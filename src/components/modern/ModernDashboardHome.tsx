@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTranslation } from '@/hooks/useTranslation';
 import { Capacitor } from '@capacitor/core';
 import { ModernSalesChart } from './ModernSalesChart';
 import { ModernRecentSales } from './ModernRecentSales';
@@ -33,6 +34,7 @@ interface Order {
 export function ModernDashboardHome() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [timeFilter, setTimeFilter] = useState('ultimos-30-dias');
   const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>(undefined);
   const [selectedProduct, setSelectedProduct] = useState('todos');
@@ -444,10 +446,10 @@ export function ModernDashboardHome() {
         <div data-onboarding="dashboard-header" className="flex items-center justify-between">
           <div>
             <h1 className="text-lg md:text-xl font-semibold text-foreground">
-              Dashboard
+              {t('dashboard.title')}
             </h1>
             <p className="text-muted-foreground text-xs">
-              Acompanhe o desempenho do seu negócio
+              {t('dashboard.subtitle')}
             </p>
           </div>
           <Button 
@@ -458,7 +460,7 @@ export function ModernDashboardHome() {
           >
             <Radio className="h-4 w-4" />
             <span className="flex items-center gap-1.5">
-              Live View
+              {t('menu.liveView')}
               <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
             </span>
           </Button>

@@ -4,6 +4,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useSellerTheme } from '@/hooks/useSellerTheme';
+import { useTranslation } from '@/hooks/useTranslation';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -31,24 +32,24 @@ import {
 import { Button } from '@/components/ui/button';
 
 const menuItems = [
-  { label: "Dashboard", href: "/vendedor", icon: LayoutDashboard },
-  { label: "Produtos", href: "/vendedor/produtos", icon: Package },
-  { label: "Vendas", href: "/vendedor/vendas", icon: TrendingUp },
-  { label: "Financeiro", href: "/vendedor/financeiro", icon: DollarSign },
-  { label: "Membros", href: "/vendedor/membros", icon: Users },
-  { label: "Pagamentos Módulos", href: "/vendedor/membros/pagamentos", icon: Coins },
-  { label: "Kamba Extra", href: "/vendedor/marketplace", icon: Store },
-  { label: "Afiliados", href: "/vendedor/afiliados", icon: UserCheck },
-  { label: "Assinaturas", href: "/vendedor/assinaturas", icon: CreditCard },
-  { label: "Reembolsos", href: "/vendedor/reembolsos", icon: AlertCircle },
-  { label: "Relatórios", href: "/vendedor/relatorios", icon: FileText },
-  { label: "Colaboradores", href: "/vendedor/colaboradores", icon: UserPlus },
-  { label: "Apps", href: "/vendedor/apps", icon: Grid3X3 },
+  { key: "menu.dashboard", href: "/vendedor", icon: LayoutDashboard },
+  { key: "menu.products", href: "/vendedor/produtos", icon: Package },
+  { key: "menu.sales", href: "/vendedor/vendas", icon: TrendingUp },
+  { key: "menu.financial", href: "/vendedor/financeiro", icon: DollarSign },
+  { key: "menu.memberAreas", href: "/vendedor/membros", icon: Users },
+  { key: "menu.modulePayments", href: "/vendedor/membros/pagamentos", icon: Coins },
+  { key: "menu.marketplace", href: "/vendedor/marketplace", icon: Store },
+  { key: "menu.affiliates", href: "/vendedor/afiliados", icon: UserCheck },
+  { key: "menu.subscriptions", href: "/vendedor/assinaturas", icon: CreditCard },
+  { key: "menu.refunds", href: "/vendedor/reembolsos", icon: AlertCircle },
+  { key: "menu.reports", href: "/vendedor/relatorios", icon: FileText },
+  { key: "menu.collaborators", href: "/vendedor/colaboradores", icon: UserPlus },
+  { key: "menu.apps", href: "/vendedor/apps", icon: Grid3X3 },
 ];
 
 const bottomItems = [
-  { label: "Configurações", href: "/vendedor/configuracoes", icon: Settings },
-  { label: "Ajuda", href: "/vendedor/ajuda", icon: HelpCircle },
+  { key: "menu.settings", href: "/vendedor/configuracoes", icon: Settings },
+  { key: "menu.help", href: "/vendedor/ajuda", icon: HelpCircle },
 ];
 
 interface ModernSidebarProps {
@@ -70,6 +71,7 @@ export function ModernSidebar({
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isDark } = useSellerTheme();
+  const { t } = useTranslation();
   const [dashboardData, setDashboardData] = useState({
     totalRevenue: 0,
   });
@@ -242,7 +244,7 @@ export function ModernSidebar({
                   }
                 >
                   <item.icon className="w-[18px] h-[18px] flex-shrink-0" />
-                  <span>{item.label}</span>
+                  <span>{t(item.key)}</span>
                 </NavLink>
               ))}
             </nav>
@@ -263,7 +265,7 @@ export function ModernSidebar({
                   }
                 >
                   <item.icon className="w-[18px] h-[18px] flex-shrink-0" />
-                  <span>{item.label}</span>
+                  <span>{t(item.key)}</span>
                 </NavLink>
               ))}
               
@@ -272,7 +274,7 @@ export function ModernSidebar({
                 className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[15px] font-medium transition-all duration-150 text-destructive hover:bg-destructive/10 w-full"
               >
                 <LogOut className="w-[18px] h-[18px] flex-shrink-0" />
-                <span>Sair</span>
+                <span>{t('menu.logout')}</span>
               </button>
             </div>
           </motion.div>
@@ -360,7 +362,7 @@ export function ModernSidebar({
                     : "text-sidebar-foreground hover:bg-sidebar-accent/50"
                 }`
               }
-              title={collapsed ? item.label : undefined}
+              title={collapsed ? t(item.key) : undefined}
             >
               {({ isActive }) => (
                 <>
@@ -377,7 +379,7 @@ export function ModernSidebar({
                         transition={{ duration: 0.15 }}
                         className="whitespace-nowrap overflow-hidden"
                       >
-                        {item.label}
+                        {t(item.key)}
                       </motion.span>
                     )}
                   </AnimatePresence>
@@ -401,7 +403,7 @@ export function ModernSidebar({
                   : "text-sidebar-foreground hover:bg-sidebar-accent/50"
               }`
             }
-            title={collapsed ? item.label : undefined}
+            title={collapsed ? t(item.key) : undefined}
           >
             <item.icon className="w-[18px] h-[18px] flex-shrink-0 ml-1" />
             <AnimatePresence>
@@ -413,7 +415,7 @@ export function ModernSidebar({
                   transition={{ duration: 0.15 }}
                   className="whitespace-nowrap overflow-hidden"
                 >
-                  {item.label}
+                  {t(item.key)}
                 </motion.span>
               )}
             </AnimatePresence>
@@ -423,7 +425,7 @@ export function ModernSidebar({
         <button
           onClick={handleSignOut}
           className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[15px] font-medium transition-all duration-150 text-destructive hover:bg-destructive/10 w-full"
-          title={collapsed ? "Sair" : undefined}
+          title={collapsed ? t('menu.logout') : undefined}
         >
           <LogOut className="w-[18px] h-[18px] flex-shrink-0 ml-1" />
           <AnimatePresence>
@@ -435,7 +437,7 @@ export function ModernSidebar({
                 transition={{ duration: 0.15 }}
                 className="whitespace-nowrap overflow-hidden"
               >
-                Sair
+                {t('menu.logout')}
               </motion.span>
             )}
           </AnimatePresence>
