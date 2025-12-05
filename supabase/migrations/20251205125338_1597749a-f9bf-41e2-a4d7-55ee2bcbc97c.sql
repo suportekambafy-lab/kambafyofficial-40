@@ -1,0 +1,2 @@
+-- Enable REPLICA IDENTITY FULL for orders table
+ALTER TABLE public.orders REPLICA IDENTITY FULL;
