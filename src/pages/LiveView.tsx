@@ -26,6 +26,7 @@ export default function LiveView() {
     user
   } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [productIds, setProductIds] = useState<string[]>([]);
   const [searchLocation, setSearchLocation] = useState('');
 
@@ -237,6 +238,7 @@ export default function LiveView() {
       console.error('Error loading live data:', error);
     } finally {
       setLoading(false);
+      setIsInitialLoad(false);
     }
   }, [user, productIds]);
   // Store loadLiveData in a ref to avoid re-subscribing
@@ -321,7 +323,7 @@ export default function LiveView() {
                 <p className="text-sm text-muted-foreground mb-1">Vendas líquidas  </p>
                 <div className="flex items-center gap-2">
                   <p className="text-2xl font-bold text-foreground">
-                    {loading ? <Skeleton className="h-8 w-24" /> : formatPriceForSeller(metrics.totalSales, 'KZ')}
+                    {isInitialLoad ? <Skeleton className="h-8 w-24" /> : formatPriceForSeller(metrics.totalSales, 'KZ')}
                   </p>
                 </div>
               </CardContent>
@@ -334,7 +336,7 @@ export default function LiveView() {
               <CardContent className="p-4">
                 <p className="text-sm text-muted-foreground mb-1">Sessões</p>
                 <div className="flex items-center gap-2">
-                  {loading ? <Skeleton className="h-8 w-16" /> : (
+                  {isInitialLoad ? <Skeleton className="h-8 w-16" /> : (
                     <>
                       <p className="text-2xl font-bold text-foreground">{metrics.sessions}</p>
                       {metrics.sessionsChange !== 0 && <span className={`flex items-center text-sm ${metrics.sessionsChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
@@ -350,7 +352,7 @@ export default function LiveView() {
             <Card>
               <CardContent className="p-4">
                 <p className="text-sm text-muted-foreground mb-1">vendas pagas </p>
-                {loading ? <Skeleton className="h-8 w-12" /> : <p className="text-2xl font-bold text-foreground">{metrics.orders}</p>}
+                {isInitialLoad ? <Skeleton className="h-8 w-12" /> : <p className="text-2xl font-bold text-foreground">{metrics.orders}</p>}
               </CardContent>
             </Card>
           </div>
