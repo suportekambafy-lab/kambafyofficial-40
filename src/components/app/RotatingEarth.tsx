@@ -10,7 +10,8 @@ interface RotatingEarthProps {
   width?: number
   height?: number
   className?: string
-  activeLocations?: SessionLocation[]
+  activeLocations?: SessionLocation[] // Sales (purple)
+  visitorLocations?: SessionLocation[] // Real-time visitors (blue)
 }
 
 // Map countries to approximate coordinates
@@ -33,14 +34,15 @@ export default function RotatingEarth({
   width = 300, 
   height = 300, 
   className = "",
-  activeLocations = []
+  activeLocations = [],
+  visitorLocations = []
 }: RotatingEarthProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isDarkMode, setIsDarkMode] = useState(false)
-  const [tooltip, setTooltip] = useState<{ x: number; y: number; country: string; count: number } | null>(null)
-  const markersRef = useRef<Array<{ x: number; y: number; country: string; count: number; size: number }>>([]);
+  const [tooltip, setTooltip] = useState<{ x: number; y: number; country: string; count: number; type: 'sale' | 'visitor' } | null>(null)
+  const markersRef = useRef<Array<{ x: number; y: number; country: string; count: number; size: number; type: 'sale' | 'visitor' }>>([]);
 
   // Detect dark mode
   useEffect(() => {
@@ -238,42 +240,84 @@ export default function RotatingEarth({
         // Clear markers ref before re-drawing
         markersRef.current = [];
 
-        // Draw active session markers
+        // Draw sales markers (purple)
         activeLocations.forEach((loc) => {
           const coords = countryCoordinates[loc.country]
           if (coords) {
             const projected = projection(coords)
             if (projected) {
-              // Smaller dots - base size 2, max 6
               const size = Math.min(2 + loc.count * 1, 6) * scaleFactor
               
-              // Save marker position for click detection
               markersRef.current.push({
                 x: projected[0],
                 y: projected[1],
                 country: loc.country,
                 count: loc.count,
-                size: size * 2 // Use outer glow size for click detection
+                size: size * 2,
+                type: 'sale'
               });
               
-              // Outer glow - purple/violet
+              // Outer glow - purple
               context.beginPath()
               context.arc(projected[0], projected[1], size * 2, 0, 2 * Math.PI)
               context.fillStyle = "rgba(139, 92, 246, 0.2)"
               context.fill()
               
-              // Middle glow - blue
+              // Middle glow - purple
               context.beginPath()
               context.arc(projected[0], projected[1], size * 1.3, 0, 2 * Math.PI)
-              context.fillStyle = "rgba(59, 130, 246, 0.4)"
+              context.fillStyle = "rgba(139, 92, 246, 0.4)"
               context.fill()
               
-              // Main dot - vibrant purple/violet
+              // Main dot - purple
               context.beginPath()
               context.arc(projected[0], projected[1], size, 0, 2 * Math.PI)
               context.fillStyle = "#8B5CF6"
               context.fill()
               context.strokeStyle = "#C4B5FD"
+              context.lineWidth = 1 * scaleFactor
+              context.stroke()
+            }
+          }
+        })
+
+        // Draw visitor markers (baby blue) - offset slightly to avoid overlap
+        visitorLocations.forEach((loc) => {
+          const coords = countryCoordinates[loc.country]
+          if (coords) {
+            // Offset visitor markers slightly
+            const offsetCoords: [number, number] = [coords[0] + 2, coords[1] + 2]
+            const projected = projection(offsetCoords)
+            if (projected) {
+              const size = Math.min(2 + loc.count * 1, 6) * scaleFactor
+              
+              markersRef.current.push({
+                x: projected[0],
+                y: projected[1],
+                country: loc.country,
+                count: loc.count,
+                size: size * 2,
+                type: 'visitor'
+              });
+              
+              // Outer glow - baby blue
+              context.beginPath()
+              context.arc(projected[0], projected[1], size * 2, 0, 2 * Math.PI)
+              context.fillStyle = "rgba(56, 189, 248, 0.2)"
+              context.fill()
+              
+              // Middle glow - baby blue
+              context.beginPath()
+              context.arc(projected[0], projected[1], size * 1.3, 0, 2 * Math.PI)
+              context.fillStyle = "rgba(56, 189, 248, 0.4)"
+              context.fill()
+              
+              // Main dot - baby blue
+              context.beginPath()
+              context.arc(projected[0], projected[1], size, 0, 2 * Math.PI)
+              context.fillStyle = "#38BDF8"
+              context.fill()
+              context.strokeStyle = "#BAE6FD"
               context.lineWidth = 1 * scaleFactor
               context.stroke()
             }
@@ -404,7 +448,7 @@ export default function RotatingEarth({
       for (const marker of markersRef.current) {
         const distance = Math.sqrt(Math.pow(x - marker.x, 2) + Math.pow(y - marker.y, 2));
         if (distance <= marker.size + 5) { // Add some tolerance
-          setTooltip({ x: marker.x, y: marker.y, country: marker.country, count: marker.count });
+          setTooltip({ x: marker.x, y: marker.y, country: marker.country, count: marker.count, type: marker.type });
           return;
         }
       }
@@ -422,7 +466,7 @@ export default function RotatingEarth({
       canvas.removeEventListener("touchstart", handleTouchStart)
       canvas.removeEventListener("click", handleClick)
     }
-  }, [width, height, activeLocations, isDarkMode])
+  }, [width, height, activeLocations, visitorLocations, isDarkMode])
 
   if (error) {
     return (
@@ -457,11 +501,14 @@ export default function RotatingEarth({
             transform: 'translateX(-50%)'
           }}
         >
-          <p className="text-sm font-medium text-foreground">
-            {tooltip.country === 'Desconhecido' ? 'Angola' : tooltip.country}
-          </p>
+          <div className="flex items-center gap-2">
+            <div className={`w-2 h-2 rounded-full ${tooltip.type === 'sale' ? 'bg-violet-500' : 'bg-sky-400'}`} />
+            <p className="text-sm font-medium text-foreground">
+              {tooltip.country === 'Desconhecido' ? 'Angola' : tooltip.country}
+            </p>
+          </div>
           <p className="text-xs text-muted-foreground">
-            {tooltip.count} {tooltip.count === 1 ? 'visitante' : 'visitantes'}
+            {tooltip.count} {tooltip.type === 'sale' ? (tooltip.count === 1 ? 'venda' : 'vendas') : (tooltip.count === 1 ? 'visitante' : 'visitantes')}
           </p>
         </div>
       )}
