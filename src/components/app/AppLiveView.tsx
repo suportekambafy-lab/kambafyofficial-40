@@ -447,35 +447,33 @@ export function AppLiveView({
         </CardContent>
       </Card>
 
-      {/* Sessions by Location - Real-time visitors */}
+      {/* Sessions by Location - Total do dia */}
       <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
         <CardHeader className="pb-2">
           <CardTitle className="text-base font-semibold border-b border-dashed border-muted pb-2 flex items-center justify-between">
             <span>Sessões por local</span>
-            <span className="text-xs font-normal text-muted-foreground">(tempo real)</span>
+            <span className="text-xs font-normal text-muted-foreground">(hoje)</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4 pt-0 space-y-3">
-          {visitorLocations.length === 0 ? (
+          {loading ? (
+            <p className="text-sm text-muted-foreground text-center py-4">Carregando...</p>
+          ) : sessionsByLocation.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">
-              Nenhum visitante no momento
+              Sem sessões hoje
             </p>
           ) : (
-            visitorLocations.map((loc, idx) => {
-              const maxCount = visitorLocations[0]?.count || 1;
-              const locationLabel = [
-                loc.country,
-                loc.region || null,
-                loc.city || null
-              ].filter(Boolean).join(' · ');
-              
+            sessionsByLocation.map((loc, idx) => {
+              const maxCount = sessionsByLocation[0]?.count || 1;
               return (
                 <div key={idx}>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm text-foreground">
-                      {locationLabel || 'Desconhecido'}
+                      {loc.country}
                     </span>
-                    <span className="text-sm text-muted-foreground">{loc.count}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {loc.count} {loc.count === 1 ? 'sessão' : 'sessões'}
+                    </span>
                   </div>
                   <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
                     <div 
