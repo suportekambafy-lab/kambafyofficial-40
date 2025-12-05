@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useSearchParams } from "react-router-dom";
 import { OptimizedPageWrapper } from "@/components/ui/optimized-page-wrapper";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface Product {
   id: string;
@@ -24,6 +24,7 @@ type Step = 'product' | 'integration' | 'configure' | 'complete';
 export default function Apps() {
   const { toast } = useToast();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const isNew = searchParams.get('new') === 'true';
   const configureType = searchParams.get('configure');
@@ -219,10 +220,10 @@ export default function Apps() {
         )}
         <div className="flex-1 w-full">
           <h1 className="text-xl xs:text-2xl sm:text-3xl font-bold break-words">
-            {configureType ? 'Configurar Integração' : 'Integrações'}
+            {configureType ? t('apps.configure') : t('apps.title')}
           </h1>
           <p className="text-muted-foreground mt-2 text-sm xs:text-base">
-            Configure integrações para automatizar seu negócio
+            {t('apps.subtitle')}
           </p>
         </div>
       </div>

@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { SEO } from '@/components/SEO';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface DailyData {
   date: string;
@@ -28,12 +29,13 @@ interface MetricData {
 
 export default function SellerReports() {
   const { user } = useAuth();
+  const { t } = useTranslation();
 
   return (
     <div className="container mx-auto p-6">
       <SEO 
-        title="Relatórios - Kambafy"
-        description="Analise suas métricas de vendas e desempenho"
+        title={`${t('reports.title')} - Kambafy`}
+        description={t('reports.subtitle')}
       />
       <div className="flex items-center justify-center min-h-[60vh]">
         <Card className="max-w-md w-full">
@@ -41,14 +43,14 @@ export default function SellerReports() {
             <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
               <Lock className="h-8 w-8 text-primary" />
             </div>
-            <CardTitle className="text-2xl">Relatórios em Breve</CardTitle>
+            <CardTitle className="text-2xl">{t('reports.title')}</CardTitle>
           </CardHeader>
           <CardContent className="text-center space-y-4">
             <p className="text-muted-foreground">
-              Estamos trabalhando para trazer análises detalhadas do seu desempenho.
+              {t('common.loading')}
             </p>
             <p className="text-muted-foreground">
-              Em breve você terá acesso a métricas completas de vendas, taxa de aprovação e muito mais.
+              {t('reports.subtitle')}
             </p>
           </CardContent>
         </Card>

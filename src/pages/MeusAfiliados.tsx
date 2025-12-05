@@ -25,6 +25,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { useCustomToast } from '@/hooks/useCustomToast';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Affiliate {
   id: string;
@@ -48,6 +49,7 @@ const statusMap = {
 };
 
 export default function MeusAfiliados() {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTab, setSelectedTab] = useState('ativos');
   const [affiliates, setAffiliates] = useState<Affiliate[]>([]);
@@ -189,19 +191,19 @@ export default function MeusAfiliados() {
       <div className="p-4 md:p-6 space-y-6">
         {/* Header */}
       <div className="space-y-4">
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground">Meus Afiliados</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-foreground">{t('affiliates.title')}</h1>
         
         {/* Tabs */}
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
           <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 h-auto">
             <TabsTrigger value="ativos" className="text-center">
-              Ativos
+              {t('affiliates.active')}
             </TabsTrigger>
             <TabsTrigger value="pendentes" className="text-center">
-              Pendentes
+              {t('affiliates.pending')}
             </TabsTrigger>
             <TabsTrigger value="recusados-bloqueados-cancelados" className="text-center">
-              Recusados, Bloqueados Ou Cancelados
+              {t('affiliates.rejected')}
             </TabsTrigger>
           </TabsList>
 
@@ -211,7 +213,7 @@ export default function MeusAfiliados() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
-                placeholder="Pesquisar"
+                placeholder={t('common.search')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"

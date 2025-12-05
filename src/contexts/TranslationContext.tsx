@@ -325,6 +325,25 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     'toast.saved': 'Salvo com sucesso',
     'toast.deleted': 'Excluído com sucesso',
     'toast.updated': 'Atualizado com sucesso',
+
+    // Live View
+    'liveView.title': 'Ao Vivo',
+    'liveView.rightNow': 'Agora mesmo',
+    'liveView.searchLocation': 'Procurar local',
+    'liveView.visitorsNow': 'Visitantes neste momento',
+    'liveView.netSales': 'Vendas líquidas',
+    'liveView.sessions': 'Sessões',
+    'liveView.paidSales': 'Vendas pagas',
+    'liveView.customerBehavior': 'Comportamento do cliente',
+    'liveView.last5min': 'últimos 5 min',
+    'liveView.ordersGenerated': 'Pedidos gerados',
+    'liveView.sessionsByLocation': 'Sessões por local',
+    'liveView.noSessions': 'Nenhuma sessão registrada',
+    'liveView.newVsReturning': 'Clientes novos em comparação com clientes habituais',
+    'liveView.newCustomers': 'Novos clientes',
+    'liveView.returningCustomers': 'Clientes habituais',
+    'liveView.salesByProduct': 'Vendas por produto',
+    'liveView.salesActivity': 'Atividade de vendas',
   },
   en: {
     // Menu/Sidebar
@@ -646,6 +665,25 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     'toast.saved': 'Saved successfully',
     'toast.deleted': 'Deleted successfully',
     'toast.updated': 'Updated successfully',
+
+    // Live View
+    'liveView.title': 'Live View',
+    'liveView.rightNow': 'Right now',
+    'liveView.searchLocation': 'Search location',
+    'liveView.visitorsNow': 'Visitors right now',
+    'liveView.netSales': 'Net sales',
+    'liveView.sessions': 'Sessions',
+    'liveView.paidSales': 'Paid sales',
+    'liveView.customerBehavior': 'Customer behavior',
+    'liveView.last5min': 'last 5 min',
+    'liveView.ordersGenerated': 'Orders generated',
+    'liveView.sessionsByLocation': 'Sessions by location',
+    'liveView.noSessions': 'No sessions recorded',
+    'liveView.newVsReturning': 'New customers vs returning customers',
+    'liveView.newCustomers': 'New customers',
+    'liveView.returningCustomers': 'Returning customers',
+    'liveView.salesByProduct': 'Sales by product',
+    'liveView.salesActivity': 'Sales activity',
   },
   es: {
     // Menu/Sidebar
@@ -967,6 +1005,25 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     'toast.saved': 'Guardado correctamente',
     'toast.deleted': 'Eliminado correctamente',
     'toast.updated': 'Actualizado correctamente',
+
+    // Live View
+    'liveView.title': 'En Vivo',
+    'liveView.rightNow': 'Ahora mismo',
+    'liveView.searchLocation': 'Buscar ubicación',
+    'liveView.visitorsNow': 'Visitantes ahora',
+    'liveView.netSales': 'Ventas netas',
+    'liveView.sessions': 'Sesiones',
+    'liveView.paidSales': 'Ventas pagadas',
+    'liveView.customerBehavior': 'Comportamiento del cliente',
+    'liveView.last5min': 'últimos 5 min',
+    'liveView.ordersGenerated': 'Pedidos generados',
+    'liveView.sessionsByLocation': 'Sesiones por ubicación',
+    'liveView.noSessions': 'Sin sesiones registradas',
+    'liveView.newVsReturning': 'Clientes nuevos vs clientes habituales',
+    'liveView.newCustomers': 'Clientes nuevos',
+    'liveView.returningCustomers': 'Clientes habituales',
+    'liveView.salesByProduct': 'Ventas por producto',
+    'liveView.salesActivity': 'Actividad de ventas',
   },
 };
 

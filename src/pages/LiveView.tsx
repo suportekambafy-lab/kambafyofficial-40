@@ -9,6 +9,7 @@ import { formatPriceForSeller } from '@/utils/priceFormatting';
 import RotatingEarth from '@/components/app/RotatingEarth';
 import { useCheckoutPresenceCount } from '@/hooks/useCheckoutPresenceCount';
 import { Progress } from '@/components/ui/progress';
+import { useTranslation } from '@/hooks/useTranslation';
 interface SessionLocation {
   country: string;
   region: string;
@@ -22,6 +23,7 @@ interface ProductSales {
   revenue: number;
 }
 export default function LiveView() {
+  const { t } = useTranslation();
   const {
     user
   } = useAuth();
@@ -289,16 +291,16 @@ export default function LiveView() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Radio className="h-6 w-6 text-primary" />
-          <h1 className="text-2xl font-bold text-foreground">Live View</h1>
+          <h1 className="text-2xl font-bold text-foreground">{t('liveView.title')}</h1>
           <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            Agora mesmo
+            {t('liveView.rightNow')}
           </span>
         </div>
         <div className="flex items-center gap-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Procurar local" value={searchLocation} onChange={e => setSearchLocation(e.target.value)} className="pl-9 w-64 bg-background" />
+            <Input placeholder={t('liveView.searchLocation')} value={searchLocation} onChange={e => setSearchLocation(e.target.value)} className="pl-9 w-64 bg-background" />
           </div>
         </div>
       </div>
@@ -310,7 +312,7 @@ export default function LiveView() {
           <div className="grid grid-cols-2 gap-4">
             <Card>
               <CardContent className="p-4">
-                <p className="text-sm text-muted-foreground mb-1">Visitantes neste momento</p>
+                <p className="text-sm text-muted-foreground mb-1">{t('liveView.visitorsNow')}</p>
                 <div className="flex items-center gap-2">
                   <p className="text-xl font-bold text-foreground">{realTimeVisitors}</p>
                   {realTimeVisitors > 0 && <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />}
@@ -320,7 +322,7 @@ export default function LiveView() {
             
             <Card>
               <CardContent className="p-4">
-                <p className="text-sm text-muted-foreground mb-1">Vendas líquidas  </p>
+                <p className="text-sm text-muted-foreground mb-1">{t('liveView.netSales')}</p>
                 <div className="flex items-center gap-2">
                   <p className="text-xl font-bold text-foreground">
                     {isInitialLoad ? <Skeleton className="h-8 w-24" /> : formatPriceForSeller(metrics.totalSales, 'KZ')}
@@ -334,7 +336,7 @@ export default function LiveView() {
           <div className="grid grid-cols-2 gap-4">
             <Card>
               <CardContent className="p-4">
-                <p className="text-sm text-muted-foreground mb-1">Sessões</p>
+                <p className="text-sm text-muted-foreground mb-1">{t('liveView.sessions')}</p>
                 <div className="flex items-center gap-2">
                   {isInitialLoad ? <Skeleton className="h-7 w-16" /> : <>
                       <p className="text-xl font-bold text-foreground">{metrics.sessions}</p>
@@ -349,7 +351,7 @@ export default function LiveView() {
             
             <Card>
               <CardContent className="p-4">
-                <p className="text-sm text-muted-foreground mb-1">vendas pagas </p>
+                <p className="text-sm text-muted-foreground mb-1">{t('liveView.paidSales')}</p>
                 {isInitialLoad ? <Skeleton className="h-7 w-12" /> : <p className="text-xl font-bold text-foreground">{metrics.orders}</p>}
               </CardContent>
             </Card>
@@ -359,18 +361,18 @@ export default function LiveView() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-base font-semibold text-foreground flex items-center justify-between">
-                <span>Comportamento do cliente</span>
-                <span className="text-xs font-normal text-muted-foreground">(últimos 5 min)</span>
+                <span>{t('liveView.customerBehavior')}</span>
+                <span className="text-xs font-normal text-muted-foreground">({t('liveView.last5min')})</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 divide-x divide-border">
                 <div className="pr-4">
-                  <p className="text-sm text-muted-foreground mb-1">Pedidos gerados</p>
+                  <p className="text-sm text-muted-foreground mb-1">{t('liveView.ordersGenerated')}</p>
                   <p className="text-xl font-bold text-foreground">{behavior.pendingOrders}</p>
                 </div>
                 <div className="pl-4">
-                  <p className="text-sm text-muted-foreground mb-1">Vendas pagas</p>
+                  <p className="text-sm text-muted-foreground mb-1">{t('liveView.paidSales')}</p>
                   <p className="text-xl font-bold text-foreground">{behavior.completed}</p>
                 </div>
               </div>
@@ -380,10 +382,10 @@ export default function LiveView() {
           {/* Sessions by Location */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base font-semibold text-foreground">Sessões por local</CardTitle>
+              <CardTitle className="text-base font-semibold text-foreground">{t('liveView.sessionsByLocation')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {filteredLocations.length === 0 ? <p className="text-sm text-muted-foreground text-center py-4">Nenhuma sessão registrada</p> : filteredLocations.map((loc, index) => <div key={index} className="space-y-1">
+              {filteredLocations.length === 0 ? <p className="text-sm text-muted-foreground text-center py-4">{t('liveView.noSessions')}</p> : filteredLocations.map((loc, index) => <div key={index} className="space-y-1">
                     <div className="flex justify-between text-sm">
                       <span className="text-foreground">{loc.country} · {loc.region} · {loc.city}</span>
                       <span className="text-muted-foreground">{loc.count}</span>
@@ -396,16 +398,16 @@ export default function LiveView() {
           {/* Customer Types */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base font-semibold text-foreground">Clientes novos em comparação com clientes habituais</CardTitle>
+              <CardTitle className="text-base font-semibold text-foreground">{t('liveView.newVsReturning')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">Novos clientes</p>
+                  <p className="text-sm text-muted-foreground mb-1">{t('liveView.newCustomers')}</p>
                   <p className="text-2xl font-bold text-foreground">{customerTypes.newCustomers}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">Clientes habituais</p>
+                  <p className="text-sm text-muted-foreground mb-1">{t('liveView.returningCustomers')}</p>
                   <p className="text-2xl font-bold text-foreground">{customerTypes.returningCustomers}</p>
                 </div>
               </div>
@@ -415,7 +417,7 @@ export default function LiveView() {
           {/* Sales by Product */}
           {productSales.length > 0 && <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-base font-semibold text-foreground">Vendas por produto</CardTitle>
+                <CardTitle className="text-base font-semibold text-foreground">{t('liveView.salesByProduct')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
