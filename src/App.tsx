@@ -11,6 +11,7 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { AdminAuthProvider } from "./contexts/AdminAuthContext";
 import { AdminSidebarProvider } from "./contexts/AdminSidebarContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
+import { TranslationProvider } from "./contexts/TranslationContext";
 import { ThemeProvider } from "./hooks/useTheme";
 import { SubdomainGuard } from "./components/SubdomainGuard";
 import { OptimizedRoutes } from "./components/OptimizedRoutes";
@@ -151,6 +152,7 @@ const App = () => {
       <HelmetProvider>
         <QueryClientProvider client={queryClient}>
           <ThemeProvider defaultTheme="light" storageKey="kambafy-ui-theme" forceLightMode={true}>
+            <TranslationProvider>
             <AuthProvider>
               <OneSignalInitializer />
               <AdminAuthProvider>
@@ -269,6 +271,7 @@ const App = () => {
           </AdminSidebarProvider>
           </AdminAuthProvider>
         </AuthProvider>
+        </TranslationProvider>
       </ThemeProvider>
     </QueryClientProvider>
   </HelmetProvider>
