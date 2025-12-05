@@ -102,6 +102,7 @@ export function AppLiveView({
     visitorLocationsRef.current = visitorLocations;
   }, [visitorLocations]);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const hasLoadedRef = useRef(false);
   const loadLiveData = useCallback(async (silent = false) => {
     if (!user || productIds.length === 0) return;
     try {
@@ -299,12 +300,13 @@ export function AppLiveView({
     }
   }, [user, productIds]);
 
-  // Initial load
+  // Initial load - only once when productIds are ready
   useEffect(() => {
-    if (productIds.length > 0) {
-      loadLiveData(false); // Show loading on initial
+    if (productIds.length > 0 && !hasLoadedRef.current) {
+      hasLoadedRef.current = true;
+      loadLiveData(false);
     }
-  }, [productIds, loadLiveData]);
+  }, [productIds]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Store loadLiveData in a ref to avoid re-subscribing
   const loadLiveDataRef = useRef(loadLiveData);
