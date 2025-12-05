@@ -78,14 +78,20 @@ export function AppLiveView({
   // Sales by product
   const [productSales, setProductSales] = useState<ProductSales[]>([]);
 
-  // Load user's products first
+  // Load user's products first - only set if actually changed
   useEffect(() => {
     const loadProducts = async () => {
       if (!user) return;
       const {
         data: products
       } = await supabase.from('products').select('id, name').eq('user_id', user.id);
-      setProductIds(products?.map(p => p.id) || []);
+      const newIds = products?.map(p => p.id) || [];
+      setProductIds(prev => {
+        const prevStr = JSON.stringify(prev.sort());
+        const newStr = JSON.stringify(newIds.sort());
+        if (prevStr === newStr) return prev;
+        return newIds;
+      });
     };
     loadProducts();
   }, [user]);
@@ -314,42 +320,40 @@ export function AppLiveView({
     loadLiveDataRef.current = loadLiveData;
   }, [loadLiveData]);
 
+  // Stable productIds string for dependency
+  const productIdsKey = productIds.join(',');
+
   // Subscribe to real-time order updates via WebSocket - stable subscription
   useEffect(() => {
     if (!user || productIds.length === 0) return;
-    console.log('🔌 [Live View] Connecting to realtime channel for user:', user.id);
-    console.log('🔌 [Live View] Watching products:', productIds);
-    const channel = supabase.channel(`live-view-${user.id}`).on('postgres_changes', {
-      event: 'INSERT',
-      schema: 'public',
-      table: 'orders'
-    }, payload => {
-      console.log('📦 [Live View] NEW ORDER INSERT:', payload);
-      // Check if this order is for one of our products
-      const newOrder = payload.new as any;
-      if (productIds.includes(newOrder?.product_id)) {
-        console.log('✅ [Live View] Order is for our product, refreshing...');
-        loadLiveDataRef.current(true);
-      } else {
-        console.log('⏭️ [Live View] Order is for different seller, ignoring');
-      }
-    }).on('postgres_changes', {
-      event: 'UPDATE',
-      schema: 'public',
-      table: 'orders'
-    }, payload => {
-      console.log('📦 [Live View] ORDER UPDATE:', payload);
-      const updatedOrder = payload.new as any;
-      if (productIds.includes(updatedOrder?.product_id)) {
-        console.log('✅ [Live View] Update is for our product, refreshing...');
-        loadLiveDataRef.current(true);
-      }
-    });
+    
+    const channel = supabase.channel(`live-view-${user.id}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'orders'
+      }, payload => {
+        const newOrder = payload.new as any;
+        if (productIds.includes(newOrder?.product_id)) {
+          loadLiveDataRef.current(true);
+        }
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'orders'
+      }, payload => {
+        const updatedOrder = payload.new as any;
+        if (productIds.includes(updatedOrder?.product_id)) {
+          loadLiveDataRef.current(true);
+        }
+      })
+      .subscribe();
+
     return () => {
-      console.log('🔌 [Live View] Disconnecting...');
       supabase.removeChannel(channel);
     };
-  }, [user?.id, productIds]);
+  }, [user?.id, productIdsKey]); // eslint-disable-line react-hooks/exhaustive-deps
   return <div className="p-4 space-y-4 min-h-screen bg-amber-50/30 dark:bg-zinc-900">
       {/* Header */}
       <div className="flex items-center justify-between px-2 mb-4">
