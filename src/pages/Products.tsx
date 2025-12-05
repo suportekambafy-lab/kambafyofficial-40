@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTranslation } from '@/hooks/useTranslation';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,7 @@ interface Product {
 
 export default function Products() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   
   const [showProductTypeSelector, setShowProductTypeSelector] = useState(false);
   const [selectedProductType, setSelectedProductType] = useState<string>("");
