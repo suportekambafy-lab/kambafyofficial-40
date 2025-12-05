@@ -7,24 +7,28 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { User, Mail, Camera, Upload, X, Shield, ExternalLink } from "lucide-react";
+import { User, Mail, Camera, Upload, X, Shield, ExternalLink, Globe } from "lucide-react";
 import { Link } from "react-router-dom";
 import { TwoFactorSettings } from "@/components/TwoFactorSettings";
 import { PasswordChange } from "@/components/PasswordChange";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export default function UserSettings() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { changeLanguage } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [profile, setProfile] = useState({
     full_name: "",
     bio: "",
     avatar_url: "",
+    language: "pt" as "pt" | "en" | "es",
   });
 
   useEffect(() => {
@@ -49,11 +53,16 @@ export default function UserSettings() {
       }
 
       if (data) {
+        const userLanguage = (data as any).language || "pt";
         setProfile({
           full_name: data.full_name || "",
           bio: data.bio || "",
           avatar_url: data.avatar_url || "",
+          language: userLanguage,
         });
+        // Sync language with the translation hook
+        changeLanguage(userLanguage);
+        localStorage.setItem('detectedLanguage', userLanguage);
       }
     } catch (error) {
       console.error('Error loading profile:', error);
@@ -81,6 +90,7 @@ export default function UserSettings() {
             full_name: updatedProfile.full_name,
             bio: updatedProfile.bio,
             avatar_url: updatedProfile.avatar_url,
+            language: updatedProfile.language,
           })
           .eq('user_id', user.id);
       } else {
@@ -91,6 +101,7 @@ export default function UserSettings() {
             full_name: updatedProfile.full_name,
             bio: updatedProfile.bio,
             avatar_url: updatedProfile.avatar_url,
+            language: updatedProfile.language,
           });
       }
 
@@ -446,6 +457,58 @@ export default function UserSettings() {
                     disabled 
                     className="text-sm md:text-base bg-muted"
                   />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Language Selection Card */}
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+                  <Globe className="h-4 w-4 md:h-5 md:w-5" />
+                  Preferências de Idioma
+                </CardTitle>
+                <CardDescription>
+                  Escolha o idioma da interface
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-sm md:text-base">Idioma da Interface</Label>
+                  <Select
+                    value={profile.language}
+                    onValueChange={async (value: "pt" | "en" | "es") => {
+                      const updatedProfile = { ...profile, language: value };
+                      setProfile(updatedProfile);
+                      changeLanguage(value);
+                      localStorage.setItem('detectedLanguage', value);
+                      await updateProfile(updatedProfile);
+                    }}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Selecione o idioma" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pt">
+                        <span className="flex items-center gap-2">
+                          🇧🇷 Português
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="en">
+                        <span className="flex items-center gap-2">
+                          🇺🇸 English
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="es">
+                        <span className="flex items-center gap-2">
+                          🇪🇸 Español
+                        </span>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    A alteração será aplicada imediatamente em toda a interface
+                  </p>
                 </div>
               </CardContent>
             </Card>

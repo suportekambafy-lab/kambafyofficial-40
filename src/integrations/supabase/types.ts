@@ -2590,6 +2590,7 @@ export type Database = {
           iban: string | null
           id: string
           is_creator: boolean | null
+          language: string | null
           onesignal_player_id: string | null
           push_notifications_enabled: boolean | null
           retained_fixed_amount: number | null
@@ -2613,6 +2614,7 @@ export type Database = {
           iban?: string | null
           id?: string
           is_creator?: boolean | null
+          language?: string | null
           onesignal_player_id?: string | null
           push_notifications_enabled?: boolean | null
           retained_fixed_amount?: number | null
@@ -2636,6 +2638,7 @@ export type Database = {
           iban?: string | null
           id?: string
           is_creator?: boolean | null
+          language?: string | null
           onesignal_player_id?: string | null
           push_notifications_enabled?: boolean | null
           retained_fixed_amount?: number | null
