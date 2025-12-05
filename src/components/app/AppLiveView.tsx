@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -251,26 +251,38 @@ export function AppLiveView({
     }
   }, [productIds, loadLiveData]);
 
-  // Subscribe to real-time order updates via WebSocket
+  // Store loadLiveData in a ref to avoid re-subscribing
+  const loadLiveDataRef = useRef(loadLiveData);
+  useEffect(() => {
+    loadLiveDataRef.current = loadLiveData;
+  }, [loadLiveData]);
+
+  // Subscribe to real-time order updates via WebSocket - stable subscription
   useEffect(() => {
     if (!user || productIds.length === 0) return;
+    
     console.log('🔌 [Live View] Connecting to realtime channel...');
-    const channel = supabase.channel('live-view-realtime').on('postgres_changes', {
-      event: '*',
-      schema: 'public',
-      table: 'orders'
-    }, payload => {
-      console.log('📦 [Live View] Order change detected:', payload.eventType);
-      // Reload data immediately on any order change
-      loadLiveData();
-    }).subscribe(status => {
-      console.log('🔌 [Live View] Realtime status:', status);
-    });
+    
+    const channel = supabase
+      .channel(`live-view-${user.id}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'orders'
+      }, (payload) => {
+        console.log('📦 [Live View] Order change detected:', payload.eventType, payload);
+        // Use ref to call latest version without re-subscribing
+        loadLiveDataRef.current();
+      })
+      .subscribe((status) => {
+        console.log('🔌 [Live View] Realtime status:', status);
+      });
+
     return () => {
       console.log('🔌 [Live View] Disconnecting...');
       supabase.removeChannel(channel);
     };
-  }, [user, productIds, loadLiveData]);
+  }, [user?.id, productIds.length]); // Stable dependencies - only reconnect when user or product count changes
   const maxLocationCount = Math.max(...sessionsByLocation.map(l => l.count), 1);
   return <div className="p-4 space-y-4 min-h-screen bg-amber-50/30 dark:bg-zinc-900">
       {/* Header */}
