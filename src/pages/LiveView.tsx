@@ -437,8 +437,8 @@ export default function LiveView() {
         <div className="relative">
           <Card className="sticky top-6 h-fit">
             <CardContent className="p-6">
-              <div className="relative w-full aspect-square max-w-[500px] mx-auto">
-                <RotatingEarth width={500} height={500} activeLocations={activeSessionsLocations} visitorLocations={visitorLocations} />
+              <div className="relative w-full aspect-square max-w-[350px] mx-auto">
+                <RotatingEarth width={350} height={350} activeLocations={activeSessionsLocations} visitorLocations={visitorLocations} />
               </div>
               
               {/* Legend */}
