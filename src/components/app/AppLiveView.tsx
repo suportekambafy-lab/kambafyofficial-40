@@ -367,7 +367,7 @@ export function AppLiveView({
         <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
           <CardContent className="p-4">
             <p className="text-xs text-muted-foreground mb-1 truncate border-b border-dashed border-muted pb-1">
-              No checkout (5 min)
+              Últimas sessões (5 min)
             </p>
             <p className="text-base font-bold text-foreground">{loading ? '...' : metrics.visitorsNow}</p>
           </CardContent>
