@@ -312,7 +312,7 @@ export default function LiveView() {
               <CardContent className="p-4">
                 <p className="text-sm text-muted-foreground mb-1">Visitantes neste momento</p>
                 <div className="flex items-center gap-2">
-                  <p className="text-2xl font-bold text-foreground">{realTimeVisitors}</p>
+                  <p className="text-xl font-bold text-foreground">{realTimeVisitors}</p>
                   {realTimeVisitors > 0 && <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />}
                 </div>
               </CardContent>
@@ -322,7 +322,7 @@ export default function LiveView() {
               <CardContent className="p-4">
                 <p className="text-sm text-muted-foreground mb-1">Vendas líquidas  </p>
                 <div className="flex items-center gap-2">
-                  <p className="text-2xl font-bold text-foreground">
+                  <p className="text-xl font-bold text-foreground">
                     {isInitialLoad ? <Skeleton className="h-8 w-24" /> : formatPriceForSeller(metrics.totalSales, 'KZ')}
                   </p>
                 </div>
@@ -336,8 +336,8 @@ export default function LiveView() {
               <CardContent className="p-4">
                 <p className="text-sm text-muted-foreground mb-1">Sessões</p>
                 <div className="flex items-center gap-2">
-                  {isInitialLoad ? <Skeleton className="h-8 w-16" /> : <>
-                      <p className="text-2xl font-bold text-foreground">{metrics.sessions}</p>
+                  {isInitialLoad ? <Skeleton className="h-7 w-16" /> : <>
+                      <p className="text-xl font-bold text-foreground">{metrics.sessions}</p>
                       {metrics.sessionsChange !== 0 && <span className={`flex items-center text-sm ${metrics.sessionsChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                           {metrics.sessionsChange >= 0 ? <TrendingUp className="h-4 w-4 mr-1" /> : <TrendingDown className="h-4 w-4 mr-1" />}
                           {Math.abs(metrics.sessionsChange)}%
@@ -350,7 +350,7 @@ export default function LiveView() {
             <Card>
               <CardContent className="p-4">
                 <p className="text-sm text-muted-foreground mb-1">vendas pagas </p>
-                {isInitialLoad ? <Skeleton className="h-8 w-12" /> : <p className="text-2xl font-bold text-foreground">{metrics.orders}</p>}
+                {isInitialLoad ? <Skeleton className="h-7 w-12" /> : <p className="text-xl font-bold text-foreground">{metrics.orders}</p>}
               </CardContent>
             </Card>
           </div>
@@ -367,11 +367,11 @@ export default function LiveView() {
               <div className="grid grid-cols-2 divide-x divide-border">
                 <div className="pr-4">
                   <p className="text-sm text-muted-foreground mb-1">Pedidos gerados</p>
-                  <p className="text-2xl font-bold text-foreground">{behavior.pendingOrders}</p>
+                  <p className="text-xl font-bold text-foreground">{behavior.pendingOrders}</p>
                 </div>
                 <div className="pl-4">
                   <p className="text-sm text-muted-foreground mb-1">Vendas pagas</p>
-                  <p className="text-2xl font-bold text-foreground">{behavior.completed}</p>
+                  <p className="text-xl font-bold text-foreground">{behavior.completed}</p>
                 </div>
               </div>
             </CardContent>
