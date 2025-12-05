@@ -272,7 +272,7 @@ export function AppLiveView({
     };
   }, [user, productIds, loadLiveData]);
   const maxLocationCount = Math.max(...sessionsByLocation.map(l => l.count), 1);
-  return <div className="p-4 space-y-4">
+  return <div className="p-4 space-y-4 min-h-screen bg-amber-50/50 dark:bg-zinc-900">
       {/* Header */}
       <div className="flex items-center justify-between px-2 mb-4">
         <div className="flex items-center gap-3">
