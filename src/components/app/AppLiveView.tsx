@@ -308,15 +308,13 @@ export function AppLiveView({
         console.log('✅ [Live View] Update is for our product, refreshing...');
         loadLiveDataRef.current(true);
       }
-    }).subscribe(status => {
-      console.log('🔌 [Live View] Realtime status:', status);
     });
     return () => {
       console.log('🔌 [Live View] Disconnecting...');
       supabase.removeChannel(channel);
     };
   }, [user?.id, productIds]);
-  const maxLocationCount = Math.max(...sessionsByLocation.map(l => l.count), 1);
+  
   return <div className="p-4 space-y-4 min-h-screen bg-amber-50/30 dark:bg-zinc-900">
       {/* Header */}
       <div className="flex items-center justify-between px-2 mb-4">
@@ -449,29 +447,46 @@ export function AppLiveView({
         </CardContent>
       </Card>
 
-      {/* Sessions by Location */}
+      {/* Sessions by Location - Real-time visitors */}
       <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
         <CardHeader className="pb-2">
-          <CardTitle className="text-base font-semibold border-b border-dashed border-muted pb-2">
-            Sessões por local
+          <CardTitle className="text-base font-semibold border-b border-dashed border-muted pb-2 flex items-center justify-between">
+            <span>Sessões por local</span>
+            <span className="text-xs font-normal text-muted-foreground">(tempo real)</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4 pt-0 space-y-3">
-          {loading ? <p className="text-sm text-muted-foreground text-center py-4">Carregando...</p> : sessionsByLocation.length === 0 ? <p className="text-sm text-muted-foreground text-center py-4">
-              Sem dados para este intervalo de datas
-            </p> : sessionsByLocation.map((loc, idx) => <div key={idx}>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm text-foreground">
-                    {loc.country} · {loc.region} · {loc.city}
-                  </span>
-                  <span className="text-sm text-muted-foreground">{loc.count}</span>
+          {visitorLocations.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              Nenhum visitante no momento
+            </p>
+          ) : (
+            visitorLocations.map((loc, idx) => {
+              const maxCount = visitorLocations[0]?.count || 1;
+              const locationLabel = [
+                loc.country,
+                loc.region || null,
+                loc.city || null
+              ].filter(Boolean).join(' · ');
+              
+              return (
+                <div key={idx}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm text-foreground">
+                      {locationLabel || 'Desconhecido'}
+                    </span>
+                    <span className="text-sm text-muted-foreground">{loc.count}</span>
+                  </div>
+                  <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-cyan-400 rounded-full transition-all duration-300" 
+                      style={{ width: `${(loc.count / maxCount) * 100}%` }} 
+                    />
+                  </div>
                 </div>
-                <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-                  <div className="h-full bg-cyan-400 rounded-full transition-all duration-300" style={{
-              width: `${loc.count / maxLocationCount * 100}%`
-            }} />
-                </div>
-              </div>)}
+              );
+            })
+          )}
         </CardContent>
       </Card>
 
