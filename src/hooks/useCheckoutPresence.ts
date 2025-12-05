@@ -12,14 +12,17 @@ interface PresenceState {
 
 export function useCheckoutPresence(productId: string | undefined, country?: string) {
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
-  const countryRef = useRef<string | undefined>(country);
+  const sessionSavedRef = useRef<boolean>(false);
   const [locationData, setLocationData] = useState<{ country: string; city: string; region: string }>({
-    country: country || 'Desconhecido',
+    country: country || '',
     city: '',
     region: ''
   });
 
-  // Fetch detailed location data (city, region)
+  // Generate unique session ID
+  const sessionId = useRef<string>(`session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
+
+  // Fetch detailed location data (city, region) from IP
   useEffect(() => {
     const fetchDetailedLocation = async () => {
       try {
@@ -27,7 +30,7 @@ export function useCheckoutPresence(productId: string | undefined, country?: str
         if (response.ok) {
           const data = await response.json();
           setLocationData({
-            country: data.country_name || country || 'Desconhecido',
+            country: data.country_name || country || '',
             city: data.city || '',
             region: data.region || ''
           });
@@ -40,13 +43,44 @@ export function useCheckoutPresence(productId: string | undefined, country?: str
     fetchDetailedLocation();
   }, [country]);
 
+  // Save session to database (once per visit)
+  useEffect(() => {
+    if (!productId || !locationData.country || sessionSavedRef.current) return;
+
+    const saveSession = async () => {
+      try {
+        const { error } = await supabase
+          .from('checkout_sessions')
+          .insert({
+            product_id: productId,
+            session_id: sessionId.current,
+            country: locationData.country,
+            city: locationData.city,
+            region: locationData.region,
+            user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null
+          });
+
+        if (error) {
+          console.log('[Checkout Presence] Failed to save session:', error);
+        } else {
+          console.log('🟢 [Checkout Presence] Session saved:', locationData.country);
+          sessionSavedRef.current = true;
+        }
+      } catch (error) {
+        console.log('[Checkout Presence] Error saving session:', error);
+      }
+    };
+
+    saveSession();
+  }, [productId, locationData.country]);
+
+  // Real-time presence for live tracking
   useEffect(() => {
     if (!productId) return;
 
     const channelName = `checkout-presence-${productId}`;
     const channel = supabase.channel(channelName);
     channelRef.current = channel;
-    countryRef.current = country;
 
     const presenceState: PresenceState = {
       productId,
