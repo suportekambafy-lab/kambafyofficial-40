@@ -1480,7 +1480,7 @@ export function AppHome() {
       </div>
 
       {/* Horizontal Bottom Navigation */}
-      {!selectedCourse && <nav className="fixed bottom-0 left-0 right-0 z-50 pb-safe bg-gradient-to-t from-background via-background to-background/95 backdrop-blur-xl">
+      {!selectedCourse && <nav className="fixed bottom-0 left-0 right-0 z-50 pb-safe">
         <div className="px-4 py-3">
           <div className="flex items-center justify-between gap-3 max-w-2xl mx-auto">
             {/* Back Button */}
