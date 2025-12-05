@@ -5,10 +5,14 @@ interface PresenceData {
   productId: string;
   enteredAt: string;
   country?: string;
+  city?: string;
+  region?: string;
 }
 
-interface VisitorLocation {
+export interface VisitorLocation {
   country: string;
+  city: string;
+  region: string;
   count: number;
 }
 
@@ -20,7 +24,7 @@ export function useCheckoutPresenceCount(productIds: string[]) {
   const updateCounts = useCallback((channels: Map<string, ReturnType<typeof supabase.channel>>) => {
     let total = 0;
     const byProduct: Record<string, number> = {};
-    const locationMap: Record<string, number> = {};
+    const locationMap: Record<string, VisitorLocation> = {};
 
     channels.forEach((channel, productId) => {
       const state = channel.presenceState();
@@ -31,10 +35,22 @@ export function useCheckoutPresenceCount(productIds: string[]) {
       Object.values(state).forEach((presences: any) => {
         if (Array.isArray(presences)) {
           count += presences.length;
-          // Collect country data
+          // Collect location data with city
           presences.forEach((p: PresenceData) => {
             const country = p.country || 'Desconhecido';
-            locationMap[country] = (locationMap[country] || 0) + 1;
+            const city = p.city || '';
+            const region = p.region || '';
+            const locationKey = `${country}-${city}-${region}`;
+            
+            if (!locationMap[locationKey]) {
+              locationMap[locationKey] = {
+                country,
+                city,
+                region,
+                count: 0
+              };
+            }
+            locationMap[locationKey].count++;
           });
         } else {
           count += 1;
@@ -45,11 +61,8 @@ export function useCheckoutPresenceCount(productIds: string[]) {
       total += count;
     });
 
-    // Convert location map to array
-    const locations = Object.entries(locationMap).map(([country, count]) => ({
-      country,
-      count
-    }));
+    // Convert location map to array sorted by count
+    const locations = Object.values(locationMap).sort((a, b) => b.count - a.count);
 
     console.log('📊 [Presence Count] Total visitors:', total, 'Locations:', locations);
     setVisitorCount(total);
