@@ -1494,16 +1494,16 @@ export function AppHome() {
                 <LayoutDashboard className={`h-5 w-5 ${activeTab === 'home' ? 'text-primary' : 'text-foreground'}`} />
               </button>
               
-              <button onClick={() => setActiveTab('stats')} className={`p-2.5 rounded-full transition-colors ${activeTab === 'stats' ? 'bg-primary/10' : 'hover:bg-accent'}`}>
-                <Wallet className={`h-5 w-5 ${activeTab === 'stats' ? 'text-primary' : 'text-foreground'}`} />
+              <button onClick={() => setActiveTab('live-view')} className={`p-2.5 rounded-full transition-colors ${activeTab === 'live-view' ? 'bg-primary/10' : 'hover:bg-accent'}`}>
+                <Radio className={`h-5 w-5 ${activeTab === 'live-view' ? 'text-primary' : 'text-foreground'}`} />
               </button>
               
               <button onClick={() => setActiveTab('products')} className={`p-2.5 rounded-full transition-colors ${activeTab === 'products' ? 'bg-primary/10' : 'hover:bg-accent'}`}>
                 <Package className={`h-5 w-5 ${activeTab === 'products' ? 'text-primary' : 'text-foreground'}`} />
               </button>
               
-              <button onClick={() => setActiveTab('live-view')} className={`p-2.5 rounded-full transition-colors ${activeTab === 'live-view' ? 'bg-primary/10' : 'hover:bg-accent'}`}>
-                <Radio className={`h-5 w-5 ${activeTab === 'live-view' ? 'text-primary' : 'text-foreground'}`} />
+              <button onClick={() => setActiveTab('stats')} className={`p-2.5 rounded-full transition-colors ${activeTab === 'stats' ? 'bg-primary/10' : 'hover:bg-accent'}`}>
+                <Wallet className={`h-5 w-5 ${activeTab === 'stats' ? 'text-primary' : 'text-foreground'}`} />
               </button>
             </div>
 
