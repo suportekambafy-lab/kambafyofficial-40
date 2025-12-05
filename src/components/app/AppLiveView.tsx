@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, Search, Map, TrendingDown, TrendingUp, ShoppingCart, CreditCard, CheckCircle } from 'lucide-react';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
+import { countTotalSales } from '@/utils/orderUtils';
 import RotatingEarth from './RotatingEarth';
 
 interface LiveViewProps {
@@ -137,9 +138,8 @@ export function AppLiveView({ onBack }: LiveViewProps) {
       
       // Calculate real metrics from TODAY's data
       const allTodayOrders = todayOrders || [];
-      const paidOrders = allTodayOrders.filter(o => 
-        o.status === 'Pago' || o.status === 'completed' || o.status === 'paid'
-      );
+      // Use same status as home page: 'completed' only
+      const paidOrders = allTodayOrders.filter(o => o.status === 'completed');
       const pendingOrders = allTodayOrders.filter(o => 
         o.status === 'pending' || o.status === 'Pendente'
       );
@@ -157,7 +157,7 @@ export function AppLiveView({ onBack }: LiveViewProps) {
       );
       const visitorsNow = recentPending.length;
       
-      // Total sales value TODAY
+      // Total sales value TODAY - same calculation as home
       const totalSalesValue = paidOrders.reduce((sum, o) => sum + parseFloat(o.amount || '0'), 0);
       
       setMetrics({
@@ -165,7 +165,7 @@ export function AppLiveView({ onBack }: LiveViewProps) {
         totalSales: totalSalesValue,
         sessions: totalSessions,
         sessionsChange: Math.round(sessionsChange),
-        orders: paidOrders.length
+        orders: countTotalSales(paidOrders) // Use same counting as home (includes order bumps)
       });
       
       // Customer behavior based on LAST 5 MINUTES
@@ -176,9 +176,7 @@ export function AppLiveView({ onBack }: LiveViewProps) {
       const recentCheckingOut = recent5min.filter(o => 
         o.status === 'pending' || o.status === 'Pendente'
       );
-      const recentCompleted = recent5min.filter(o => 
-        o.status === 'Pago' || o.status === 'completed' || o.status === 'paid'
-      );
+      const recentCompleted = recent5min.filter(o => o.status === 'completed');
       
       setBehavior({
         activeCarts: recentFailed.length,
