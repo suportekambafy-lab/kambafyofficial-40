@@ -24,6 +24,23 @@ interface ProductSales {
   revenue: number;
 }
 
+// Mapear código de país do telefone para nome
+const getCountryFromPhone = (phone: string | null): string => {
+  if (!phone) return 'Desconhecido';
+  const cleaned = phone.replace(/\s/g, '');
+  if (cleaned.startsWith('+244')) return 'Angola';
+  if (cleaned.startsWith('+258')) return 'Moçambique';
+  if (cleaned.startsWith('+351')) return 'Portugal';
+  if (cleaned.startsWith('+55')) return 'Brasil';
+  if (cleaned.startsWith('+34')) return 'Espanha';
+  if (cleaned.startsWith('+33')) return 'França';
+  if (cleaned.startsWith('+44')) return 'Reino Unido';
+  if (cleaned.startsWith('+1')) return 'Estados Unidos';
+  if (cleaned.startsWith('+39')) return 'Itália';
+  if (cleaned.startsWith('+49')) return 'Alemanha';
+  return 'Outro';
+};
+
 export function AppLiveView({ onBack }: LiveViewProps) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -63,10 +80,10 @@ export function AppLiveView({ onBack }: LiveViewProps) {
     try {
       setLoading(true);
       
-      // Fetch orders from last 24 hours for live metrics
       const now = new Date();
       const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
       const last7d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const previousWeekStart = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
       
       // Get user's products
       const { data: products } = await supabase
@@ -81,7 +98,7 @@ export function AppLiveView({ onBack }: LiveViewProps) {
         return;
       }
       
-      // Get orders from last 24h
+      // Get ALL orders from last 24h (for live view)
       const { data: recentOrders } = await supabase
         .from('orders')
         .select('*')
@@ -89,90 +106,105 @@ export function AppLiveView({ onBack }: LiveViewProps) {
         .gte('created_at', last24h.toISOString())
         .order('created_at', { ascending: false });
       
-      // Get orders from last 7 days for comparison
+      // Get orders from last 7 days
       const { data: weekOrders } = await supabase
         .from('orders')
         .select('*')
         .in('product_id', productIds)
         .gte('created_at', last7d.toISOString());
       
-      // Get abandoned purchases for checkout funnel
-      const { data: abandonedPurchases } = await supabase
-        .from('abandoned_purchases')
-        .select('*')
+      // Get orders from previous week for comparison
+      const { data: previousWeekOrders } = await supabase
+        .from('orders')
+        .select('id')
         .in('product_id', productIds)
-        .eq('status', 'abandoned')
-        .gte('created_at', last24h.toISOString());
+        .gte('created_at', previousWeekStart.toISOString())
+        .lt('created_at', last7d.toISOString());
       
-      // Calculate metrics
-      const paidOrders = recentOrders?.filter(o => o.status === 'Pago') || [];
-      const pendingOrders = recentOrders?.filter(o => o.status === 'pending' || o.status === 'Pendente') || [];
+      // Calculate real metrics
+      const allRecentOrders = recentOrders || [];
+      const paidOrders = allRecentOrders.filter(o => 
+        o.status === 'Pago' || o.status === 'completed' || o.status === 'paid'
+      );
+      const pendingOrders = allRecentOrders.filter(o => 
+        o.status === 'pending' || o.status === 'Pendente'
+      );
+      const failedOrders = allRecentOrders.filter(o => 
+        o.status === 'failed' || o.status === 'Falhou'
+      );
       
-      // Sessions calculation (simulated based on orders and abandoned)
-      const totalSessions = (recentOrders?.length || 0) + (abandonedPurchases?.length || 0);
-      const previousDaySessions = Math.max(1, Math.floor(totalSessions * 1.2)); // Simulated previous
-      const sessionsChange = previousDaySessions > 0 
-        ? ((totalSessions - previousDaySessions) / previousDaySessions) * 100 
+      // Sessions = all order attempts in last 24h
+      const totalSessions = allRecentOrders.length;
+      const previousSessions = (previousWeekOrders?.length || 0) / 7; // Daily average
+      const sessionsChange = previousSessions > 0 
+        ? ((totalSessions - previousSessions) / previousSessions) * 100 
         : 0;
       
+      // Visitors now = pending orders (people currently in checkout)
+      const visitorsNow = pendingOrders.length;
+      
+      // Total sales value
+      const totalSalesValue = paidOrders.reduce((sum, o) => sum + parseFloat(o.amount || '0'), 0);
+      
       setMetrics({
-        visitorsNow: abandonedPurchases?.length || 0,
-        totalSales: paidOrders.reduce((sum, o) => sum + parseFloat(o.amount || '0'), 0),
+        visitorsNow,
+        totalSales: totalSalesValue,
         sessions: totalSessions,
         sessionsChange: Math.round(sessionsChange),
         orders: paidOrders.length
       });
       
+      // Customer behavior based on real statuses
       setBehavior({
-        activeCarts: abandonedPurchases?.length || 0,
-        checkingOut: pendingOrders?.length || 0,
-        completed: paidOrders.length
+        activeCarts: failedOrders.length, // Failed = abandoned carts
+        checkingOut: pendingOrders.length, // Pending = currently checking out
+        completed: paidOrders.length // Paid = completed
       });
       
-      // Sessions by location (based on order data - simulated geographic distribution)
-      const locations: SessionLocation[] = [];
-      const uniqueEmails = new Set(recentOrders?.map(o => o.customer_email) || []);
+      // Sessions by location - based on phone country codes from REAL orders
+      const locationCounts: Record<string, SessionLocation> = {};
+      allRecentOrders.forEach(order => {
+        const country = getCountryFromPhone(order.customer_phone);
+        if (!locationCounts[country]) {
+          locationCounts[country] = {
+            country,
+            region: 'Nenhum(a)',
+            city: 'Nenhum(a)',
+            count: 0
+          };
+        }
+        locationCounts[country].count++;
+      });
       
-      // Simulated location data based on real activity
-      if (uniqueEmails.size > 0) {
-        const locationSamples = [
-          { country: 'Angola', region: 'Luanda', city: 'Luanda' },
-          { country: 'Portugal', region: 'Lisboa', city: 'Lisboa' },
-          { country: 'Brazil', region: 'São Paulo', city: 'São Paulo' },
-          { country: 'Mozambique', region: 'Maputo', city: 'Maputo' },
-        ];
-        
-        const emailArray = Array.from(uniqueEmails);
-        emailArray.forEach((_, idx) => {
-          const loc = locationSamples[idx % locationSamples.length];
-          const existing = locations.find(l => l.country === loc.country);
-          if (existing) {
-            existing.count++;
-          } else {
-            locations.push({ ...loc, count: 1 });
-          }
-        });
-      }
+      const sortedLocations = Object.values(locationCounts)
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10);
       
-      setSessionsByLocation(locations);
+      setSessionsByLocation(sortedLocations);
       
-      // Customer types
-      const allEmails = weekOrders?.map(o => o.customer_email) || [];
-      const emailCounts = allEmails.reduce((acc, email) => {
-        acc[email] = (acc[email] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
+      // Customer types - based on real order history
+      const allWeekOrders = weekOrders || [];
+      const emailCounts: Record<string, number> = {};
       
-      const returning = Object.values(emailCounts).filter(c => c > 1).length;
-      const newCust = Object.keys(emailCounts).length - returning;
+      allWeekOrders.forEach(order => {
+        const email = order.customer_email?.toLowerCase();
+        if (email) {
+          emailCounts[email] = (emailCounts[email] || 0) + 1;
+        }
+      });
+      
+      // Count unique emails
+      const uniqueEmails = Object.keys(emailCounts);
+      const returningCustomers = uniqueEmails.filter(email => emailCounts[email] > 1).length;
+      const newCustomers = uniqueEmails.length - returningCustomers;
       
       setCustomerTypes({
-        newCustomers: newCust,
-        returningCustomers: returning
+        newCustomers,
+        returningCustomers
       });
       
-      // Sales by product
-      const salesByProduct: ProductSales[] = (products || []).map(p => {
+      // Sales by product - REAL data
+      const productSalesData: ProductSales[] = (products || []).map(p => {
         const productOrders = paidOrders.filter(o => o.product_id === p.id);
         return {
           id: p.id,
@@ -180,9 +212,10 @@ export function AppLiveView({ onBack }: LiveViewProps) {
           sales: productOrders.length,
           revenue: productOrders.reduce((sum, o) => sum + parseFloat(o.amount || '0'), 0)
         };
-      }).filter(p => p.sales > 0);
+      }).filter(p => p.sales > 0 || p.revenue > 0)
+        .sort((a, b) => b.revenue - a.revenue);
       
-      setProductSales(salesByProduct);
+      setProductSales(productSalesData);
       
     } catch (error) {
       console.error('Error loading live data:', error);
@@ -236,7 +269,7 @@ export function AppLiveView({ onBack }: LiveViewProps) {
           </Button>
         </div>
         <h2 className="text-xl font-bold text-foreground">Live View</h2>
-        <div className="w-20" /> {/* Spacer for centering */}
+        <div className="w-20" />
       </div>
 
       {/* Filter Pills */}
@@ -275,14 +308,11 @@ export function AppLiveView({ onBack }: LiveViewProps) {
       <Card className="overflow-hidden rounded-2xl border-none shadow-sm bg-gradient-to-br from-background to-muted/20">
         <CardContent className="p-6">
           <div className="relative w-full aspect-square max-w-[300px] mx-auto">
-            {/* Stylized Globe */}
             <div className="absolute inset-0 rounded-full bg-gradient-to-br from-cyan-100 via-cyan-200 to-teal-100 dark:from-cyan-900/30 dark:via-cyan-800/20 dark:to-teal-900/30 shadow-inner">
-              {/* Globe Pattern */}
               <div className="absolute inset-4 rounded-full border-2 border-cyan-300/30 dark:border-cyan-600/30" />
               <div className="absolute inset-8 rounded-full border border-cyan-300/20 dark:border-cyan-600/20" />
               <div className="absolute inset-12 rounded-full border border-cyan-300/10 dark:border-cyan-600/10" />
               
-              {/* Continents representation */}
               <div className="absolute inset-0 rounded-full overflow-hidden">
                 <div className="absolute top-[20%] left-[25%] w-[30%] h-[25%] bg-cyan-400/40 dark:bg-cyan-500/30 rounded-[40%]" />
                 <div className="absolute top-[35%] left-[55%] w-[20%] h-[30%] bg-cyan-400/40 dark:bg-cyan-500/30 rounded-[30%]" />
@@ -290,14 +320,14 @@ export function AppLiveView({ onBack }: LiveViewProps) {
                 <div className="absolute top-[55%] left-[60%] w-[18%] h-[20%] bg-cyan-400/40 dark:bg-cyan-500/30 rounded-[35%]" />
               </div>
               
-              {/* Active visitor dots */}
+              {/* Active visitor dots based on real location data */}
               {sessionsByLocation.slice(0, 5).map((loc, idx) => {
                 const positions = [
-                  { top: '30%', left: '45%' },
-                  { top: '45%', left: '60%' },
-                  { top: '55%', left: '35%' },
-                  { top: '40%', left: '25%' },
-                  { top: '60%', left: '55%' },
+                  { top: '30%', left: '45%' }, // Angola
+                  { top: '55%', left: '35%' }, // Brasil
+                  { top: '25%', left: '48%' }, // Portugal
+                  { top: '40%', left: '60%' }, // Moçambique
+                  { top: '35%', left: '25%' }, // US
                 ];
                 const pos = positions[idx % positions.length];
                 return (
@@ -305,12 +335,12 @@ export function AppLiveView({ onBack }: LiveViewProps) {
                     key={loc.country}
                     className="absolute w-3 h-3 rounded-full bg-purple-500 animate-pulse shadow-lg shadow-purple-500/50"
                     style={{ top: pos.top, left: pos.left }}
+                    title={`${loc.country}: ${loc.count} sessões`}
                   />
                 );
               })}
             </div>
             
-            {/* Center Icon */}
             <div className="absolute inset-0 flex items-center justify-center">
               <Globe className="h-12 w-12 text-cyan-500/30 dark:text-cyan-400/30" />
             </div>
@@ -325,7 +355,7 @@ export function AppLiveView({ onBack }: LiveViewProps) {
             <p className="text-xs text-muted-foreground mb-1 truncate border-b border-dashed border-muted pb-1">
               Visitantes neste m...
             </p>
-            <p className="text-2xl font-bold text-foreground">{metrics.visitorsNow}</p>
+            <p className="text-2xl font-bold text-foreground">{loading ? '...' : metrics.visitorsNow}</p>
           </CardContent>
         </Card>
         
@@ -336,10 +366,8 @@ export function AppLiveView({ onBack }: LiveViewProps) {
             </p>
             <div className="flex items-center gap-2">
               <p className="text-2xl font-bold text-foreground">
-                {formatPriceForSeller(metrics.totalSales, 'KZ').split(' ')[0]}
+                {loading ? '...' : formatPriceForSeller(metrics.totalSales, 'KZ')}
               </p>
-              <span className="text-xs text-muted-foreground">—</span>
-              <div className="w-8 h-1 bg-cyan-400 rounded-full" />
             </div>
           </CardContent>
         </Card>
@@ -351,16 +379,13 @@ export function AppLiveView({ onBack }: LiveViewProps) {
             </p>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <p className="text-2xl font-bold text-foreground">{metrics.sessions}</p>
-                <span className={`flex items-center text-xs ${metrics.sessionsChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                  {metrics.sessionsChange >= 0 ? <TrendingUp className="h-3 w-3 mr-0.5" /> : <TrendingDown className="h-3 w-3 mr-0.5" />}
-                  {Math.abs(metrics.sessionsChange)}%
-                </span>
-              </div>
-              <div className="w-16 h-6 flex items-end gap-0.5">
-                {[40, 60, 30, 80, 50, 70, 45].map((h, i) => (
-                  <div key={i} className="flex-1 bg-muted rounded-t" style={{ height: `${h}%` }} />
-                ))}
+                <p className="text-2xl font-bold text-foreground">{loading ? '...' : metrics.sessions}</p>
+                {!loading && metrics.sessionsChange !== 0 && (
+                  <span className={`flex items-center text-xs ${metrics.sessionsChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                    {metrics.sessionsChange >= 0 ? <TrendingUp className="h-3 w-3 mr-0.5" /> : <TrendingDown className="h-3 w-3 mr-0.5" />}
+                    {Math.abs(metrics.sessionsChange)}%
+                  </span>
+                )}
               </div>
             </div>
           </CardContent>
@@ -369,13 +394,9 @@ export function AppLiveView({ onBack }: LiveViewProps) {
         <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
           <CardContent className="p-4">
             <p className="text-xs text-muted-foreground mb-1 truncate border-b border-dashed border-muted pb-1">
-              Encomendas
+              Encomendas pagas
             </p>
-            <div className="flex items-center gap-2">
-              <p className="text-2xl font-bold text-foreground">{metrics.orders}</p>
-              <span className="text-xs text-muted-foreground">—</span>
-              <div className="w-8 h-1 bg-cyan-400 rounded-full" />
-            </div>
+            <p className="text-2xl font-bold text-foreground">{loading ? '...' : metrics.orders}</p>
           </CardContent>
         </Card>
       </div>
@@ -394,21 +415,21 @@ export function AppLiveView({ onBack }: LiveViewProps) {
                 <ShoppingCart className="h-5 w-5 text-orange-500" />
               </div>
               <p className="text-xs text-muted-foreground mb-1">Carrinhos ativos</p>
-              <p className="text-xl font-bold text-foreground">{behavior.activeCarts}</p>
+              <p className="text-xl font-bold text-foreground">{loading ? '...' : behavior.activeCarts}</p>
             </div>
             <div className="text-center border-x border-muted">
               <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mx-auto mb-2">
                 <CreditCard className="h-5 w-5 text-blue-500" />
               </div>
-              <p className="text-xs text-muted-foreground mb-1">A finalizar a compra</p>
-              <p className="text-xl font-bold text-foreground">{behavior.checkingOut}</p>
+              <p className="text-xs text-muted-foreground mb-1">A finalizar</p>
+              <p className="text-xl font-bold text-foreground">{loading ? '...' : behavior.checkingOut}</p>
             </div>
             <div className="text-center">
               <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-2">
                 <CheckCircle className="h-5 w-5 text-green-500" />
               </div>
-              <p className="text-xs text-muted-foreground mb-1 truncate">Compra efet...</p>
-              <p className="text-xl font-bold text-foreground">{behavior.completed}</p>
+              <p className="text-xs text-muted-foreground mb-1">Compras</p>
+              <p className="text-xl font-bold text-foreground">{loading ? '...' : behavior.completed}</p>
             </div>
           </div>
         </CardContent>
@@ -422,7 +443,9 @@ export function AppLiveView({ onBack }: LiveViewProps) {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4 pt-0 space-y-3">
-          {sessionsByLocation.length === 0 ? (
+          {loading ? (
+            <p className="text-sm text-muted-foreground text-center py-4">Carregando...</p>
+          ) : sessionsByLocation.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">
               Sem dados para este intervalo de datas
             </p>
@@ -431,7 +454,7 @@ export function AppLiveView({ onBack }: LiveViewProps) {
               <div key={idx}>
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-sm text-foreground">
-                    {loc.country} · {loc.region || 'Nenhum(a)'} · {loc.city || 'Nenhum(a)'}
+                    {loc.country} · {loc.region} · {loc.city}
                   </span>
                   <span className="text-sm text-muted-foreground">{loc.count}</span>
                 </div>
@@ -451,11 +474,13 @@ export function AppLiveView({ onBack }: LiveViewProps) {
       <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
         <CardHeader className="pb-2">
           <CardTitle className="text-base font-semibold border-b border-dashed border-muted pb-2 truncate">
-            Clientes novos em comparação com clientes ...
+            Clientes novos vs recorrentes
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4 pt-0">
-          {customerTypes.newCustomers === 0 && customerTypes.returningCustomers === 0 ? (
+          {loading ? (
+            <p className="text-sm text-muted-foreground text-center py-4">Carregando...</p>
+          ) : customerTypes.newCustomers === 0 && customerTypes.returningCustomers === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">
               Sem dados para este intervalo de datas
             </p>
@@ -488,9 +513,11 @@ export function AppLiveView({ onBack }: LiveViewProps) {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4 pt-0 space-y-3">
-          {productSales.length === 0 ? (
+          {loading ? (
+            <p className="text-sm text-muted-foreground text-center py-4">Carregando...</p>
+          ) : productSales.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">
-              Sem dados para este intervalo de datas
+              Sem vendas nas últimas 24 horas
             </p>
           ) : (
             productSales.map(product => (
