@@ -7,6 +7,7 @@ import { Link } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTranslation } from "@/hooks/useTranslation";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { OptimizedPageWrapper } from "@/components/ui/optimized-page-wrapper";
 import { BankingInfo } from "@/components/BankingInfo";
@@ -33,6 +34,7 @@ export default function Financial() {
   const {
     toast
   } = useCustomToast();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [withdrawalModalOpen, setWithdrawalModalOpen] = useState(false);
   const [withdrawalRequests, setWithdrawalRequests] = useState<WithdrawalRequest[]>([]);
@@ -226,19 +228,19 @@ export default function Financial() {
       <div className="space-y-6 p-4 md:p-6 lg:p-8 max-w-full overflow-x-hidden">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold dark:text-white">Financeiro</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold dark:text-white">{t('financial.title')}</h1>
             <p className="text-sm sm:text-base text-muted-foreground mt-1 sm:mt-2">
-              Gerencie seus ganhos e saques
+              {t('financial.subtitle')}
             </p>
           </div>
           <div className="flex gap-2 sm:gap-3">
             <Button variant="outline" onClick={() => loadFinancialData()} className="flex items-center gap-2 dark:text-white" size="sm">
               <RefreshCw className="h-4 w-4" />
-              <span className="hidden sm:inline">Atualizar</span>
+              <span className="hidden sm:inline">{t('common.refresh')}</span>
             </Button>
             <Button variant="outline" onClick={handleGenerateReport} className="flex items-center gap-2 dark:text-white" size="sm">
               <Download className="h-4 w-4" />
-              <span className="hidden sm:inline">Relatório</span>
+              <span className="hidden sm:inline">{t('reports.title')}</span>
             </Button>
           </div>
         </div>
