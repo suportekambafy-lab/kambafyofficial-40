@@ -432,26 +432,22 @@ export default function LiveView() {
         </div>
 
         {/* Right Column - Globe */}
-        <div className="relative">
-          <Card className="sticky top-6 h-fit">
-            <CardContent className="p-6">
-              <div className="relative w-full aspect-square max-w-[350px] mx-auto">
-                <RotatingEarth width={350} height={350} activeLocations={activeSessionsLocations} visitorLocations={visitorLocations} />
-              </div>
-              
-              {/* Legend */}
-              <div className="flex items-center justify-center gap-6 mt-4">
-                <div className="flex items-center gap-2 text-sm text-foreground">
-                  <span className="w-3 h-3 rounded-full bg-purple-500" />
-                  Vendas
-                </div>
-                <div className="flex items-center gap-2 text-sm text-foreground">
-                  <span className="w-3 h-3 rounded-full bg-cyan-500" />
-                  Visitantes neste momento
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        <div className="relative sticky top-6">
+          <div className="relative w-full aspect-square max-w-[500px] mx-auto">
+            <RotatingEarth width={500} height={500} activeLocations={activeSessionsLocations} visitorLocations={visitorLocations} />
+          </div>
+          
+          {/* Legend */}
+          <div className="flex items-center justify-center gap-6 mt-4">
+            <div className="flex items-center gap-2 text-sm text-foreground">
+              <span className="w-3 h-3 rounded-full bg-purple-500" />
+              Vendas
+            </div>
+            <div className="flex items-center gap-2 text-sm text-foreground">
+              <span className="w-3 h-3 rounded-full bg-cyan-500" />
+              Visitantes neste momento
+            </div>
+          </div>
         </div>
       </div>
     </div>;
