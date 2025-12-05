@@ -55,11 +55,18 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
 
     // Sales
     'sales.title': 'Vendas',
+    'sales.subtitle': 'Gerencie e acompanhe suas vendas',
+    'sales.registered': 'vendas registradas',
     'sales.total': 'Total',
     'sales.pending': 'Pendente',
     'sales.completed': 'Concluída',
     'sales.cancelled': 'Cancelada',
     'sales.refunded': 'Reembolsada',
+    'sales.approved': 'Aprovado',
+    'sales.paidSales': 'Vendas Pagas',
+    'sales.pendingSales': 'Vendas Pendentes',
+    'sales.confirmed': 'vendas confirmadas',
+    'sales.awaitingConfirmation': 'aguardando confirmação',
 
     // Financial
     'financial.title': 'Financeiro',
@@ -67,6 +74,20 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     'financial.pending': 'Pendente',
     'financial.withdraw': 'Solicitar Saque',
     'financial.transactions': 'Transações',
+
+    // Common
+    'common.loading': 'Carregando...',
+    'common.save': 'Salvar',
+    'common.cancel': 'Cancelar',
+    'common.delete': 'Excluir',
+    'common.edit': 'Editar',
+    'common.create': 'Criar',
+    'common.search': 'Buscar',
+    'common.filter': 'Filtrar',
+    'common.export': 'Exportar',
+    'common.import': 'Importar',
+    'common.refresh': 'Atualizar',
+    'common.back': 'Voltar',
 
     // Settings
     'settings.title': 'Configurações da Conta',
@@ -102,18 +123,6 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     'settings.error': 'Erro',
     'settings.error.message': 'Erro ao atualizar perfil',
 
-    // Common
-    'common.loading': 'Carregando...',
-    'common.save': 'Salvar',
-    'common.cancel': 'Cancelar',
-    'common.delete': 'Excluir',
-    'common.edit': 'Editar',
-    'common.create': 'Criar',
-    'common.search': 'Buscar',
-    'common.filter': 'Filtrar',
-    'common.export': 'Exportar',
-    'common.import': 'Importar',
-    'common.back': 'Voltar',
     'common.next': 'Próximo',
     'common.previous': 'Anterior',
     'common.confirm': 'Confirmar',
@@ -202,11 +211,18 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
 
     // Sales
     'sales.title': 'Sales',
+    'sales.subtitle': 'Manage and track your sales',
+    'sales.registered': 'sales registered',
     'sales.total': 'Total',
     'sales.pending': 'Pending',
     'sales.completed': 'Completed',
     'sales.cancelled': 'Cancelled',
     'sales.refunded': 'Refunded',
+    'sales.approved': 'Approved',
+    'sales.paidSales': 'Paid Sales',
+    'sales.pendingSales': 'Pending Sales',
+    'sales.confirmed': 'confirmed sales',
+    'sales.awaitingConfirmation': 'awaiting confirmation',
 
     // Financial
     'financial.title': 'Financial',
@@ -260,6 +276,7 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     'common.filter': 'Filter',
     'common.export': 'Export',
     'common.import': 'Import',
+    'common.refresh': 'Refresh',
     'common.back': 'Back',
     'common.next': 'Next',
     'common.previous': 'Previous',
@@ -349,11 +366,18 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
 
     // Sales
     'sales.title': 'Ventas',
+    'sales.subtitle': 'Administra y sigue tus ventas',
+    'sales.registered': 'ventas registradas',
     'sales.total': 'Total',
     'sales.pending': 'Pendiente',
     'sales.completed': 'Completada',
     'sales.cancelled': 'Cancelada',
     'sales.refunded': 'Reembolsada',
+    'sales.approved': 'Aprobado',
+    'sales.paidSales': 'Ventas Pagadas',
+    'sales.pendingSales': 'Ventas Pendientes',
+    'sales.confirmed': 'ventas confirmadas',
+    'sales.awaitingConfirmation': 'esperando confirmación',
 
     // Financial
     'financial.title': 'Financiero',
@@ -407,6 +431,7 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     'common.filter': 'Filtrar',
     'common.export': 'Exportar',
     'common.import': 'Importar',
+    'common.refresh': 'Actualizar',
     'common.back': 'Volver',
     'common.next': 'Siguiente',
     'common.previous': 'Anterior',

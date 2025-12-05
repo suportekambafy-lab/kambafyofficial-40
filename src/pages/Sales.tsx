@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ShoppingCart, Search, RefreshCw, CheckCircle, Clock, XCircle, CreditCard, Banknote, Building, Calendar, Package, User, DollarSign, Download } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTranslation } from "@/hooks/useTranslation";
 import { supabase } from "@/integrations/supabase/client";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { useToast } from "@/hooks/use-toast";
@@ -70,6 +71,7 @@ export default function Sales() {
   const {
     toast
   } = useToast();
+  const { t } = useTranslation();
   const {
     getCurrencyInfo
   } = useCurrencyToCountry();
@@ -287,15 +289,15 @@ export default function Sales() {
   const getStatusBadge = (status: string) => {
     if (status === 'completed') {
       return <Badge variant="default" className="text-xs bg-green-100 text-green-800 border-green-200">
-          Aprovado
+          {t('sales.approved')}
         </Badge>;
     } else if (status === 'pending') {
       return <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-200">
-          Pendente
+          {t('sales.pending')}
         </Badge>;
     } else if (status === 'failed' || status === 'cancelled') {
       return <Badge variant="destructive" className="text-xs">
-          Cancelado
+          {t('sales.cancelled')}
         </Badge>;
     }
     return <Badge variant="secondary" className="text-xs">
@@ -369,19 +371,19 @@ export default function Sales() {
       {/* Header com total de vendas */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-foreground">Vendas</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-foreground">{t('sales.title')}</h1>
           <p className="text-sm md:text-base text-muted-foreground">
-            {totalCount > 0 ? `${totalCount} vendas registradas` : 'Gerencie e acompanhe suas vendas'}
+            {totalCount > 0 ? `${totalCount} ${t('sales.registered')}` : t('sales.subtitle')}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={exportSalesToCSV} disabled={filteredSales.length === 0} className="text-xs md:text-sm text-foreground">
             <Download className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
-            Exportar
+            {t('common.export')}
           </Button>
           <Button variant="outline" size="sm" onClick={handleRefresh} className="text-xs md:text-sm text-foreground">
             <RefreshCw className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
-            Atualizar
+            {t('common.refresh')}
           </Button>
         </div>
       </div>
@@ -391,7 +393,7 @@ export default function Sales() {
          <HighlightedCard highlightColor="green">
           <HighlightedCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <HighlightedCardTitle className="text-sm font-medium">
-              Vendas Pagas
+              {t('sales.paidSales')}
             </HighlightedCardTitle>
             <CheckCircle className="h-4 w-4 text-green-600" />
           </HighlightedCardHeader>
@@ -400,7 +402,7 @@ export default function Sales() {
               {formatCurrency(salesStats.paidTotal)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {salesStats.paid} vendas confirmadas
+              {salesStats.paid} {t('sales.confirmed')}
             </p>
           </HighlightedCardContent>
         </HighlightedCard>
@@ -408,7 +410,7 @@ export default function Sales() {
         <HighlightedCard highlightColor="yellow">
           <HighlightedCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <HighlightedCardTitle className="text-sm font-medium">
-              Vendas Pendentes
+              {t('sales.pendingSales')}
             </HighlightedCardTitle>
             <Clock className="h-4 w-4 text-yellow-600" />
           </HighlightedCardHeader>
@@ -417,7 +419,7 @@ export default function Sales() {
               {formatCurrency(salesStats.pendingTotal)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {salesStats.pending} aguardando confirmação
+              {salesStats.pending} {t('sales.awaitingConfirmation')}
             </p>
           </HighlightedCardContent>
         </HighlightedCard>
