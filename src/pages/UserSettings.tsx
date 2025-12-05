@@ -21,8 +21,9 @@ import { useTranslation } from "@/hooks/useTranslation";
 export default function UserSettings() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { changeLanguage } = useTranslation();
+  const { t, changeLanguage, currentLanguage } = useTranslation();
   const [loading, setLoading] = useState(false);
+  const [, forceUpdate] = useState({});
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [profile, setProfile] = useState({
     full_name: "",
@@ -108,15 +109,15 @@ export default function UserSettings() {
       if (result.error) {
         console.error('Error updating profile:', result.error);
         toast({
-          title: "Erro",
-          description: "Erro ao atualizar perfil: " + result.error.message,
+          title: t('settings.error'),
+          description: t('settings.error.message') + ": " + result.error.message,
           variant: "destructive"
         });
         return false;
       } else {
         toast({
-          title: "Perfil atualizado",
-          description: "Suas informações foram salvas com sucesso!"
+          title: t('settings.success'),
+          description: t('settings.success.message')
         });
         return true;
       }
@@ -291,15 +292,15 @@ export default function UserSettings() {
     <ProtectedRoute>
       <div className="p-3 md:p-6 space-y-4 md:space-y-6 max-w-6xl mx-auto overflow-x-hidden">
         <div className="space-y-2">
-          <h1 className="text-xl md:text-2xl font-bold text-foreground">Configurações da Conta</h1>
-          <p className="text-sm md:text-base text-muted-foreground">Gerencie suas informações pessoais e configurações</p>
+          <h1 className="text-xl md:text-2xl font-bold text-foreground">{t('settings.title')}</h1>
+          <p className="text-sm md:text-base text-muted-foreground">{t('settings.subtitle')}</p>
         </div>
 
         <Tabs defaultValue="profile" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="profile">Perfil</TabsTrigger>
-            <TabsTrigger value="account">Conta</TabsTrigger>
-            <TabsTrigger value="security">Segurança</TabsTrigger>
+            <TabsTrigger value="profile">{t('settings.tab.profile')}</TabsTrigger>
+            <TabsTrigger value="account">{t('settings.tab.account')}</TabsTrigger>
+            <TabsTrigger value="security">{t('settings.tab.security')}</TabsTrigger>
           </TabsList>
           
           <TabsContent value="profile" className="space-y-4 md:space-y-6">
@@ -307,7 +308,7 @@ export default function UserSettings() {
               <CardHeader className="pb-4">
                 <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
                   <User className="h-4 w-4 md:h-5 md:w-5" />
-                  Perfil Público
+                  {t('settings.profile.title')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4 md:space-y-6">
@@ -344,9 +345,9 @@ export default function UserSettings() {
                   
                   <div className="flex-1 space-y-3 text-center sm:text-left">
                     <div>
-                      <h3 className="font-medium text-sm md:text-base">Foto de Perfil</h3>
+                      <h3 className="font-medium text-sm md:text-base">{t('settings.profile.photo')}</h3>
                       <p className="text-xs md:text-sm text-muted-foreground">
-                        Clique na foto para alterar. Máximo 5MB.
+                        {t('settings.profile.photo.hint')}
                       </p>
                     </div>
                     
@@ -359,7 +360,7 @@ export default function UserSettings() {
                         className="text-xs md:text-sm"
                       >
                         <Upload className="h-3 w-3 md:h-4 md:w-4 mr-2" />
-                        {uploadingAvatar ? "Enviando..." : "Enviar Foto"}
+                        {uploadingAvatar ? t('settings.profile.uploading') : t('settings.profile.upload')}
                       </Button>
                       
                       {profile.avatar_url && (
@@ -371,7 +372,7 @@ export default function UserSettings() {
                           className="text-xs md:text-sm"
                         >
                           <X className="h-3 w-3 md:h-4 md:w-4 mr-2" />
-                          Remover
+                          {t('settings.profile.remove')}
                         </Button>
                       )}
                     </div>
@@ -380,10 +381,10 @@ export default function UserSettings() {
 
                 {/* Full Name */}
                 <div className="space-y-2">
-                  <Label htmlFor="full_name" className="text-sm md:text-base">Nome Completo</Label>
+                  <Label htmlFor="full_name" className="text-sm md:text-base">{t('settings.profile.name')}</Label>
                   <Input
                     id="full_name"
-                    placeholder="Seu nome completo"
+                    placeholder={t('settings.profile.name.placeholder')}
                     value={profile.full_name}
                     onChange={(e) => handleInputChange("full_name", e.target.value)}
                     className="text-sm md:text-base"
@@ -392,17 +393,17 @@ export default function UserSettings() {
 
                 {/* Bio */}
                 <div className="space-y-2">
-                  <Label htmlFor="bio" className="text-sm md:text-base">Biografia</Label>
+                  <Label htmlFor="bio" className="text-sm md:text-base">{t('settings.profile.bio')}</Label>
                   <Textarea
                     id="bio"
-                    placeholder="Conte um pouco sobre você..."
+                    placeholder={t('settings.profile.bio.placeholder')}
                     value={profile.bio}
                     onChange={(e) => handleInputChange("bio", e.target.value)}
                     rows={3}
                     className="text-sm md:text-base resize-none"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Esta informação será visível para seus clientes
+                    {t('settings.profile.bio.hint')}
                   </p>
                 </div>
 
@@ -411,7 +412,7 @@ export default function UserSettings() {
                   disabled={loading} 
                   className="w-full text-sm md:text-base"
                 >
-                  {loading ? "Salvando..." : "Salvar Alterações"}
+                  {loading ? t('settings.profile.saving') : t('settings.profile.save')}
                 </Button>
               </CardContent>
             </Card>
@@ -422,38 +423,38 @@ export default function UserSettings() {
               <CardHeader className="pb-4">
                 <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
                   <Mail className="h-4 w-4 md:h-5 md:w-5" />
-                  Informações da Conta
+                  {t('settings.account.title')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label className="text-sm md:text-base">Email</Label>
+                  <Label className="text-sm md:text-base">{t('settings.account.email')}</Label>
                   <Input 
                     value={user?.email || ""} 
                     disabled 
                     className="text-sm md:text-base bg-muted"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Para alterar seu email, entre em contato com o suporte
+                    {t('settings.account.email.hint')}
                   </p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-sm md:text-base">ID da Conta</Label>
+                  <Label className="text-sm md:text-base">{t('settings.account.id')}</Label>
                   <Input 
                     value={user?.id || ""} 
                     disabled 
                     className="text-xs md:text-sm bg-muted font-mono"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Este é seu identificador único no sistema
+                    {t('settings.account.id.hint')}
                   </p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-sm md:text-base">Membro desde</Label>
+                  <Label className="text-sm md:text-base">{t('settings.account.member.since')}</Label>
                   <Input 
-                    value={user?.created_at ? new Date(user.created_at).toLocaleDateString('pt-BR') : ""} 
+                    value={user?.created_at ? new Date(user.created_at).toLocaleDateString(currentLanguage === 'en' ? 'en-US' : currentLanguage === 'es' ? 'es-ES' : 'pt-BR') : ""} 
                     disabled 
                     className="text-sm md:text-base bg-muted"
                   />
@@ -466,15 +467,15 @@ export default function UserSettings() {
               <CardHeader className="pb-4">
                 <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
                   <Globe className="h-4 w-4 md:h-5 md:w-5" />
-                  Preferências de Idioma
+                  {t('settings.language.title')}
                 </CardTitle>
                 <CardDescription>
-                  Escolha o idioma da interface
+                  {t('settings.language.subtitle')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label className="text-sm md:text-base">Idioma da Interface</Label>
+                  <Label className="text-sm md:text-base">{t('settings.language.label')}</Label>
                   <Select
                     value={profile.language}
                     onValueChange={async (value: "pt" | "en" | "es") => {
@@ -483,6 +484,8 @@ export default function UserSettings() {
                       changeLanguage(value);
                       localStorage.setItem('detectedLanguage', value);
                       await updateProfile(updatedProfile);
+                      // Force re-render to update translations
+                      forceUpdate({});
                     }}
                   >
                     <SelectTrigger className="w-full">
@@ -507,7 +510,7 @@ export default function UserSettings() {
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground">
-                    A alteração será aplicada imediatamente em toda a interface
+                    {t('settings.language.hint')}
                   </p>
                 </div>
               </CardContent>
