@@ -231,14 +231,29 @@ export function AppLiveView({
         returningCustomers
       });
 
-      // Sales by product - TODAY's data
+      // Sales by product - TODAY's data (usar seller_commission para consistência com total)
       const productSalesData: ProductSales[] = (products || []).map(p => {
         const productOrders = paidOrders.filter(o => o.product_id === p.id);
+        // Calcular revenue usando seller_commission (mesmo cálculo do total)
+        let productRevenue = 0;
+        productOrders.forEach(order => {
+          let amount = parseFloat(order.seller_commission?.toString() || order.amount || '0');
+          // Convert to KZ if different currency
+          if (order.currency && order.currency !== 'KZ') {
+            const exchangeRates: Record<string, number> = {
+              'EUR': 1053,
+              'MZN': 14.3
+            };
+            const rate = exchangeRates[order.currency.toUpperCase()] || 1;
+            amount = Math.round(amount * rate);
+          }
+          productRevenue += amount;
+        });
         return {
           id: p.id,
           name: p.name,
           sales: productOrders.length,
-          revenue: productOrders.reduce((sum, o) => sum + parseFloat(o.amount || '0'), 0)
+          revenue: productRevenue
         };
       }).filter(p => p.sales > 0 || p.revenue > 0).sort((a, b) => b.revenue - a.revenue);
       setProductSales(productSalesData);
