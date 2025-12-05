@@ -229,20 +229,21 @@ export function AppLiveView({
       const sortedLocations = Object.values(locationCounts).sort((a, b) => b.count - a.count).slice(0, 10);
       setSessionsByLocation(sortedLocations);
 
-      // ACTIVE sessions locations - from real-time presence (for globe)
+      // ACTIVE sales locations - from completed orders in last 5 min (for globe - purple dots)
       const activeLocationCounts: Record<string, SessionLocation> = {};
-      visitorLocations.forEach(loc => {
-        if (!loc.country || loc.country === 'Desconhecido' || loc.country === '') return;
+      recentCompleted.forEach(order => {
+        const country = (order as any).customer_country;
+        if (!country || country === 'Desconhecido' || country === '') return;
         
-        if (!activeLocationCounts[loc.country]) {
-          activeLocationCounts[loc.country] = {
-            country: loc.country,
-            region: loc.region || 'Nenhum(a)',
-            city: loc.city || 'Nenhum(a)',
+        if (!activeLocationCounts[country]) {
+          activeLocationCounts[country] = {
+            country,
+            region: 'Nenhum(a)',
+            city: 'Nenhum(a)',
             count: 0
           };
         }
-        activeLocationCounts[loc.country].count += loc.count;
+        activeLocationCounts[country].count++;
       });
       const sortedActiveLocations = Object.values(activeLocationCounts).sort((a, b) => b.count - a.count);
       setActiveSessionsLocations(sortedActiveLocations);
