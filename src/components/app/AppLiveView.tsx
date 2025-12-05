@@ -137,10 +137,8 @@ export function AppLiveView({
       const paidOrders = allTodayOrders.filter(o => o.status === 'completed');
       const pendingOrders = allTodayOrders.filter(o => o.status === 'pending' || o.status === 'Pendente');
 
-      // Sessions = all order attempts today
-      const totalSessions = allTodayOrders.length;
+      // Sessions comparison placeholder (will be updated after fetching checkout_sessions)
       const yesterdaySessions = yesterdayOrders?.length || 0;
-      const sessionsChange = yesterdaySessions > 0 ? (totalSessions - yesterdaySessions) / yesterdaySessions * 100 : 0;
 
       // Visitors now = pending orders from last 5 minutes (people currently in checkout)
       const recentPending = (recentOrders || []).filter(o => o.status === 'pending' || o.status === 'Pendente');
@@ -163,13 +161,6 @@ export function AppLiveView({
         }
         totalSalesValue += amount;
       });
-      setMetrics({
-        visitorsNow,
-        totalSales: totalSalesValue,
-        sessions: totalSessions,
-        sessionsChange: Math.round(sessionsChange),
-        orders: paidOrders.length // Count orders, not items
-      });
 
       // Customer behavior - ÚLTIMOS 5 MINUTOS (tempo real)
       const recentCompleted = (recentOrders || []).filter(o => o.status === 'completed');
@@ -179,18 +170,23 @@ export function AppLiveView({
         completed: recentCompleted.length // Compras pagas nos últimos 5 min
       });
 
-      // Sessions by location - only use IP-based customer_country (skip unknown)
+      // Sessions by location - fetch from checkout_sessions table (today's visits)
+      const { data: todaySessions } = await supabase
+        .from('checkout_sessions')
+        .select('country, city, region')
+        .in('product_id', productIds)
+        .gte('created_at', todayStart.toISOString());
+
       const locationCounts: Record<string, SessionLocation> = {};
-      allTodayOrders.forEach(order => {
-        // Only use IP-detected country, skip orders without valid country
-        const country = (order as any).customer_country;
-        if (!country || country === 'Desconhecido') return; // Skip unknown
+      (todaySessions || []).forEach(session => {
+        const country = session.country;
+        if (!country || country === 'Desconhecido' || country === '') return;
         
         if (!locationCounts[country]) {
           locationCounts[country] = {
             country,
-            region: 'Nenhum(a)',
-            city: 'Nenhum(a)',
+            region: session.region || 'Nenhum(a)',
+            city: session.city || 'Nenhum(a)',
             count: 0
           };
         }
@@ -199,21 +195,33 @@ export function AppLiveView({
       const sortedLocations = Object.values(locationCounts).sort((a, b) => b.count - a.count).slice(0, 10);
       setSessionsByLocation(sortedLocations);
 
-      // ACTIVE sessions locations - ONLY from last 5 min pending orders (for globe)
+      // Sessions count from checkout_sessions table
+      const totalSessions = todaySessions?.length || 0;
+      const sessionsChange = yesterdaySessions > 0 ? (totalSessions - yesterdaySessions) / yesterdaySessions * 100 : 0;
+
+      // Set all metrics
+      setMetrics({
+        visitorsNow,
+        totalSales: totalSalesValue,
+        sessions: totalSessions,
+        sessionsChange: Math.round(sessionsChange),
+        orders: paidOrders.length
+      });
+
+      // ACTIVE sessions locations - from real-time presence (for globe)
       const activeLocationCounts: Record<string, SessionLocation> = {};
-      recentPending.forEach(order => {
-        const country = (order as any).customer_country;
-        if (!country || country === 'Desconhecido') return; // Skip unknown
+      visitorLocations.forEach(loc => {
+        if (!loc.country || loc.country === 'Desconhecido' || loc.country === '') return;
         
-        if (!activeLocationCounts[country]) {
-          activeLocationCounts[country] = {
-            country,
-            region: 'Nenhum(a)',
-            city: 'Nenhum(a)',
+        if (!activeLocationCounts[loc.country]) {
+          activeLocationCounts[loc.country] = {
+            country: loc.country,
+            region: loc.region || 'Nenhum(a)',
+            city: loc.city || 'Nenhum(a)',
             count: 0
           };
         }
-        activeLocationCounts[country].count++;
+        activeLocationCounts[loc.country].count += loc.count;
       });
       const sortedActiveLocations = Object.values(activeLocationCounts).sort((a, b) => b.count - a.count);
       setActiveSessionsLocations(sortedActiveLocations);
