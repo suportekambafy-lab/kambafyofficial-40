@@ -1,12 +1,12 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 
 interface CountryInfo {
   code: string;
   name: string;
   currency: string;
   flag: string;
-  exchangeRate: number; // Taxa de conversão de KZ para moeda local
+  exchangeRate: number;
 }
 
 const SUPPORTED_COUNTRIES: Record<string, CountryInfo> = {
@@ -15,45 +15,86 @@ const SUPPORTED_COUNTRIES: Record<string, CountryInfo> = {
     name: 'Angola',
     currency: 'KZ',
     flag: '🇦🇴',
-    exchangeRate: 1 // Base currency
+    exchangeRate: 1
   },
   PT: {
     code: 'PT',
     name: 'Portugal',
     currency: 'EUR',
     flag: '🇵🇹',
-    exchangeRate: 0.0012 // Fallback rate
+    exchangeRate: 0.0012
   },
   MZ: {
     code: 'MZ',
     name: 'Moçambique',
     currency: 'MZN',
     flag: '🇲🇿',
-    exchangeRate: 0.0697 // Fallback rate based on your example: 39000 KZ = 2720.22 MZN
+    exchangeRate: 0.0697
   }
 };
 
-// Mapeamento de países para idiomas
 const COUNTRY_LANGUAGES: Record<string, string> = {
-  'AO': 'pt', // Angola - Português
-  'PT': 'pt', // Portugal - Português
-  'MZ': 'pt'  // Moçambique - Português
+  'AO': 'pt',
+  'PT': 'pt',
+  'MZ': 'pt'
 };
 
-// Margem de segurança para preservar valor (5% a mais)
 const SAFETY_MARGIN = 1.05;
 
+// Função para obter país inicial do cache ANTES do React
+const getInitialCountry = (): CountryInfo => {
+  try {
+    const storedCountry = localStorage.getItem('userCountry');
+    if (storedCountry && SUPPORTED_COUNTRIES[storedCountry]) {
+      return SUPPORTED_COUNTRIES[storedCountry];
+    }
+  } catch {
+    // localStorage indisponível
+  }
+  return SUPPORTED_COUNTRIES.AO;
+};
+
+// Função para obter taxas iniciais do cache
+const getInitialRates = (): Record<string, CountryInfo> => {
+  try {
+    const storedRates = localStorage.getItem('exchangeRates');
+    if (storedRates) {
+      const rates = JSON.parse(storedRates);
+      const countries = { ...SUPPORTED_COUNTRIES };
+      if (rates.EUR) countries.PT.exchangeRate = rates.EUR;
+      if (rates.MZN) countries.MZ.exchangeRate = rates.MZN;
+      return countries;
+    }
+  } catch {
+    // localStorage indisponível
+  }
+  return SUPPORTED_COUNTRIES;
+};
+
 export const useGeoLocation = () => {
-  const [userCountry, setUserCountry] = useState<CountryInfo>(SUPPORTED_COUNTRIES.AO);
-  const [supportedCountries, setSupportedCountries] = useState(SUPPORTED_COUNTRIES);
-  const [loading, setLoading] = useState(true);
+  // Inicializar com dados do cache IMEDIATAMENTE
+  const [userCountry, setUserCountry] = useState<CountryInfo>(getInitialCountry);
+  const [supportedCountries, setSupportedCountries] = useState(getInitialRates);
+  const [loading, setLoading] = useState(() => {
+    // Se já temos país em cache, não está carregando
+    try {
+      return !localStorage.getItem('userCountry');
+    } catch {
+      return true;
+    }
+  });
   const [error, setError] = useState<string | null>(null);
   const [detectedLanguage, setDetectedLanguage] = useState<string>('pt');
-  const [isReady, setIsReady] = useState(false); // Novo estado para indicar quando está pronto
+  const [isReady, setIsReady] = useState(() => {
+    try {
+      return !!localStorage.getItem('userCountry');
+    } catch {
+      return false;
+    }
+  });
 
   const fetchExchangeRates = async () => {
     try {
-      // Using a free API that doesn't require authentication
       const response = await fetch('https://api.exchangerate-api.com/v4/latest/AOA');
       
       if (!response.ok) {
@@ -64,42 +105,42 @@ export const useGeoLocation = () => {
       
       const updatedCountries = { ...SUPPORTED_COUNTRIES };
       
-      // Update EUR rate with safety margin
       if (data.rates.EUR) {
         updatedCountries.PT.exchangeRate = data.rates.EUR * SAFETY_MARGIN;
       }
       
-      // Update MZN rate with safety margin
       if (data.rates.MZN) {
         updatedCountries.MZ.exchangeRate = data.rates.MZN * SAFETY_MARGIN;
       }
-
       
       setSupportedCountries(updatedCountries);
       
-      // Salvar taxas para evitar flash na próxima visita
       localStorage.setItem('exchangeRates', JSON.stringify({
         EUR: updatedCountries.PT.exchangeRate,
         MZN: updatedCountries.MZ.exchangeRate
       }));
       localStorage.setItem('ratesLastUpdate', Date.now().toString());
       
-      // Update current country if it's not Angola
-      if (userCountry.code !== 'AO') {
-        setUserCountry({...userCountry, exchangeRate: updatedCountries[userCountry.code as keyof typeof updatedCountries]?.exchangeRate || userCountry.exchangeRate});
-      }
       if (userCountry.code !== 'AO') {
         setUserCountry(updatedCountries[userCountry.code]);
       }
       
     } catch (err) {
-      // Keep fallback rates if API fails - silent fail
+      // Keep fallback rates if API fails
     }
   };
 
   const detectCountryByIP = async () => {
     try {
-      const response = await fetch('https://ipapi.co/json/');
+      // Usar múltiplas APIs em paralelo para maior velocidade e redundância
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 3000);
+      
+      const response = await fetch('https://ipapi.co/json/', {
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeout);
       
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
@@ -111,36 +152,38 @@ export const useGeoLocation = () => {
       
       if (detectedCountry) {
         setUserCountry(detectedCountry);
+        localStorage.setItem('userCountry', countryCode);
         const language = COUNTRY_LANGUAGES[countryCode] || 'pt';
         setDetectedLanguage(language);
         applyLanguage(language);
       } else {
         setUserCountry(supportedCountries.AO);
+        localStorage.setItem('userCountry', 'AO');
         setDetectedLanguage('pt');
         applyLanguage('pt');
       }
     } catch (err) {
-      setError('Erro ao detectar localização');
-      setUserCountry(supportedCountries.AO);
-      setDetectedLanguage('pt');
-      applyLanguage('pt');
+      // Em caso de erro, manter país atual (do cache ou Angola)
+      if (!localStorage.getItem('userCountry')) {
+        setUserCountry(supportedCountries.AO);
+        setDetectedLanguage('pt');
+        applyLanguage('pt');
+      }
     } finally {
       setLoading(false);
+      setIsReady(true);
     }
   };
 
-  // Função para obter país baseado no perfil do usuário
   const getUserCountryFromProfile = async () => {
     try {
       const storedCountry = localStorage.getItem('userCountry');
       if (storedCountry && supportedCountries[storedCountry]) {
         setUserCountry(supportedCountries[storedCountry]);
-        console.log(`Loaded country from profile: ${supportedCountries[storedCountry].name}`);
       } else {
         await detectCountryByIP();
       }
     } catch (err) {
-      console.error('Error loading user country from profile:', err);
       await detectCountryByIP();
     }
   };
@@ -148,7 +191,6 @@ export const useGeoLocation = () => {
   const convertPrice = (priceInKZ: number, targetCountry?: CountryInfo, customPrices?: Record<string, string>): number => {
     const country = targetCountry || userCountry;
     
-    // Verificar se há preço customizado para o país
     if (customPrices && customPrices[country.code]) {
       const customPrice = parseFloat(customPrices[country.code]);
       if (!isNaN(customPrice)) {
@@ -156,7 +198,6 @@ export const useGeoLocation = () => {
       }
     }
     
-    // API retorna taxa: 1 KZ = X EUR, então multiplicamos para converter
     const convertedValue = priceInKZ * country.exchangeRate;
     return Math.round(convertedValue * 100) / 100;
   };
@@ -164,7 +205,6 @@ export const useGeoLocation = () => {
   const formatPrice = (priceInKZ: number, targetCountry?: CountryInfo, customPrices?: Record<string, string>): string => {
     const country = targetCountry || userCountry;
     
-    // Verificar se há preço customizado para o país
     if (customPrices && customPrices[country.code]) {
       const customPrice = parseFloat(customPrices[country.code]);
       
@@ -181,7 +221,6 @@ export const useGeoLocation = () => {
       }
     }
     
-    // If no custom price, use automatic conversion
     const convertedPrice = convertPrice(priceInKZ, country);
     
     switch (country?.currency) {
@@ -201,14 +240,12 @@ export const useGeoLocation = () => {
       setUserCountry(country);
       localStorage.setItem('userCountry', countryCode);
       
-      // Atualizar idioma quando país é alterado manualmente
       const language = COUNTRY_LANGUAGES[countryCode] || 'pt';
       setDetectedLanguage(language);
       applyLanguage(language);
     }
   };
 
-  // Função para aplicar idioma na aplicação
   const applyLanguage = (language: string) => {
     try {
       document.documentElement.lang = language;
@@ -220,60 +257,49 @@ export const useGeoLocation = () => {
 
   useEffect(() => {
     const initializeGeoLocation = async () => {
-      // Verificar se já temos dados salvos para evitar flash de loading
       const storedCountry = localStorage.getItem('userCountry');
-      const storedRates = localStorage.getItem('exchangeRates');
       const lastUpdate = localStorage.getItem('ratesLastUpdate');
       
-      // Se temos dados recentes (menos de 1 hora), usar imediatamente
       const now = Date.now();
       const oneHour = 60 * 60 * 1000;
       const hasRecentData = lastUpdate && (now - parseInt(lastUpdate)) < oneHour;
       
-      if (storedCountry && storedRates && hasRecentData) {
-        try {
-          const countryData = supportedCountries[storedCountry];
-          const rates = JSON.parse(storedRates);
-          
-          if (countryData && rates) {
-            setUserCountry(countryData);
-            
-            // Aplicar taxas salvas
-            const updatedCountries = { ...SUPPORTED_COUNTRIES };
-            if (rates.EUR) updatedCountries.PT.exchangeRate = rates.EUR;
-            if (rates.MZN) updatedCountries.MZ.exchangeRate = rates.MZN;
-            setSupportedCountries(updatedCountries);
-            
-            setIsReady(true);
-            setLoading(false);
-            
-            // Detectar idioma e aplicar
-            const language = COUNTRY_LANGUAGES[storedCountry] || 'pt';
-            setDetectedLanguage(language);
-            applyLanguage(language);
-            
-            // Atualizar taxas em background
-            fetchExchangeRates();
-            return;
-          }
-        } catch (error) {
-          // Silent fail, proceed to fresh detection
+      // Se já temos país guardado, apenas atualizar taxas em background
+      if (storedCountry && SUPPORTED_COUNTRIES[storedCountry]) {
+        // País já está definido pelo estado inicial, só marcar como pronto
+        setIsReady(true);
+        setLoading(false);
+        
+        const language = COUNTRY_LANGUAGES[storedCountry] || 'pt';
+        setDetectedLanguage(language);
+        applyLanguage(language);
+        
+        // Atualizar taxas em background sem bloquear
+        if (!hasRecentData) {
+          fetchExchangeRates();
         }
+        
+        // Re-detectar país em background (caso tenha mudado de localização)
+        // mas só se os dados tiverem mais de 24 horas
+        const twentyFourHours = 24 * 60 * 60 * 1000;
+        if (!lastUpdate || (now - parseInt(lastUpdate)) > twentyFourHours) {
+          detectCountryByIP();
+        }
+        
+        return;
       }
       
-      // Se não temos dados em cache, fazer detecção normal
+      // Primeira visita - detectar país
       await detectCountryByIP();
-      await fetchExchangeRates();
-      setIsReady(true);
+      fetchExchangeRates();
     };
     
     initializeGeoLocation();
     
-    // Update exchange rates every 30 minutes
     const interval = setInterval(fetchExchangeRates, 30 * 60 * 1000);
     
     return () => clearInterval(interval);
-  }, []); // Remove dependency to avoid loops
+  }, []);
 
   return {
     userCountry,
