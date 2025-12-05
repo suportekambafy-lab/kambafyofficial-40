@@ -59,9 +59,7 @@ const StripeCardPayment = lazy(() => import('@/components/checkout/StripeCardPay
 const KambaPayCheckoutOption = lazy(() => 
   import('@/components/KambaPayCheckoutOption').then(module => ({ default: module.KambaPayCheckoutOption }))
 );
-const ApplePayModal = lazy(() => 
-  import('@/components/checkout/ApplePayModal').then(module => ({ default: module.ApplePayModal }))
-);
+// Apple Pay removido
 
 // Componente otimizado do header do produto
 const ProductHeader = memo(({ product, formatPrice, userCountry }: any) => {
@@ -210,7 +208,7 @@ const OptimizedCheckout = () => {
   const [processing, setProcessing] = useState(false);
   const [kambaPayEmailError, setKambaPayEmailError] = useState<string | null>(null);
   const [bankTransferData, setBankTransferData] = useState<{file: File, bank: string} | null>(null);
-  const [applePayModalOpen, setApplePayModalOpen] = useState(false);
+  // Apple Pay removido
   
   // Validation states
   const [fieldTouched, setFieldTouched] = useState({
@@ -321,12 +319,7 @@ const OptimizedCheckout = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Abrir modal do Apple Pay quando selecionado
-  useEffect(() => {
-    if (selectedPayment === 'apple_pay' && formData.fullName && formData.email && formData.phone) {
-      setApplePayModalOpen(true);
-    }
-  }, [selectedPayment, formData.fullName, formData.email, formData.phone]);
+  // Apple Pay removido
 
   // Auto-selecionar primeiro método de pagamento disponível
   useEffect(() => {
@@ -1254,49 +1247,7 @@ const OptimizedCheckout = () => {
                     </Suspense>
                   )}
 
-                  {/* Apple Pay com Modal do Stripe */}
-                  {selectedPayment === 'apple_pay' && (
-                    <div className="mt-6">
-                      <Card className="border-2 border-blue-500">
-                        <CardContent className="p-6">
-                          <div className="text-center space-y-4">
-                            <div className="flex items-center justify-center gap-2">
-                              <Shield className="w-5 h-5 text-blue-600" />
-                              <h3 className="text-lg font-semibold">Pagamento com Apple Pay</h3>
-                            </div>
-                            
-                            <p className="text-sm text-gray-600">
-                              Clique no botão abaixo para abrir o formulário de pagamento seguro do Apple Pay
-                            </p>
-
-                            <Button
-                              onClick={() => {
-                                if (!formData.fullName || !formData.email || !formData.phone) {
-                                  toast({
-                                    title: "Dados obrigatórios",
-                                    description: "Por favor, preencha todos os campos obrigatórios antes de prosseguir.",
-                                    variant: "destructive",
-                                  });
-                                  return;
-                                }
-                                setApplePayModalOpen(true);
-                              }}
-                              className="w-full"
-                              size="lg"
-                            >
-                              <Wallet className="w-5 h-5 mr-2" />
-                              Pagar com Apple Pay
-                            </Button>
-
-                            <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
-                              <CheckCircle className="w-4 h-4 text-green-600" />
-                              <span>Pagamento seguro processado pelo Stripe</span>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  )}
+                  {/* Apple Pay removido */}
                 </div>
               </div>
             </CardContent>
@@ -1341,48 +1292,7 @@ const OptimizedCheckout = () => {
         buttonText="Finalizar Compra"
       />
 
-      {/* Apple Pay Modal */}
-      {selectedPayment === 'apple_pay' && (
-        <Suspense fallback={<div />}>
-          <ApplePayModal
-            open={applePayModalOpen}
-            onOpenChange={setApplePayModalOpen}
-            convertedAmount={(() => {
-              let productPrice = parseFloat(product?.price || '0');
-              if (product?.custom_prices && userCountry?.code && product.custom_prices[userCountry.code]) {
-                productPrice = parseFloat(product.custom_prices[userCountry.code]);
-              } else {
-                productPrice = convertPrice(productPrice, userCountry, product?.custom_prices);
-              }
-              return productPrice + productExtraPrice + accessExtensionPrice;
-            })()}
-            originalAmountKZ={parseFloat(product?.price || '0')}
-            currency={userCountry?.currency || 'USD'}
-            productId={productId || ''}
-            customerData={{
-              fullName: formData.fullName,
-              email: formData.email,
-              phone: formData.phone
-            }}
-            onSuccess={(paymentIntent) => {
-              console.log('Apple Pay payment successful:', paymentIntent);
-              toast({
-                title: "Pagamento aprovado!",
-                description: "Seu pagamento foi processado com sucesso.",
-              });
-              navigate(`/checkout-success?order_id=${paymentIntent.id}`);
-            }}
-            onError={(error) => {
-              console.error('Apple Pay error:', error);
-              toast({
-                title: "Erro no pagamento",
-                description: error,
-                variant: "destructive",
-              });
-            }}
-          />
-        </Suspense>
-      )}
+      {/* Apple Pay removido */}
     </ThemeProvider>
   );
 };
