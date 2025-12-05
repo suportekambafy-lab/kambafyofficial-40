@@ -24,7 +24,7 @@ All colors MUST be HSL.
 
   :root {
     /* Kambafy Clean Design System */
-    --background: 210 20% 96%; /* Slight blue tinted background */
+    --background: 70 20% 97%; /* White background */
     --foreground: 0 0% 15%;
 
     --card: 0 0% 100%;
