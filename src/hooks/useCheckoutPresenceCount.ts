@@ -4,15 +4,23 @@ import { supabase } from '@/integrations/supabase/client';
 interface PresenceData {
   productId: string;
   enteredAt: string;
+  country?: string;
+}
+
+interface VisitorLocation {
+  country: string;
+  count: number;
 }
 
 export function useCheckoutPresenceCount(productIds: string[]) {
   const [visitorCount, setVisitorCount] = useState(0);
   const [visitorsByProduct, setVisitorsByProduct] = useState<Record<string, number>>({});
+  const [visitorLocations, setVisitorLocations] = useState<VisitorLocation[]>([]);
 
   const updateCounts = useCallback((channels: Map<string, ReturnType<typeof supabase.channel>>) => {
     let total = 0;
     const byProduct: Record<string, number> = {};
+    const locationMap: Record<string, number> = {};
 
     channels.forEach((channel, productId) => {
       const state = channel.presenceState();
@@ -21,16 +29,32 @@ export function useCheckoutPresenceCount(productIds: string[]) {
       // Count ALL presences in each key
       let count = 0;
       Object.values(state).forEach((presences: any) => {
-        count += Array.isArray(presences) ? presences.length : 1;
+        if (Array.isArray(presences)) {
+          count += presences.length;
+          // Collect country data
+          presences.forEach((p: PresenceData) => {
+            const country = p.country || 'Desconhecido';
+            locationMap[country] = (locationMap[country] || 0) + 1;
+          });
+        } else {
+          count += 1;
+        }
       });
       
       byProduct[productId] = count;
       total += count;
     });
 
-    console.log('📊 [Presence Count] Total visitors:', total, 'By product:', byProduct);
+    // Convert location map to array
+    const locations = Object.entries(locationMap).map(([country, count]) => ({
+      country,
+      count
+    }));
+
+    console.log('📊 [Presence Count] Total visitors:', total, 'Locations:', locations);
     setVisitorCount(total);
     setVisitorsByProduct(byProduct);
+    setVisitorLocations(locations);
   }, []);
 
   useEffect(() => {
@@ -73,5 +97,5 @@ export function useCheckoutPresenceCount(productIds: string[]) {
     };
   }, [productIds, updateCounts]);
 
-  return { visitorCount, visitorsByProduct };
+  return { visitorCount, visitorsByProduct, visitorLocations };
 }
