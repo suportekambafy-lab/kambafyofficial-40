@@ -163,32 +163,21 @@ export function AppLiveView({
         orders: paidOrders.length // Count orders, not items
       });
 
-      // Customer behavior - more accurate logic
-      // Checking out = ALL pending orders that haven't expired yet (not just last 5 min)
-      const currentTime = new Date();
-      const activeCheckouts = allTodayOrders.filter(o => {
-        if (o.status !== 'pending' && o.status !== 'Pendente') return false;
-        // Check if order hasn't expired
-        if (o.expires_at) {
-          return new Date(o.expires_at) > currentTime;
-        }
-        return true; // No expiry set, consider active
-      });
+      // Customer behavior - ÚLTIMOS 5 MINUTOS
+      const recent5min = recentOrders || [];
       
-      // Active carts = pending orders from last 15 min (people recently entered checkout)
-      const last15min = new Date(currentTime.getTime() - 15 * 60 * 1000);
-      const recentCheckouts = allTodayOrders.filter(o => 
-        (o.status === 'pending' || o.status === 'Pendente') &&
-        new Date(o.created_at) >= last15min
+      // Pedidos pendentes nos últimos 5 min = pessoas no checkout/preenchendo
+      const pendingLast5min = recent5min.filter(o => 
+        o.status === 'pending' || o.status === 'Pendente'
       );
       
-      // Completed today
-      const completedToday = paidOrders.length;
+      // Compras completadas nos últimos 5 min
+      const completedLast5min = recent5min.filter(o => o.status === 'completed');
       
       setBehavior({
-        activeCarts: recentCheckouts.length, // Recent people who entered checkout
-        checkingOut: activeCheckouts.length, // All currently active checkouts
-        completed: completedToday
+        activeCarts: pendingLast5min.length, // No checkout / carrinhos ativos (igual)
+        checkingOut: pendingLast5min.length, // A finalizar (pessoas preenchendo)
+        completed: completedLast5min.length  // Compras reais nos últimos 5 min
       });
 
       // Sessions by location - based on phone country codes from TODAY's orders
