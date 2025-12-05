@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, useCallback } from "react"
 import * as d3 from "d3"
 
 interface SessionLocation {
@@ -84,6 +84,10 @@ const countryCoordinates: Record<string, [number, number]> = {
   'Unknown': [17.8739, -11.2027]
 };
 
+// Cache world data globally to avoid re-fetching
+let cachedWorldData: any = null;
+let cachedDots: { lng: number; lat: number }[] = [];
+
 export default function RotatingEarth({ 
   width = 300, 
   height = 300, 
@@ -92,11 +96,24 @@ export default function RotatingEarth({
   visitorLocations = []
 }: RotatingEarthProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(!cachedWorldData)
   const [error, setError] = useState<string | null>(null)
   const [isDarkMode, setIsDarkMode] = useState(false)
   const [tooltip, setTooltip] = useState<{ x: number; y: number; country: string; count: number; type: 'sale' | 'visitor' } | null>(null)
   const markersRef = useRef<Array<{ x: number; y: number; country: string; count: number; size: number; type: 'sale' | 'visitor' }>>([]);
+  
+  // Store locations in refs to avoid re-running main effect
+  const activeLocationsRef = useRef(activeLocations);
+  const visitorLocationsRef = useRef(visitorLocations);
+  
+  // Update refs when props change
+  useEffect(() => {
+    activeLocationsRef.current = activeLocations;
+  }, [activeLocations]);
+  
+  useEffect(() => {
+    visitorLocationsRef.current = visitorLocations;
+  }, [visitorLocations]);
 
   // Detect dark mode
   useEffect(() => {
@@ -227,14 +244,6 @@ export default function RotatingEarth({
       return dots
     }
 
-    interface DotData {
-      lng: number
-      lat: number
-    }
-
-    const allDots: DotData[] = []
-    let landFeatures: any
-
     const render = () => {
       context.clearRect(0, 0, containerWidth, containerHeight)
 
@@ -250,7 +259,7 @@ export default function RotatingEarth({
       context.lineWidth = 2 * scaleFactor
       context.stroke()
 
-      if (landFeatures) {
+      if (cachedWorldData) {
         // Draw graticule
         const graticule = d3.geoGraticule()
         context.beginPath()
@@ -263,7 +272,7 @@ export default function RotatingEarth({
 
         // Draw land outlines
         context.beginPath()
-        landFeatures.features.forEach((feature: any) => {
+        cachedWorldData.features.forEach((feature: any) => {
           path(feature)
         })
         context.fillStyle = colors.land
@@ -273,7 +282,7 @@ export default function RotatingEarth({
         context.stroke()
 
         // Draw halftone dots
-        allDots.forEach((dot) => {
+        cachedDots.forEach((dot) => {
           const projected = projection([dot.lng, dot.lat])
           if (
             projected &&
@@ -294,8 +303,8 @@ export default function RotatingEarth({
         // Clear markers ref before re-drawing
         markersRef.current = [];
 
-        // Draw sales markers (purple)
-        activeLocations.forEach((loc) => {
+        // Draw sales markers (purple) - use ref for latest data
+        activeLocationsRef.current.forEach((loc) => {
           const coords = countryCoordinates[loc.country]
           if (coords) {
             const projected = projection(coords)
@@ -335,8 +344,8 @@ export default function RotatingEarth({
           }
         })
 
-        // Draw visitor markers (baby blue) - offset slightly to avoid overlap
-        visitorLocations.forEach((loc) => {
+        // Draw visitor markers (baby blue) - offset slightly to avoid overlap - use ref
+        visitorLocationsRef.current.forEach((loc) => {
           const coords = countryCoordinates[loc.country]
           if (coords) {
             // Offset visitor markers slightly
@@ -381,6 +390,12 @@ export default function RotatingEarth({
     }
 
     const loadWorldData = async () => {
+      // Use cached data if available
+      if (cachedWorldData) {
+        render()
+        return
+      }
+
       try {
         setIsLoading(true)
 
@@ -389,12 +404,13 @@ export default function RotatingEarth({
         )
         if (!response.ok) throw new Error("Failed to load land data")
 
-        landFeatures = await response.json()
+        cachedWorldData = await response.json()
+        cachedDots = []
 
-        landFeatures.features.forEach((feature: any) => {
+        cachedWorldData.features.forEach((feature: any) => {
           const dots = generateDotsInPolygon(feature, 20)
           dots.forEach(([lng, lat]) => {
-            allDots.push({ lng, lat })
+            cachedDots.push({ lng, lat })
           })
         })
 
@@ -520,7 +536,7 @@ export default function RotatingEarth({
       canvas.removeEventListener("touchstart", handleTouchStart)
       canvas.removeEventListener("click", handleClick)
     }
-  }, [width, height, activeLocations, visitorLocations, isDarkMode])
+  }, [width, height, isDarkMode]) // Removed activeLocations and visitorLocations from deps
 
   if (error) {
     return (
