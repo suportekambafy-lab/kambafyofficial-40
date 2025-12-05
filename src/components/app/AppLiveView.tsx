@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, Search, Map, TrendingDown, TrendingUp, ShoppingCart, CreditCard, CheckCircle } from 'lucide-react';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
-import { countTotalSales } from '@/utils/orderUtils';
 import RotatingEarth from './RotatingEarth';
 
 interface LiveViewProps {
@@ -157,15 +156,30 @@ export function AppLiveView({ onBack }: LiveViewProps) {
       );
       const visitorsNow = recentPending.length;
       
-      // Total sales value TODAY - same calculation as home
-      const totalSalesValue = paidOrders.reduce((sum, o) => sum + parseFloat(o.amount || '0'), 0);
+      // Total sales value TODAY - use seller_commission (same as home page)
+      let totalSalesValue = 0;
+      paidOrders.forEach(order => {
+        // Use seller_commission if available, otherwise fallback to amount
+        let amount = parseFloat(order.seller_commission?.toString() || order.amount || '0');
+        
+        // Convert to KZ if different currency (same logic as home)
+        if (order.currency && order.currency !== 'KZ') {
+          const exchangeRates: Record<string, number> = {
+            'EUR': 1053,
+            'MZN': 14.3
+          };
+          const rate = exchangeRates[order.currency.toUpperCase()] || 1;
+          amount = Math.round(amount * rate);
+        }
+        totalSalesValue += amount;
+      });
       
       setMetrics({
         visitorsNow,
         totalSales: totalSalesValue,
         sessions: totalSessions,
         sessionsChange: Math.round(sessionsChange),
-        orders: countTotalSales(paidOrders) // Use same counting as home (includes order bumps)
+        orders: paidOrders.length // Count orders, not items
       });
       
       // Customer behavior based on LAST 5 MINUTES
