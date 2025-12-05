@@ -37,6 +37,8 @@ import { ModernSalesChart } from '@/components/modern/ModernSalesChart';
 import { useSalesCache } from '@/hooks/useSalesCache';
 import { Capacitor } from '@capacitor/core';
 import { useOneSignal } from '@/hooks/useOneSignal';
+import { AppLiveView } from '@/components/app/AppLiveView';
+import { Radio } from 'lucide-react';
 export function AppHome() {
   const {
     user,
@@ -904,6 +906,8 @@ export function AppHome() {
         </div>;
     }
     switch (activeTab) {
+      case 'live-view':
+        return <AppLiveView onBack={() => setActiveTab('home')} />;
       case 'products':
         return <div className="p-4 space-y-4">
             <div className="flex items-center justify-between px-2 mb-2">
@@ -1496,6 +1500,10 @@ export function AppHome() {
               
               <button onClick={() => setActiveTab('products')} className={`p-2.5 rounded-full transition-colors ${activeTab === 'products' ? 'bg-primary/10' : 'hover:bg-accent'}`}>
                 <Package className={`h-5 w-5 ${activeTab === 'products' ? 'text-primary' : 'text-foreground'}`} />
+              </button>
+              
+              <button onClick={() => setActiveTab('live-view')} className={`p-2.5 rounded-full transition-colors ${activeTab === 'live-view' ? 'bg-primary/10' : 'hover:bg-accent'}`}>
+                <Radio className={`h-5 w-5 ${activeTab === 'live-view' ? 'text-primary' : 'text-foreground'}`} />
               </button>
             </div>
 
