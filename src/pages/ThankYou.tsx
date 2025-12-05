@@ -86,10 +86,10 @@ const ThankYou = () => {
     
     console.log('🔍 ThankYou redirect check:', { redirectStatus, paymentMethod });
     
-    // Se o pagamento foi cancelado/rejeitado, redirecionar de volta ao checkout
+    // Se o pagamento foi cancelado/rejeitado, redirecionar de volta ao checkout com mensagem de erro
     if (redirectStatus === 'failed' || redirectStatus === 'canceled') {
       console.log('❌ Payment failed/canceled, redirecting back to checkout');
-      navigate(`/checkout/${orderDetails.productId}`);
+      navigate(`/checkout/${orderDetails.productId}?error=payment_failed`);
       return;
     }
     
@@ -108,10 +108,10 @@ const ThankYou = () => {
           
           console.log('🔍 Payment status check result:', data);
           
-          // Se o pagamento foi cancelado ou falhou, redirecionar
+          // Se o pagamento foi cancelado ou falhou, redirecionar para checkout com erro
           if (data?.status === 'canceled' || data?.status === 'requires_payment_method') {
             console.log('❌ Payment was canceled/failed, redirecting back to checkout');
-            navigate(`/checkout/${orderDetails.productId}`);
+            navigate(`/checkout/${orderDetails.productId}?error=payment_rejected`);
           }
         });
       }

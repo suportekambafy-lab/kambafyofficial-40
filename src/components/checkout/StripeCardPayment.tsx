@@ -220,14 +220,56 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
           throw new Error(pmError.message);
         }
 
+        // Use redirect: 'if_required' to handle the response in the current page
         confirmResult = await stripe.confirmPayment({
           clientSecret: paymentIntentData.client_secret,
           confirmParams: {
             payment_method: pm!.id,
-            return_url: `${window.location.origin}/obrigado?order_id=${paymentIntentData.order_id}&customer_name=${encodeURIComponent(customerData.name)}&customer_email=${encodeURIComponent(customerData.email)}&product_name=${encodeURIComponent('Produto Digital')}&amount=${convertedAmount}&currency=${currency}&product_id=${productId}&payment_method=mbway&payment_intent_id=${paymentIntentData.payment_intent_id}&status=pending`
+            return_url: `${window.location.origin}/checkout/${productId}?payment_return=mbway&order_id=${paymentIntentData.order_id}&payment_intent_id=${paymentIntentData.payment_intent_id}`
           },
-          redirect: 'always'
+          redirect: 'if_required'
         });
+
+        // Handle MB Way result - if we reach here without redirect, check the status
+        if (confirmResult?.paymentIntent) {
+          const status = confirmResult.paymentIntent.status;
+          console.log('MB Way payment status:', status);
+          
+          if (status === 'succeeded') {
+            // Payment succeeded, redirect to thank you page
+            const params = new URLSearchParams({
+              order_id: paymentIntentData.order_id,
+              customer_name: customerData.name,
+              customer_email: customerData.email,
+              product_name: 'Produto Digital',
+              amount: amount.toString(),
+              currency: 'KZ',
+              product_id: productId,
+              payment_method: 'mbway',
+              payment_intent_id: confirmResult.paymentIntent.id,
+              status: 'paid'
+            });
+            navigate(`/obrigado?${params.toString()}`);
+            return;
+          } else if (status === 'requires_action') {
+            // MB Way requires user to confirm on phone - show message
+            toast({
+              title: "Confirme no seu telemóvel",
+              description: "Por favor, confirme o pagamento na aplicação MB Way.",
+            });
+            // Don't redirect, wait for confirmation
+            return;
+          } else if (status === 'canceled' || status === 'requires_payment_method') {
+            // Payment was rejected/canceled
+            toast({
+              title: "Pagamento recusado",
+              description: "O pagamento foi recusado ou cancelado. Por favor, tente novamente.",
+              variant: "destructive"
+            });
+            setProcessing(false);
+            return;
+          }
+        }
       }
 
       if (confirmResult?.error) {
