@@ -14,7 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 
-const stripePromise = loadStripe('pk_live_51RiHotJULMAOJLONpEMG70rOcOr9Vl7wZUfufcpy0r5zemcLEdHVfPblHJsDRmtcPSnYcOBi7Qq7K8nLuYcsQa5E00457X64oG');
+const stripePromise = loadStripe('pk_live_51Sb4mRGfoQ3QRz9Av3PFK6zMS4wVFOCxbb331dYoWryYmzGHT9hGbB0TS6Fgvj9E5JgOU9YH9ynMIm1oPc46NRK5004WEaLu4y');
 
 const CARD_ELEMENT_OPTIONS = {
   style: {

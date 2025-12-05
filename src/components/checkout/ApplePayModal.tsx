@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { AppleIcon } from 'lucide-react';
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_51QWtBjKtm5S2NqMjLM1pTqyLxhQKO7jVBhWb3t3tLkfCEaU5S1i4wqO3MwXD0XnI6jkMnWRsQGKaZE6rTDzAIR1I00vx7KqFfg');
+const stripePromise = loadStripe('pk_live_51Sb4mRGfoQ3QRz9Av3PFK6zMS4wVFOCxbb331dYoWryYmzGHT9hGbB0TS6Fgvj9E5JgOU9YH9ynMIm1oPc46NRK5004WEaLu4y');
 
 interface ApplePayModalProps {
   open: boolean;
