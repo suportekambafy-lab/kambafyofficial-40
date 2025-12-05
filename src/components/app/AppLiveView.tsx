@@ -342,16 +342,7 @@ export function AppLiveView({
           </div>
           
           {/* Legend */}
-          <div className="flex items-center justify-center gap-4 mt-3 text-xs text-muted-foreground">
-            <div className="flex items-center gap-1">
-              <div className="w-2 h-2 rounded-full bg-violet-500" />
-              <span>Vendas</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-2 h-2 rounded-full bg-sky-400 animate-pulse" />
-              <span>Visitantes ({realTimeVisitors})</span>
-            </div>
-          </div>
+          
           
           {/* Real-time indicator */}
           
