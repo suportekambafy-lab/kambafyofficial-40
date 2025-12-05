@@ -408,8 +408,21 @@ const Checkout = () => {
   useEffect(() => {
     console.log('Checkout page loaded with productId:', productId);
 
-    // Verificar se o usuário foi redirecionado de volta do Klarna
+    // Verificar se há erros de pagamento na URL (redirecionamento de pagina de obrigado)
     const urlParams = new URLSearchParams(window.location.search);
+    const errorParam = urlParams.get('error');
+    if (errorParam === 'payment_failed' || errorParam === 'payment_rejected') {
+      console.log('❌ Payment error detected from redirect:', errorParam);
+      toast({
+        title: "Pagamento recusado",
+        message: "O pagamento foi recusado ou cancelado. Por favor, tente novamente.",
+        variant: "error"
+      });
+      // Limpar parâmetros de erro da URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    // Verificar se o usuário foi redirecionado de volta do Klarna
     const paymentReturn = urlParams.get('payment_return');
     const redirectStatus = urlParams.get('redirect_status');
     const orderId = urlParams.get('order_id');
@@ -462,6 +475,68 @@ const Checkout = () => {
         toast({
           title: "Pagamento cancelado",
           message: "O pagamento foi cancelado. Você pode tentar novamente.",
+          variant: "error"
+        });
+      }
+    }
+    
+    // Verificar se o usuário foi redirecionado de volta do MB Way
+    if (paymentReturn === 'mbway') {
+      console.log('🔄 User returned from MB Way payment');
+      
+      // Verificar o status do pagamento via API
+      if (paymentIntentId) {
+        supabase.functions.invoke('check-payment-status', {
+          body: { paymentIntentId }
+        }).then(({ data, error }) => {
+          if (error) {
+            console.error('Error checking payment status:', error);
+            toast({
+              title: "Erro",
+              message: "Não foi possível verificar o status do pagamento.",
+              variant: "error"
+            });
+            window.history.replaceState({}, document.title, window.location.pathname);
+            return;
+          }
+          
+          console.log('🔍 MB Way payment status:', data);
+          
+          if (data?.status === 'succeeded') {
+            // Pagamento bem-sucedido, redirecionar para página de obrigado
+            const params = new URLSearchParams({
+              order_id: orderId || '',
+              payment_intent_id: paymentIntentId || '',
+              status: 'paid',
+              payment_method: 'mbway'
+            });
+            navigate(`/obrigado?${params.toString()}`);
+          } else if (data?.status === 'canceled' || data?.status === 'requires_payment_method') {
+            // Pagamento foi recusado/cancelado
+            console.log('❌ MB Way payment was rejected/canceled');
+            window.history.replaceState({}, document.title, window.location.pathname);
+            toast({
+              title: "Pagamento recusado",
+              message: "O pagamento MB Way foi recusado ou cancelado. Por favor, tente novamente.",
+              variant: "error"
+            });
+          } else if (data?.status === 'requires_action' || data?.status === 'processing') {
+            // Pagamento ainda pendente de confirmação
+            console.log('⏳ MB Way payment still pending');
+            window.history.replaceState({}, document.title, window.location.pathname);
+            toast({
+              title: "Aguardando confirmação",
+              message: "Por favor, confirme o pagamento na aplicação MB Way do seu telemóvel.",
+              variant: "default"
+            });
+          }
+        });
+      } else {
+        // Sem payment intent id, mostrar erro
+        window.history.replaceState({}, document.title, window.location.pathname);
+        toast({
+          title: "Pagamento recusado",
+          message: "O pagamento foi recusado. Por favor, tente novamente.",
           variant: "error"
         });
       }
