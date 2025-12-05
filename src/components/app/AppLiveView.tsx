@@ -447,29 +447,27 @@ export function AppLiveView({
         </CardContent>
       </Card>
 
-      {/* Sessions by Location - Total do dia */}
+      {/* Sessions by Location - Real-time by IP */}
       <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
         <CardHeader className="pb-2">
           <CardTitle className="text-base font-semibold border-b border-dashed border-muted pb-2 flex items-center justify-between">
             <span>Sessões por local</span>
-            <span className="text-xs font-normal text-muted-foreground">(hoje)</span>
+            <span className="text-xs font-normal text-muted-foreground">(tempo real)</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4 pt-0 space-y-3">
-          {loading ? (
-            <p className="text-sm text-muted-foreground text-center py-4">Carregando...</p>
-          ) : sessionsByLocation.length === 0 ? (
+          {visitorLocations.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">
-              Sem sessões hoje
+              Nenhum visitante no momento
             </p>
           ) : (
-            sessionsByLocation.map((loc, idx) => {
-              const maxCount = sessionsByLocation[0]?.count || 1;
+            visitorLocations.map((loc, idx) => {
+              const maxCount = visitorLocations[0]?.count || 1;
               return (
                 <div key={idx}>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm text-foreground">
-                      {loc.country}
+                      {loc.country}{loc.city ? ` · ${loc.city}` : ''}
                     </span>
                     <span className="text-sm text-muted-foreground">
                       {loc.count} {loc.count === 1 ? 'sessão' : 'sessões'}
