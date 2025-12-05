@@ -52,6 +52,7 @@ interface StripeCardFormProps {
   setProcessing: (processing: boolean) => void;
   displayPrice: string;
   convertedAmount: number;
+  customerCountry?: string;
 }
 
 const ApplePayButton: React.FC<StripeCardFormProps> = ({
@@ -231,7 +232,8 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
   processing,
   setProcessing,
   displayPrice,
-  convertedAmount
+  convertedAmount,
+  customerCountry
 }) => {
   const stripe = useStripe();
   const elements = useElements();
@@ -279,7 +281,8 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
           convertedAmount: convertedAmount, // Valor convertido para a moeda de destino
           targetCurrency: currency, // Moeda de destino (EUR, MZN, etc)
           paymentMethod: paymentMethod,
-          testMode: false
+          testMode: false,
+          customerCountry: customerCountry
         }
       });
 

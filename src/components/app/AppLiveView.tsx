@@ -179,10 +179,11 @@ export function AppLiveView({
         completed: recentCompleted.length // Compras pagas nos últimos 5 min
       });
 
-      // Sessions by location - based on phone country codes from TODAY's orders
+      // Sessions by location - prefer customer_country (IP-based), fallback to phone
       const locationCounts: Record<string, SessionLocation> = {};
       allTodayOrders.forEach(order => {
-        const country = getCountryFromPhone(order.customer_phone);
+        // Prefer IP-based country, fallback to phone-based detection
+        const country = order.customer_country || getCountryFromPhone(order.customer_phone);
         if (!locationCounts[country]) {
           locationCounts[country] = {
             country,
@@ -199,7 +200,7 @@ export function AppLiveView({
       // ACTIVE sessions locations - ONLY from last 5 min pending orders (for globe)
       const activeLocationCounts: Record<string, SessionLocation> = {};
       recentPending.forEach(order => {
-        const country = getCountryFromPhone(order.customer_phone);
+        const country = order.customer_country || getCountryFromPhone(order.customer_phone);
         if (!activeLocationCounts[country]) {
           activeLocationCounts[country] = {
             country,
@@ -447,27 +448,29 @@ export function AppLiveView({
         </CardContent>
       </Card>
 
-      {/* Sessions by Location - Real-time by IP */}
+      {/* Sessions by Location - Total do dia */}
       <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
         <CardHeader className="pb-2">
           <CardTitle className="text-base font-semibold border-b border-dashed border-muted pb-2 flex items-center justify-between">
             <span>Sessões por local</span>
-            <span className="text-xs font-normal text-muted-foreground">(tempo real)</span>
+            <span className="text-xs font-normal text-muted-foreground">(hoje)</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4 pt-0 space-y-3">
-          {visitorLocations.length === 0 ? (
+          {loading ? (
+            <p className="text-sm text-muted-foreground text-center py-4">Carregando...</p>
+          ) : sessionsByLocation.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">
-              Nenhum visitante no momento
+              Sem sessões hoje
             </p>
           ) : (
-            visitorLocations.map((loc, idx) => {
-              const maxCount = visitorLocations[0]?.count || 1;
+            sessionsByLocation.map((loc, idx) => {
+              const maxCount = sessionsByLocation[0]?.count || 1;
               return (
                 <div key={idx}>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm text-foreground">
-                      {loc.country}{loc.city ? ` · ${loc.city}` : ''}
+                      {loc.country}
                     </span>
                     <span className="text-sm text-muted-foreground">
                       {loc.count} {loc.count === 1 ? 'sessão' : 'sessões'}

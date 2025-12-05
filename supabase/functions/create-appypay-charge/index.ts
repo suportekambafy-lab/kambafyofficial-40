@@ -42,7 +42,8 @@ Deno.serve(async (req) => {
       phoneNumber,
       orderData: checkoutOrderData, // Order data passed from checkout
       productName, // Nome do produto (usado quando é módulo)
-      skipOrderSave = false // Se true, não salva na tabela orders
+      skipOrderSave = false, // Se true, não salva na tabela orders
+      customerCountry // País detectado por IP
     } = requestBody;
 
     if (!amount || !customerData) {
@@ -421,7 +422,8 @@ Deno.serve(async (req) => {
         status: orderStatus,
         amount: grossAmount.toString(), // Garantir que amount está correto
         seller_commission: sellerCommission, // SOBRESCREVER com desconto de 8%
-        expires_at: expiresAt
+        expires_at: expiresAt,
+        customer_country: customerCountry || checkoutOrderData.customer_country || null
       } : {
         product_id: productId,
         order_id: orderId,
@@ -430,6 +432,7 @@ Deno.serve(async (req) => {
         customer_name: customerData.name,
         customer_email: customerData.email,
         customer_phone: phoneNumber || customerData.phone,
+        customer_country: customerCountry || null,
         amount: originalAmount?.toString() || amount.toString(),
         currency: originalCurrency,
         payment_method: paymentMethod,
