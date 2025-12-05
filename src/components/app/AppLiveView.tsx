@@ -126,23 +126,14 @@ export function AppLiveView({
         data: recentOrders
       } = await supabase.from('orders').select('*').in('product_id', productIds).gte('created_at', last5min.toISOString());
 
-      // Get abandoned purchases from TODAY for this seller's products
-      const {
-        data: todayAbandoned
-      } = await supabase.from('abandoned_purchases')
-        .select('*')
-        .in('product_id', productIds)
-        .gte('abandoned_at', todayStart.toISOString());
-      
-      // Get recent abandoned (last 30 min) - active carts
-      const last30min = new Date(now.getTime() - 30 * 60 * 1000);
+      // Get abandoned purchases from LAST 5 MINUTES (real-time)
       const {
         data: recentAbandoned
       } = await supabase.from('abandoned_purchases')
         .select('*')
         .in('product_id', productIds)
         .eq('status', 'abandoned')
-        .gte('abandoned_at', last30min.toISOString());
+        .gte('abandoned_at', last5min.toISOString());
 
       // Calculate real metrics from TODAY's data
       const allTodayOrders = todayOrders || [];
@@ -184,18 +175,14 @@ export function AppLiveView({
         orders: paidOrders.length // Count orders, not items
       });
 
-      // Customer behavior - use abandoned_purchases table
-      const abandonedToday = todayAbandoned || [];
+      // Customer behavior - ÚLTIMOS 5 MINUTOS (tempo real)
       const activeAbandoned = recentAbandoned || [];
-      const recoveredToday = abandonedToday.filter(a => a.status === 'recovered');
-      
-      // Compras completadas HOJE
-      const completedToday = paidOrders.length;
+      const recentCompleted = (recentOrders || []).filter(o => o.status === 'completed');
       
       setBehavior({
-        activeCarts: activeAbandoned.length, // Carrinhos abandonados nos últimos 30 min
-        checkingOut: abandonedToday.filter(a => a.status === 'abandoned').length, // Total abandonados hoje
-        completed: completedToday  // Compras completadas hoje
+        activeCarts: activeAbandoned.length, // Carrinhos abandonados nos últimos 5 min
+        checkingOut: recentPending.length,   // Pessoas no checkout agora (últimos 5 min)
+        completed: recentCompleted.length    // Compras nos últimos 5 min
       });
 
       // Sessions by location - based on phone country codes from TODAY's orders
@@ -452,21 +439,21 @@ export function AppLiveView({
               <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center mx-auto mb-2">
                 <ShoppingCart className="h-5 w-5 text-orange-500" />
               </div>
-              <p className="text-xs text-muted-foreground mb-1">Carrinhos (30m)</p>
+              <p className="text-xs text-muted-foreground mb-1">Abandonos (5m)</p>
               <p className="text-sm font-bold text-foreground">{loading ? '...' : behavior.activeCarts}</p>
             </div>
             <div className="text-center border-x border-muted">
               <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mx-auto mb-2">
                 <CreditCard className="h-5 w-5 text-blue-500" />
               </div>
-              <p className="text-xs text-muted-foreground mb-1">Abandonados</p>
+              <p className="text-xs text-muted-foreground mb-1">No checkout</p>
               <p className="text-sm font-bold text-foreground">{loading ? '...' : behavior.checkingOut}</p>
             </div>
             <div className="text-center">
               <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-2">
                 <CheckCircle className="h-5 w-5 text-green-500" />
               </div>
-              <p className="text-xs text-muted-foreground mb-1">Vendas</p>
+              <p className="text-xs text-muted-foreground mb-1">Compras (5m)</p>
               <p className="text-sm font-bold text-foreground">{loading ? '...' : behavior.completed}</p>
             </div>
           </div>
