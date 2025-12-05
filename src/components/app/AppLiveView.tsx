@@ -335,7 +335,7 @@ export function AppLiveView({ onBack }: LiveViewProps) {
       </div>
 
       {/* Filter Pills */}
-      <div className="flex items-center gap-2 px-2 overflow-x-auto pb-2">
+      <div className="flex items-center gap-2 px-2 overflow-x-auto scrollbar-hide">
         <button
           onClick={() => setActiveFilter('orders')}
           className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors ${
