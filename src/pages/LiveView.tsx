@@ -8,23 +8,22 @@ import { formatPriceForSeller } from '@/utils/priceFormatting';
 import RotatingEarth from '@/components/app/RotatingEarth';
 import { useCheckoutPresenceCount } from '@/hooks/useCheckoutPresenceCount';
 import { Progress } from '@/components/ui/progress';
-
 interface SessionLocation {
   country: string;
   region: string;
   city: string;
   count: number;
 }
-
 interface ProductSales {
   id: string;
   name: string;
   sales: number;
   revenue: number;
 }
-
 export default function LiveView() {
-  const { user } = useAuth();
+  const {
+    user
+  } = useAuth();
   const [loading, setLoading] = useState(true);
   const [productIds, setProductIds] = useState<string[]>([]);
   const [searchLocation, setSearchLocation] = useState('');
@@ -62,24 +61,25 @@ export default function LiveView() {
   useEffect(() => {
     const loadProducts = async () => {
       if (!user) return;
-      const { data: products } = await supabase
-        .from('products')
-        .select('id, name')
-        .eq('user_id', user.id);
+      const {
+        data: products
+      } = await supabase.from('products').select('id, name').eq('user_id', user.id);
       setProductIds(products?.map(p => p.id) || []);
     };
     loadProducts();
   }, [user]);
 
   // Real-time presence tracking
-  const { visitorCount: realTimeVisitors, visitorLocations } = useCheckoutPresenceCount(productIds);
-  
+  const {
+    visitorCount: realTimeVisitors,
+    visitorLocations
+  } = useCheckoutPresenceCount(productIds);
+
   // Use ref for visitorLocations to avoid causing re-renders in loadLiveData
   const visitorLocationsRef = useRef(visitorLocations);
   useEffect(() => {
     visitorLocationsRef.current = visitorLocations;
   }, [visitorLocations]);
-
   const loadLiveData = useCallback(async (silent = false) => {
     if (!user || productIds.length === 0) return;
     try {
@@ -88,61 +88,46 @@ export default function LiveView() {
       const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       const yesterdayStart = new Date(todayStart.getTime() - 24 * 60 * 60 * 1000);
       const last5min = new Date(now.getTime() - 5 * 60 * 1000);
-
-      const { data: products } = await supabase
-        .from('products')
-        .select('id, name')
-        .eq('user_id', user.id);
-
-      const { data: todayOrders } = await supabase
-        .from('orders')
-        .select('*')
-        .in('product_id', productIds)
-        .gte('created_at', todayStart.toISOString())
-        .order('created_at', { ascending: false });
-
-      const { data: yesterdayOrders } = await supabase
-        .from('orders')
-        .select('id')
-        .in('product_id', productIds)
-        .gte('created_at', yesterdayStart.toISOString())
-        .lt('created_at', todayStart.toISOString());
-
-      const { data: recentOrders } = await supabase
-        .from('orders')
-        .select('*')
-        .in('product_id', productIds)
-        .gte('created_at', last5min.toISOString());
-
+      const {
+        data: products
+      } = await supabase.from('products').select('id, name').eq('user_id', user.id);
+      const {
+        data: todayOrders
+      } = await supabase.from('orders').select('*').in('product_id', productIds).gte('created_at', todayStart.toISOString()).order('created_at', {
+        ascending: false
+      });
+      const {
+        data: yesterdayOrders
+      } = await supabase.from('orders').select('id').in('product_id', productIds).gte('created_at', yesterdayStart.toISOString()).lt('created_at', todayStart.toISOString());
+      const {
+        data: recentOrders
+      } = await supabase.from('orders').select('*').in('product_id', productIds).gte('created_at', last5min.toISOString());
       const allTodayOrders = todayOrders || [];
       const paidOrders = allTodayOrders.filter(o => o.status === 'completed');
       const pendingOrders = allTodayOrders.filter(o => o.status === 'pending' || o.status === 'Pendente');
       const yesterdaySessions = yesterdayOrders?.length || 0;
       const recentPending = (recentOrders || []).filter(o => o.status === 'pending' || o.status === 'Pendente');
-
       let totalSalesValue = 0;
       paidOrders.forEach(order => {
         let amount = parseFloat(order.seller_commission?.toString() || order.amount || '0');
         if (order.currency && order.currency !== 'KZ') {
-          const exchangeRates: Record<string, number> = { 'EUR': 1053, 'MZN': 14.3 };
+          const exchangeRates: Record<string, number> = {
+            'EUR': 1053,
+            'MZN': 14.3
+          };
           const rate = exchangeRates[order.currency.toUpperCase()] || 1;
           amount = Math.round(amount * rate);
         }
         totalSalesValue += amount;
       });
-
       const recentCompleted = (recentOrders || []).filter(o => o.status === 'completed');
       setBehavior({
         pendingOrders: recentPending.length,
         completed: recentCompleted.length,
         activeCarts: pendingOrders.length
       });
-
       const totalSessions = allTodayOrders.length;
-      const sessionsChange = yesterdaySessions > 0 
-        ? (totalSessions - yesterdaySessions) / yesterdaySessions * 100 
-        : 0;
-
+      const sessionsChange = yesterdaySessions > 0 ? (totalSessions - yesterdaySessions) / yesterdaySessions * 100 : 0;
       setMetrics({
         visitorsNow: recentPending.length,
         totalSales: totalSalesValue,
@@ -152,19 +137,14 @@ export default function LiveView() {
       });
 
       // Sessions by location
-      const { data: todaySessions } = await supabase
-        .from('checkout_sessions')
-        .select('country, city, region')
-        .in('product_id', productIds)
-        .gte('created_at', todayStart.toISOString());
-
+      const {
+        data: todaySessions
+      } = await supabase.from('checkout_sessions').select('country, city, region').in('product_id', productIds).gte('created_at', todayStart.toISOString());
       const locationCounts: Record<string, SessionLocation> = {};
-      
       if (todaySessions && todaySessions.length > 0) {
         todaySessions.forEach(session => {
           const country = session.country;
           if (!country || country === 'Desconhecido' || country === '') return;
-          
           if (!locationCounts[country]) {
             locationCounts[country] = {
               country,
@@ -178,7 +158,6 @@ export default function LiveView() {
       } else {
         visitorLocationsRef.current.forEach(loc => {
           if (!loc.country || loc.country === 'Desconhecido' || loc.country === '') return;
-          
           if (!locationCounts[loc.country]) {
             locationCounts[loc.country] = {
               country: loc.country,
@@ -190,7 +169,6 @@ export default function LiveView() {
           locationCounts[loc.country].count += loc.count;
         });
       }
-      
       const sortedLocations = Object.values(locationCounts).sort((a, b) => b.count - a.count).slice(0, 10);
       setSessionsByLocation(sortedLocations);
 
@@ -199,9 +177,13 @@ export default function LiveView() {
       recentCompleted.forEach(order => {
         const country = (order as any).customer_country;
         if (!country || country === 'Desconhecido' || country === '') return;
-        
         if (!activeLocationCounts[country]) {
-          activeLocationCounts[country] = { country, region: 'Nenhum(a)', city: 'Nenhum(a)', count: 0 };
+          activeLocationCounts[country] = {
+            country,
+            region: 'Nenhum(a)',
+            city: 'Nenhum(a)',
+            count: 0
+          };
         }
         activeLocationCounts[country].count++;
       });
@@ -213,7 +195,6 @@ export default function LiveView() {
         const email = order.customer_email?.toLowerCase();
         if (email) emailCounts[email] = (emailCounts[email] || 0) + 1;
       });
-
       const uniqueEmails = Object.keys(emailCounts);
       const returningCustomers = uniqueEmails.filter(email => emailCounts[email] > 1).length;
       setCustomerTypes({
@@ -228,13 +209,21 @@ export default function LiveView() {
         productOrders.forEach(order => {
           let amount = parseFloat(order.seller_commission?.toString() || order.amount || '0');
           if (order.currency && order.currency !== 'KZ') {
-            const exchangeRates: Record<string, number> = { 'EUR': 1053, 'MZN': 14.3 };
+            const exchangeRates: Record<string, number> = {
+              'EUR': 1053,
+              'MZN': 14.3
+            };
             const rate = exchangeRates[order.currency.toUpperCase()] || 1;
             amount = Math.round(amount * rate);
           }
           productRevenue += amount;
         });
-        return { id: p.id, name: p.name, sales: productOrders.length, revenue: productRevenue };
+        return {
+          id: p.id,
+          name: p.name,
+          sales: productOrders.length,
+          revenue: productRevenue
+        };
       }).filter(p => p.sales > 0 || p.revenue > 0).sort((a, b) => b.revenue - a.revenue);
       setProductSales(productSalesData);
     } catch (error) {
@@ -243,11 +232,9 @@ export default function LiveView() {
       setLoading(false);
     }
   }, [user, productIds]);
-
   useEffect(() => {
     if (productIds.length > 0) loadLiveData(false);
   }, [productIds, loadLiveData]);
-
   const loadLiveDataRef = useRef(loadLiveData);
   useEffect(() => {
     loadLiveDataRef.current = loadLiveData;
@@ -256,32 +243,28 @@ export default function LiveView() {
   // Real-time subscription
   useEffect(() => {
     if (!user || productIds.length === 0) return;
-    const channel = supabase
-      .channel(`live-view-desktop-${user.id}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, payload => {
-        const newOrder = payload.new as any;
-        if (productIds.includes(newOrder?.product_id)) loadLiveDataRef.current(true);
-      })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, payload => {
-        const updatedOrder = payload.new as any;
-        if (productIds.includes(updatedOrder?.product_id)) loadLiveDataRef.current(true);
-      })
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
+    const channel = supabase.channel(`live-view-desktop-${user.id}`).on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'orders'
+    }, payload => {
+      const newOrder = payload.new as any;
+      if (productIds.includes(newOrder?.product_id)) loadLiveDataRef.current(true);
+    }).on('postgres_changes', {
+      event: 'UPDATE',
+      schema: 'public',
+      table: 'orders'
+    }, payload => {
+      const updatedOrder = payload.new as any;
+      if (productIds.includes(updatedOrder?.product_id)) loadLiveDataRef.current(true);
+    }).subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user?.id, productIds]);
-
-  const filteredLocations = sessionsByLocation.filter(loc => 
-    searchLocation === '' || 
-    loc.country.toLowerCase().includes(searchLocation.toLowerCase()) ||
-    loc.city.toLowerCase().includes(searchLocation.toLowerCase()) ||
-    loc.region.toLowerCase().includes(searchLocation.toLowerCase())
-  );
-
+  const filteredLocations = sessionsByLocation.filter(loc => searchLocation === '' || loc.country.toLowerCase().includes(searchLocation.toLowerCase()) || loc.city.toLowerCase().includes(searchLocation.toLowerCase()) || loc.region.toLowerCase().includes(searchLocation.toLowerCase()));
   const maxLocationCount = Math.max(...sessionsByLocation.map(l => l.count), 1);
-
-  return (
-    <div className="p-6 space-y-6 bg-background text-foreground">
+  return <div className="p-6 space-y-6 bg-background text-foreground">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -295,12 +278,7 @@ export default function LiveView() {
         <div className="flex items-center gap-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Procurar local"
-              value={searchLocation}
-              onChange={(e) => setSearchLocation(e.target.value)}
-              className="pl-9 w-64 bg-background"
-            />
+            <Input placeholder="Procurar local" value={searchLocation} onChange={e => setSearchLocation(e.target.value)} className="pl-9 w-64 bg-background" />
           </div>
         </div>
       </div>
@@ -322,7 +300,7 @@ export default function LiveView() {
             
             <Card>
               <CardContent className="p-4">
-                <p className="text-sm text-muted-foreground mb-1">Total de vendas</p>
+                <p className="text-sm text-muted-foreground mb-1">Total líquidas  </p>
                 <div className="flex items-center gap-2">
                   <p className="text-2xl font-bold text-foreground">
                     {loading ? '...' : formatPriceForSeller(metrics.totalSales, 'KZ')}
@@ -339,19 +317,17 @@ export default function LiveView() {
                 <p className="text-sm text-muted-foreground mb-1">Sessões</p>
                 <div className="flex items-center gap-2">
                   <p className="text-2xl font-bold text-foreground">{loading ? '...' : metrics.sessions}</p>
-                  {!loading && metrics.sessionsChange !== 0 && (
-                    <span className={`flex items-center text-sm ${metrics.sessionsChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                  {!loading && metrics.sessionsChange !== 0 && <span className={`flex items-center text-sm ${metrics.sessionsChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                       {metrics.sessionsChange >= 0 ? <TrendingUp className="h-4 w-4 mr-1" /> : <TrendingDown className="h-4 w-4 mr-1" />}
                       {Math.abs(metrics.sessionsChange)}%
-                    </span>
-                  )}
+                    </span>}
                 </div>
               </CardContent>
             </Card>
             
             <Card>
               <CardContent className="p-4">
-                <p className="text-sm text-muted-foreground mb-1">Encomendas</p>
+                <p className="text-sm text-muted-foreground mb-1">vendas pagas </p>
                 <p className="text-2xl font-bold text-foreground">{loading ? '...' : metrics.orders}</p>
               </CardContent>
             </Card>
@@ -385,19 +361,13 @@ export default function LiveView() {
               <CardTitle className="text-base font-semibold text-foreground">Sessões por local</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {filteredLocations.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">Nenhuma sessão registrada</p>
-              ) : (
-                filteredLocations.map((loc, index) => (
-                  <div key={index} className="space-y-1">
+              {filteredLocations.length === 0 ? <p className="text-sm text-muted-foreground text-center py-4">Nenhuma sessão registrada</p> : filteredLocations.map((loc, index) => <div key={index} className="space-y-1">
                     <div className="flex justify-between text-sm">
                       <span className="text-foreground">{loc.country} · {loc.region} · {loc.city}</span>
                       <span className="text-muted-foreground">{loc.count}</span>
                     </div>
-                    <Progress value={(loc.count / maxLocationCount) * 100} className="h-2" />
-                  </div>
-                ))
-              )}
+                    <Progress value={loc.count / maxLocationCount * 100} className="h-2" />
+                  </div>)}
             </CardContent>
           </Card>
 
@@ -421,26 +391,22 @@ export default function LiveView() {
           </Card>
 
           {/* Sales by Product */}
-          {productSales.length > 0 && (
-            <Card>
+          {productSales.length > 0 && <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base font-semibold text-foreground">Vendas por produto</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {productSales.map((product) => (
-                    <div key={product.id} className="flex items-center justify-between">
+                  {productSales.map(product => <div key={product.id} className="flex items-center justify-between">
                       <span className="text-sm truncate max-w-[200px] text-foreground">{product.name}</span>
                       <div className="flex items-center gap-4">
                         <span className="text-sm text-muted-foreground">{product.sales} vendas</span>
                         <span className="text-sm font-medium text-foreground">{formatPriceForSeller(product.revenue, 'KZ')}</span>
                       </div>
-                    </div>
-                  ))}
+                    </div>)}
                 </div>
               </CardContent>
-            </Card>
-          )}
+            </Card>}
         </div>
 
         {/* Right Column - Globe */}
@@ -448,20 +414,13 @@ export default function LiveView() {
           <Card className="sticky top-6 h-fit">
             <CardContent className="p-6">
               <div className="relative w-full aspect-square max-w-[500px] mx-auto">
-                <RotatingEarth 
-                  width={500} 
-                  height={500} 
-                  activeLocations={activeSessionsLocations} 
-                  visitorLocations={visitorLocations} 
-                />
+                <RotatingEarth width={500} height={500} activeLocations={activeSessionsLocations} visitorLocations={visitorLocations} />
                 
-                {activeSessionsLocations.length === 0 && realTimeVisitors === 0 && (
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                {activeSessionsLocations.length === 0 && realTimeVisitors === 0 && <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <div className="text-center text-muted-foreground text-sm bg-background/90 px-4 py-3 rounded-lg shadow-sm">
                       Nenhuma sessão ativa
                     </div>
-                  </div>
-                )}
+                  </div>}
               </div>
               
               {/* Legend */}
@@ -479,6 +438,5 @@ export default function LiveView() {
           </Card>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 }
