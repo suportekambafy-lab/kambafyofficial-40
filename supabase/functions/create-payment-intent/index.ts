@@ -61,11 +61,32 @@ Deno.serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    const { data: product, error: productError } = await supabase
-      .from('products')
-      .select('*')
-      .eq('slug', productId)
-      .single();
+    // Try to find product by ID first, then by slug
+    let product = null;
+    let productError = null;
+    
+    // First try by ID (UUID format)
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (uuidRegex.test(productId)) {
+      const result = await supabase
+        .from('products')
+        .select('*')
+        .eq('id', productId)
+        .single();
+      product = result.data;
+      productError = result.error;
+    }
+    
+    // If not found by ID, try by slug
+    if (!product) {
+      const result = await supabase
+        .from('products')
+        .select('*')
+        .eq('slug', productId)
+        .single();
+      product = result.data;
+      productError = result.error;
+    }
 
     if (productError || !product) {
       console.error('Product not found:', productError);
