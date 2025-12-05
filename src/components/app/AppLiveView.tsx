@@ -413,7 +413,7 @@ export function AppLiveView({
               Vendas líquidas  
             </p>
             <div className="flex items-center gap-2">
-              {loading ? <Skeleton className="h-6 w-20" /> : (
+              {isInitialLoad ? <Skeleton className="h-6 w-20" /> : (
                 <p className="text-base font-bold text-foreground">
                   {formatPriceForSeller(metrics.totalSales, 'KZ')}
                 </p>
@@ -429,7 +429,7 @@ export function AppLiveView({
             </p>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                {loading ? <Skeleton className="h-6 w-12" /> : (
+                {isInitialLoad ? <Skeleton className="h-6 w-12" /> : (
                   <>
                     <p className="text-base font-bold text-foreground">{metrics.sessions}</p>
                     {metrics.sessionsChange !== 0 && <span className={`flex items-center text-xs ${metrics.sessionsChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
@@ -448,7 +448,7 @@ export function AppLiveView({
             <p className="text-xs text-muted-foreground mb-1 truncate border-b border-dashed border-muted pb-1">
               Vendas pagas
             </p>
-            {loading ? <Skeleton className="h-6 w-10" /> : <p className="text-base font-bold text-foreground">{metrics.orders}</p>}
+            {isInitialLoad ? <Skeleton className="h-6 w-10" /> : <p className="text-base font-bold text-foreground">{metrics.orders}</p>}
           </CardContent>
         </Card>
       </div>
@@ -466,12 +466,12 @@ export function AppLiveView({
             <div className="text-center">
               
               <p className="text-xs text-muted-foreground mb-1">Pedido gerado</p>
-              {loading ? <Skeleton className="h-5 w-8 mx-auto" /> : <p className="text-sm font-bold text-foreground">{behavior.pendingOrders}</p>}
+              {isInitialLoad ? <Skeleton className="h-5 w-8 mx-auto" /> : <p className="text-sm font-bold text-foreground">{behavior.pendingOrders}</p>}
             </div>
             <div className="text-center border-l border-muted">
               
               <p className="text-xs text-muted-foreground mb-1">Compras pagas </p>
-              {loading ? <Skeleton className="h-5 w-8 mx-auto" /> : <p className="text-sm font-bold text-foreground">{behavior.completed}</p>}
+              {isInitialLoad ? <Skeleton className="h-5 w-8 mx-auto" /> : <p className="text-sm font-bold text-foreground">{behavior.completed}</p>}
             </div>
           </div>
         </CardContent>
@@ -486,7 +486,7 @@ export function AppLiveView({
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4 pt-0 space-y-3">
-          {loading ? <p className="text-sm text-muted-foreground text-center py-4">Carregando...</p> : sessionsByLocation.length === 0 ? <p className="text-sm text-muted-foreground text-center py-4">
+          {isInitialLoad ? <Skeleton className="h-16 w-full" /> : sessionsByLocation.length === 0 ? <p className="text-sm text-muted-foreground text-center py-4">
               Sem sessões hoje
             </p> : sessionsByLocation.map((loc, idx) => {
           const maxCount = sessionsByLocation[0]?.count || 1;
@@ -517,7 +517,7 @@ export function AppLiveView({
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4 pt-0">
-          {loading ? <p className="text-sm text-muted-foreground text-center py-4">Carregando...</p> : customerTypes.newCustomers === 0 && customerTypes.returningCustomers === 0 ? <p className="text-sm text-muted-foreground text-center py-4">
+          {isInitialLoad ? <Skeleton className="h-16 w-full" /> : customerTypes.newCustomers === 0 && customerTypes.returningCustomers === 0 ? <p className="text-sm text-muted-foreground text-center py-4">
               Sem dados para este intervalo de datas
             </p> : <div className="flex items-center gap-6">
               <div className="flex-1">
@@ -546,7 +546,7 @@ export function AppLiveView({
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4 pt-0 space-y-3">
-          {loading ? <p className="text-sm text-muted-foreground text-center py-4">Carregando...</p> : productSales.length === 0 ? <p className="text-sm text-muted-foreground text-center py-4">
+          {isInitialLoad ? <Skeleton className="h-16 w-full" /> : productSales.length === 0 ? <p className="text-sm text-muted-foreground text-center py-4">
               Sem vendas nas últimas 24 horas
             </p> : productSales.map(product => <div key={product.id} className="flex items-center justify-between py-2 border-b border-muted last:border-0">
                 <div className="flex-1 min-w-0">
