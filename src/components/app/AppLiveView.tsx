@@ -271,18 +271,37 @@ export function AppLiveView({
   useEffect(() => {
     if (!user || productIds.length === 0) return;
     
-    console.log('🔌 [Live View] Connecting to realtime channel...');
+    console.log('🔌 [Live View] Connecting to realtime channel for user:', user.id);
+    console.log('🔌 [Live View] Watching products:', productIds);
     
     const channel = supabase
       .channel(`live-view-${user.id}`)
       .on('postgres_changes', {
-        event: '*',
+        event: 'INSERT',
         schema: 'public',
         table: 'orders'
       }, (payload) => {
-        console.log('📦 [Live View] Order change detected:', payload.eventType, payload);
-        // SILENT update - no loading spinner for realtime updates
-        loadLiveDataRef.current(true);
+        console.log('📦 [Live View] NEW ORDER INSERT:', payload);
+        // Check if this order is for one of our products
+        const newOrder = payload.new as any;
+        if (productIds.includes(newOrder?.product_id)) {
+          console.log('✅ [Live View] Order is for our product, refreshing...');
+          loadLiveDataRef.current(true);
+        } else {
+          console.log('⏭️ [Live View] Order is for different seller, ignoring');
+        }
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'orders'
+      }, (payload) => {
+        console.log('📦 [Live View] ORDER UPDATE:', payload);
+        const updatedOrder = payload.new as any;
+        if (productIds.includes(updatedOrder?.product_id)) {
+          console.log('✅ [Live View] Update is for our product, refreshing...');
+          loadLiveDataRef.current(true);
+        }
       })
       .subscribe((status) => {
         console.log('🔌 [Live View] Realtime status:', status);
@@ -292,7 +311,7 @@ export function AppLiveView({
       console.log('🔌 [Live View] Disconnecting...');
       supabase.removeChannel(channel);
     };
-  }, [user?.id, productIds.length]);
+  }, [user?.id, productIds]);
   const maxLocationCount = Math.max(...sessionsByLocation.map(l => l.count), 1);
   return <div className="p-4 space-y-4 min-h-screen bg-amber-50/30 dark:bg-zinc-900">
       {/* Header */}
