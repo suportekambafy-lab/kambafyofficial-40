@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { TrendingDown, TrendingUp, Search, Radio, Maximize2 } from 'lucide-react';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
@@ -320,7 +321,7 @@ export default function LiveView() {
                 <p className="text-sm text-muted-foreground mb-1">Vendas líquidas  </p>
                 <div className="flex items-center gap-2">
                   <p className="text-2xl font-bold text-foreground">
-                    {loading ? '...' : formatPriceForSeller(metrics.totalSales, 'KZ')}
+                    {loading ? <Skeleton className="h-8 w-24" /> : formatPriceForSeller(metrics.totalSales, 'KZ')}
                   </p>
                 </div>
               </CardContent>
@@ -333,11 +334,15 @@ export default function LiveView() {
               <CardContent className="p-4">
                 <p className="text-sm text-muted-foreground mb-1">Sessões</p>
                 <div className="flex items-center gap-2">
-                  <p className="text-2xl font-bold text-foreground">{loading ? '...' : metrics.sessions}</p>
-                  {!loading && metrics.sessionsChange !== 0 && <span className={`flex items-center text-sm ${metrics.sessionsChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                      {metrics.sessionsChange >= 0 ? <TrendingUp className="h-4 w-4 mr-1" /> : <TrendingDown className="h-4 w-4 mr-1" />}
-                      {Math.abs(metrics.sessionsChange)}%
-                    </span>}
+                  {loading ? <Skeleton className="h-8 w-16" /> : (
+                    <>
+                      <p className="text-2xl font-bold text-foreground">{metrics.sessions}</p>
+                      {metrics.sessionsChange !== 0 && <span className={`flex items-center text-sm ${metrics.sessionsChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                          {metrics.sessionsChange >= 0 ? <TrendingUp className="h-4 w-4 mr-1" /> : <TrendingDown className="h-4 w-4 mr-1" />}
+                          {Math.abs(metrics.sessionsChange)}%
+                        </span>}
+                    </>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -345,7 +350,7 @@ export default function LiveView() {
             <Card>
               <CardContent className="p-4">
                 <p className="text-sm text-muted-foreground mb-1">vendas pagas </p>
-                <p className="text-2xl font-bold text-foreground">{loading ? '...' : metrics.orders}</p>
+                {loading ? <Skeleton className="h-8 w-12" /> : <p className="text-2xl font-bold text-foreground">{metrics.orders}</p>}
               </CardContent>
             </Card>
           </div>
