@@ -1396,7 +1396,7 @@ export function AppHome() {
               <CardContent className="p-4">
                 <div className="space-y-2">
                   <div className="text-xs font-medium text-muted-foreground">Vendas líquidas</div>
-                  <div className="text-xl font-bold tracking-tight text-foreground">
+                  <div className="text-4xl font-bold tracking-tight text-foreground">
                     {loading ? '...' : formatPriceForSeller(stats.totalRevenue, 'KZ')}
                   </div>
                 </div>
