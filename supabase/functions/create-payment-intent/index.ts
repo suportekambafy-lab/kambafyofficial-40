@@ -142,6 +142,12 @@ Deno.serve(async (req) => {
         allow_redirects: 'always'
       };
       allowRedirects = 'always';
+    } else if (paymentMethod === 'mbway') {
+      automaticPaymentMethods = {
+        enabled: true,
+        allow_redirects: 'always'
+      };
+      allowRedirects = 'always';
     } else {
       automaticPaymentMethods = {
         enabled: true,

@@ -158,7 +158,7 @@ export function ModulePaymentModal({
     if (!module) return;
 
     // Para métodos Stripe, não processar aqui - o componente StripeCardPayment cuidará disso
-    if (['card', 'klarna', 'multibanco', 'apple_pay'].includes(selectedPaymentMethod)) {
+    if (['card', 'klarna', 'multibanco', 'apple_pay', 'mbway'].includes(selectedPaymentMethod)) {
       console.log('⏳ Stripe payment will be handled by StripeCardPayment component');
       return;
     }
@@ -568,7 +568,7 @@ export function ModulePaymentModal({
           )}
 
           {/* Comprovante para outros métodos que não são Express/Reference/Transfer */}
-          {selectedPaymentMethod && selectedPaymentMethod !== 'express' && selectedPaymentMethod !== 'reference' && selectedPaymentMethod !== 'transfer' && !['card', 'klarna', 'multibanco', 'apple_pay'].includes(selectedPaymentMethod) && (
+          {selectedPaymentMethod && selectedPaymentMethod !== 'express' && selectedPaymentMethod !== 'reference' && selectedPaymentMethod !== 'transfer' && !['card', 'klarna', 'multibanco', 'apple_pay', 'mbway'].includes(selectedPaymentMethod) && (
             <div className="space-y-2">
               <Label htmlFor="proof">Comprovante de Pagamento</Label>
               <Input
@@ -584,7 +584,7 @@ export function ModulePaymentModal({
           )}
 
           {/* Stripe Payment Methods */}
-          {['card', 'klarna', 'multibanco', 'apple_pay'].includes(selectedPaymentMethod) && (
+          {['card', 'klarna', 'multibanco', 'apple_pay', 'mbway'].includes(selectedPaymentMethod) && (
             <div className="mt-4">
               <OptimizedStripeCardPayment
                 amount={amount}
@@ -608,7 +608,7 @@ export function ModulePaymentModal({
         </div>
 
         <div className="flex flex-col gap-3">
-          {!['card', 'klarna', 'multibanco', 'apple_pay'].includes(selectedPaymentMethod) && (
+          {!['card', 'klarna', 'multibanco', 'apple_pay', 'mbway'].includes(selectedPaymentMethod) && (
             <Button
               onClick={handlePayment}
               className="w-full h-12 text-lg font-semibold"
