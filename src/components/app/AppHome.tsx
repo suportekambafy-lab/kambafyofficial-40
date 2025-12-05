@@ -1502,7 +1502,7 @@ export function AppHome() {
                 <Package className={`h-5 w-5 ${activeTab === 'products' ? 'text-primary' : 'text-foreground'}`} />
               </button>
               
-              <button onClick={() => setActiveTab('stats')} className={`p-2.5 rounded-full transition-colors ${activeTab === 'stats' ? 'bg-primary/10' : 'hover:bg-accent'}`}>
+              <button onClick={() => setActiveTab('stats')} className={`p-2.5 transition-colors ${activeTab === 'stats' ? '' : 'hover:bg-accent'}`}>
                 <Wallet className={`h-5 w-5 ${activeTab === 'stats' ? 'text-primary' : 'text-foreground'}`} />
               </button>
             </div>
