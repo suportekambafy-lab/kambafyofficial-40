@@ -3,8 +3,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Search, Map, Globe, TrendingDown, TrendingUp, ShoppingCart, CreditCard, CheckCircle } from 'lucide-react';
+import { ChevronLeft, Search, Map, TrendingDown, TrendingUp, ShoppingCart, CreditCard, CheckCircle } from 'lucide-react';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
+import RotatingEarth from './RotatingEarth';
 
 interface LiveViewProps {
   onBack: () => void;
@@ -353,78 +354,40 @@ export function AppLiveView({ onBack }: LiveViewProps) {
         </Button>
       </div>
 
-      {/* Globe Visualization with Real Earth Image */}
-      <Card className="overflow-hidden rounded-2xl border-none shadow-sm bg-gradient-to-br from-sky-50 to-cyan-50 dark:from-sky-950/30 dark:to-cyan-950/30">
-        <CardContent className="p-6">
-          <div className="relative w-full aspect-square max-w-[300px] mx-auto">
-            {/* Real Globe Image */}
-            <div className="absolute inset-0 rounded-full overflow-hidden shadow-2xl shadow-cyan-500/20">
-              <img 
-                src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/The_Earth_seen_from_Apollo_17.jpg/1200px-The_Earth_seen_from_Apollo_17.jpg" 
-                alt="Earth Globe"
-                className="w-full h-full object-cover rounded-full"
-              />
-              {/* Overlay for better dot visibility */}
-              <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-black/30 rounded-full" />
-              
-              {/* Active visitor dots - ONLY from last 5 min pending orders */}
-              {activeSessionsLocations.map((loc) => {
-                // Map countries to approximate globe positions
-                const countryPositions: Record<string, { top: string; left: string }> = {
-                  'Angola': { top: '55%', left: '52%' },
-                  'Moçambique': { top: '58%', left: '62%' },
-                  'Portugal': { top: '38%', left: '42%' },
-                  'Brasil': { top: '55%', left: '30%' },
-                  'Espanha': { top: '36%', left: '44%' },
-                  'França': { top: '34%', left: '48%' },
-                  'Reino Unido': { top: '30%', left: '46%' },
-                  'Estados Unidos': { top: '35%', left: '22%' },
-                  'Itália': { top: '37%', left: '52%' },
-                  'Alemanha': { top: '32%', left: '50%' },
-                  'Outro': { top: '45%', left: '50%' },
-                  'Desconhecido': { top: '50%', left: '50%' }
-                };
-                const pos = countryPositions[loc.country] || { top: '50%', left: '50%' };
-                const size = Math.min(8 + loc.count * 4, 20);
-                
-                return (
-                  <div
-                    key={loc.country}
-                    className="absolute rounded-full bg-green-400 animate-pulse shadow-lg"
-                    style={{ 
-                      top: pos.top, 
-                      left: pos.left,
-                      width: `${size}px`,
-                      height: `${size}px`,
-                      boxShadow: `0 0 ${size * 2}px rgba(34, 197, 94, 0.9)`,
-                      transform: 'translate(-50%, -50%)'
-                    }}
-                    title={`${loc.country}: ${loc.count} no checkout agora`}
-                  />
-                );
-              })}
-            </div>
+      {/* Globe Visualization - Rotating Earth */}
+      <Card className="overflow-hidden rounded-2xl border-none shadow-sm bg-white">
+        <CardContent className="p-4">
+          <div className="relative w-full max-w-[280px] mx-auto">
+            <RotatingEarth 
+              width={280} 
+              height={280} 
+              activeLocations={activeSessionsLocations}
+            />
             
             {/* No active sessions message */}
             {activeSessionsLocations.length === 0 && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center text-muted-foreground text-xs bg-background/80 px-3 py-2 rounded-lg">
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="text-center text-muted-foreground text-xs bg-white/90 px-3 py-2 rounded-lg shadow-sm">
                   Nenhuma sessão ativa
                 </div>
               </div>
             )}
-            
-            {/* Legend */}
-            <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-4 text-xs text-foreground/70">
-              <div className="flex items-center gap-1">
-                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                <span>No checkout agora ({metrics.visitorsNow})</span>
-              </div>
+          </div>
+          
+          {/* Legend */}
+          <div className="flex items-center justify-center gap-4 mt-3 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              <span>No checkout ({metrics.visitorsNow})</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 rounded-full bg-sky-400" />
+              <span>Continentes</span>
             </div>
           </div>
           
           {/* Real-time indicator */}
-          <div className="flex items-center justify-center gap-2 mt-4 text-xs text-muted-foreground">
+          <div className="flex items-center justify-center gap-2 mt-2 text-xs text-muted-foreground">
             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
             <span>Tempo real via WebSocket</span>
           </div>
