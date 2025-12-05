@@ -16,11 +16,19 @@ export function useCheckoutPresenceCount(productIds: string[]) {
 
     channels.forEach((channel, productId) => {
       const state = channel.presenceState();
-      const count = Object.keys(state).length;
+      console.log('📊 [Presence Count] State for', productId, ':', JSON.stringify(state));
+      
+      // Count ALL presences in each key
+      let count = 0;
+      Object.values(state).forEach((presences: any) => {
+        count += Array.isArray(presences) ? presences.length : 1;
+      });
+      
       byProduct[productId] = count;
       total += count;
     });
 
+    console.log('📊 [Presence Count] Total visitors:', total, 'By product:', byProduct);
     setVisitorCount(total);
     setVisitorsByProduct(byProduct);
   }, []);

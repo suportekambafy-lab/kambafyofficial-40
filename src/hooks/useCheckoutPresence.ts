@@ -24,9 +24,10 @@ export function useCheckoutPresence(productId: string | undefined) {
     };
 
     channel.subscribe(async (status) => {
+      console.log('🔌 [Checkout Presence] Channel status:', status);
       if (status === 'SUBSCRIBED') {
-        await channel.track(presenceState);
-        console.log('🟢 [Checkout Presence] Tracking visitor on product:', productId);
+        const trackResult = await channel.track(presenceState);
+        console.log('🟢 [Checkout Presence] Track result:', trackResult, 'for product:', productId);
       }
     });
 
