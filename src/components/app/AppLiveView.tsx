@@ -95,13 +95,12 @@ export function AppLiveView({
     visitorCount: realTimeVisitors,
     visitorLocations
   } = useCheckoutPresenceCount(productIds);
-  
+
   // Use ref for visitorLocations to avoid stale closures
   const visitorLocationsRef = useRef(visitorLocations);
   useEffect(() => {
     visitorLocationsRef.current = visitorLocations;
   }, [visitorLocations]);
-  
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const loadLiveData = useCallback(async (silent = false) => {
     if (!user || productIds.length === 0) return;
@@ -191,21 +190,17 @@ export function AppLiveView({
       });
 
       // Sessions by location - fetch from checkout_sessions table (today's visits)
-      const { data: todaySessions } = await supabase
-        .from('checkout_sessions')
-        .select('country, city, region')
-        .in('product_id', productIds)
-        .gte('created_at', todayStart.toISOString());
+      const {
+        data: todaySessions
+      } = await supabase.from('checkout_sessions').select('country, city, region').in('product_id', productIds).gte('created_at', todayStart.toISOString());
 
       // Use checkout_sessions for location if available, otherwise use real-time presence
       const locationCounts: Record<string, SessionLocation> = {};
-      
       if (todaySessions && todaySessions.length > 0) {
         // Use saved sessions for location
         todaySessions.forEach(session => {
           const country = session.country;
           if (!country || country === 'Desconhecido' || country === '') return;
-          
           if (!locationCounts[country]) {
             locationCounts[country] = {
               country,
@@ -220,7 +215,6 @@ export function AppLiveView({
         // Fallback to real-time presence locations
         visitorLocationsRef.current.forEach(loc => {
           if (!loc.country || loc.country === 'Desconhecido' || loc.country === '') return;
-          
           if (!locationCounts[loc.country]) {
             locationCounts[loc.country] = {
               country: loc.country,
@@ -232,7 +226,6 @@ export function AppLiveView({
           locationCounts[loc.country].count += loc.count;
         });
       }
-      
       const sortedLocations = Object.values(locationCounts).sort((a, b) => b.count - a.count).slice(0, 10);
       setSessionsByLocation(sortedLocations);
 
@@ -241,7 +234,6 @@ export function AppLiveView({
       recentCompleted.forEach(order => {
         const country = (order as any).customer_country;
         if (!country || country === 'Desconhecido' || country === '') return;
-        
         if (!activeLocationCounts[country]) {
           activeLocationCounts[country] = {
             country,
@@ -356,7 +348,6 @@ export function AppLiveView({
       supabase.removeChannel(channel);
     };
   }, [user?.id, productIds]);
-  
   return <div className="p-4 space-y-4 min-h-screen bg-amber-50/30 dark:bg-zinc-900">
       {/* Header */}
       <div className="flex items-center justify-between px-2 mb-4">
@@ -472,16 +463,12 @@ export function AppLiveView({
         <CardContent className="p-4 pt-0">
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center">
-              <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mx-auto mb-2">
-                <CreditCard className="h-5 w-5 text-blue-500" />
-              </div>
+              
               <p className="text-xs text-muted-foreground mb-1">Pedido gerado</p>
               <p className="text-sm font-bold text-foreground">{loading ? '...' : behavior.pendingOrders}</p>
             </div>
             <div className="text-center border-l border-muted">
-              <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-2">
-                <CheckCircle className="h-5 w-5 text-green-500" />
-              </div>
+              
               <p className="text-xs text-muted-foreground mb-1">Compras pagas </p>
               <p className="text-sm font-bold text-foreground">{loading ? '...' : behavior.completed}</p>
             </div>
@@ -498,17 +485,11 @@ export function AppLiveView({
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4 pt-0 space-y-3">
-          {loading ? (
-            <p className="text-sm text-muted-foreground text-center py-4">Carregando...</p>
-          ) : sessionsByLocation.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">
+          {loading ? <p className="text-sm text-muted-foreground text-center py-4">Carregando...</p> : sessionsByLocation.length === 0 ? <p className="text-sm text-muted-foreground text-center py-4">
               Sem sessões hoje
-            </p>
-          ) : (
-            sessionsByLocation.map((loc, idx) => {
-              const maxCount = sessionsByLocation[0]?.count || 1;
-              return (
-                <div key={idx}>
+            </p> : sessionsByLocation.map((loc, idx) => {
+          const maxCount = sessionsByLocation[0]?.count || 1;
+          return <div key={idx}>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm text-foreground">
                       {loc.country}
@@ -518,15 +499,12 @@ export function AppLiveView({
                     </span>
                   </div>
                   <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-cyan-400 rounded-full transition-all duration-300" 
-                      style={{ width: `${(loc.count / maxCount) * 100}%` }} 
-                    />
+                    <div className="h-full bg-cyan-400 rounded-full transition-all duration-300" style={{
+                width: `${loc.count / maxCount * 100}%`
+              }} />
                   </div>
-                </div>
-              );
-            })
-          )}
+                </div>;
+        })}
         </CardContent>
       </Card>
 
