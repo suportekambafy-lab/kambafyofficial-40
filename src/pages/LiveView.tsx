@@ -300,7 +300,7 @@ export default function LiveView() {
             
             <Card>
               <CardContent className="p-4">
-                <p className="text-sm text-muted-foreground mb-1">Total líquidas  </p>
+                <p className="text-sm text-muted-foreground mb-1">Vendas líquidas  </p>
                 <div className="flex items-center gap-2">
                   <p className="text-2xl font-bold text-foreground">
                     {loading ? '...' : formatPriceForSeller(metrics.totalSales, 'KZ')}
