@@ -73,6 +73,12 @@ export default function LiveView() {
 
   // Real-time presence tracking
   const { visitorCount: realTimeVisitors, visitorLocations } = useCheckoutPresenceCount(productIds);
+  
+  // Use ref for visitorLocations to avoid causing re-renders in loadLiveData
+  const visitorLocationsRef = useRef(visitorLocations);
+  useEffect(() => {
+    visitorLocationsRef.current = visitorLocations;
+  }, [visitorLocations]);
 
   const loadLiveData = useCallback(async (silent = false) => {
     if (!user || productIds.length === 0) return;
@@ -170,7 +176,7 @@ export default function LiveView() {
           locationCounts[country].count++;
         });
       } else {
-        visitorLocations.forEach(loc => {
+        visitorLocationsRef.current.forEach(loc => {
           if (!loc.country || loc.country === 'Desconhecido' || loc.country === '') return;
           
           if (!locationCounts[loc.country]) {
@@ -236,7 +242,7 @@ export default function LiveView() {
     } finally {
       setLoading(false);
     }
-  }, [user, productIds, visitorLocations]);
+  }, [user, productIds]);
 
   useEffect(() => {
     if (productIds.length > 0) loadLiveData(false);
