@@ -179,11 +179,13 @@ export function AppLiveView({
         completed: recentCompleted.length // Compras pagas nos últimos 5 min
       });
 
-      // Sessions by location - prefer customer_country (IP-based), fallback to phone
+      // Sessions by location - only use IP-based customer_country (skip unknown)
       const locationCounts: Record<string, SessionLocation> = {};
       allTodayOrders.forEach(order => {
-        // Prefer IP-based country, fallback to phone-based detection
-        const country = (order as any).customer_country || getCountryFromPhone(order.customer_phone);
+        // Only use IP-detected country, skip orders without valid country
+        const country = (order as any).customer_country;
+        if (!country || country === 'Desconhecido') return; // Skip unknown
+        
         if (!locationCounts[country]) {
           locationCounts[country] = {
             country,
@@ -200,7 +202,9 @@ export function AppLiveView({
       // ACTIVE sessions locations - ONLY from last 5 min pending orders (for globe)
       const activeLocationCounts: Record<string, SessionLocation> = {};
       recentPending.forEach(order => {
-        const country = order.customer_country || getCountryFromPhone(order.customer_phone);
+        const country = (order as any).customer_country;
+        if (!country || country === 'Desconhecido') return; // Skip unknown
+        
         if (!activeLocationCounts[country]) {
           activeLocationCounts[country] = {
             country,
