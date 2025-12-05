@@ -413,8 +413,8 @@ export function AppLiveView({
               Vendas líquidas  
             </p>
             <div className="flex items-center gap-2">
-              {isInitialLoad ? <Skeleton className="h-10 w-28" /> : (
-                <p className="text-2xl font-bold text-foreground">
+              {isInitialLoad ? <Skeleton className="h-12 w-32" /> : (
+                <p className="text-3xl font-bold text-foreground">
                   {formatPriceForSeller(metrics.totalSales, 'KZ')}
                 </p>
               )}
