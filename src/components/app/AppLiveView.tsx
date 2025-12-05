@@ -6,18 +6,15 @@ import { Button } from '@/components/ui/button';
 import { ChevronLeft, TrendingDown, TrendingUp, ShoppingCart, CreditCard, CheckCircle } from 'lucide-react';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
 import RotatingEarth from './RotatingEarth';
-
 interface LiveViewProps {
   onBack: () => void;
 }
-
 interface SessionLocation {
   country: string;
   region: string;
   city: string;
   count: number;
 }
-
 interface ProductSales {
   id: string;
   name: string;
@@ -41,12 +38,15 @@ const getCountryFromPhone = (phone: string | null): string => {
   if (cleaned.startsWith('+49')) return 'Alemanha';
   return 'Outro';
 };
-
-export function AppLiveView({ onBack }: LiveViewProps) {
-  const { user } = useAuth();
+export function AppLiveView({
+  onBack
+}: LiveViewProps) {
+  const {
+    user
+  } = useAuth();
   const [loading, setLoading] = useState(true);
   const [productIds, setProductIds] = useState<string[]>([]);
-  
+
   // Live metrics
   const [metrics, setMetrics] = useState({
     visitorsNow: 0,
@@ -55,26 +55,26 @@ export function AppLiveView({ onBack }: LiveViewProps) {
     sessionsChange: 0,
     orders: 0
   });
-  
+
   // Customer behavior
   const [behavior, setBehavior] = useState({
     activeCarts: 0,
     checkingOut: 0,
     completed: 0
   });
-  
+
   // Sessions by location (today's data)
   const [sessionsByLocation, setSessionsByLocation] = useState<SessionLocation[]>([]);
-  
+
   // ACTIVE sessions (last 5 min - for globe dots)
   const [activeSessionsLocations, setActiveSessionsLocations] = useState<SessionLocation[]>([]);
-  
+
   // New vs returning
   const [customerTypes, setCustomerTypes] = useState({
     newCustomers: 0,
     returningCustomers: 0
   });
-  
+
   // Sales by product
   const [productSales, setProductSales] = useState<ProductSales[]>([]);
 
@@ -82,21 +82,17 @@ export function AppLiveView({ onBack }: LiveViewProps) {
   useEffect(() => {
     const loadProducts = async () => {
       if (!user) return;
-      const { data: products } = await supabase
-        .from('products')
-        .select('id, name')
-        .eq('user_id', user.id);
+      const {
+        data: products
+      } = await supabase.from('products').select('id, name').eq('user_id', user.id);
       setProductIds(products?.map(p => p.id) || []);
     };
     loadProducts();
   }, [user]);
-
   const loadLiveData = useCallback(async () => {
     if (!user || productIds.length === 0) return;
-    
     try {
       setLoading(true);
-      
       const now = new Date();
       // Today start (midnight)
       const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -104,63 +100,50 @@ export function AppLiveView({ onBack }: LiveViewProps) {
       const yesterdayStart = new Date(todayStart.getTime() - 24 * 60 * 60 * 1000);
       // Last 5 minutes for real-time behavior
       const last5min = new Date(now.getTime() - 5 * 60 * 1000);
-      
+
       // Get user's products
-      const { data: products } = await supabase
-        .from('products')
-        .select('id, name')
-        .eq('user_id', user.id);
-      
+      const {
+        data: products
+      } = await supabase.from('products').select('id, name').eq('user_id', user.id);
+
       // Get TODAY's orders only
-      const { data: todayOrders } = await supabase
-        .from('orders')
-        .select('*')
-        .in('product_id', productIds)
-        .gte('created_at', todayStart.toISOString())
-        .order('created_at', { ascending: false });
-      
+      const {
+        data: todayOrders
+      } = await supabase.from('orders').select('*').in('product_id', productIds).gte('created_at', todayStart.toISOString()).order('created_at', {
+        ascending: false
+      });
+
       // Get yesterday's orders for comparison
-      const { data: yesterdayOrders } = await supabase
-        .from('orders')
-        .select('id')
-        .in('product_id', productIds)
-        .gte('created_at', yesterdayStart.toISOString())
-        .lt('created_at', todayStart.toISOString());
-      
+      const {
+        data: yesterdayOrders
+      } = await supabase.from('orders').select('id').in('product_id', productIds).gte('created_at', yesterdayStart.toISOString()).lt('created_at', todayStart.toISOString());
+
       // Get LAST 5 MINUTES orders for real-time behavior
-      const { data: recentOrders } = await supabase
-        .from('orders')
-        .select('*')
-        .in('product_id', productIds)
-        .gte('created_at', last5min.toISOString());
-      
+      const {
+        data: recentOrders
+      } = await supabase.from('orders').select('*').in('product_id', productIds).gte('created_at', last5min.toISOString());
+
       // Calculate real metrics from TODAY's data
       const allTodayOrders = todayOrders || [];
       // Use same status as home page: 'completed' only
       const paidOrders = allTodayOrders.filter(o => o.status === 'completed');
-      const pendingOrders = allTodayOrders.filter(o => 
-        o.status === 'pending' || o.status === 'Pendente'
-      );
-      
+      const pendingOrders = allTodayOrders.filter(o => o.status === 'pending' || o.status === 'Pendente');
+
       // Sessions = all order attempts today
       const totalSessions = allTodayOrders.length;
       const yesterdaySessions = yesterdayOrders?.length || 0;
-      const sessionsChange = yesterdaySessions > 0 
-        ? ((totalSessions - yesterdaySessions) / yesterdaySessions) * 100 
-        : 0;
-      
+      const sessionsChange = yesterdaySessions > 0 ? (totalSessions - yesterdaySessions) / yesterdaySessions * 100 : 0;
+
       // Visitors now = pending orders from last 5 minutes (people currently in checkout)
-      const recentPending = (recentOrders || []).filter(o => 
-        o.status === 'pending' || o.status === 'Pendente'
-      );
+      const recentPending = (recentOrders || []).filter(o => o.status === 'pending' || o.status === 'Pendente');
       const visitorsNow = recentPending.length;
-      
+
       // Total sales value TODAY - use seller_commission (same as home page)
       let totalSalesValue = 0;
       paidOrders.forEach(order => {
         // Use seller_commission if available, otherwise fallback to amount
         let amount = parseFloat(order.seller_commission?.toString() || order.amount || '0');
-        
+
         // Convert to KZ if different currency (same logic as home)
         if (order.currency && order.currency !== 'KZ') {
           const exchangeRates: Record<string, number> = {
@@ -172,7 +155,6 @@ export function AppLiveView({ onBack }: LiveViewProps) {
         }
         totalSalesValue += amount;
       });
-      
       setMetrics({
         visitorsNow,
         totalSales: totalSalesValue,
@@ -180,23 +162,18 @@ export function AppLiveView({ onBack }: LiveViewProps) {
         sessionsChange: Math.round(sessionsChange),
         orders: paidOrders.length // Count orders, not items
       });
-      
+
       // Customer behavior based on LAST 5 MINUTES
       const recent5min = recentOrders || [];
-      const recentFailed = recent5min.filter(o => 
-        o.status === 'failed' || o.status === 'Falhou'
-      );
-      const recentCheckingOut = recent5min.filter(o => 
-        o.status === 'pending' || o.status === 'Pendente'
-      );
+      const recentFailed = recent5min.filter(o => o.status === 'failed' || o.status === 'Falhou');
+      const recentCheckingOut = recent5min.filter(o => o.status === 'pending' || o.status === 'Pendente');
       const recentCompleted = recent5min.filter(o => o.status === 'completed');
-      
       setBehavior({
         activeCarts: recentFailed.length,
         checkingOut: recentCheckingOut.length,
         completed: recentCompleted.length
       });
-      
+
       // Sessions by location - based on phone country codes from TODAY's orders
       const locationCounts: Record<string, SessionLocation> = {};
       allTodayOrders.forEach(order => {
@@ -211,13 +188,9 @@ export function AppLiveView({ onBack }: LiveViewProps) {
         }
         locationCounts[country].count++;
       });
-      
-      const sortedLocations = Object.values(locationCounts)
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 10);
-      
+      const sortedLocations = Object.values(locationCounts).sort((a, b) => b.count - a.count).slice(0, 10);
       setSessionsByLocation(sortedLocations);
-      
+
       // ACTIVE sessions locations - ONLY from last 5 min pending orders (for globe)
       const activeLocationCounts: Record<string, SessionLocation> = {};
       recentPending.forEach(order => {
@@ -232,32 +205,27 @@ export function AppLiveView({ onBack }: LiveViewProps) {
         }
         activeLocationCounts[country].count++;
       });
-      
-      const sortedActiveLocations = Object.values(activeLocationCounts)
-        .sort((a, b) => b.count - a.count);
-      
+      const sortedActiveLocations = Object.values(activeLocationCounts).sort((a, b) => b.count - a.count);
       setActiveSessionsLocations(sortedActiveLocations);
-      
+
       // Customer types - based on TODAY's orders
       const emailCounts: Record<string, number> = {};
-      
       allTodayOrders.forEach(order => {
         const email = order.customer_email?.toLowerCase();
         if (email) {
           emailCounts[email] = (emailCounts[email] || 0) + 1;
         }
       });
-      
+
       // Count unique emails
       const uniqueEmails = Object.keys(emailCounts);
       const returningCustomers = uniqueEmails.filter(email => emailCounts[email] > 1).length;
       const newCustomers = uniqueEmails.length - returningCustomers;
-      
       setCustomerTypes({
         newCustomers,
         returningCustomers
       });
-      
+
       // Sales by product - TODAY's data
       const productSalesData: ProductSales[] = (products || []).map(p => {
         const productOrders = paidOrders.filter(o => o.product_id === p.id);
@@ -267,11 +235,8 @@ export function AppLiveView({ onBack }: LiveViewProps) {
           sales: productOrders.length,
           revenue: productOrders.reduce((sum, o) => sum + parseFloat(o.amount || '0'), 0)
         };
-      }).filter(p => p.sales > 0 || p.revenue > 0)
-        .sort((a, b) => b.revenue - a.revenue);
-      
+      }).filter(p => p.sales > 0 || p.revenue > 0).sort((a, b) => b.revenue - a.revenue);
       setProductSales(productSalesData);
-      
     } catch (error) {
       console.error('Error loading live data:', error);
     } finally {
@@ -289,38 +254,25 @@ export function AppLiveView({ onBack }: LiveViewProps) {
   // Subscribe to real-time order updates via WebSocket
   useEffect(() => {
     if (!user || productIds.length === 0) return;
-    
     console.log('🔌 [Live View] Connecting to realtime channel...');
-    
-    const channel = supabase
-      .channel('live-view-realtime')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'orders'
-        },
-        (payload) => {
-          console.log('📦 [Live View] Order change detected:', payload.eventType);
-          // Reload data immediately on any order change
-          loadLiveData();
-        }
-      )
-      .subscribe((status) => {
-        console.log('🔌 [Live View] Realtime status:', status);
-      });
-    
+    const channel = supabase.channel('live-view-realtime').on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'orders'
+    }, payload => {
+      console.log('📦 [Live View] Order change detected:', payload.eventType);
+      // Reload data immediately on any order change
+      loadLiveData();
+    }).subscribe(status => {
+      console.log('🔌 [Live View] Realtime status:', status);
+    });
     return () => {
       console.log('🔌 [Live View] Disconnecting...');
       supabase.removeChannel(channel);
     };
   }, [user, productIds, loadLiveData]);
-
   const maxLocationCount = Math.max(...sessionsByLocation.map(l => l.count), 1);
-
-  return (
-    <div className="p-4 space-y-4">
+  return <div className="p-4 space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between px-2 mb-4">
         <div className="flex items-center gap-3">
@@ -349,20 +301,14 @@ export function AppLiveView({ onBack }: LiveViewProps) {
       <Card className="overflow-hidden rounded-2xl border-none shadow-sm bg-card">
         <CardContent className="p-4">
           <div className="relative w-full max-w-[280px] mx-auto">
-            <RotatingEarth 
-              width={280} 
-              height={280} 
-              activeLocations={activeSessionsLocations}
-            />
+            <RotatingEarth width={280} height={280} activeLocations={activeSessionsLocations} />
             
             {/* No active sessions message */}
-            {activeSessionsLocations.length === 0 && (
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            {activeSessionsLocations.length === 0 && <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <div className="text-center text-muted-foreground text-xs bg-background/90 px-3 py-2 rounded-lg shadow-sm">
                   Nenhuma sessão ativa
                 </div>
-              </div>
-            )}
+              </div>}
           </div>
           
           {/* Legend */}
@@ -378,10 +324,7 @@ export function AppLiveView({ onBack }: LiveViewProps) {
           </div>
           
           {/* Real-time indicator */}
-          <div className="flex items-center justify-center gap-2 mt-2 text-xs text-muted-foreground">
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <span>Tempo real via WebSocket</span>
-          </div>
+          
         </CardContent>
       </Card>
 
@@ -420,12 +363,10 @@ export function AppLiveView({ onBack }: LiveViewProps) {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <p className="text-base font-bold text-foreground">{loading ? '...' : metrics.sessions}</p>
-                {!loading && metrics.sessionsChange !== 0 && (
-                  <span className={`flex items-center text-xs ${metrics.sessionsChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                {!loading && metrics.sessionsChange !== 0 && <span className={`flex items-center text-xs ${metrics.sessionsChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                     {metrics.sessionsChange >= 0 ? <TrendingUp className="h-3 w-3 mr-0.5" /> : <TrendingDown className="h-3 w-3 mr-0.5" />}
                     {Math.abs(metrics.sessionsChange)}%
-                  </span>
-                )}
+                  </span>}
               </div>
             </div>
           </CardContent>
@@ -484,15 +425,9 @@ export function AppLiveView({ onBack }: LiveViewProps) {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4 pt-0 space-y-3">
-          {loading ? (
-            <p className="text-sm text-muted-foreground text-center py-4">Carregando...</p>
-          ) : sessionsByLocation.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">
+          {loading ? <p className="text-sm text-muted-foreground text-center py-4">Carregando...</p> : sessionsByLocation.length === 0 ? <p className="text-sm text-muted-foreground text-center py-4">
               Sem dados para este intervalo de datas
-            </p>
-          ) : (
-            sessionsByLocation.map((loc, idx) => (
-              <div key={idx}>
+            </p> : sessionsByLocation.map((loc, idx) => <div key={idx}>
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-sm text-foreground">
                     {loc.country} · {loc.region} · {loc.city}
@@ -500,14 +435,11 @@ export function AppLiveView({ onBack }: LiveViewProps) {
                   <span className="text-sm text-muted-foreground">{loc.count}</span>
                 </div>
                 <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-cyan-400 rounded-full transition-all duration-300"
-                    style={{ width: `${(loc.count / maxLocationCount) * 100}%` }}
-                  />
+                  <div className="h-full bg-cyan-400 rounded-full transition-all duration-300" style={{
+              width: `${loc.count / maxLocationCount * 100}%`
+            }} />
                 </div>
-              </div>
-            ))
-          )}
+              </div>)}
         </CardContent>
       </Card>
 
@@ -519,14 +451,9 @@ export function AppLiveView({ onBack }: LiveViewProps) {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4 pt-0">
-          {loading ? (
-            <p className="text-sm text-muted-foreground text-center py-4">Carregando...</p>
-          ) : customerTypes.newCustomers === 0 && customerTypes.returningCustomers === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">
+          {loading ? <p className="text-sm text-muted-foreground text-center py-4">Carregando...</p> : customerTypes.newCustomers === 0 && customerTypes.returningCustomers === 0 ? <p className="text-sm text-muted-foreground text-center py-4">
               Sem dados para este intervalo de datas
-            </p>
-          ) : (
-            <div className="flex items-center gap-6">
+            </p> : <div className="flex items-center gap-6">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-3 h-3 rounded-full bg-purple-500" />
@@ -541,8 +468,7 @@ export function AppLiveView({ onBack }: LiveViewProps) {
                 </div>
                 <p className="text-2xl font-bold text-foreground">{customerTypes.returningCustomers}</p>
               </div>
-            </div>
-          )}
+            </div>}
         </CardContent>
       </Card>
 
@@ -554,15 +480,9 @@ export function AppLiveView({ onBack }: LiveViewProps) {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4 pt-0 space-y-3">
-          {loading ? (
-            <p className="text-sm text-muted-foreground text-center py-4">Carregando...</p>
-          ) : productSales.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">
+          {loading ? <p className="text-sm text-muted-foreground text-center py-4">Carregando...</p> : productSales.length === 0 ? <p className="text-sm text-muted-foreground text-center py-4">
               Sem vendas nas últimas 24 horas
-            </p>
-          ) : (
-            productSales.map(product => (
-              <div key={product.id} className="flex items-center justify-between py-2 border-b border-muted last:border-0">
+            </p> : productSales.map(product => <div key={product.id} className="flex items-center justify-between py-2 border-b border-muted last:border-0">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground truncate">{product.name}</p>
                   <p className="text-xs text-muted-foreground">{product.sales} vendas</p>
@@ -570,11 +490,8 @@ export function AppLiveView({ onBack }: LiveViewProps) {
                 <p className="text-sm font-semibold text-foreground">
                   {formatPriceForSeller(product.revenue, 'KZ')}
                 </p>
-              </div>
-            ))
-          )}
+              </div>)}
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 }
