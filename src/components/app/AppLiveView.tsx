@@ -380,13 +380,6 @@ export function AppLiveView({
         <CardContent className="p-4">
           <div className="relative w-full max-w-[280px] mx-auto">
             <RotatingEarth width={280} height={280} activeLocations={activeSessionsLocations} visitorLocations={visitorLocations} />
-            
-            {/* No active sessions message */}
-            {activeSessionsLocations.length === 0 && realTimeVisitors === 0 && <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="text-center text-muted-foreground text-xs bg-background/90 px-3 py-2 rounded-lg shadow-sm">
-                  Nenhuma sessão ativa
-                </div>
-              </div>}
           </div>
           
           {/* Legend */}
