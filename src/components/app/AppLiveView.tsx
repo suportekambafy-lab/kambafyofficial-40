@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -92,20 +92,6 @@ export function AppLiveView({
   
   // Real-time presence tracking for visitors on checkout
   const { visitorCount: realTimeVisitors, visitorLocations } = useCheckoutPresenceCount(productIds);
-  
-  // Merge real-time visitor locations with active sessions for globe
-  const globeLocations = useMemo(() => {
-    const merged = [...activeSessionsLocations];
-    visitorLocations.forEach(vl => {
-      const existing = merged.find(m => m.country === vl.country);
-      if (existing) {
-        existing.count += vl.count;
-      } else {
-        merged.push({ ...vl, region: '', city: '' });
-      }
-    });
-    return merged;
-  }, [activeSessionsLocations, visitorLocations]);
   
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   
@@ -351,10 +337,15 @@ export function AppLiveView({
       <Card className="overflow-hidden rounded-2xl border-none shadow-sm bg-card">
         <CardContent className="p-4">
           <div className="relative w-full max-w-[280px] mx-auto">
-            <RotatingEarth width={280} height={280} activeLocations={globeLocations} />
+            <RotatingEarth 
+              width={280} 
+              height={280} 
+              activeLocations={activeSessionsLocations} 
+              visitorLocations={visitorLocations}
+            />
             
             {/* No active sessions message */}
-            {globeLocations.length === 0 && realTimeVisitors === 0 && <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            {activeSessionsLocations.length === 0 && realTimeVisitors === 0 && <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <div className="text-center text-muted-foreground text-xs bg-background/90 px-3 py-2 rounded-lg shadow-sm">
                   Nenhuma sessão ativa
                 </div>
@@ -364,12 +355,12 @@ export function AppLiveView({
           {/* Legend */}
           <div className="flex items-center justify-center gap-4 mt-3 text-xs text-muted-foreground">
             <div className="flex items-center gap-1">
-              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-              <span>No checkout ({realTimeVisitors})</span>
+              <div className="w-2 h-2 rounded-full bg-violet-500" />
+              <span>Vendas</span>
             </div>
             <div className="flex items-center gap-1">
-              <div className="w-2 h-2 rounded-full bg-sky-400" />
-              <span>Continentes</span>
+              <div className="w-2 h-2 rounded-full bg-sky-400 animate-pulse" />
+              <span>Visitantes ({realTimeVisitors})</span>
             </div>
           </div>
           
