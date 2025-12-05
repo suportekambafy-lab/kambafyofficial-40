@@ -492,8 +492,8 @@ export function AppLiveView({
           const maxCount = sessionsByLocation[0]?.count || 1;
           return <div key={idx}>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm text-foreground">
-                      {loc.country}
+                    <span className="text-sm text-foreground truncate max-w-[60%]">
+                      {loc.country} · {loc.city}
                     </span>
                     <span className="text-sm text-muted-foreground">
                       {loc.count} {loc.count === 1 ? 'sessão' : 'sessões'}
