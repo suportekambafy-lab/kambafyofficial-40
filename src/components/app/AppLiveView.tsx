@@ -95,6 +95,13 @@ export function AppLiveView({
     visitorCount: realTimeVisitors,
     visitorLocations
   } = useCheckoutPresenceCount(productIds);
+  
+  // Use ref for visitorLocations to avoid stale closures
+  const visitorLocationsRef = useRef(visitorLocations);
+  useEffect(() => {
+    visitorLocationsRef.current = visitorLocations;
+  }, [visitorLocations]);
+  
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const loadLiveData = useCallback(async (silent = false) => {
     if (!user || productIds.length === 0) return;
@@ -211,7 +218,7 @@ export function AppLiveView({
         });
       } else {
         // Fallback to real-time presence locations
-        visitorLocations.forEach(loc => {
+        visitorLocationsRef.current.forEach(loc => {
           if (!loc.country || loc.country === 'Desconhecido' || loc.country === '') return;
           
           if (!locationCounts[loc.country]) {
