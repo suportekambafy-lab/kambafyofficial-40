@@ -249,7 +249,7 @@ export default function LiveView() {
 
   // Track if initial load has happened
   const hasLoadedRef = useRef(false);
-  
+
   // Initial load - only once when productIds are ready
   useEffect(() => {
     if (productIds.length > 0 && !hasLoadedRef.current) {
@@ -336,15 +336,13 @@ export default function LiveView() {
               <CardContent className="p-4">
                 <p className="text-sm text-muted-foreground mb-1">Sessões</p>
                 <div className="flex items-center gap-2">
-                  {isInitialLoad ? <Skeleton className="h-8 w-16" /> : (
-                    <>
+                  {isInitialLoad ? <Skeleton className="h-8 w-16" /> : <>
                       <p className="text-2xl font-bold text-foreground">{metrics.sessions}</p>
                       {metrics.sessionsChange !== 0 && <span className={`flex items-center text-sm ${metrics.sessionsChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                           {metrics.sessionsChange >= 0 ? <TrendingUp className="h-4 w-4 mr-1" /> : <TrendingDown className="h-4 w-4 mr-1" />}
                           {Math.abs(metrics.sessionsChange)}%
                         </span>}
-                    </>
-                  )}
+                    </>}
                 </div>
               </CardContent>
             </Card>
@@ -445,7 +443,7 @@ export default function LiveView() {
               <div className="flex items-center justify-center gap-6 mt-4">
                 <div className="flex items-center gap-2 text-sm text-foreground">
                   <span className="w-3 h-3 rounded-full bg-purple-500" />
-                  Encomendas
+                  Vendas
                 </div>
                 <div className="flex items-center gap-2 text-sm text-foreground">
                   <span className="w-3 h-3 rounded-full bg-cyan-500" />
