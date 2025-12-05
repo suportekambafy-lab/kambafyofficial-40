@@ -65,10 +65,10 @@ export default function RotatingEarth({
     const colors = isDarkMode ? {
       ocean: "#1a1a2e",
       oceanStroke: "#2d2d44",
-      land: "#3b82f6",
-      landStroke: "#60a5fa",
-      dots: "#60a5fa",
-      graticule: "#4b5563",
+      land: "#87CEEB",
+      landStroke: "#5DADE2",
+      dots: "#5DADE2",
+      graticule: "#5DADE2",
       markerStroke: "#1a1a2e"
     } : {
       ocean: "#ffffff",
