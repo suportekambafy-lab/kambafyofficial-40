@@ -14,6 +14,7 @@ import { Plus, Video, FileText, Users, MoreHorizontal, Edit, Trash2, Eye, Clock,
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTranslation } from "@/hooks/useTranslation";
 import VideoUploader from "@/components/VideoUploader";
 import StudentsManager from "@/components/StudentsManager";
 import CohortsManager from "@/components/members/CohortsManager";

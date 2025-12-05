@@ -22,8 +22,10 @@ import {
   DialogTitle,
   DialogFooter
 } from '@/components/ui/dialog';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export default function SellerRefunds() {
+  const { t } = useTranslation();
   const { refunds, loading, sellerProcessRefund } = useRefunds('seller');
   const [selectedRefund, setSelectedRefund] = useState<any>(null);
   const [action, setAction] = useState<'approve' | 'reject' | null>(null);
@@ -57,10 +59,10 @@ export default function SellerRefunds() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold flex items-center gap-2 mb-3 text-foreground">
           <AlertCircle className="h-8 w-8" />
-          Gerenciar Reembolsos
+          {t('refunds.title')}
         </h1>
         <p className="text-muted-foreground text-lg mb-4">
-          Analise e processe solicitações de reembolso dos seus clientes
+          {t('refunds.subtitle')}
         </p>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">

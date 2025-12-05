@@ -21,6 +21,7 @@ import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useTranslation } from "@/hooks/useTranslation";
 
 // Função para abrir o Crisp Chat
 const openCrispChat = () => {
@@ -40,6 +41,7 @@ declare global {
 export default function SellerHelp() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("faq");
@@ -145,15 +147,15 @@ export default function SellerHelp() {
   return (
     <div className="p-4 md:p-6 space-y-6">
         <div className="text-center space-y-4">
-        <h1 className="text-3xl font-bold text-foreground">Central de Ajuda</h1>
+        <h1 className="text-3xl font-bold text-foreground">{t('help.title')}</h1>
         <p className="text-lg text-muted-foreground">
-          Encontre respostas rápidas ou entre em contato conosco
+          {t('help.subtitle')}
         </p>
         
         <div className="relative max-w-md mx-auto">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input 
-            placeholder="Pesquisar na ajuda..." 
+            placeholder={t('common.search')} 
             className="pl-9" 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
