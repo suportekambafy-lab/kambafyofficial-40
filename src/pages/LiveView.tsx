@@ -275,12 +275,12 @@ export default function LiveView() {
   const maxLocationCount = Math.max(...sessionsByLocation.map(l => l.count), 1);
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 bg-background text-foreground">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Radio className="h-6 w-6 text-primary" />
-          <h1 className="text-2xl font-bold">Live View</h1>
+          <h1 className="text-2xl font-bold text-foreground">Live View</h1>
           <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
             Agora mesmo
@@ -293,7 +293,7 @@ export default function LiveView() {
               placeholder="Procurar local"
               value={searchLocation}
               onChange={(e) => setSearchLocation(e.target.value)}
-              className="pl-9 w-64"
+              className="pl-9 w-64 bg-background"
             />
           </div>
         </div>
@@ -308,7 +308,7 @@ export default function LiveView() {
               <CardContent className="p-4">
                 <p className="text-sm text-muted-foreground mb-1">Visitantes neste momento</p>
                 <div className="flex items-center gap-2">
-                  <p className="text-2xl font-bold">{realTimeVisitors}</p>
+                  <p className="text-2xl font-bold text-foreground">{realTimeVisitors}</p>
                   {realTimeVisitors > 0 && <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />}
                 </div>
               </CardContent>
@@ -318,7 +318,7 @@ export default function LiveView() {
               <CardContent className="p-4">
                 <p className="text-sm text-muted-foreground mb-1">Total de vendas</p>
                 <div className="flex items-center gap-2">
-                  <p className="text-2xl font-bold">
+                  <p className="text-2xl font-bold text-foreground">
                     {loading ? '...' : formatPriceForSeller(metrics.totalSales, 'KZ')}
                   </p>
                 </div>
@@ -332,7 +332,7 @@ export default function LiveView() {
               <CardContent className="p-4">
                 <p className="text-sm text-muted-foreground mb-1">Sessões</p>
                 <div className="flex items-center gap-2">
-                  <p className="text-2xl font-bold">{loading ? '...' : metrics.sessions}</p>
+                  <p className="text-2xl font-bold text-foreground">{loading ? '...' : metrics.sessions}</p>
                   {!loading && metrics.sessionsChange !== 0 && (
                     <span className={`flex items-center text-sm ${metrics.sessionsChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                       {metrics.sessionsChange >= 0 ? <TrendingUp className="h-4 w-4 mr-1" /> : <TrendingDown className="h-4 w-4 mr-1" />}
@@ -346,7 +346,7 @@ export default function LiveView() {
             <Card>
               <CardContent className="p-4">
                 <p className="text-sm text-muted-foreground mb-1">Encomendas</p>
-                <p className="text-2xl font-bold">{loading ? '...' : metrics.orders}</p>
+                <p className="text-2xl font-bold text-foreground">{loading ? '...' : metrics.orders}</p>
               </CardContent>
             </Card>
           </div>
@@ -354,21 +354,21 @@ export default function LiveView() {
           {/* Customer Behavior */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base font-semibold">Comportamento do cliente</CardTitle>
+              <CardTitle className="text-base font-semibold text-foreground">Comportamento do cliente</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-3 divide-x">
+              <div className="grid grid-cols-3 divide-x divide-border">
                 <div className="pr-4">
                   <p className="text-sm text-muted-foreground mb-1">Carrinhos ativos</p>
-                  <p className="text-2xl font-bold">{behavior.activeCarts}</p>
+                  <p className="text-2xl font-bold text-foreground">{behavior.activeCarts}</p>
                 </div>
                 <div className="px-4">
                   <p className="text-sm text-muted-foreground mb-1">A finalizar a compra</p>
-                  <p className="text-2xl font-bold">{behavior.pendingOrders}</p>
+                  <p className="text-2xl font-bold text-foreground">{behavior.pendingOrders}</p>
                 </div>
                 <div className="pl-4">
                   <p className="text-sm text-muted-foreground mb-1">Compra efetuada</p>
-                  <p className="text-2xl font-bold">{behavior.completed}</p>
+                  <p className="text-2xl font-bold text-foreground">{behavior.completed}</p>
                 </div>
               </div>
             </CardContent>
@@ -377,7 +377,7 @@ export default function LiveView() {
           {/* Sessions by Location */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base font-semibold">Sessões por local</CardTitle>
+              <CardTitle className="text-base font-semibold text-foreground">Sessões por local</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {filteredLocations.length === 0 ? (
@@ -386,7 +386,7 @@ export default function LiveView() {
                 filteredLocations.map((loc, index) => (
                   <div key={index} className="space-y-1">
                     <div className="flex justify-between text-sm">
-                      <span>{loc.country} · {loc.region} · {loc.city}</span>
+                      <span className="text-foreground">{loc.country} · {loc.region} · {loc.city}</span>
                       <span className="text-muted-foreground">{loc.count}</span>
                     </div>
                     <Progress value={(loc.count / maxLocationCount) * 100} className="h-2" />
@@ -399,17 +399,17 @@ export default function LiveView() {
           {/* Customer Types */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base font-semibold">Clientes novos em comparação com clientes habituais</CardTitle>
+              <CardTitle className="text-base font-semibold text-foreground">Clientes novos em comparação com clientes habituais</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Novos clientes</p>
-                  <p className="text-2xl font-bold">{customerTypes.newCustomers}</p>
+                  <p className="text-2xl font-bold text-foreground">{customerTypes.newCustomers}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Clientes habituais</p>
-                  <p className="text-2xl font-bold">{customerTypes.returningCustomers}</p>
+                  <p className="text-2xl font-bold text-foreground">{customerTypes.returningCustomers}</p>
                 </div>
               </div>
             </CardContent>
@@ -419,16 +419,16 @@ export default function LiveView() {
           {productSales.length > 0 && (
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-base font-semibold">Vendas por produto</CardTitle>
+                <CardTitle className="text-base font-semibold text-foreground">Vendas por produto</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
                   {productSales.map((product) => (
                     <div key={product.id} className="flex items-center justify-between">
-                      <span className="text-sm truncate max-w-[200px]">{product.name}</span>
+                      <span className="text-sm truncate max-w-[200px] text-foreground">{product.name}</span>
                       <div className="flex items-center gap-4">
                         <span className="text-sm text-muted-foreground">{product.sales} vendas</span>
-                        <span className="text-sm font-medium">{formatPriceForSeller(product.revenue, 'KZ')}</span>
+                        <span className="text-sm font-medium text-foreground">{formatPriceForSeller(product.revenue, 'KZ')}</span>
                       </div>
                     </div>
                   ))}
@@ -461,11 +461,11 @@ export default function LiveView() {
               
               {/* Legend */}
               <div className="flex items-center justify-center gap-6 mt-4">
-                <div className="flex items-center gap-2 text-sm">
+                <div className="flex items-center gap-2 text-sm text-foreground">
                   <span className="w-3 h-3 rounded-full bg-purple-500" />
                   Encomendas
                 </div>
-                <div className="flex items-center gap-2 text-sm">
+                <div className="flex items-center gap-2 text-sm text-foreground">
                   <span className="w-3 h-3 rounded-full bg-cyan-500" />
                   Visitantes neste momento
                 </div>
