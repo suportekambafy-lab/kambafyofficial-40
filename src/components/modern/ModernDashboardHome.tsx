@@ -10,10 +10,11 @@ import { ProductFilter } from '@/components/ProductFilter';
 import { CustomPeriodSelector, type DateRange } from '@/components/ui/custom-period-selector';
 import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
 import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Radio } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { startOfDay, endOfDay, subDays, isWithinInterval } from 'date-fns';
 import { countTotalSales } from '@/utils/orderUtils';
+import { useNavigate } from 'react-router-dom';
 
 interface Order {
   id: string;
@@ -31,6 +32,7 @@ interface Order {
 
 export function ModernDashboardHome() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [timeFilter, setTimeFilter] = useState('ultimos-30-dias');
   const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>(undefined);
   const [selectedProduct, setSelectedProduct] = useState('todos');
@@ -439,13 +441,27 @@ export function ModernDashboardHome() {
         <AppDownloadBanner />
         
         {/* Header */}
-        <div data-onboarding="dashboard-header">
-          <h1 className="text-lg md:text-xl font-semibold text-foreground">
-            Dashboard
-          </h1>
-          <p className="text-muted-foreground text-xs">
-            Acompanhe o desempenho do seu negócio
-          </p>
+        <div data-onboarding="dashboard-header" className="flex items-center justify-between">
+          <div>
+            <h1 className="text-lg md:text-xl font-semibold text-foreground">
+              Dashboard
+            </h1>
+            <p className="text-muted-foreground text-xs">
+              Acompanhe o desempenho do seu negócio
+            </p>
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => navigate('/vendedor/live-view')}
+            className="hidden md:flex items-center gap-2"
+          >
+            <Radio className="h-4 w-4" />
+            <span className="flex items-center gap-1.5">
+              Live View
+              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            </span>
+          </Button>
         </div>
 
         {/* Filters */}

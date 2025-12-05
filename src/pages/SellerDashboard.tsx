@@ -62,6 +62,7 @@ const SellerMemberModulePayments = createLazyWithRetry(() => import("./SellerMem
 const SellerReports = createLazyWithRetry(() => import("./SellerReports"), "SellerReports");
 const SellerRefunds = createLazyWithRetry(() => import("./SellerRefunds"), "SellerRefunds");
 const SellerSubscriptions = createLazyWithRetry(() => import("./SellerSubscriptions"), "SellerSubscriptions");
+const LiveView = createLazyWithRetry(() => import("./LiveView"), "LiveView");
 
 function SellerDashboardContent() {
   const location = useLocation();
@@ -115,6 +116,7 @@ function SellerDashboardContent() {
             <Suspense fallback={<SkeletonPage variant="dashboard" />}>
               <Routes>
                 <Route path="/" element={<ModernDashboardHome />} />
+                <Route path="/live-view" element={<LiveView />} />
                 <Route path="/produtos" element={<Products />} />
                 <Route path="/vendas" element={<Sales />} />
                 <Route path="/financeiro" element={<Financial />} />
