@@ -14,20 +14,74 @@ interface RotatingEarthProps {
   visitorLocations?: SessionLocation[] // Real-time visitors (blue)
 }
 
-// Map countries to approximate coordinates
+// Map countries to approximate coordinates (Portuguese and English names)
 const countryCoordinates: Record<string, [number, number]> = {
+  // Angola
   'Angola': [17.8739, -11.2027],
-  'Moçambique': [35.5296, -18.6657],
+  // Portugal
   'Portugal': [-8.2245, 39.3999],
+  // Brazil
   'Brasil': [-51.9253, -14.2350],
-  'Espanha': [-3.7492, 40.4637],
+  'Brazil': [-51.9253, -14.2350],
+  // Spain
+  'Espanha': [-3.7038, 40.4168],
+  'Spain': [-3.7038, 40.4168],
+  // Mozambique
+  'Moçambique': [35.5296, -18.6657],
+  'Mozambique': [35.5296, -18.6657],
+  // France
   'França': [2.2137, 46.2276],
+  'France': [2.2137, 46.2276],
+  // United Kingdom
   'Reino Unido': [-3.4360, 55.3781],
+  'United Kingdom': [-3.4360, 55.3781],
+  // United States
   'Estados Unidos': [-95.7129, 37.0902],
+  'United States': [-95.7129, 37.0902],
+  // Italy
   'Itália': [12.5674, 41.8719],
+  'Italy': [12.5674, 41.8719],
+  // Germany
   'Alemanha': [10.4515, 51.1657],
-  'Outro': [17.8739, -11.2027], // Default to Angola
-  'Desconhecido': [17.8739, -11.2027] // Default to Angola
+  'Germany': [10.4515, 51.1657],
+  // South Africa
+  'África do Sul': [22.9375, -30.5595],
+  'South Africa': [22.9375, -30.5595],
+  // Netherlands
+  'Holanda': [5.2913, 52.1326],
+  'Netherlands': [5.2913, 52.1326],
+  // Belgium
+  'Bélgica': [4.4699, 50.5039],
+  'Belgium': [4.4699, 50.5039],
+  // Cape Verde
+  'Cabo Verde': [-23.6052, 15.1111],
+  'Cape Verde': [-23.6052, 15.1111],
+  // Canada
+  'Canadá': [-106.3468, 56.1304],
+  'Canada': [-106.3468, 56.1304],
+  // China
+  'China': [104.1954, 35.8617],
+  // India
+  'Índia': [78.9629, 20.5937],
+  'India': [78.9629, 20.5937],
+  // Australia
+  'Austrália': [133.7751, -25.2744],
+  'Australia': [133.7751, -25.2744],
+  // Argentina
+  'Argentina': [-63.6167, -38.4161],
+  // Mexico
+  'México': [-102.5528, 23.6345],
+  'Mexico': [-102.5528, 23.6345],
+  // Japan
+  'Japão': [138.2529, 36.2048],
+  'Japan': [138.2529, 36.2048],
+  // Nigeria
+  'Nigéria': [8.6753, 9.0820],
+  'Nigeria': [8.6753, 9.0820],
+  // Default fallbacks
+  'Outro': [17.8739, -11.2027],
+  'Desconhecido': [17.8739, -11.2027],
+  'Unknown': [17.8739, -11.2027]
 };
 
 export default function RotatingEarth({ 
