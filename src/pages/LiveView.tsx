@@ -354,20 +354,19 @@ export default function LiveView() {
           {/* Customer Behavior */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base font-semibold text-foreground">Comportamento do cliente</CardTitle>
+              <CardTitle className="text-base font-semibold text-foreground flex items-center justify-between">
+                <span>Comportamento do cliente</span>
+                <span className="text-xs font-normal text-muted-foreground">(últimos 5 min)</span>
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-3 divide-x divide-border">
+              <div className="grid grid-cols-2 divide-x divide-border">
                 <div className="pr-4">
-                  <p className="text-sm text-muted-foreground mb-1">Carrinhos ativos</p>
-                  <p className="text-2xl font-bold text-foreground">{behavior.activeCarts}</p>
-                </div>
-                <div className="px-4">
-                  <p className="text-sm text-muted-foreground mb-1">A finalizar a compra</p>
+                  <p className="text-sm text-muted-foreground mb-1">Pedidos gerados</p>
                   <p className="text-2xl font-bold text-foreground">{behavior.pendingOrders}</p>
                 </div>
                 <div className="pl-4">
-                  <p className="text-sm text-muted-foreground mb-1">Compra efetuada</p>
+                  <p className="text-sm text-muted-foreground mb-1">Vendas pagas</p>
                   <p className="text-2xl font-bold text-foreground">{behavior.completed}</p>
                 </div>
               </div>
