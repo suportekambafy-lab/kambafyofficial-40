@@ -126,6 +126,24 @@ export function AppLiveView({
         data: recentOrders
       } = await supabase.from('orders').select('*').in('product_id', productIds).gte('created_at', last5min.toISOString());
 
+      // Get abandoned purchases from TODAY for this seller's products
+      const {
+        data: todayAbandoned
+      } = await supabase.from('abandoned_purchases')
+        .select('*')
+        .in('product_id', productIds)
+        .gte('abandoned_at', todayStart.toISOString());
+      
+      // Get recent abandoned (last 30 min) - active carts
+      const last30min = new Date(now.getTime() - 30 * 60 * 1000);
+      const {
+        data: recentAbandoned
+      } = await supabase.from('abandoned_purchases')
+        .select('*')
+        .in('product_id', productIds)
+        .eq('status', 'abandoned')
+        .gte('abandoned_at', last30min.toISOString());
+
       // Calculate real metrics from TODAY's data
       const allTodayOrders = todayOrders || [];
       // Use same status as home page: 'completed' only
@@ -166,21 +184,18 @@ export function AppLiveView({
         orders: paidOrders.length // Count orders, not items
       });
 
-      // Customer behavior - ÚLTIMOS 5 MINUTOS
-      const recent5min = recentOrders || [];
+      // Customer behavior - use abandoned_purchases table
+      const abandonedToday = todayAbandoned || [];
+      const activeAbandoned = recentAbandoned || [];
+      const recoveredToday = abandonedToday.filter(a => a.status === 'recovered');
       
-      // Pedidos pendentes nos últimos 5 min = pessoas no checkout/preenchendo
-      const pendingLast5min = recent5min.filter(o => 
-        o.status === 'pending' || o.status === 'Pendente'
-      );
-      
-      // Compras completadas nos últimos 5 min
-      const completedLast5min = recent5min.filter(o => o.status === 'completed');
+      // Compras completadas HOJE
+      const completedToday = paidOrders.length;
       
       setBehavior({
-        activeCarts: pendingLast5min.length, // No checkout / carrinhos ativos (igual)
-        checkingOut: pendingLast5min.length, // A finalizar (pessoas preenchendo)
-        completed: completedLast5min.length  // Compras reais nos últimos 5 min
+        activeCarts: activeAbandoned.length, // Carrinhos abandonados nos últimos 30 min
+        checkingOut: abandonedToday.filter(a => a.status === 'abandoned').length, // Total abandonados hoje
+        completed: completedToday  // Compras completadas hoje
       });
 
       // Sessions by location - based on phone country codes from TODAY's orders
@@ -437,21 +452,21 @@ export function AppLiveView({
               <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center mx-auto mb-2">
                 <ShoppingCart className="h-5 w-5 text-orange-500" />
               </div>
-              <p className="text-xs text-muted-foreground mb-1">Carrinhos ativos</p>
+              <p className="text-xs text-muted-foreground mb-1">Carrinhos (30m)</p>
               <p className="text-sm font-bold text-foreground">{loading ? '...' : behavior.activeCarts}</p>
             </div>
             <div className="text-center border-x border-muted">
               <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mx-auto mb-2">
                 <CreditCard className="h-5 w-5 text-blue-500" />
               </div>
-              <p className="text-xs text-muted-foreground mb-1">A finalizar</p>
+              <p className="text-xs text-muted-foreground mb-1">Abandonados</p>
               <p className="text-sm font-bold text-foreground">{loading ? '...' : behavior.checkingOut}</p>
             </div>
             <div className="text-center">
               <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-2">
                 <CheckCircle className="h-5 w-5 text-green-500" />
               </div>
-              <p className="text-xs text-muted-foreground mb-1">Compras</p>
+              <p className="text-xs text-muted-foreground mb-1">Vendas</p>
               <p className="text-sm font-bold text-foreground">{loading ? '...' : behavior.completed}</p>
             </div>
           </div>
