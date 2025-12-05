@@ -1467,7 +1467,8 @@ const Checkout = () => {
             originalCurrency: 'KZ',
             paymentMethod: selectedPayment,
             phoneNumber: phoneToUse,
-            orderData: orderData // Pass order data for saving
+            orderData: orderData, // Pass order data for saving
+            customerCountry: countryName // Pass IP-detected country
           }
         });
         if (appyPayResponse.error) {

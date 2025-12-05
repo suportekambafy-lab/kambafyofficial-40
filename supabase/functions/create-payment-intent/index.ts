@@ -24,7 +24,8 @@ Deno.serve(async (req) => {
       targetCurrency,
       paymentMethod = 'card',
       testMode,
-      upsellFrom
+      upsellFrom,
+      customerCountry
     } = requestBody;
 
     if (!amount || !currency || !productId || !customerData) {
@@ -238,6 +239,7 @@ Deno.serve(async (req) => {
       customer_name: customerData.name,
       customer_email: customerData.email,
       customer_phone: customerData.phone,
+      customer_country: customerCountry || null,
       amount: finalAmount,
       currency: finalCurrency,
       payment_method: paymentMethod,

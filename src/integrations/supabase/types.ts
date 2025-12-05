@@ -2108,6 +2108,7 @@ export type Database = {
           created_at: string
           created_by_impersonation: boolean | null
           currency: string | null
+          customer_country: string | null
           customer_email: string
           customer_name: string
           customer_phone: string | null
@@ -2139,6 +2140,7 @@ export type Database = {
           created_at?: string
           created_by_impersonation?: boolean | null
           currency?: string | null
+          customer_country?: string | null
           customer_email: string
           customer_name: string
           customer_phone?: string | null
@@ -2170,6 +2172,7 @@ export type Database = {
           created_at?: string
           created_by_impersonation?: boolean | null
           currency?: string | null
+          customer_country?: string | null
           customer_email?: string
           customer_name?: string
           customer_phone?: string | null
