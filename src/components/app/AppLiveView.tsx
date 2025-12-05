@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, TrendingDown, TrendingUp, CreditCard, CheckCircle, Users } from 'lucide-react';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
@@ -419,9 +420,11 @@ export function AppLiveView({
               Vendas líquidas  
             </p>
             <div className="flex items-center gap-2">
-              <p className="text-base font-bold text-foreground">
-                {loading ? '...' : formatPriceForSeller(metrics.totalSales, 'KZ')}
-              </p>
+              {loading ? <Skeleton className="h-6 w-20" /> : (
+                <p className="text-base font-bold text-foreground">
+                  {formatPriceForSeller(metrics.totalSales, 'KZ')}
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -433,11 +436,15 @@ export function AppLiveView({
             </p>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <p className="text-base font-bold text-foreground">{loading ? '...' : metrics.sessions}</p>
-                {!loading && metrics.sessionsChange !== 0 && <span className={`flex items-center text-xs ${metrics.sessionsChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                    {metrics.sessionsChange >= 0 ? <TrendingUp className="h-3 w-3 mr-0.5" /> : <TrendingDown className="h-3 w-3 mr-0.5" />}
-                    {Math.abs(metrics.sessionsChange)}%
-                  </span>}
+                {loading ? <Skeleton className="h-6 w-12" /> : (
+                  <>
+                    <p className="text-base font-bold text-foreground">{metrics.sessions}</p>
+                    {metrics.sessionsChange !== 0 && <span className={`flex items-center text-xs ${metrics.sessionsChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                        {metrics.sessionsChange >= 0 ? <TrendingUp className="h-3 w-3 mr-0.5" /> : <TrendingDown className="h-3 w-3 mr-0.5" />}
+                        {Math.abs(metrics.sessionsChange)}%
+                      </span>}
+                  </>
+                )}
               </div>
             </div>
           </CardContent>
@@ -448,7 +455,7 @@ export function AppLiveView({
             <p className="text-xs text-muted-foreground mb-1 truncate border-b border-dashed border-muted pb-1">
               Vendas pagas
             </p>
-            <p className="text-base font-bold text-foreground">{loading ? '...' : metrics.orders}</p>
+            {loading ? <Skeleton className="h-6 w-10" /> : <p className="text-base font-bold text-foreground">{metrics.orders}</p>}
           </CardContent>
         </Card>
       </div>
@@ -466,12 +473,12 @@ export function AppLiveView({
             <div className="text-center">
               
               <p className="text-xs text-muted-foreground mb-1">Pedido gerado</p>
-              <p className="text-sm font-bold text-foreground">{loading ? '...' : behavior.pendingOrders}</p>
+              {loading ? <Skeleton className="h-5 w-8 mx-auto" /> : <p className="text-sm font-bold text-foreground">{behavior.pendingOrders}</p>}
             </div>
             <div className="text-center border-l border-muted">
               
               <p className="text-xs text-muted-foreground mb-1">Compras pagas </p>
-              <p className="text-sm font-bold text-foreground">{loading ? '...' : behavior.completed}</p>
+              {loading ? <Skeleton className="h-5 w-8 mx-auto" /> : <p className="text-sm font-bold text-foreground">{behavior.completed}</p>}
             </div>
           </div>
         </CardContent>
