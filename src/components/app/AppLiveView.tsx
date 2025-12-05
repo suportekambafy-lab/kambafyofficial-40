@@ -81,9 +81,12 @@ export function AppLiveView({ onBack }: LiveViewProps) {
       setLoading(true);
       
       const now = new Date();
-      const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-      const last7d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-      const previousWeekStart = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+      // Today start (midnight)
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      // Yesterday start for comparison
+      const yesterdayStart = new Date(todayStart.getTime() - 24 * 60 * 60 * 1000);
+      // Last 5 minutes for real-time behavior
+      const last5min = new Date(now.getTime() - 5 * 60 * 1000);
       
       // Get user's products
       const { data: products } = await supabase
@@ -98,52 +101,52 @@ export function AppLiveView({ onBack }: LiveViewProps) {
         return;
       }
       
-      // Get ALL orders from last 24h (for live view)
+      // Get TODAY's orders only
+      const { data: todayOrders } = await supabase
+        .from('orders')
+        .select('*')
+        .in('product_id', productIds)
+        .gte('created_at', todayStart.toISOString())
+        .order('created_at', { ascending: false });
+      
+      // Get yesterday's orders for comparison
+      const { data: yesterdayOrders } = await supabase
+        .from('orders')
+        .select('id')
+        .in('product_id', productIds)
+        .gte('created_at', yesterdayStart.toISOString())
+        .lt('created_at', todayStart.toISOString());
+      
+      // Get LAST 5 MINUTES orders for real-time behavior
       const { data: recentOrders } = await supabase
         .from('orders')
         .select('*')
         .in('product_id', productIds)
-        .gte('created_at', last24h.toISOString())
-        .order('created_at', { ascending: false });
+        .gte('created_at', last5min.toISOString());
       
-      // Get orders from last 7 days
-      const { data: weekOrders } = await supabase
-        .from('orders')
-        .select('*')
-        .in('product_id', productIds)
-        .gte('created_at', last7d.toISOString());
-      
-      // Get orders from previous week for comparison
-      const { data: previousWeekOrders } = await supabase
-        .from('orders')
-        .select('id')
-        .in('product_id', productIds)
-        .gte('created_at', previousWeekStart.toISOString())
-        .lt('created_at', last7d.toISOString());
-      
-      // Calculate real metrics
-      const allRecentOrders = recentOrders || [];
-      const paidOrders = allRecentOrders.filter(o => 
+      // Calculate real metrics from TODAY's data
+      const allTodayOrders = todayOrders || [];
+      const paidOrders = allTodayOrders.filter(o => 
         o.status === 'Pago' || o.status === 'completed' || o.status === 'paid'
       );
-      const pendingOrders = allRecentOrders.filter(o => 
+      const pendingOrders = allTodayOrders.filter(o => 
         o.status === 'pending' || o.status === 'Pendente'
       );
-      const failedOrders = allRecentOrders.filter(o => 
-        o.status === 'failed' || o.status === 'Falhou'
-      );
       
-      // Sessions = all order attempts in last 24h
-      const totalSessions = allRecentOrders.length;
-      const previousSessions = (previousWeekOrders?.length || 0) / 7; // Daily average
-      const sessionsChange = previousSessions > 0 
-        ? ((totalSessions - previousSessions) / previousSessions) * 100 
+      // Sessions = all order attempts today
+      const totalSessions = allTodayOrders.length;
+      const yesterdaySessions = yesterdayOrders?.length || 0;
+      const sessionsChange = yesterdaySessions > 0 
+        ? ((totalSessions - yesterdaySessions) / yesterdaySessions) * 100 
         : 0;
       
-      // Visitors now = pending orders (people currently in checkout)
-      const visitorsNow = pendingOrders.length;
+      // Visitors now = pending orders from last 5 minutes (people currently in checkout)
+      const recentPending = (recentOrders || []).filter(o => 
+        o.status === 'pending' || o.status === 'Pendente'
+      );
+      const visitorsNow = recentPending.length;
       
-      // Total sales value
+      // Total sales value TODAY
       const totalSalesValue = paidOrders.reduce((sum, o) => sum + parseFloat(o.amount || '0'), 0);
       
       setMetrics({
@@ -154,16 +157,27 @@ export function AppLiveView({ onBack }: LiveViewProps) {
         orders: paidOrders.length
       });
       
-      // Customer behavior based on real statuses
+      // Customer behavior based on LAST 5 MINUTES
+      const recent5min = recentOrders || [];
+      const recentFailed = recent5min.filter(o => 
+        o.status === 'failed' || o.status === 'Falhou'
+      );
+      const recentCheckingOut = recent5min.filter(o => 
+        o.status === 'pending' || o.status === 'Pendente'
+      );
+      const recentCompleted = recent5min.filter(o => 
+        o.status === 'Pago' || o.status === 'completed' || o.status === 'paid'
+      );
+      
       setBehavior({
-        activeCarts: failedOrders.length, // Failed = abandoned carts
-        checkingOut: pendingOrders.length, // Pending = currently checking out
-        completed: paidOrders.length // Paid = completed
+        activeCarts: recentFailed.length,
+        checkingOut: recentCheckingOut.length,
+        completed: recentCompleted.length
       });
       
-      // Sessions by location - based on phone country codes from REAL orders
+      // Sessions by location - based on phone country codes from TODAY's orders
       const locationCounts: Record<string, SessionLocation> = {};
-      allRecentOrders.forEach(order => {
+      allTodayOrders.forEach(order => {
         const country = getCountryFromPhone(order.customer_phone);
         if (!locationCounts[country]) {
           locationCounts[country] = {
@@ -182,11 +196,10 @@ export function AppLiveView({ onBack }: LiveViewProps) {
       
       setSessionsByLocation(sortedLocations);
       
-      // Customer types - based on real order history
-      const allWeekOrders = weekOrders || [];
+      // Customer types - based on TODAY's orders
       const emailCounts: Record<string, number> = {};
       
-      allWeekOrders.forEach(order => {
+      allTodayOrders.forEach(order => {
         const email = order.customer_email?.toLowerCase();
         if (email) {
           emailCounts[email] = (emailCounts[email] || 0) + 1;
@@ -203,7 +216,7 @@ export function AppLiveView({ onBack }: LiveViewProps) {
         returningCustomers
       });
       
-      // Sales by product - REAL data
+      // Sales by product - TODAY's data
       const productSalesData: ProductSales[] = (products || []).map(p => {
         const productOrders = paidOrders.filter(o => o.product_id === p.id);
         return {
@@ -304,56 +317,84 @@ export function AppLiveView({ onBack }: LiveViewProps) {
         </Button>
       </div>
 
-      {/* Globe Visualization */}
-      <Card className="overflow-hidden rounded-2xl border-none shadow-sm bg-gradient-to-br from-background to-muted/20">
+      {/* Globe Visualization with Real Earth Image */}
+      <Card className="overflow-hidden rounded-2xl border-none shadow-sm bg-gradient-to-br from-slate-900 to-slate-800">
         <CardContent className="p-6">
           <div className="relative w-full aspect-square max-w-[300px] mx-auto">
-            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-cyan-100 via-cyan-200 to-teal-100 dark:from-cyan-900/30 dark:via-cyan-800/20 dark:to-teal-900/30 shadow-inner">
-              <div className="absolute inset-4 rounded-full border-2 border-cyan-300/30 dark:border-cyan-600/30" />
-              <div className="absolute inset-8 rounded-full border border-cyan-300/20 dark:border-cyan-600/20" />
-              <div className="absolute inset-12 rounded-full border border-cyan-300/10 dark:border-cyan-600/10" />
-              
-              <div className="absolute inset-0 rounded-full overflow-hidden">
-                <div className="absolute top-[20%] left-[25%] w-[30%] h-[25%] bg-cyan-400/40 dark:bg-cyan-500/30 rounded-[40%]" />
-                <div className="absolute top-[35%] left-[55%] w-[20%] h-[30%] bg-cyan-400/40 dark:bg-cyan-500/30 rounded-[30%]" />
-                <div className="absolute top-[50%] left-[20%] w-[15%] h-[25%] bg-cyan-400/40 dark:bg-cyan-500/30 rounded-[40%]" />
-                <div className="absolute top-[55%] left-[60%] w-[18%] h-[20%] bg-cyan-400/40 dark:bg-cyan-500/30 rounded-[35%]" />
-              </div>
+            {/* Real Globe Image */}
+            <div className="absolute inset-0 rounded-full overflow-hidden shadow-2xl shadow-cyan-500/20">
+              <img 
+                src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/The_Earth_seen_from_Apollo_17.jpg/1200px-The_Earth_seen_from_Apollo_17.jpg" 
+                alt="Earth Globe"
+                className="w-full h-full object-cover rounded-full"
+              />
+              {/* Overlay for better dot visibility */}
+              <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-black/30 rounded-full" />
               
               {/* Active visitor dots based on real location data */}
-              {sessionsByLocation.slice(0, 5).map((loc, idx) => {
-                const positions = [
-                  { top: '30%', left: '45%' }, // Angola
-                  { top: '55%', left: '35%' }, // Brasil
-                  { top: '25%', left: '48%' }, // Portugal
-                  { top: '40%', left: '60%' }, // Moçambique
-                  { top: '35%', left: '25%' }, // US
-                ];
-                const pos = positions[idx % positions.length];
+              {sessionsByLocation.slice(0, 8).map((loc, idx) => {
+                // Map countries to approximate globe positions
+                const countryPositions: Record<string, { top: string; left: string }> = {
+                  'Angola': { top: '55%', left: '52%' },
+                  'Moçambique': { top: '58%', left: '62%' },
+                  'Portugal': { top: '38%', left: '42%' },
+                  'Brasil': { top: '55%', left: '30%' },
+                  'Espanha': { top: '36%', left: '44%' },
+                  'França': { top: '34%', left: '48%' },
+                  'Reino Unido': { top: '30%', left: '46%' },
+                  'Estados Unidos': { top: '35%', left: '22%' },
+                  'Itália': { top: '37%', left: '52%' },
+                  'Alemanha': { top: '32%', left: '50%' },
+                  'Outro': { top: '45%', left: '50%' },
+                  'Desconhecido': { top: '50%', left: '50%' }
+                };
+                const pos = countryPositions[loc.country] || { top: '50%', left: '50%' };
+                const size = Math.min(4 + loc.count * 2, 16);
+                
                 return (
                   <div
                     key={loc.country}
-                    className="absolute w-3 h-3 rounded-full bg-purple-500 animate-pulse shadow-lg shadow-purple-500/50"
-                    style={{ top: pos.top, left: pos.left }}
+                    className="absolute rounded-full bg-cyan-400 animate-pulse shadow-lg"
+                    style={{ 
+                      top: pos.top, 
+                      left: pos.left,
+                      width: `${size}px`,
+                      height: `${size}px`,
+                      boxShadow: `0 0 ${size * 2}px rgba(34, 211, 238, 0.8)`,
+                      transform: 'translate(-50%, -50%)'
+                    }}
                     title={`${loc.country}: ${loc.count} sessões`}
                   />
                 );
               })}
             </div>
             
-            <div className="absolute inset-0 flex items-center justify-center">
-              <Globe className="h-12 w-12 text-cyan-500/30 dark:text-cyan-400/30" />
+            {/* Legend */}
+            <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-4 text-xs text-white/80">
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                <span>Sessões ativas</span>
+              </div>
             </div>
+          </div>
+          
+          {/* Real-time indicator */}
+          <div className="flex items-center justify-center gap-2 mt-4 text-xs text-white/60">
+            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            <span>Dados em tempo real (últimos 5 min)</span>
           </div>
         </CardContent>
       </Card>
 
-      {/* KPI Cards Grid */}
+      {/* KPI Cards Grid - Today's Data */}
+      <div className="text-xs text-muted-foreground text-center mb-2">
+        Dados de hoje ({new Date().toLocaleDateString('pt-PT')})
+      </div>
       <div className="grid grid-cols-2 gap-3">
         <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
           <CardContent className="p-4">
             <p className="text-xs text-muted-foreground mb-1 truncate border-b border-dashed border-muted pb-1">
-              Visitantes neste m...
+              No checkout (5 min)
             </p>
             <p className="text-2xl font-bold text-foreground">{loading ? '...' : metrics.visitorsNow}</p>
           </CardContent>
@@ -401,11 +442,12 @@ export function AppLiveView({ onBack }: LiveViewProps) {
         </Card>
       </div>
 
-      {/* Customer Behavior */}
+      {/* Customer Behavior - Last 5 minutes */}
       <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
         <CardHeader className="pb-2">
-          <CardTitle className="text-base font-semibold border-b border-dashed border-muted pb-2">
-            Comportamento do cliente
+          <CardTitle className="text-base font-semibold border-b border-dashed border-muted pb-2 flex items-center justify-between">
+            <span>Comportamento do cliente</span>
+            <span className="text-xs font-normal text-muted-foreground">(últimos 5 min)</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4 pt-0">
