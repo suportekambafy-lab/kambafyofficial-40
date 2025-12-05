@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Search, Map, TrendingDown, TrendingUp, ShoppingCart, CreditCard, CheckCircle } from 'lucide-react';
+import { ChevronLeft, TrendingDown, TrendingUp, ShoppingCart, CreditCard, CheckCircle } from 'lucide-react';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
 import RotatingEarth from './RotatingEarth';
 
@@ -45,7 +45,6 @@ const getCountryFromPhone = (phone: string | null): string => {
 export function AppLiveView({ onBack }: LiveViewProps) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [activeFilter, setActiveFilter] = useState<'orders' | 'visitors'>('orders');
   const [productIds, setProductIds] = useState<string[]>([]);
   
   // Live metrics
@@ -332,38 +331,6 @@ export function AppLiveView({ onBack }: LiveViewProps) {
         </div>
         <h2 className="text-xl font-bold text-foreground">Live View</h2>
         <div className="w-20" />
-      </div>
-
-      {/* Filter Pills */}
-      <div className="flex items-center gap-2 px-2 overflow-x-auto pb-2">
-        <button
-          onClick={() => setActiveFilter('orders')}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors ${
-            activeFilter === 'orders' 
-              ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' 
-              : 'bg-muted text-muted-foreground'
-          }`}
-        >
-          <span className={`w-2 h-2 rounded-full ${activeFilter === 'orders' ? 'bg-purple-500' : 'bg-muted-foreground'}`} />
-          Encomendas
-        </button>
-        <button
-          onClick={() => setActiveFilter('visitors')}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors ${
-            activeFilter === 'visitors' 
-              ? 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400' 
-              : 'bg-muted text-muted-foreground'
-          }`}
-        >
-          <span className={`w-2 h-2 rounded-full ${activeFilter === 'visitors' ? 'bg-cyan-500' : 'bg-muted-foreground'}`} />
-          Visitantes neste momento
-        </button>
-        <Button variant="outline" size="icon" className="rounded-full flex-shrink-0">
-          <Search className="h-4 w-4" />
-        </Button>
-        <Button variant="outline" size="icon" className="rounded-full flex-shrink-0">
-          <Map className="h-4 w-4" />
-        </Button>
       </div>
 
       {/* Globe Visualization - Rotating Earth */}
