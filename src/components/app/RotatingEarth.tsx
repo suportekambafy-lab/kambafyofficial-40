@@ -71,12 +71,12 @@ export default function RotatingEarth({
       graticule: "#4b5563",
       markerStroke: "#1a1a2e"
     } : {
-      ocean: "#ffffff",
-      oceanStroke: "#e0e0e0",
-      land: "#87CEEB",
-      landStroke: "#5DADE2",
-      dots: "#5DADE2",
-      graticule: "#87CEEB",
+      ocean: "#e0f2fe",
+      oceanStroke: "#7dd3fc",
+      land: "#3b82f6",
+      landStroke: "#2563eb",
+      dots: "#1d4ed8",
+      graticule: "#60a5fa",
       markerStroke: "#ffffff"
     }
 
