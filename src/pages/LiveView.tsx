@@ -57,14 +57,20 @@ export default function LiveView() {
   // Sales by product
   const [productSales, setProductSales] = useState<ProductSales[]>([]);
 
-  // Load user's products first
+  // Load user's products first - only set if actually changed
   useEffect(() => {
     const loadProducts = async () => {
       if (!user) return;
       const {
         data: products
       } = await supabase.from('products').select('id, name').eq('user_id', user.id);
-      setProductIds(products?.map(p => p.id) || []);
+      const newIds = products?.map(p => p.id) || [];
+      setProductIds(prev => {
+        const prevStr = JSON.stringify(prev.sort());
+        const newStr = JSON.stringify(newIds.sort());
+        if (prevStr === newStr) return prev;
+        return newIds;
+      });
     };
     loadProducts();
   }, [user]);
@@ -232,15 +238,26 @@ export default function LiveView() {
       setLoading(false);
     }
   }, [user, productIds]);
-  useEffect(() => {
-    if (productIds.length > 0) loadLiveData(false);
-  }, [productIds, loadLiveData]);
+  // Store loadLiveData in a ref to avoid re-subscribing
   const loadLiveDataRef = useRef(loadLiveData);
   useEffect(() => {
     loadLiveDataRef.current = loadLiveData;
   }, [loadLiveData]);
 
-  // Real-time subscription
+  // Track if initial load has happened
+  const hasLoadedRef = useRef(false);
+  
+  // Initial load - only once when productIds are ready
+  useEffect(() => {
+    if (productIds.length > 0 && !hasLoadedRef.current) {
+      hasLoadedRef.current = true;
+      loadLiveData(false);
+    }
+  }, [productIds]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Stable productIds string for dependency
+  const productIdsKey = productIds.join(',');
+
+  // Real-time subscription - stable
   useEffect(() => {
     if (!user || productIds.length === 0) return;
     const channel = supabase.channel(`live-view-desktop-${user.id}`).on('postgres_changes', {
@@ -261,7 +278,7 @@ export default function LiveView() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user?.id, productIds]);
+  }, [user?.id, productIdsKey]); // eslint-disable-line react-hooks/exhaustive-deps
   const filteredLocations = sessionsByLocation.filter(loc => searchLocation === '' || loc.country.toLowerCase().includes(searchLocation.toLowerCase()) || loc.city.toLowerCase().includes(searchLocation.toLowerCase()) || loc.region.toLowerCase().includes(searchLocation.toLowerCase()));
   const maxLocationCount = Math.max(...sessionsByLocation.map(l => l.count), 1);
   return <div className="p-6 space-y-6 bg-background text-foreground">
