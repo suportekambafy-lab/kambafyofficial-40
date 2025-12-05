@@ -59,18 +59,35 @@ const Checkout = () => {
     isReady: geoReady
   } = useGeoLocation();
   
+  // IP-detected country name (fetched directly from API)
+  const [ipCountryName, setIpCountryName] = useState<string>('');
+  
+  // Fetch country name directly from IP API
+  useEffect(() => {
+    const fetchCountryFromIP = async () => {
+      try {
+        const response = await fetch('https://ipapi.co/json/');
+        if (response.ok) {
+          const data = await response.json();
+          const detectedCountry = data.country_name || '';
+          console.log('🌍 IP detected country:', detectedCountry);
+          setIpCountryName(detectedCountry);
+        }
+      } catch (error) {
+        console.log('Failed to fetch country from IP:', error);
+      }
+    };
+    fetchCountryFromIP();
+  }, []);
+  
   // Track visitor presence in real-time for Live View (with country)
-  const countryName = userCountry?.code === 'AO' ? 'Angola' 
-    : userCountry?.code === 'MZ' ? 'Moçambique'
-    : userCountry?.code === 'PT' ? 'Portugal'
-    : userCountry?.code === 'BR' ? 'Brasil'
-    : 'Outro';
-  useCheckoutPresence(productId, countryName);
+  useCheckoutPresence(productId, ipCountryName || userCountry?.name || 'Desconhecido');
   
   console.log('🌍 Geo state:', {
     geoLoading,
     geoReady,
-    userCountry: userCountry?.code
+    userCountry: userCountry?.code,
+    ipCountryName
   });
 
   // 🌍 Aplicar país detectado via IP automaticamente
@@ -1468,7 +1485,7 @@ const Checkout = () => {
             paymentMethod: selectedPayment,
             phoneNumber: phoneToUse,
             orderData: orderData, // Pass order data for saving
-            customerCountry: countryName // Pass IP-detected country
+            customerCountry: ipCountryName // Pass IP-detected country
           }
         });
         if (appyPayResponse.error) {
@@ -2317,7 +2334,7 @@ const Checkout = () => {
                 name: formData.fullName,
                 email: formData.email,
                 phone: formData.phone
-              }} paymentMethod={selectedPayment} onSuccess={handleCardPaymentSuccess} onError={handleCardPaymentError} processing={processing} setProcessing={setProcessing} displayPrice={getDisplayPrice(totalPrice, true)} convertedAmount={convertedTotalPrice} />
+              }} paymentMethod={selectedPayment} onSuccess={handleCardPaymentSuccess} onError={handleCardPaymentError} processing={processing} setProcessing={setProcessing} displayPrice={getDisplayPrice(totalPrice, true)} convertedAmount={convertedTotalPrice} customerCountry={ipCountryName} />
                 </div>}
 
             </div>
