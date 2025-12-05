@@ -8,7 +8,9 @@ import {
 import { loadStripe } from '@stripe/stripe-js';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { CreditCard, Lock } from 'lucide-react';
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { CreditCard, Lock, Smartphone } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -52,6 +54,8 @@ interface StripeCardFormProps {
   displayPrice: string;
   convertedAmount: number;
   customerCountry?: string;
+  mbwayPhone?: string;
+  onMbwayPhoneChange?: (phone: string) => void;
 }
 
 // Apple Pay removido
@@ -69,13 +73,16 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
   setProcessing,
   displayPrice,
   convertedAmount,
-  customerCountry
+  customerCountry,
+  mbwayPhone,
+  onMbwayPhoneChange
 }) => {
   const stripe = useStripe();
   const elements = useElements();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [cardError, setCardError] = useState<string>('');
+  const [localMbwayPhone, setLocalMbwayPhone] = useState<string>(mbwayPhone || '');
 
   const getStripeCurrency = (fromCurrency: string): string => {
     if (fromCurrency === 'EUR') {
@@ -194,7 +201,9 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
         );
       } else if (paymentMethod === 'mbway') {
         // MB Way payment - requires phone number in Portuguese format
-        const phoneNumber = customerData.phone.replace(/\s/g, '');
+        // Use mbwayPhone if provided, otherwise fall back to customerData.phone
+        const mbwayPhoneToUse = localMbwayPhone || mbwayPhone || customerData.phone;
+        const phoneNumber = mbwayPhoneToUse.replace(/\s/g, '');
         const formattedPhone = phoneNumber.startsWith('+351') ? phoneNumber : `+351${phoneNumber.replace(/^0+/, '')}`;
         
         // Create payment method first, then confirm
@@ -327,7 +336,7 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
         </Card>
       )}
 
-      {(paymentMethod === 'klarna' || paymentMethod === 'multibanco' || paymentMethod === 'mbway') && (
+      {(paymentMethod === 'klarna' || paymentMethod === 'multibanco') && (
         <Card className="border-gray-200">
           <CardContent className="p-4">
             <div className="space-y-4">
@@ -339,12 +348,52 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
               <div className="text-sm text-gray-600">
                 {paymentMethod === 'multibanco' 
                   ? 'Você será redirecionado para a página de confirmação com a referência para pagamento.'
-                  : paymentMethod === 'klarna'
-                  ? 'Pague em 3x sem juros. Você será redirecionado para completar o pagamento com Klarna.'
-                  : paymentMethod === 'mbway'
-                  ? 'Receberá uma notificação no seu telemóvel para confirmar o pagamento via MB Way.'
-                  : 'Você será redirecionado para completar o pagamento de forma segura.'
+                  : 'Pague em 3x sem juros. Você será redirecionado para completar o pagamento com Klarna.'
                 }
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {paymentMethod === 'mbway' && (
+        <Card className="border-gray-200">
+          <CardContent className="p-4">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                <Smartphone className="w-4 h-4" />
+                Pagamento seguro com MB WAY
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="mbway-phone" className="text-sm font-medium text-gray-700">
+                  Número de telemóvel MB Way
+                </Label>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-500 bg-gray-100 px-3 py-2 rounded-l-md border border-r-0 border-gray-300">
+                    +351
+                  </span>
+                  <Input
+                    id="mbway-phone"
+                    type="tel"
+                    placeholder="912 345 678"
+                    value={localMbwayPhone}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 9);
+                      setLocalMbwayPhone(value);
+                      onMbwayPhoneChange?.(value);
+                    }}
+                    className="flex-1 rounded-l-none"
+                    maxLength={9}
+                  />
+                </div>
+                <p className="text-xs text-gray-500">
+                  Insira o número associado à sua conta MB Way (9 dígitos)
+                </p>
+              </div>
+              
+              <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-md">
+                Receberá uma notificação no seu telemóvel para confirmar o pagamento via MB Way.
               </div>
             </div>
           </CardContent>
@@ -353,9 +402,9 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
 
       <Button
         type="submit"
-        disabled={!stripe || processing || !customerData.name || !customerData.email || !customerData.phone}
+        disabled={!stripe || processing || !customerData.name || !customerData.email || !customerData.phone || (paymentMethod === 'mbway' && localMbwayPhone.length !== 9)}
         className={`w-full h-12 font-semibold ${
-          (!stripe || processing || !customerData.name || !customerData.email || !customerData.phone)
+          (!stripe || processing || !customerData.name || !customerData.email || !customerData.phone || (paymentMethod === 'mbway' && localMbwayPhone.length !== 9))
             ? 'bg-green-600/50 cursor-not-allowed text-white/70'
             : 'bg-green-600 hover:bg-green-700 text-white'
         }`}
@@ -391,6 +440,8 @@ interface StripeCardPaymentProps {
   setProcessing: (processing: boolean) => void;
   displayPrice: string;
   convertedAmount: number;
+  mbwayPhone?: string;
+  onMbwayPhoneChange?: (phone: string) => void;
 }
 
 const StripeCardPayment: React.FC<StripeCardPaymentProps> = (props) => {
