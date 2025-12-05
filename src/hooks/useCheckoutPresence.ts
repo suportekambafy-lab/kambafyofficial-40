@@ -43,27 +43,30 @@ export function useCheckoutPresence(productId: string | undefined, country?: str
     fetchDetailedLocation();
   }, [country]);
 
-  // Save session to database (once per visit)
+  // Save session to database (once per visit) - save immediately, don't wait for location
   useEffect(() => {
-    if (!productId || !locationData.country || sessionSavedRef.current) return;
+    if (!productId || sessionSavedRef.current) return;
 
     const saveSession = async () => {
+      // Use whatever location data we have available
+      const countryToSave = locationData.country || country || 'Desconhecido';
+      
       try {
         const { error } = await supabase
           .from('checkout_sessions')
           .insert({
             product_id: productId,
             session_id: sessionId.current,
-            country: locationData.country,
-            city: locationData.city,
-            region: locationData.region,
+            country: countryToSave,
+            city: locationData.city || null,
+            region: locationData.region || null,
             user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null
           });
 
         if (error) {
           console.log('[Checkout Presence] Failed to save session:', error);
         } else {
-          console.log('🟢 [Checkout Presence] Session saved:', locationData.country);
+          console.log('🟢 [Checkout Presence] Session saved:', countryToSave);
           sessionSavedRef.current = true;
         }
       } catch (error) {
@@ -71,8 +74,11 @@ export function useCheckoutPresence(productId: string | undefined, country?: str
       }
     };
 
-    saveSession();
-  }, [productId, locationData.country]);
+    // Small delay to allow location data to load first, but don't wait forever
+    const timeout = setTimeout(saveSession, 1500);
+    
+    return () => clearTimeout(timeout);
+  }, [productId, country, locationData]);
 
   // Real-time presence for live tracking
   useEffect(() => {
@@ -86,7 +92,7 @@ export function useCheckoutPresence(productId: string | undefined, country?: str
       productId,
       enteredAt: new Date().toISOString(),
       userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
-      country: locationData.country,
+      country: locationData.country || country || 'Desconhecido',
       city: locationData.city,
       region: locationData.region
     };
@@ -105,5 +111,5 @@ export function useCheckoutPresence(productId: string | undefined, country?: str
       supabase.removeChannel(channel);
       channelRef.current = null;
     };
-  }, [productId, locationData]);
+  }, [productId, locationData, country]);
 }
