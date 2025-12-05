@@ -10,6 +10,7 @@ interface PresenceState {
 
 export function useCheckoutPresence(productId: string | undefined, country?: string) {
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const countryRef = useRef<string | undefined>(country);
 
   useEffect(() => {
     if (!productId) return;
@@ -17,6 +18,7 @@ export function useCheckoutPresence(productId: string | undefined, country?: str
     const channelName = `checkout-presence-${productId}`;
     const channel = supabase.channel(channelName);
     channelRef.current = channel;
+    countryRef.current = country;
 
     const presenceState: PresenceState = {
       productId,
@@ -26,10 +28,10 @@ export function useCheckoutPresence(productId: string | undefined, country?: str
     };
 
     channel.subscribe(async (status) => {
-      console.log('🔌 [Checkout Presence] Channel status:', status);
+      console.log('🔌 [Checkout Presence] Channel status:', status, 'country:', country);
       if (status === 'SUBSCRIBED') {
         const trackResult = await channel.track(presenceState);
-        console.log('🟢 [Checkout Presence] Track result:', trackResult, 'for product:', productId);
+        console.log('🟢 [Checkout Presence] Track result:', trackResult, 'for product:', productId, 'country:', country);
       }
     });
 
@@ -39,5 +41,5 @@ export function useCheckoutPresence(productId: string | undefined, country?: str
       supabase.removeChannel(channel);
       channelRef.current = null;
     };
-  }, [productId]);
+  }, [productId, country]);
 }
