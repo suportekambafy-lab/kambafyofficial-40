@@ -45,6 +45,7 @@ export function AppLiveView({ onBack }: LiveViewProps) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<'orders' | 'visitors'>('orders');
+  const [productIds, setProductIds] = useState<string[]>([]);
   
   // Live metrics
   const [metrics, setMetrics] = useState({
@@ -62,8 +63,11 @@ export function AppLiveView({ onBack }: LiveViewProps) {
     completed: 0
   });
   
-  // Sessions by location
+  // Sessions by location (today's data)
   const [sessionsByLocation, setSessionsByLocation] = useState<SessionLocation[]>([]);
+  
+  // ACTIVE sessions (last 5 min - for globe dots)
+  const [activeSessionsLocations, setActiveSessionsLocations] = useState<SessionLocation[]>([]);
   
   // New vs returning
   const [customerTypes, setCustomerTypes] = useState({
@@ -74,8 +78,21 @@ export function AppLiveView({ onBack }: LiveViewProps) {
   // Sales by product
   const [productSales, setProductSales] = useState<ProductSales[]>([]);
 
+  // Load user's products first
+  useEffect(() => {
+    const loadProducts = async () => {
+      if (!user) return;
+      const { data: products } = await supabase
+        .from('products')
+        .select('id, name')
+        .eq('user_id', user.id);
+      setProductIds(products?.map(p => p.id) || []);
+    };
+    loadProducts();
+  }, [user]);
+
   const loadLiveData = useCallback(async () => {
-    if (!user) return;
+    if (!user || productIds.length === 0) return;
     
     try {
       setLoading(true);
@@ -93,13 +110,6 @@ export function AppLiveView({ onBack }: LiveViewProps) {
         .from('products')
         .select('id, name')
         .eq('user_id', user.id);
-      
-      const productIds = products?.map(p => p.id) || [];
-      
-      if (productIds.length === 0) {
-        setLoading(false);
-        return;
-      }
       
       // Get TODAY's orders only
       const { data: todayOrders } = await supabase
@@ -196,6 +206,26 @@ export function AppLiveView({ onBack }: LiveViewProps) {
       
       setSessionsByLocation(sortedLocations);
       
+      // ACTIVE sessions locations - ONLY from last 5 min pending orders (for globe)
+      const activeLocationCounts: Record<string, SessionLocation> = {};
+      recentPending.forEach(order => {
+        const country = getCountryFromPhone(order.customer_phone);
+        if (!activeLocationCounts[country]) {
+          activeLocationCounts[country] = {
+            country,
+            region: 'Nenhum(a)',
+            city: 'Nenhum(a)',
+            count: 0
+          };
+        }
+        activeLocationCounts[country].count++;
+      });
+      
+      const sortedActiveLocations = Object.values(activeLocationCounts)
+        .sort((a, b) => b.count - a.count);
+      
+      setActiveSessionsLocations(sortedActiveLocations);
+      
       // Customer types - based on TODAY's orders
       const emailCounts: Record<string, number> = {};
       
@@ -235,22 +265,23 @@ export function AppLiveView({ onBack }: LiveViewProps) {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, productIds]);
 
+  // Initial load
   useEffect(() => {
-    loadLiveData();
+    if (productIds.length > 0) {
+      loadLiveData();
+    }
+  }, [productIds, loadLiveData]);
+
+  // Subscribe to real-time order updates via WebSocket
+  useEffect(() => {
+    if (!user || productIds.length === 0) return;
     
-    // Refresh every 30 seconds
-    const interval = setInterval(loadLiveData, 30000);
-    return () => clearInterval(interval);
-  }, [loadLiveData]);
-
-  // Subscribe to real-time order updates
-  useEffect(() => {
-    if (!user) return;
+    console.log('🔌 [Live View] Connecting to realtime channel...');
     
     const channel = supabase
-      .channel('live-view-orders')
+      .channel('live-view-realtime')
       .on(
         'postgres_changes',
         {
@@ -258,16 +289,21 @@ export function AppLiveView({ onBack }: LiveViewProps) {
           schema: 'public',
           table: 'orders'
         },
-        () => {
+        (payload) => {
+          console.log('📦 [Live View] Order change detected:', payload.eventType);
+          // Reload data immediately on any order change
           loadLiveData();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('🔌 [Live View] Realtime status:', status);
+      });
     
     return () => {
+      console.log('🔌 [Live View] Disconnecting...');
       supabase.removeChannel(channel);
     };
-  }, [user, loadLiveData]);
+  }, [user, productIds, loadLiveData]);
 
   const maxLocationCount = Math.max(...sessionsByLocation.map(l => l.count), 1);
 
@@ -331,8 +367,8 @@ export function AppLiveView({ onBack }: LiveViewProps) {
               {/* Overlay for better dot visibility */}
               <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-black/30 rounded-full" />
               
-              {/* Active visitor dots based on real location data */}
-              {sessionsByLocation.slice(0, 8).map((loc, idx) => {
+              {/* Active visitor dots - ONLY from last 5 min pending orders */}
+              {activeSessionsLocations.map((loc) => {
                 // Map countries to approximate globe positions
                 const countryPositions: Record<string, { top: string; left: string }> = {
                   'Angola': { top: '55%', left: '52%' },
@@ -349,31 +385,40 @@ export function AppLiveView({ onBack }: LiveViewProps) {
                   'Desconhecido': { top: '50%', left: '50%' }
                 };
                 const pos = countryPositions[loc.country] || { top: '50%', left: '50%' };
-                const size = Math.min(4 + loc.count * 2, 16);
+                const size = Math.min(8 + loc.count * 4, 20);
                 
                 return (
                   <div
                     key={loc.country}
-                    className="absolute rounded-full bg-cyan-400 animate-pulse shadow-lg"
+                    className="absolute rounded-full bg-green-400 animate-pulse shadow-lg"
                     style={{ 
                       top: pos.top, 
                       left: pos.left,
                       width: `${size}px`,
                       height: `${size}px`,
-                      boxShadow: `0 0 ${size * 2}px rgba(34, 211, 238, 0.8)`,
+                      boxShadow: `0 0 ${size * 2}px rgba(34, 197, 94, 0.9)`,
                       transform: 'translate(-50%, -50%)'
                     }}
-                    title={`${loc.country}: ${loc.count} sessões`}
+                    title={`${loc.country}: ${loc.count} no checkout agora`}
                   />
                 );
               })}
             </div>
             
+            {/* No active sessions message */}
+            {activeSessionsLocations.length === 0 && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center text-muted-foreground text-xs bg-background/80 px-3 py-2 rounded-lg">
+                  Nenhuma sessão ativa
+                </div>
+              </div>
+            )}
+            
             {/* Legend */}
             <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-4 text-xs text-foreground/70">
               <div className="flex items-center gap-1">
-                <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
-                <span>Sessões ativas</span>
+                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                <span>No checkout agora ({metrics.visitorsNow})</span>
               </div>
             </div>
           </div>
@@ -381,7 +426,7 @@ export function AppLiveView({ onBack }: LiveViewProps) {
           {/* Real-time indicator */}
           <div className="flex items-center justify-center gap-2 mt-4 text-xs text-muted-foreground">
             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <span>Dados em tempo real (últimos 5 min)</span>
+            <span>Tempo real via WebSocket</span>
           </div>
         </CardContent>
       </Card>
