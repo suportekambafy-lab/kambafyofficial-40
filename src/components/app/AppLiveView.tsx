@@ -318,7 +318,7 @@ export function AppLiveView({ onBack }: LiveViewProps) {
       </div>
 
       {/* Globe Visualization with Real Earth Image */}
-      <Card className="overflow-hidden rounded-2xl border-none shadow-sm bg-gradient-to-br from-slate-900 to-slate-800">
+      <Card className="overflow-hidden rounded-2xl border-none shadow-sm bg-gradient-to-br from-sky-50 to-cyan-50 dark:from-sky-950/30 dark:to-cyan-950/30">
         <CardContent className="p-6">
           <div className="relative w-full aspect-square max-w-[300px] mx-auto">
             {/* Real Globe Image */}
@@ -370,16 +370,16 @@ export function AppLiveView({ onBack }: LiveViewProps) {
             </div>
             
             {/* Legend */}
-            <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-4 text-xs text-white/80">
+            <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-4 text-xs text-foreground/70">
               <div className="flex items-center gap-1">
-                <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
                 <span>Sessões ativas</span>
               </div>
             </div>
           </div>
           
           {/* Real-time indicator */}
-          <div className="flex items-center justify-center gap-2 mt-4 text-xs text-white/60">
+          <div className="flex items-center justify-center gap-2 mt-4 text-xs text-muted-foreground">
             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
             <span>Dados em tempo real (últimos 5 min)</span>
           </div>
