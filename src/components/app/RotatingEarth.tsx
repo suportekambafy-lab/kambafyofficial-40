@@ -239,21 +239,28 @@ export default function RotatingEarth({
           if (coords) {
             const projected = projection(coords)
             if (projected) {
-              const size = Math.min(6 + loc.count * 3, 16) * scaleFactor
+              // Smaller dots - base size 2, max 6
+              const size = Math.min(2 + loc.count * 1, 6) * scaleFactor
               
-              // Glow effect
+              // Outer glow - purple/violet
               context.beginPath()
-              context.arc(projected[0], projected[1], size * 1.5, 0, 2 * Math.PI)
-              context.fillStyle = "rgba(34, 197, 94, 0.3)"
+              context.arc(projected[0], projected[1], size * 2, 0, 2 * Math.PI)
+              context.fillStyle = "rgba(139, 92, 246, 0.2)"
               context.fill()
               
-              // Main dot
+              // Middle glow - blue
+              context.beginPath()
+              context.arc(projected[0], projected[1], size * 1.3, 0, 2 * Math.PI)
+              context.fillStyle = "rgba(59, 130, 246, 0.4)"
+              context.fill()
+              
+              // Main dot - vibrant purple/violet
               context.beginPath()
               context.arc(projected[0], projected[1], size, 0, 2 * Math.PI)
-              context.fillStyle = "#22C55E"
+              context.fillStyle = "#8B5CF6"
               context.fill()
-              context.strokeStyle = colors.markerStroke
-              context.lineWidth = 2 * scaleFactor
+              context.strokeStyle = "#C4B5FD"
+              context.lineWidth = 1 * scaleFactor
               context.stroke()
             }
           }
