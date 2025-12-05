@@ -1490,15 +1490,15 @@ export function AppHome() {
 
             {/* Navigation Icons - Centered Group */}
             <div className="flex items-center gap-4 flex-1 justify-center rounded-full px-6 py-2 bg-background/95 backdrop-blur-xl border border-border/50 shadow-lg transition-all duration-300">
-              <button onClick={() => setActiveTab('home')} className={`p-2.5 rounded-full transition-colors ${activeTab === 'home' ? 'bg-primary/10' : 'hover:bg-accent'}`}>
+              <button onClick={() => setActiveTab('home')} className={`p-2.5 transition-colors`}>
                 <LayoutDashboard className={`h-5 w-5 ${activeTab === 'home' ? 'text-primary' : 'text-foreground'}`} />
               </button>
               
-              <button onClick={() => setActiveTab('live-view')} className={`p-2.5 rounded-full transition-colors ${activeTab === 'live-view' ? 'bg-primary/10' : 'hover:bg-accent'}`}>
+              <button onClick={() => setActiveTab('live-view')} className={`p-2.5 transition-colors`}>
                 <Radio className={`h-5 w-5 ${activeTab === 'live-view' ? 'text-primary' : 'text-foreground'}`} />
               </button>
               
-              <button onClick={() => setActiveTab('products')} className={`p-2.5 rounded-full transition-colors ${activeTab === 'products' ? 'bg-primary/10' : 'hover:bg-accent'}`}>
+              <button onClick={() => setActiveTab('products')} className={`p-2.5 transition-colors`}>
                 <Package className={`h-5 w-5 ${activeTab === 'products' ? 'text-primary' : 'text-foreground'}`} />
               </button>
               
