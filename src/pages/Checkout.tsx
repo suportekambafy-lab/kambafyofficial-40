@@ -682,7 +682,7 @@ const Checkout = () => {
     const paymentOrder: Record<string, string[]> = {
       'AO': ['express', 'reference', 'transfer'],
       'MZ': ['emola', 'epesa'],
-      'PT': ['card', 'klarna', 'multibanco', 'apple_pay', 'mbway']
+      'PT': ['card', 'klarna', 'multibanco', 'mbway']
     };
 
     // Primeiro, verificar se o produto tem métodos de pagamento configurados
@@ -694,7 +694,7 @@ const Checkout = () => {
         } else if (userCountry.code === 'MZ') {
           return ['emola', 'epesa'].includes(method.id);
         } else if (userCountry.code === 'PT') {
-          return ['card', 'klarna', 'multibanco', 'apple_pay', 'mbway'].includes(method.id);
+          return ['card', 'klarna', 'multibanco', 'mbway'].includes(method.id);
         }
         return false;
       });
@@ -1282,7 +1282,7 @@ const Checkout = () => {
     // APENAS se o método de pagamento selecionado for Stripe (card, klarna, multibanco)
     if (product.subscription_config?.is_subscription && product.subscription_config?.stripe_price_id) {
       // Se for método Stripe, usar checkout de assinatura Stripe
-      if (['card', 'klarna', 'multibanco', 'apple_pay', 'mbway'].includes(selectedPayment)) {
+      if (['card', 'klarna', 'multibanco', 'mbway'].includes(selectedPayment)) {
         console.log('📦 Product is subscription with Stripe payment, redirecting to Stripe subscription checkout');
         await handleSubscriptionCheckout();
         return;
@@ -1292,7 +1292,7 @@ const Checkout = () => {
     }
 
     // Para métodos Stripe, o processamento é feito pelo componente StripeCardPayment
-    if (['card', 'klarna', 'multibanco', 'apple_pay', 'mbway'].includes(selectedPayment)) {
+    if (['card', 'klarna', 'multibanco', 'mbway'].includes(selectedPayment)) {
       console.log('Stripe payment method selected, processing handled by StripeCardPayment component');
       return;
     }
@@ -2212,88 +2212,7 @@ const Checkout = () => {
 
               <OptimizedOrderBump productId={productId || ''} position="after_payment_method" onToggle={handleOrderBumpToggle} userCountry={userCountry} formatPrice={formatPrice} resetSelection={resetOrderBumps} />
 
-              {selectedPayment === 'apple_pay' && (
-                <div className="mt-6">
-                  <Button 
-                    onClick={async () => {
-                      console.log('🍎 Apple Pay button clicked!');
-                      console.log('🍎 Form data:', formData);
-                      console.log('🍎 Product:', product);
-                      console.log('🍎 Total price:', convertedTotalPrice);
-                      console.log('🍎 Currency:', userCountry.currency);
-                      
-                      if (!formData.fullName || !formData.email || !formData.phone) {
-                        console.log('🍎 Missing form data');
-                        toast({
-                          title: "Dados incompletos",
-                          message: "Preencha todos os campos antes de continuar",
-                          variant: "error"
-                        });
-                        return;
-                      }
-                      
-                      setProcessing(true);
-                      try {
-                        console.log('🍎 Calling create-stripe-checkout-session...');
-                        const { data, error } = await supabase.functions.invoke('create-stripe-checkout-session', {
-                          body: {
-                            amount: convertedTotalPrice,
-                            currency: userCountry.currency === 'KZ' ? 'USD' : userCountry.currency,
-                            productId: productId,
-                            productName: product?.name || 'Produto Digital',
-                            customerData: {
-                              name: formData.fullName,
-                              email: formData.email,
-                              phone: formData.phone
-                            },
-                            paymentMethod: selectedPayment
-                          }
-                        });
-
-                        console.log('🍎 Edge function response:', { data, error });
-
-                        if (error) {
-                          console.error('🍎 Edge function error:', error);
-                          throw error;
-                        }
-
-                        if (data?.url) {
-                          console.log('🍎 Redirecionando para:', data.url);
-                          // Abrir na mesma aba para evitar bloqueio de pop-up
-                          window.location.href = data.url;
-                        } else {
-                          console.error('🍎 No URL in response');
-                          toast({
-                            title: "Erro",
-                            message: "Nenhuma URL recebida do servidor",
-                            variant: "error"
-                          });
-                        }
-                      } catch (error) {
-                        console.error('🍎 Error opening Stripe checkout:', error);
-                        toast({
-                          title: "Erro",
-                          message: error instanceof Error ? error.message : "Erro ao abrir checkout do Stripe",
-                          variant: "error"
-                        });
-                      } finally {
-                        setProcessing(false);
-                      }
-                    }}
-                    disabled={!formData.fullName || !formData.email || !formData.phone || processing}
-                    className="w-full h-12 font-semibold bg-green-600 hover:bg-green-700 text-white"
-                  >
-                    {processing ? (
-                      <div className="flex items-center justify-center">
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                        PROCESSANDO...
-                      </div>
-                    ) : (
-                      `PAGAR COM APPLE PAY ${getDisplayPrice(totalPrice, true)}`
-                    )}
-                  </Button>
-                </div>
-              )}
+              {/* Apple Pay removido */}
 
               {/* Botão de Assinatura para produtos de assinatura */}
               {product?.subscription_config?.is_subscription && product?.subscription_config?.stripe_price_id && ['card', 'klarna', 'multibanco', 'mbway'].includes(selectedPayment) && (
@@ -2567,7 +2486,7 @@ const Checkout = () => {
               }} disabled={processing} />
                 </div>}
 
-              {!['card', 'klarna', 'multibanco', 'apple_pay', 'mbway', 'transfer'].includes(selectedPayment) && availablePaymentMethods.length > 0 && !referenceData && <Button onClick={handlePurchase} disabled={!formData.fullName || !formData.email || !(selectedPayment === 'express' ? expressPhone : formData.phone) || !selectedPayment || processing} className={`w-full h-12 font-semibold relative transition-all ${!formData.fullName || !formData.email || !(selectedPayment === 'express' ? expressPhone : formData.phone) || !selectedPayment || processing ? 'bg-green-600/50 cursor-not-allowed text-white/70' : 'bg-green-600 hover:bg-green-700 text-white'}`}>
+              {!['card', 'klarna', 'multibanco', 'mbway', 'transfer'].includes(selectedPayment) && availablePaymentMethods.length > 0 && !referenceData && <Button onClick={handlePurchase} disabled={!formData.fullName || !formData.email || !(selectedPayment === 'express' ? expressPhone : formData.phone) || !selectedPayment || processing} className={`w-full h-12 font-semibold relative transition-all ${!formData.fullName || !formData.email || !(selectedPayment === 'express' ? expressPhone : formData.phone) || !selectedPayment || processing ? 'bg-green-600/50 cursor-not-allowed text-white/70' : 'bg-green-600 hover:bg-green-700 text-white'}`}>
                   {processing ? <div className="flex items-center justify-center">
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2">
                       </div>

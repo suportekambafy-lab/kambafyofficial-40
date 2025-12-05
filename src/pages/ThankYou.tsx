@@ -221,11 +221,9 @@ const ThankYou = () => {
           setRelatedOrders(relatedOrdersData);
         }
 
-        // Para Multibanco e Apple Pay, buscar dados reais do Stripe se necessário
-        if (['multibanco', 'apple_pay'].includes(orderDetails.paymentMethod) && orderDetails.paymentIntentId) {
-          if (orderDetails.paymentMethod === 'multibanco') {
-            await fetchMultibancoData();
-          }
+        // Para Multibanco, buscar dados reais do Stripe se necessário
+        if (orderDetails.paymentMethod === 'multibanco' && orderDetails.paymentIntentId) {
+          await fetchMultibancoData();
         }
 
         // Verificar se o usuário está autenticado e redirecionar se necessário
@@ -279,7 +277,7 @@ const ThankYou = () => {
     const orderId = orderDetails.orderId;
     const paymentMethod = orderDetails.paymentMethod;
     
-    if (orderStatus === 'pending' && ['multibanco', 'apple_pay', 'transfer', 'bank_transfer', 'transferencia', 'reference'].includes(paymentMethod) && orderId) {
+    if (orderStatus === 'pending' && ['multibanco', 'transfer', 'bank_transfer', 'transferencia', 'reference'].includes(paymentMethod) && orderId) {
       console.log('🔄 Iniciando verificação periódica do status do pedido...');
 
       // Verificar imediatamente
@@ -397,8 +395,8 @@ const ThankYou = () => {
   const [isAccessingProduct, setIsAccessingProduct] = useState(false);
   const handleAccessProduct = async () => {
     // Usar o status atual em vez do status inicial
-    if (orderStatus === 'pending' && ['multibanco', 'apple_pay', 'transfer'].includes(orderDetails.paymentMethod)) {
-      const methodName = orderDetails.paymentMethod === 'multibanco' ? 'Multibanco' : orderDetails.paymentMethod === 'apple_pay' ? 'Apple Pay' : 'Transferência Bancária';
+    if (orderStatus === 'pending' && ['multibanco', 'transfer'].includes(orderDetails.paymentMethod)) {
+      const methodName = orderDetails.paymentMethod === 'multibanco' ? 'Multibanco' : 'Transferência Bancária';
       alert(`O acesso ao produto será liberado após a confirmação do pagamento por ${methodName}.`);
       return;
     }
@@ -448,7 +446,7 @@ const ThankYou = () => {
     }
   };
   const getStatusBadge = () => {
-    if (orderStatus === 'pending' && ['multibanco', 'apple_pay', 'transfer', 'reference'].includes(orderDetails.paymentMethod)) {
+    if (orderStatus === 'pending' && ['multibanco', 'transfer', 'reference'].includes(orderDetails.paymentMethod)) {
       return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
           <Clock className="w-3 h-3 mr-1" />
           Pendente
@@ -469,7 +467,7 @@ const ThankYou = () => {
     }
     
     // Se está pendente
-    if (orderStatus === 'pending' && ['multibanco', 'apple_pay', 'transfer', 'reference'].includes(orderDetails.paymentMethod)) {
+    if (orderStatus === 'pending' && ['multibanco', 'transfer', 'reference'].includes(orderDetails.paymentMethod)) {
       return {
         title: "Obrigado pelo seu pedido!",
         subtitle: "Por favor, complete o seu pagamento para desbloquear o acesso."

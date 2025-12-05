@@ -88,15 +88,6 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
     countryName: "Portugal"
   },
   {
-    id: "apple_pay",
-    name: "Apple Pay",
-    image: getPaymentMethodImage("apple_pay"),
-    enabled: true,
-    isPortugal: true,
-    countryFlag: "🇵🇹",
-    countryName: "Portugal"
-  },
-  {
     id: "mbway",
     name: "MB Way",
     image: getPaymentMethodImage("mbway"),
@@ -119,7 +110,6 @@ export const getCountryByPaymentMethod = (paymentMethod: string) => {
     'card': { code: 'PT', name: 'Portugal', flag: '🇵🇹' },
     'multibanco': { code: 'PT', name: 'Portugal', flag: '🇵🇹' },
     'klarna': { code: 'PT', name: 'Portugal', flag: '🇵🇹' },
-    'apple_pay': { code: 'PT', name: 'Portugal', flag: '🇵🇹' },
     'mbway': { code: 'PT', name: 'Portugal', flag: '🇵🇹' },
     
     // Moçambique

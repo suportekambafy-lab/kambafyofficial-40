@@ -3,13 +3,12 @@ import {
   CardElement, 
   useElements, 
   useStripe,
-  Elements,
-  PaymentRequestButtonElement
+  Elements
 } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { CreditCard, Lock, Smartphone } from 'lucide-react';
+import { CreditCard, Lock } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -55,170 +54,7 @@ interface StripeCardFormProps {
   customerCountry?: string;
 }
 
-const ApplePayButton: React.FC<StripeCardFormProps> = ({
-  convertedAmount,
-  originalAmountKZ,
-  currency,
-  productId,
-  customerData,
-  onSuccess,
-  onError,
-  processing,
-  setProcessing
-}) => {
-  const stripe = useStripe();
-  const [paymentRequest, setPaymentRequest] = useState<any>(null);
-  const [canMakePayment, setCanMakePayment] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const getStripeCurrency = (fromCurrency: string): string => {
-    if (fromCurrency === 'EUR') {
-      return 'eur';
-    } else if (fromCurrency === 'MZN') {
-      return 'usd';
-    }
-    return 'usd';
-  };
-
-  const stripeCurrency = getStripeCurrency(currency);
-  const stripeAmount = Math.round(convertedAmount * 100);
-
-  React.useEffect(() => {
-    if (!stripe) return;
-
-    console.log(`Apple Pay setup: ${convertedAmount} ${stripeCurrency.toUpperCase()} = ${stripeAmount} cents`);
-    setIsLoading(true);
-
-    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent) || 
-                    /iPad|iPhone|iPod/.test(navigator.userAgent);
-    
-    console.log('Browser detection - Safari/iOS:', isSafari);
-
-    const pr = stripe.paymentRequest({
-      country: 'US',
-      currency: stripeCurrency,
-      total: {
-        label: 'Total',
-        amount: stripeAmount,
-      },
-      requestPayerName: true,
-      requestPayerEmail: true,
-      requestPayerPhone: false,
-    });
-
-    pr.canMakePayment().then((result) => {
-      console.log('Apple Pay canMakePayment result:', result);
-      
-      if (result && result.applePay) {
-        console.log('Apple Pay is available!');
-        setCanMakePayment(true);
-        setPaymentRequest(pr);
-      } else {
-        console.log('Apple Pay not available');
-        setCanMakePayment(false);
-      }
-      setIsLoading(false);
-    }).catch((error) => {
-      console.error('Error checking Apple Pay availability:', error);
-      setCanMakePayment(false);
-      setIsLoading(false);
-    });
-
-    pr.on('paymentmethod', async (event) => {
-      console.log('Apple Pay payment method selected:', event);
-      setProcessing(true);
-
-      try {
-        const { data: paymentIntentData, error: paymentIntentError } = await supabase.functions.invoke('create-payment-intent', {
-          body: {
-            amount: stripeAmount,
-            currency: stripeCurrency,
-            productId,
-            customerData,
-            originalAmount: originalAmountKZ,
-            originalCurrency: 'KZ',
-            convertedAmount: convertedAmount,
-            targetCurrency: currency,
-            paymentMethod: 'apple_pay',
-            testMode: false
-          }
-        });
-
-        if (paymentIntentError) {
-          throw new Error(paymentIntentError.message);
-        }
-
-        const confirmResult = await stripe.confirmCardPayment(
-          paymentIntentData.client_secret,
-          {
-            payment_method: event.paymentMethod.id
-          }
-        );
-
-        if (confirmResult.error) {
-          console.error('Apple Pay confirmation error:', confirmResult.error);
-          event.complete('fail');
-          onError(confirmResult.error.message || 'Erro ao processar pagamento');
-        } else {
-          console.log('Apple Pay payment successful:', confirmResult.paymentIntent);
-          event.complete('success');
-          onSuccess(confirmResult.paymentIntent);
-        }
-      } catch (error) {
-        console.error('Apple Pay processing error:', error);
-        event.complete('fail');
-        onError(error instanceof Error ? error.message : 'Erro inesperado');
-      } finally {
-        setProcessing(false);
-      }
-    });
-  }, [stripe, convertedAmount, currency, productId, customerData, onSuccess, onError, setProcessing]);
-
-  if (isLoading) {
-    return (
-      <div className="w-full p-4 text-center">
-        <div className="animate-pulse">
-          <div className="h-12 bg-gray-200 rounded-md"></div>
-        </div>
-        <p className="text-sm text-gray-500 mt-2">Verificando disponibilidade do Apple Pay...</p>
-      </div>
-    );
-  }
-
-  if (!canMakePayment || !paymentRequest) {
-    return (
-      <div className="w-full p-4 text-center text-gray-500 bg-gray-50 rounded-lg">
-        <Smartphone className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-        <p className="font-medium">Apple Pay não disponível</p>
-        <p className="text-sm mt-1">
-          Apple Pay requer Safari no iOS/macOS ou dispositivo compatível
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="w-full">
-      <div className="apple-pay-button-container">
-        <PaymentRequestButtonElement 
-          options={{ 
-            paymentRequest,
-            style: {
-              paymentRequestButton: {
-                type: 'buy',
-                theme: 'dark',
-                height: '48px',
-              },
-            },
-          }}
-        />
-      </div>
-      <p className="text-xs text-center text-gray-500 mt-2">
-        Toque para pagar com Touch ID, Face ID ou senha
-      </p>
-    </div>
-  );
-};
+// Apple Pay removido
 
 const StripeCardForm: React.FC<StripeCardFormProps> = ({
   amount,
@@ -453,51 +289,12 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
         return 'KLARNA';
       case 'multibanco':
         return 'MULTIBANCO';
-      case 'apple_pay':
-        return 'APPLE PAY';
       case 'mbway':
         return 'MB WAY';
       default:
         return 'CARTÃO';
     }
   };
-
-  if (paymentMethod === 'apple_pay') {
-    return (
-      <div className="space-y-4">
-        <Card className="border-gray-200">
-          <CardContent className="p-4">
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                <Smartphone className="w-4 h-4" />
-                Pagamento seguro com Apple Pay
-              </div>
-              
-              <ApplePayButton
-                amount={amount}
-                originalAmountKZ={originalAmountKZ}
-                currency={currency}
-                productId={productId}
-                customerData={customerData}
-                paymentMethod={paymentMethod}
-                onSuccess={onSuccess}
-                onError={onError}
-                processing={processing}
-                setProcessing={setProcessing}
-                displayPrice={displayPrice}
-                convertedAmount={convertedAmount}
-              />
-              
-              <div className="flex items-center gap-2 text-xs text-gray-500">
-                <Lock className="w-3 h-3" />
-                Pagamento processado de forma segura pelo Apple Pay
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
