@@ -360,7 +360,7 @@ export function AppLiveView({
       supabase.removeChannel(channel);
     };
   }, [user?.id, productIdsKey]); // eslint-disable-line react-hooks/exhaustive-deps
-  return <div className="p-4 space-y-4 min-h-screen bg-amber-50/30 dark:bg-zinc-900">
+  return <div className="p-4 space-y-4 min-h-screen bg-background">
       {/* Header */}
       <div className="flex items-center justify-between px-2 mb-4">
         <div className="flex items-center gap-3">
