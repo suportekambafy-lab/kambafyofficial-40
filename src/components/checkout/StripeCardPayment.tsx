@@ -89,6 +89,8 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
       return 'eur';
     } else if (fromCurrency === 'MZN') {
       return 'usd';
+    } else if (fromCurrency === 'GBP') {
+      return 'gbp';
     }
     return 'usd';
   };
@@ -138,7 +140,7 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
 
       let confirmResult;
       
-      if (paymentMethod === 'card') {
+      if (paymentMethod === 'card' || paymentMethod === 'card_uk') {
         const cardElement = elements.getElement(CardElement);
         if (!cardElement) {
           throw new Error('Elemento do cartão não encontrado');
@@ -157,7 +159,28 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
             }
           }
         );
-      } else if (paymentMethod === 'klarna') {
+      } else if (paymentMethod === 'klarna' || paymentMethod === 'klarna_uk') {
+        const country = paymentMethod === 'klarna_uk' ? 'GB' : (currency === 'EUR' ? 'PT' : 'US');
+        confirmResult = await stripe.confirmKlarnaPayment(
+          paymentIntentData.client_secret,
+          {
+            payment_method: {
+              billing_details: {
+                name: customerData.name,
+                email: customerData.email,
+                phone: customerData.phone,
+                address: {
+                  country: country,
+                  line1: '',
+                  city: '',
+                  postal_code: '',
+                  state: ''
+                }
+              }
+            },
+            return_url: `https://pay.kambafy.com/checkout/${productId}?payment_return=klarna&order_id=${paymentIntentData.order_id}&payment_intent_id=${paymentIntentData.payment_intent_id}`
+          }
+        );
         confirmResult = await stripe.confirmKlarnaPayment(
           paymentIntentData.client_secret,
           {
@@ -336,26 +359,29 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
     switch (paymentMethod) {
       case 'card':
         return 'CARTÃO';
+      case 'card_uk':
+        return 'CARD';
       case 'klarna':
+      case 'klarna_uk':
         return 'KLARNA';
       case 'multibanco':
         return 'MULTIBANCO';
       case 'mbway':
         return 'MB WAY';
       default:
-        return 'CARTÃO';
+        return 'CARD';
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {paymentMethod === 'card' && (
+      {(paymentMethod === 'card' || paymentMethod === 'card_uk') && (
         <Card className="border-gray-200">
           <CardContent className="p-4">
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
                 <CreditCard className="w-4 h-4" />
-                Informações do Cartão
+                {paymentMethod === 'card_uk' ? 'Card Details' : 'Informações do Cartão'}
               </div>
               
               <div className="p-3 border border-gray-300 rounded-md bg-white">
@@ -371,26 +397,28 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
 
               <div className="flex items-center gap-2 text-xs text-gray-500">
                 <Lock className="w-3 h-3" />
-                Seus dados estão protegidos com criptografia SSL
+                {paymentMethod === 'card_uk' ? 'Your data is protected with SSL encryption' : 'Seus dados estão protegidos com criptografia SSL'}
               </div>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {(paymentMethod === 'klarna' || paymentMethod === 'multibanco') && (
+      {(paymentMethod === 'klarna' || paymentMethod === 'klarna_uk' || paymentMethod === 'multibanco') && (
         <Card className="border-gray-200">
           <CardContent className="p-4">
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
                 <Lock className="w-4 h-4" />
-                Pagamento seguro com {getPaymentMethodName()}
+                {paymentMethod === 'klarna_uk' ? `Secure payment with ${getPaymentMethodName()}` : `Pagamento seguro com ${getPaymentMethodName()}`}
               </div>
               
               <div className="text-sm text-gray-600">
                 {paymentMethod === 'multibanco' 
                   ? 'Você será redirecionado para a página de confirmação com a referência para pagamento.'
-                  : 'Pague em 3x sem juros. Você será redirecionado para completar o pagamento com Klarna.'
+                  : paymentMethod === 'klarna_uk'
+                    ? 'Pay in 3 interest-free installments. You will be redirected to complete the payment with Klarna.'
+                    : 'Pague em 3x sem juros. Você será redirecionado para completar o pagamento com Klarna.'
                 }
               </div>
             </div>
