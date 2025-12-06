@@ -1,20 +1,18 @@
 import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { ShoppingBag, CheckCircle2, TrendingUp } from 'lucide-react';
-
+import { TrendingUp, TrendingDown } from 'lucide-react';
 interface ChartData {
   time: string;
   vendas: number;
 }
-
 interface ModernSalesChartProps {
   timeFilter?: string;
   customDateRange?: { from: Date; to: Date } | null;
 }
-
 const getFilterLabel = (filter: string) => {
   const labels: Record<string, string> = {
     'hoje': 'Hoje',
@@ -26,12 +24,13 @@ const getFilterLabel = (filter: string) => {
   };
   return labels[filter] || 'Todos';
 };
-
 export function ModernSalesChart({
   timeFilter = 'hoje',
   customDateRange = null
 }: ModernSalesChartProps) {
-  const { user } = useAuth();
+  const {
+    user
+  } = useAuth();
   const [chartData, setChartData] = useState<ChartData[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalValue, setTotalValue] = useState(0);
@@ -39,7 +38,6 @@ export function ModernSalesChart({
   const [paidOrdersCount, setPaidOrdersCount] = useState(0);
   const [ordersTrend, setOrdersTrend] = useState(0);
   const [paidTrend, setPaidTrend] = useState(0);
-
   useEffect(() => {
     if (user) {
       fetchChartData();
@@ -55,19 +53,16 @@ export function ModernSalesChart({
       };
     }
   }, [user, timeFilter, customDateRange]);
-
   const fetchChartData = async () => {
     if (!user) return;
     try {
       setLoading(true);
-      const { data: userProducts, error: productsError } = await supabase
-        .from('products')
-        .select('id')
-        .eq('user_id', user.id);
-      
+      const {
+        data: userProducts,
+        error: productsError
+      } = await supabase.from('products').select('id').eq('user_id', user.id);
       if (productsError) throw productsError;
       const userProductIds = userProducts?.map(p => p.id) || [];
-      
       if (userProductIds.length === 0) {
         setChartData([]);
         setOrdersCount(0);
@@ -77,6 +72,7 @@ export function ModernSalesChart({
         return;
       }
 
+      // Determine date range based on filter
       const now = new Date();
       let startDate = new Date();
       let endDate = new Date();
@@ -144,44 +140,46 @@ export function ModernSalesChart({
         }
       }
 
-      const [{ count: totalOrdersCount }, { count: paidOrdersCountResult }, { count: prevTotalCount }, { count: prevPaidCount }] = await Promise.all([
-        supabase.from('orders').select('*', { count: 'exact', head: true })
-          .in('product_id', userProductIds)
-          .gte('created_at', startDate.toISOString())
-          .lte('created_at', endDate.toISOString()),
-        supabase.from('orders').select('*', { count: 'exact', head: true })
-          .in('product_id', userProductIds)
-          .gte('created_at', startDate.toISOString())
-          .lte('created_at', endDate.toISOString())
-          .eq('status', 'completed'),
-        supabase.from('orders').select('*', { count: 'exact', head: true })
-          .in('product_id', userProductIds)
-          .gte('created_at', prevStartDate.toISOString())
-          .lt('created_at', prevEndDate.toISOString()),
-        supabase.from('orders').select('*', { count: 'exact', head: true })
-          .in('product_id', userProductIds)
-          .gte('created_at', prevStartDate.toISOString())
-          .lt('created_at', prevEndDate.toISOString())
-          .eq('status', 'completed')
-      ]);
+      // Fetch counts using count queries (no 1000 row limit)
+      const [{
+        count: totalOrdersCount
+      }, {
+        count: paidOrdersCountResult
+      }, {
+        count: prevTotalCount
+      }, {
+        count: prevPaidCount
+      }] = await Promise.all([supabase.from('orders').select('*', {
+        count: 'exact',
+        head: true
+      }).in('product_id', userProductIds).gte('created_at', startDate.toISOString()).lte('created_at', endDate.toISOString()), supabase.from('orders').select('*', {
+        count: 'exact',
+        head: true
+      }).in('product_id', userProductIds).gte('created_at', startDate.toISOString()).lte('created_at', endDate.toISOString()).eq('status', 'completed'), supabase.from('orders').select('*', {
+        count: 'exact',
+        head: true
+      }).in('product_id', userProductIds).gte('created_at', prevStartDate.toISOString()).lt('created_at', prevEndDate.toISOString()), supabase.from('orders').select('*', {
+        count: 'exact',
+        head: true
+      }).in('product_id', userProductIds).gte('created_at', prevStartDate.toISOString()).lt('created_at', prevEndDate.toISOString()).eq('status', 'completed')]);
 
+      // Set counts from direct queries
       setOrdersCount(totalOrdersCount || 0);
       setPaidOrdersCount(paidOrdersCountResult || 0);
       setOrdersTrend((totalOrdersCount || 0) - (prevTotalCount || 0));
       setPaidTrend((paidOrdersCountResult || 0) - (prevPaidCount || 0));
 
-      const { data: orders, error } = await supabase
-        .from('orders')
-        .select('created_at, amount, seller_commission, currency, product_id, status')
-        .in('product_id', userProductIds)
-        .gte('created_at', startDate.toISOString())
-        .lte('created_at', endDate.toISOString())
-        .eq('status', 'completed')
-        .order('created_at', { ascending: true });
-
+      // Fetch orders for chart data (limited to recent for visualization)
+      const {
+        data: orders,
+        error
+      } = await supabase.from('orders').select('created_at, amount, seller_commission, currency, product_id, status').in('product_id', userProductIds).gte('created_at', startDate.toISOString()).lte('created_at', endDate.toISOString()).eq('status', 'completed').order('created_at', {
+        ascending: true
+      });
       if (error) return;
       const completedOrders = orders || [];
 
+      // Calculate total revenue from completed orders
       let total = 0;
       completedOrders.forEach(order => {
         let amount = parseFloat(order.seller_commission?.toString() || '0');
@@ -190,7 +188,10 @@ export function ModernSalesChart({
           amount = grossAmount * 0.92;
         }
         if (order.currency && order.currency !== 'KZ') {
-          const exchangeRates: Record<string, number> = { 'EUR': 1053, 'MZN': 14.3 };
+          const exchangeRates: Record<string, number> = {
+            'EUR': 1053,
+            'MZN': 14.3
+          };
           const rate = exchangeRates[order.currency.toUpperCase()] || 1;
           amount = Math.round(amount * rate);
         }
@@ -198,8 +199,11 @@ export function ModernSalesChart({
       });
       setTotalValue(total);
 
+      // Group data by hour for today/yesterday, or by day for longer periods
       if (timeFilter === 'hoje' || timeFilter === 'ontem') {
-        const salesByHour: { [key: string]: number } = {};
+        const salesByHour: {
+          [key: string]: number;
+        } = {};
         for (let i = 0; i < 24; i += 2) {
           const hourKey = `${i.toString().padStart(2, '0')}:00`;
           salesByHour[hourKey] = 0;
@@ -214,7 +218,10 @@ export function ModernSalesChart({
             amount = grossAmount * 0.92;
           }
           if (order.currency && order.currency !== 'KZ') {
-            const exchangeRates: Record<string, number> = { 'EUR': 1053, 'MZN': 14.3 };
+            const exchangeRates: Record<string, number> = {
+              'EUR': 1053,
+              'MZN': 14.3
+            };
             const rate = exchangeRates[order.currency.toUpperCase()] || 1;
             amount = Math.round(amount * rate);
           }
@@ -228,7 +235,10 @@ export function ModernSalesChart({
         }));
         setChartData(formattedData);
       } else {
-        const salesByDay: { [key: string]: number } = {};
+        // Daily view for longer periods
+        const salesByDay: {
+          [key: string]: number;
+        } = {};
         for (let i = daysInPeriod - 1; i >= 0; i--) {
           const date = new Date();
           date.setDate(date.getDate() - i);
@@ -244,7 +254,10 @@ export function ModernSalesChart({
             amount = grossAmount * 0.92;
           }
           if (order.currency && order.currency !== 'KZ') {
-            const exchangeRates: Record<string, number> = { 'EUR': 1053, 'MZN': 14.3 };
+            const exchangeRates: Record<string, number> = {
+              'EUR': 1053,
+              'MZN': 14.3
+            };
             const rate = exchangeRates[order.currency.toUpperCase()] || 1;
             amount = Math.round(amount * rate);
           }
@@ -253,7 +266,10 @@ export function ModernSalesChart({
           }
         });
         const formattedData: ChartData[] = Object.entries(salesByDay).map(([date, amount]) => ({
-          time: new Date(date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+          time: new Date(date).toLocaleDateString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit'
+          }),
           vendas: Math.round(amount)
         }));
         setChartData(formattedData);
@@ -264,119 +280,96 @@ export function ModernSalesChart({
       setLoading(false);
     }
   };
-
   const chartConfig = {
     vendas: {
       label: "Vendas",
       color: "hsl(var(--primary))"
     }
   };
-
   const filterLabel = getFilterLabel(timeFilter);
-
-  // Wise-style KPI cards data
-  const kpiCards = [
-    {
-      icon: ShoppingBag,
-      value: ordersCount,
-      label: "Pedidos feitos",
-      iconBg: "bg-orange-100 dark:bg-orange-900/30",
-      iconColor: "text-orange-600 dark:text-orange-400"
-    },
-    {
-      icon: CheckCircle2,
-      value: paidOrdersCount,
-      label: "Pedidos pagos",
-      iconBg: "bg-emerald-100 dark:bg-emerald-900/30",
-      iconColor: "text-emerald-600 dark:text-emerald-400"
-    }
-  ];
-
-  return (
-    <div className="space-y-3">
-      {/* Wise-style KPI Cards - Horizontal scroll */}
-      <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
-        {kpiCards.map((card, index) => (
-          <div 
-            key={index}
-            className="flex-1 min-w-[150px] bg-muted/50 dark:bg-muted/30 rounded-2xl p-5 flex flex-col justify-between"
-            style={{ minHeight: '140px' }}
-          >
-            {/* Icon Circle - Top */}
-            <div className={`w-12 h-12 rounded-full ${card.iconBg} flex items-center justify-center`}>
-              <card.icon className={`w-6 h-6 ${card.iconColor}`} />
-            </div>
-            
-            {/* Value and Label - Bottom */}
-            <div className="mt-auto pt-4">
-              <p className="text-[28px] font-bold text-foreground leading-none mb-1">
-                {card.value.toLocaleString('pt-BR', { minimumIntegerDigits: 2 })}
-              </p>
-              <span className="text-sm text-muted-foreground">{card.label}</span>
-            </div>
+  return <div className="flex flex-col md:flex-row gap-3">
+      {/* KPI Cards - First on mobile, second on desktop */}
+      <div className="flex flex-row md:flex-col gap-2 md:w-40 order-first md:order-last">
+        <div className="bg-card rounded-xl border border-border/40 p-3 shadow-sm flex-1">
+          <div className="flex items-center justify-between mb-0.5">
+            <span className="text-xs text-muted-foreground">Pedidos feitos</span>
+            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 ${ordersTrend >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'}`}>
+              {ordersTrend >= 0 ? '+' : ''}{ordersTrend}
+              {ordersTrend >= 0 ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
+            </span>
           </div>
-        ))}
+          <span className="text-[10px] text-muted-foreground">{filterLabel}</span>
+          <p className="text-xl font-bold text-foreground">{ordersCount.toLocaleString()}</p>
+        </div>
+
+        <div className="bg-card rounded-xl border border-border/40 p-3 shadow-sm flex-1">
+          <div className="flex items-center justify-between mb-0.5">
+            <span className="text-xs text-muted-foreground">Pedidos pagos</span>
+            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 ${paidTrend >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'}`}>
+              {paidTrend >= 0 ? '+' : ''}{paidTrend}
+              {paidTrend >= 0 ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
+            </span>
+          </div>
+          <span className="text-[10px] text-muted-foreground">{filterLabel}</span>
+          <p className="text-xl font-bold text-foreground">{paidOrdersCount.toLocaleString()}</p>
+        </div>
       </div>
 
-      {/* Chart Section - Wise style */}
-      <div className="bg-muted/50 dark:bg-muted/30 rounded-2xl overflow-hidden">
-        <div className="flex items-center justify-between px-5 pt-4 pb-2">
-          <h3 className="text-base font-semibold text-foreground">Vendas</h3>
-          <span className="text-xs text-muted-foreground underline cursor-pointer">{filterLabel}</span>
-        </div>
+      {/* Chart Card */}
+      <Card className="flex-1 rounded-xl shadow-sm border border-border/40 bg-card overflow-hidden order-last md:order-first">
+        <CardHeader className="pb-1 px-4 pt-3">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            
+            <span className="text-sm font-medium">Desempenho de vendas</span>
+          </div>
+        </CardHeader>
         
-        <div className="px-2 pb-4">
-          {loading ? (
-            <div className="h-[140px] flex items-center justify-center">
+        <CardContent className="px-4 pb-3">
+          {loading ? <div className="h-[180px] flex items-center justify-center">
               <span className="text-muted-foreground text-sm">Carregando...</span>
-            </div>
-          ) : (
-            <ChartContainer config={chartConfig} className="h-[140px] w-full">
-              <AreaChart data={chartData} margin={{ top: 5, right: 10, left: -15, bottom: 0 }}>
+            </div> : <ChartContainer config={chartConfig} className="h-[180px] w-full">
+              <AreaChart data={chartData} margin={{
+            top: 5,
+            right: 5,
+            left: 0,
+            bottom: 0
+          }}>
                 <defs>
-                  <linearGradient id="wiseGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="hsl(142 76% 36%)" stopOpacity={0.12} />
-                    <stop offset="100%" stopColor="hsl(142 76% 36%)" stopOpacity={0} />
+                  <linearGradient id="colorVendasGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#22c55e" stopOpacity={0.4} />
+                    <stop offset="50%" stopColor="#22c55e" stopOpacity={0.15} />
+                    <stop offset="100%" stopColor="#22c55e" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="strokeGradient" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="#16a34a" />
+                    <stop offset="50%" stopColor="#22c55e" />
+                    <stop offset="100%" stopColor="#4ade80" />
                   </linearGradient>
                 </defs>
-                <CartesianGrid horizontal={true} vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.25} strokeDasharray="0" />
-                <XAxis 
-                  dataKey="time" 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} 
-                  dy={6} 
-                  interval="preserveStartEnd" 
-                />
-                <YAxis 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} 
-                  tickFormatter={value => {
-                    if (value === 0) return '0';
-                    if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
-                    if (value >= 1000) return `${(value / 1000).toFixed(0)}K`;
-                    return value.toString();
-                  }} 
-                  width={35} 
-                  domain={[0, 'auto']} 
-                />
+                <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.3} />
+                <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{
+              fontSize: 10,
+              fill: 'hsl(var(--muted-foreground))'
+            }} dy={5} interval="preserveStartEnd" />
+                <YAxis axisLine={false} tickLine={false} tick={{
+              fontSize: 10,
+              fill: 'hsl(var(--muted-foreground))'
+            }} tickFormatter={value => {
+              if (value === 0) return '0';
+              if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
+              if (value >= 1000) return `${(value / 1000).toFixed(0)}K`;
+              return value.toString();
+            }} width={45} domain={[0, 'auto']} />
                 <ChartTooltip content={<ChartTooltipContent />} formatter={(value: number) => [`${value.toLocaleString()} KZ`, 'Vendas']} />
-                <Area 
-                  type="monotone" 
-                  dataKey="vendas" 
-                  stroke="hsl(142 76% 36%)" 
-                  strokeWidth={2} 
-                  fillOpacity={1} 
-                  fill="url(#wiseGradient)" 
-                  dot={false} 
-                  activeDot={{ fill: 'hsl(142 76% 36%)', stroke: 'white', strokeWidth: 2, r: 4 }} 
-                />
+                <Area type="monotone" dataKey="vendas" stroke="url(#strokeGradient)" strokeWidth={2.5} fillOpacity={1} fill="url(#colorVendasGradient)" dot={false} activeDot={{
+              fill: '#22c55e',
+              stroke: 'white',
+              strokeWidth: 3,
+              r: 6
+            }} />
               </AreaChart>
-            </ChartContainer>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+            </ChartContainer>}
+        </CardContent>
+      </Card>
+    </div>;
 }
