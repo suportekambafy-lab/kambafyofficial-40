@@ -1417,9 +1417,9 @@ export function AppHome() {
                 </div>
                 <div className="relative shrink-0">
                   <img 
-                    src="/lovable-uploads/65ca54b1-d149-4d61-b1f7-13da8b2a1893.png" 
-                    alt="Profissional"
-                    className="w-20 h-20 object-cover rounded-full border-2 border-primary-foreground/20"
+                    src="/lovable-uploads/d78cb5d7-0aa7-4ec7-8dc1-e2bbca3e6f57.png" 
+                    alt="Profissional com telefone"
+                    className="w-24 h-24 object-cover object-top rounded-xl border-2 border-primary-foreground/20"
                   />
                 </div>
               </div>
