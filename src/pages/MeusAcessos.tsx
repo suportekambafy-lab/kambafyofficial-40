@@ -5,7 +5,7 @@ import { createMemberAreaLinks } from '@/utils/memberAreaLinks';
 import { getFileUrl } from '@/utils/fileUtils';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, ShoppingBag, Calendar, Eye, User, LogOut, Settings, ExternalLink, BookOpen, TrendingUp, Wallet } from "lucide-react";
+import { ArrowLeft, ShoppingBag, Calendar, Eye, User, LogOut, Settings, ExternalLink, BookOpen, TrendingUp, Wallet, RotateCcw } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -19,12 +19,14 @@ import { useKambaPayBalance } from '@/hooks/useKambaPayBalance';
 import professionalManImage from "@/assets/professional-man.jpg";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { toast } from 'sonner';
+import { RefundRequestDialog } from "@/components/refunds/RefundRequestDialog";
 
 interface Access {
   id: string;
   customer_email: string;
   customer_name: string;
   product_id: string;
+  order_id: string;
   access_granted_at: string;
   is_active: boolean;
   products: {
@@ -50,6 +52,8 @@ export default function MeusAcessos() {
   const [avatarDrawerOpen, setAvatarDrawerOpen] = useState(false);
   const [profileAvatar, setProfileAvatar] = useState("");
   const [profileName, setProfileName] = useState("");
+  const [refundDialogOpen, setRefundDialogOpen] = useState(false);
+  const [selectedOrderForRefund, setSelectedOrderForRefund] = useState<{ order_id: string; product_name: string } | null>(null);
   
   // Hook para buscar saldo KambaPay
   const { balance, fetchBalanceByEmail } = useKambaPayBalance();
@@ -373,7 +377,7 @@ export default function MeusAcessos() {
                               </Badge>
                             </div>
                           </div>
-                          <div className="mt-4 flex items-center space-x-2">
+                          <div className="mt-4 flex items-center space-x-2 flex-wrap gap-2">
                             {access.products ? (
                               access.products.type === 'Curso' && access.products.member_areas ? (
                                 <Button
@@ -431,6 +435,23 @@ export default function MeusAcessos() {
                                 Produto Indisponível
                               </Button>
                             )}
+                            
+                            {/* Botão de Solicitar Reembolso */}
+                            <Button
+                              onClick={() => {
+                                setSelectedOrderForRefund({
+                                  order_id: access.order_id,
+                                  product_name: access.products?.name || 'Produto'
+                                });
+                                setRefundDialogOpen(true);
+                              }}
+                              size="sm"
+                              variant="outline"
+                              className="text-orange-600 border-orange-300 hover:bg-orange-50"
+                            >
+                              <RotateCcw className="w-4 h-4 mr-2" />
+                              Solicitar Reembolso
+                            </Button>
                           </div>
                         </div>
                       </div>
@@ -449,6 +470,21 @@ export default function MeusAcessos() {
           profileName={profileName || user?.email || 'Usuário'}
           isMobile={false}
         />
+
+        {/* Dialog de Reembolso */}
+        {selectedOrderForRefund && (
+          <RefundRequestDialog
+            open={refundDialogOpen}
+            onClose={() => {
+              setRefundDialogOpen(false);
+              setSelectedOrderForRefund(null);
+            }}
+            order={selectedOrderForRefund}
+            onSuccess={() => {
+              toast.success('Solicitação de reembolso enviada com sucesso!');
+            }}
+          />
+        )}
       </div>
     </ProtectedRoute>
   );
