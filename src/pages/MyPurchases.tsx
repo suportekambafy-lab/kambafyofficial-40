@@ -108,8 +108,8 @@ export default function MyPurchases() {
 
   const canRequestRefund = (order: any) => {
     const refund = order.refund;
-    // Se tem reembolso pendente ou aprovado, não pode solicitar
-    if (refund && ['pending', 'approved', 'approved_by_seller', 'approved_by_admin'].includes(refund.status)) {
+    // Se tem reembolso pendente, aprovado ou completo, não pode solicitar
+    if (refund && ['pending', 'approved', 'approved_by_seller', 'approved_by_admin', 'completed'].includes(refund.status)) {
       return false;
     }
     if (!order.refund_deadline) return false;
@@ -140,6 +140,8 @@ export default function MyPurchases() {
         return { label: 'Aprovado', variant: 'outline' as const, color: 'text-green-600', icon: CheckCircle };
       case 'approved_by_admin':
         return { label: 'Aprovado (Admin)', variant: 'outline' as const, color: 'text-green-600', icon: CheckCircle };
+      case 'completed':
+        return { label: 'Reembolsado', variant: 'outline' as const, color: 'text-green-600', icon: CheckCircle };
       case 'rejected':
       case 'rejected_by_seller':
         return { label: 'Rejeitado', variant: 'outline' as const, color: 'text-red-600', icon: XCircle };
