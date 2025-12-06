@@ -9,7 +9,6 @@ import {
   LogOut,
   HelpCircle,
   CreditCard,
-  ShoppingBag,
   ArrowLeftRight,
   Download,
   X,
@@ -17,8 +16,15 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { AvatarDrawer } from '@/components/ui/avatar-drawer';
 import { useKambaPayBalance } from '@/hooks/useKambaPayBalance';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface CustomerTopBarProps {
   showAppBanner?: boolean;
@@ -30,8 +36,6 @@ export function CustomerTopBar({ showAppBanner = true }: CustomerTopBarProps) {
   const { toast } = useToast();
   const [profileAvatar, setProfileAvatar] = useState("");
   const [profileName, setProfileName] = useState("");
-  const [avatarDrawerOpen, setAvatarDrawerOpen] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const { balance, fetchBalanceByEmail } = useKambaPayBalance();
 
@@ -200,136 +204,90 @@ export function CustomerTopBar({ showAppBanner = true }: CustomerTopBarProps) {
             </Button>
 
             {/* User Menu */}
-            <div className="relative">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="flex items-center gap-2 px-2"
-                onClick={() => setUserMenuOpen(!userMenuOpen)}
-              >
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={profileAvatar} />
-                  <AvatarFallback className="bg-primary text-primary-foreground text-sm">
-                    {profileName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="hidden sm:inline text-sm font-medium max-w-[100px] truncate">
-                  {profileName || user?.email?.split('@')[0]}
-                </span>
-              </Button>
-
-              <AnimatePresence>
-                {userMenuOpen && (
-                  <>
-                    {/* Backdrop */}
-                    <div 
-                      className="fixed inset-0 z-40" 
-                      onClick={() => setUserMenuOpen(false)}
-                    />
-                    
-                    {/* Menu */}
-                    <motion.div
-                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                      transition={{ duration: 0.15 }}
-                      className="absolute right-0 mt-2 w-56 rounded-xl border border-border bg-card p-1.5 shadow-lg z-50"
-                    >
-                      {/* User Info */}
-                      <div className="px-3 py-2 mb-1">
-                        <p className="text-sm font-medium">{profileName || 'Usuário'}</p>
-                        <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
-                      </div>
-                      
-                      <div className="h-px bg-border my-1" />
-
-                      {/* Mobile-only buttons */}
-                      <button
-                        onClick={() => {
-                          navigate('/minhas-compras');
-                          setUserMenuOpen(false);
-                        }}
-                        className="sm:hidden flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-accent"
-                      >
-                        <CreditCard className="h-4 w-4 text-muted-foreground" />
-                        <span>Minhas Compras</span>
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          navigate('/vendedor');
-                          setUserMenuOpen(false);
-                        }}
-                        className="sm:hidden flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-accent"
-                      >
-                        <ArrowLeftRight className="h-4 w-4 text-muted-foreground" />
-                        <span>Painel Vendedor</span>
-                      </button>
-
-                      <div className="sm:hidden h-px bg-border my-1" />
-
-                      <button
-                        onClick={() => {
-                          navigate('/configuracoes');
-                          setUserMenuOpen(false);
-                        }}
-                        className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-accent"
-                      >
-                        <Settings className="h-4 w-4 text-muted-foreground" />
-                        <span>Configurações</span>
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          handleDownloadApp();
-                          setUserMenuOpen(false);
-                        }}
-                        className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-accent"
-                      >
-                        <Download className="h-4 w-4 text-muted-foreground" />
-                        <span>Baixar Aplicativo</span>
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          navigate('/ajuda');
-                          setUserMenuOpen(false);
-                        }}
-                        className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-accent"
-                      >
-                        <HelpCircle className="h-4 w-4 text-muted-foreground" />
-                        <span>Ajuda</span>
-                      </button>
-
-                      <div className="h-px bg-border my-1" />
-
-                      <button
-                        onClick={() => {
-                          handleSignOut();
-                          setUserMenuOpen(false);
-                        }}
-                        className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
-                      >
-                        <LogOut className="h-4 w-4" />
-                        <span>Sair</span>
-                      </button>
-                    </motion.div>
-                  </>
-                )}
-              </AnimatePresence>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="flex items-center gap-2 px-2"
+                >
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={profileAvatar} />
+                    <AvatarFallback className="bg-primary text-primary-foreground text-sm">
+                      {profileName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="hidden sm:inline text-sm font-medium max-w-[100px] truncate">
+                    {profileName || user?.email?.split('@')[0]}
+                  </span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56" sideOffset={8}>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium">{profileName || 'Usuário'}</p>
+                    <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                
+                {/* Mobile-only buttons */}
+                <DropdownMenuItem
+                  className="sm:hidden cursor-pointer"
+                  onClick={() => navigate('/minhas-compras')}
+                >
+                  <CreditCard className="h-4 w-4 mr-2" />
+                  Minhas Compras
+                </DropdownMenuItem>
+                
+                <DropdownMenuItem
+                  className="sm:hidden cursor-pointer"
+                  onClick={() => navigate('/vendedor')}
+                >
+                  <ArrowLeftRight className="h-4 w-4 mr-2" />
+                  Painel Vendedor
+                </DropdownMenuItem>
+                
+                <DropdownMenuSeparator className="sm:hidden" />
+                
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => navigate('/configuracoes')}
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Configurações
+                </DropdownMenuItem>
+                
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={handleDownloadApp}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Baixar Aplicativo
+                </DropdownMenuItem>
+                
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => navigate('/ajuda')}
+                >
+                  <HelpCircle className="h-4 w-4 mr-2" />
+                  Ajuda
+                </DropdownMenuItem>
+                
+                <DropdownMenuSeparator />
+                
+                <DropdownMenuItem
+                  className="cursor-pointer text-destructive focus:text-destructive"
+                  onClick={handleSignOut}
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sair
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>
-
-      {/* Avatar Drawer for mobile */}
-      <AvatarDrawer
-        isOpen={avatarDrawerOpen}
-        onClose={() => setAvatarDrawerOpen(false)}
-        profileAvatar={profileAvatar}
-        profileName={profileName}
-        isMobile={true}
-      />
     </>
   );
 }
