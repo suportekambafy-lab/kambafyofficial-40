@@ -70,9 +70,9 @@ export const ProductCard = memo(({ product, onEdit, onShare, onDelete, onToggleS
               >
                 {product.status}
               </Badge>
-              {product.status === 'Banido' && product.revision_requested && (
+              {product.status === 'Em Revisão' && (
                 <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600">
-                  Revisão Solicitada
+                  Em Revisão
                 </Badge>
               )}
               {product.status === 'Pendente' && (
@@ -208,43 +208,27 @@ export const ProductCard = memo(({ product, onEdit, onShare, onDelete, onToggleS
                 )}
               </div>
               
-              {/* Second row - Share and Delete OR Request Revision (only for Banido status) */}
+              {/* Second row - Share and Delete (no revision request option) */}
               <div className="flex gap-2">
-                {product.status === 'Banido' && !product.revision_requested ? (
-                  // Produto banido pelo admin - mostrar botão de solicitar revisão
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onRequestRevision?.(product)}
-                    className="flex-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50 text-xs h-8"
-                  >
-                    <AlertCircle className="w-3 h-3 mr-1" />
-                    <span>Solicitar Revisão</span>
-                  </Button>
-                ) : (
-                  // Produto normal ou inativo pelo vendedor - mostrar botões padrão
-                  <>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onShare(product)}
-                      className="flex-1 text-xs h-8"
-                      disabled={product.status === 'Rascunho' || product.status === 'Inativo'}
-                    >
-                      <Share className="w-3 h-3 mr-1" />
-                      <span>{(product.status === 'Rascunho' || product.status === 'Inativo') ? 'Indisponível' : 'Partilhar'}</span>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onDelete(product)}
-                      className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50 text-xs h-8"
-                    >
-                      <Trash2 className="w-3 h-3 mr-1" />
-                      <span>Excluir</span>
-                    </Button>
-                  </>
-                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onShare(product)}
+                  className="flex-1 text-xs h-8"
+                  disabled={product.status === 'Rascunho' || product.status === 'Inativo' || product.status === 'Banido' || product.status === 'Em Revisão' || product.status === 'Pendente'}
+                >
+                  <Share className="w-3 h-3 mr-1" />
+                  <span>{(product.status === 'Rascunho' || product.status === 'Inativo' || product.status === 'Banido' || product.status === 'Em Revisão' || product.status === 'Pendente') ? 'Indisponível' : 'Partilhar'}</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onDelete(product)}
+                  className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50 text-xs h-8"
+                >
+                  <Trash2 className="w-3 h-3 mr-1" />
+                  <span>Excluir</span>
+                </Button>
               </div>
             </>
           )}
