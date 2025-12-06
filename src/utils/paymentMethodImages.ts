@@ -13,7 +13,11 @@ export const PAYMENT_METHOD_IMAGES = {
   card: "/lovable-uploads/3253c01d-89da-4a32-846f-4861dd03645c.png",
   klarna: "/lovable-uploads/86f49c10-3542-43ce-89aa-cbef30d98480.png",
   multibanco: "/lovable-uploads/eaa553f2-386c-434b-8096-7243db77886e.png",
-  mbway: "/assets/mbway-logo.png"
+  mbway: "/assets/mbway-logo.png",
+  
+  // UK - Métodos de pagamento Reino Unido (usa mesmas imagens)
+  card_uk: "/lovable-uploads/3253c01d-89da-4a32-846f-4861dd03645c.png",
+  klarna_uk: "/lovable-uploads/86f49c10-3542-43ce-89aa-cbef30d98480.png"
 };
 
 // Function to get image for payment method
