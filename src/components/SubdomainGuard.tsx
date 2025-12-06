@@ -146,10 +146,10 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
     
     // Define quais rotas são RESTRITAS de cada subdomínio (não permitidas)
     // NOTA: /login/:id e /area/:id são tratadas separadamente
-    const restrictedFromMain = ['/auth', '/vendedor', '/apps', '/minhas-compras', '/meus-acessos', '/admin']; 
+    const restrictedFromMain = ['/auth', '/vendedor', '/apps', '/meus-acessos', '/admin']; 
     const restrictedFromApp = ['/checkout', '/obrigado', '/admin']; 
-    const restrictedFromPay = ['/auth', '/vendedor', '/apps', '/minhas-compras', '/meus-acessos', '/admin']; 
-    const restrictedFromAdmin = ['/checkout', '/obrigado', '/auth', '/vendedor', '/apps', '/minhas-compras', '/meus-acessos'];
+    const restrictedFromPay = ['/auth', '/vendedor', '/apps', '/meus-acessos', '/admin']; 
+    const restrictedFromAdmin = ['/checkout', '/obrigado', '/auth', '/vendedor', '/apps', '/meus-acessos'];
     
     // Verifica se a rota atual é restrita do subdomínio atual
     let shouldRedirect = false;
@@ -230,8 +230,7 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
           if (currentPath.startsWith('/admin')) {
             targetSubdomain = 'admin';
           } else if (currentPath.startsWith('/auth') || currentPath.startsWith('/vendedor') || 
-              currentPath.startsWith('/apps') || currentPath.startsWith('/minhas-compras') || 
-              currentPath.startsWith('/meus-acessos')) {
+              currentPath.startsWith('/apps') || currentPath.startsWith('/meus-acessos')) {
             targetSubdomain = 'app';
           } else {
             targetSubdomain = 'main';

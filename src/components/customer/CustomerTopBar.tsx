@@ -202,7 +202,7 @@ export function CustomerTopBar({ showAppBanner = true }: CustomerTopBarProps) {
               variant="ghost"
               size="sm"
               className="hidden sm:flex gap-2 text-muted-foreground hover:text-foreground"
-              onClick={() => navigate('/minhas-compras')}
+              onClick={() => navigate('/meus-acessos/compras')}
             >
               <CreditCard className="h-4 w-4" />
               <span className="hidden md:inline">Minhas Compras</span>
@@ -250,7 +250,7 @@ export function CustomerTopBar({ showAppBanner = true }: CustomerTopBarProps) {
                 {/* Mobile-only buttons */}
                 <DropdownMenuItem
                   className="sm:hidden cursor-pointer"
-                  onClick={() => navigate('/minhas-compras')}
+                  onClick={() => navigate('/meus-acessos/compras')}
                 >
                   <CreditCard className="h-4 w-4 mr-2" />
                   Minhas Compras
