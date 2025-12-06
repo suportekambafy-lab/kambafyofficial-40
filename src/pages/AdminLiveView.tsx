@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getAllSessionsCount, getAllSessionsWithLocation } from '@/utils/supabaseCountQuery';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
@@ -137,31 +138,23 @@ export default function AdminLiveView() {
         totalProducts: productsCount || 0
       });
 
-      // Sessions from checkout_sessions table
-      const { data: todaySessions, error: sessionsError } = await supabase
-        .from('checkout_sessions')
-        .select('country, city, region, created_at')
-        .gte('created_at', todayStart.toISOString());
+      // Sessions count using exact count (bypasses 1000 limit)
+      const totalSessions = await getAllSessionsCount(todayStart);
+      const yesterdaySessionCount = await getAllSessionsCount(yesterdayStart, todayStart);
+      
+      // Fetch sessions with location data using pagination
+      const todaySessions = await getAllSessionsWithLocation(null, todayStart);
 
       console.log('=== DEBUG SESSIONS ===');
       console.log('Now:', now.toISOString());
       console.log('Today start (UTC):', todayStart.toISOString());
       console.log('Last 10 min:', last10min.toISOString());
-      console.log('Sessions query error:', sessionsError);
-      console.log('Today sessions data:', todaySessions);
-      console.log('Today sessions count:', todaySessions?.length);
-      console.log('Active checkouts data:', activeCheckouts);
+      console.log('Today sessions count (exact):', totalSessions);
+      console.log('Yesterday sessions count (exact):', yesterdaySessionCount);
+      console.log('Today sessions with location:', todaySessions.length);
       console.log('Active checkouts count:', activeCheckouts?.length);
       console.log('=== END DEBUG ===');
 
-      const { data: yesterdaySessions } = await supabase
-        .from('checkout_sessions')
-        .select('id')
-        .gte('created_at', yesterdayStart.toISOString())
-        .lt('created_at', todayStart.toISOString());
-
-      const totalSessions = todaySessions?.length || 0;
-      const yesterdaySessionCount = yesterdaySessions?.length || 0;
       const sessionsChange = yesterdaySessionCount > 0
         ? Math.round((totalSessions - yesterdaySessionCount) / yesterdaySessionCount * 100)
         : 0;

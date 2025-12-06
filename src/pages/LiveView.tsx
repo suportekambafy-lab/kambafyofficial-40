@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { getSessionsCount, getAllSessionsWithLocation } from '@/utils/supabaseCountQuery';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
@@ -136,19 +137,13 @@ export default function LiveView() {
         activeCarts: pendingOrders.length
       });
 
-      // Sessions by location - fetch from checkout_sessions table (today's visits)
-      const {
-        data: todaySessions
-      } = await supabase.from('checkout_sessions').select('country, city, region').in('product_id', productIds).gte('created_at', todayStart.toISOString());
+      // Sessions count using exact count (bypasses 1000 limit)
+      const totalSessions = await getSessionsCount(productIds, todayStart);
+      const yesterdaySessionCount = await getSessionsCount(productIds, yesterdayStart, todayStart);
+      
+      // Fetch sessions with location data using pagination
+      const todaySessions = await getAllSessionsWithLocation(productIds, todayStart);
 
-      // Get yesterday's sessions for comparison
-      const {
-        data: yesterdaySessionsData
-      } = await supabase.from('checkout_sessions').select('id').in('product_id', productIds).gte('created_at', yesterdayStart.toISOString()).lt('created_at', todayStart.toISOString());
-
-      // Calculate sessions from checkout_sessions table (consistent with location data)
-      const totalSessions = todaySessions?.length || 0;
-      const yesterdaySessionCount = yesterdaySessionsData?.length || 0;
       const sessionsChange = yesterdaySessionCount > 0 ? Math.round((totalSessions - yesterdaySessionCount) / yesterdaySessionCount * 100) : 0;
 
       setMetrics({
