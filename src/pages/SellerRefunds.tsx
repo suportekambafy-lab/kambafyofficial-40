@@ -53,6 +53,45 @@ export default function SellerRefunds() {
   };
 
   const pendingRefunds = refunds.filter(r => r.status === 'pending');
+  const processedRefunds = refunds.filter(r => r.status !== 'pending');
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-300">Pendente</Badge>;
+      case 'approved':
+      case 'approved_by_seller':
+        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">Aprovado</Badge>;
+      case 'rejected':
+      case 'rejected_by_seller':
+        return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-300">Rejeitado</Badge>;
+      case 'approved_by_admin':
+        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-300">Aprovado (Admin)</Badge>;
+      case 'rejected_by_admin':
+        return <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-300">Rejeitado (Admin)</Badge>;
+      case 'cancelled':
+        return <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-300">Cancelado</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'approved':
+      case 'approved_by_seller':
+      case 'approved_by_admin':
+        return <CheckCircle className="h-5 w-5 text-green-600" />;
+      case 'rejected':
+      case 'rejected_by_seller':
+      case 'rejected_by_admin':
+        return <XCircle className="h-5 w-5 text-red-600" />;
+      case 'cancelled':
+        return <XCircle className="h-5 w-5 text-gray-600" />;
+      default:
+        return <Clock className="h-5 w-5 text-yellow-600" />;
+    }
+  };
 
   return (
     <div className="container mx-auto p-6">
@@ -127,80 +166,154 @@ export default function SellerRefunds() {
 
       {loading ? (
         <PageSkeleton variant="refunds" />
-      ) : pendingRefunds.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <CheckCircle className="h-16 w-16 mx-auto mb-4 text-green-500" />
-            <p className="text-muted-foreground">Nenhuma solicitação de reembolso pendente</p>
-          </CardContent>
-        </Card>
       ) : (
-        <div className="space-y-4">
-          {pendingRefunds.map((refund) => (
-            <Card key={refund.id} className="border-l-4 border-l-yellow-500">
-              <CardContent className="p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Clock className="h-5 w-5 text-yellow-600" />
-                      <h3 className="font-semibold text-lg">
-                        Pedido: {refund.order_id}
-                      </h3>
-                      <Badge variant="outline" className="ml-2">Pendente</Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-1">
-                      Produto: {refund.products?.name || 'N/A'}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Cliente: {refund.buyer_email}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-2xl font-bold text-red-600">
-                      {refund.amount} {refund.currency}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {format(new Date(refund.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
-                    </p>
-                  </div>
-                </div>
+        <div className="space-y-8">
+          {/* Pendentes */}
+          <div>
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <Clock className="h-5 w-5 text-yellow-600" />
+              Solicitações Pendentes
+            </h2>
+            {pendingRefunds.length === 0 ? (
+              <Card>
+                <CardContent className="py-8 text-center">
+                  <CheckCircle className="h-12 w-12 mx-auto mb-3 text-green-500" />
+                  <p className="text-muted-foreground">Nenhuma solicitação pendente</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {pendingRefunds.map((refund) => (
+                  <Card key={refund.id} className="border-l-4 border-l-yellow-500">
+                    <CardContent className="p-6">
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Clock className="h-5 w-5 text-yellow-600" />
+                            <h3 className="font-semibold text-lg">
+                              Pedido: {refund.order_id}
+                            </h3>
+                            {getStatusBadge(refund.status)}
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-1">
+                            Produto: {refund.products?.name || 'N/A'}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Cliente: {refund.buyer_email}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-2xl font-bold text-red-600">
+                            {refund.amount} {refund.currency}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {format(new Date(refund.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                          </p>
+                        </div>
+                      </div>
 
-                <div className="mb-4 p-4 bg-muted rounded-lg">
-                  <p className="text-sm font-medium mb-2 flex items-center gap-2">
-                    <MessageSquare className="h-4 w-4" />
-                    Motivo do Cliente:
-                  </p>
-                  <p className="text-sm text-muted-foreground">{refund.reason}</p>
-                </div>
+                      <div className="mb-4 p-4 bg-muted rounded-lg">
+                        <p className="text-sm font-medium mb-2 flex items-center gap-2">
+                          <MessageSquare className="h-4 w-4" />
+                          Motivo do Cliente:
+                        </p>
+                        <p className="text-sm text-muted-foreground">{refund.reason}</p>
+                      </div>
 
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-                  <p className="text-sm text-yellow-800">
-                    <strong>Atenção:</strong> Ao aprovar, o valor de {refund.amount} {refund.currency} será 
-                    automaticamente descontado do seu saldo disponível. Se não houver saldo suficiente, 
-                    seu saldo ficará negativo até regularização.
-                  </p>
-                </div>
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                        <p className="text-sm text-yellow-800">
+                          <strong>Atenção:</strong> Ao aprovar, o valor de {refund.amount} {refund.currency} será 
+                          automaticamente descontado do seu saldo disponível.
+                        </p>
+                      </div>
 
-                <div className="flex gap-3">
-                  <Button
-                    onClick={() => openDialog(refund, 'approve')}
-                    className="flex-1 bg-green-600 hover:bg-green-700"
-                  >
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                    Aprovar Reembolso
-                  </Button>
-                  <Button
-                    onClick={() => openDialog(refund, 'reject')}
-                    variant="destructive"
-                    className="flex-1"
-                  >
-                    <XCircle className="h-4 w-4 mr-2" />
-                    Rejeitar Pedido
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                      <div className="flex gap-3">
+                        <Button
+                          onClick={() => openDialog(refund, 'approve')}
+                          className="flex-1 bg-green-600 hover:bg-green-700"
+                        >
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                          Aprovar Reembolso
+                        </Button>
+                        <Button
+                          onClick={() => openDialog(refund, 'reject')}
+                          variant="destructive"
+                          className="flex-1"
+                        >
+                          <XCircle className="h-4 w-4 mr-2" />
+                          Rejeitar Pedido
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Histórico */}
+          {processedRefunds.length > 0 && (
+            <div>
+              <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                <MessageSquare className="h-5 w-5 text-muted-foreground" />
+                Histórico de Reembolsos
+              </h2>
+              <div className="space-y-3">
+                {processedRefunds.map((refund) => (
+                  <Card key={refund.id} className="border-l-4 border-l-muted">
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            {getStatusIcon(refund.status)}
+                            <h3 className="font-medium">
+                              Pedido: {refund.order_id}
+                            </h3>
+                            {getStatusBadge(refund.status)}
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-1">
+                            Produto: {refund.products?.name || 'N/A'}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Cliente: {refund.buyer_email}
+                          </p>
+                          
+                          <div className="mt-2 text-sm">
+                            <p className="text-muted-foreground">
+                              <span className="font-medium">Motivo:</span> {refund.reason}
+                            </p>
+                            {refund.seller_comment && (
+                              <p className="text-muted-foreground mt-1">
+                                <span className="font-medium">Seu comentário:</span> {refund.seller_comment}
+                              </p>
+                            )}
+                            {refund.admin_comment && (
+                              <p className="text-muted-foreground mt-1">
+                                <span className="font-medium">Comentário Admin:</span> {refund.admin_comment}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-lg font-semibold">
+                            {refund.amount} {refund.currency}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {format(new Date(refund.created_at), "dd/MM/yyyy", { locale: ptBR })}
+                          </p>
+                          {refund.updated_at && refund.updated_at !== refund.created_at && (
+                            <p className="text-xs text-muted-foreground">
+                              Atualizado: {format(new Date(refund.updated_at), "dd/MM/yyyy", { locale: ptBR })}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
