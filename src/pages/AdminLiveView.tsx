@@ -194,9 +194,9 @@ export default function AdminLiveView() {
       });
       setActiveSessionsLocations(Object.values(activeLocationCounts).sort((a, b) => b.count - a.count));
 
-      // Visitor locations for globe (from recent checkout sessions)
+      // Visitor locations for globe (from all today's checkout sessions)
       const visitorLocationCounts: Record<string, SessionLocation> = {};
-      (activeCheckouts || []).forEach(session => {
+      (todaySessions || []).forEach(session => {
         const country = session.country;
         if (!country || country === 'Desconhecido' || country === '') return;
         if (!visitorLocationCounts[country]) {
@@ -210,6 +210,7 @@ export default function AdminLiveView() {
         visitorLocationCounts[country].count++;
       });
       setVisitorLocations(Object.values(visitorLocationCounts));
+      console.log('Visitor locations for globe:', Object.values(visitorLocationCounts));
 
       // Top sellers today
       // Top sellers today - get all unique seller IDs first
