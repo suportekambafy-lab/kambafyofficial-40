@@ -946,8 +946,7 @@ export function AppHome() {
                             </div>
                             <button 
                               onClick={() => {
-                                const baseUrl = window.location.origin;
-                                const checkoutUrl = `${baseUrl}/checkout/${product.id}`;
+                                const checkoutUrl = `https://pay.kambafy.com/checkout/${product.id}`;
                                 navigator.clipboard.writeText(checkoutUrl);
                                 triggerHaptic('light');
                                 setCopiedProductId(product.id);
