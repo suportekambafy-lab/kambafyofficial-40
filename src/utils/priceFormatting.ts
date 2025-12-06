@@ -95,6 +95,30 @@ export const formatPriceForSeller = (
     : `${amountInKZ.toLocaleString()} KZ`;
 };
 
+// Função específica para admin - mostra valor completo (com taxa) em KZ
+export const formatPriceForAdmin = (
+  amount: number,
+  currency: string = 'KZ',
+  useToLocaleString: boolean = true
+): string => {
+  // Se não é KZ, converter para KZ
+  let amountInKZ = amount;
+  
+  if (currency.toUpperCase() !== 'KZ') {
+    const exchangeRates: Record<string, number> = {
+      'EUR': 1053,
+      'MZN': 14.3
+    };
+    
+    const rate = exchangeRates[currency.toUpperCase()] || 1;
+    amountInKZ = Math.round(amount * rate);
+  }
+  
+  return useToLocaleString 
+    ? `${parseFloat(amountInKZ.toString()).toLocaleString('pt-BR')} KZ`
+    : `${amountInKZ.toLocaleString()} KZ`;
+};
+
 // Helper para obter o texto do intervalo de assinatura
 export const getSubscriptionIntervalText = (interval: string, intervalCount: number = 1): string => {
   const intervals: Record<string, { singular: string; plural: string }> = {
