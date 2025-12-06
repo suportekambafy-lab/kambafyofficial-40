@@ -19,7 +19,6 @@ export interface RefundRequest {
   created_at: string;
   updated_at: string;
   products?: { name: string };
-  orders?: { customer_name: string };
 }
 
 export function useRefunds(userType: 'buyer' | 'seller' | 'admin') {
@@ -37,8 +36,7 @@ export function useRefunds(userType: 'buyer' | 'seller' | 'admin') {
         .from('refund_requests')
         .select(`
           *,
-          products(name),
-          orders(customer_name)
+          products(name)
         `)
         .order('created_at', { ascending: false });
 

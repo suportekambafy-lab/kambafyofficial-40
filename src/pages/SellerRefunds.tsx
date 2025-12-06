@@ -152,7 +152,7 @@ export default function SellerRefunds() {
                       Produto: {refund.products?.name || 'N/A'}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Cliente: {refund.orders?.customer_name || refund.buyer_email}
+                      Cliente: {refund.buyer_email}
                     </p>
                   </div>
                   <div className="text-right">
