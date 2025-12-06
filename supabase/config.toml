@@ -158,3 +158,9 @@ verify_jwt = false
 
 [functions.set-admin-password]
 verify_jwt = false
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.recover-stripe-payments]
+verify_jwt = false
