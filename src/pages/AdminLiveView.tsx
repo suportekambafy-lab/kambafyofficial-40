@@ -63,9 +63,11 @@ export default function AdminLiveView() {
     try {
       if (!silent) setLoading(true);
       const now = new Date();
-      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      // Use UTC for consistency with database timestamps
+      const todayStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
       const yesterdayStart = new Date(todayStart.getTime() - 24 * 60 * 60 * 1000);
       const last5min = new Date(now.getTime() - 5 * 60 * 1000);
+      const last10min = new Date(now.getTime() - 10 * 60 * 1000);
 
       // Get all today's orders (platform-wide)
       const { data: todayOrders } = await supabase
@@ -88,7 +90,6 @@ export default function AdminLiveView() {
         .gte('created_at', last5min.toISOString());
 
       // Get active checkout sessions (last 10 min)
-      const last10min = new Date(now.getTime() - 10 * 60 * 1000);
       const { data: activeCheckouts } = await supabase
         .from('checkout_sessions')
         .select('*')
