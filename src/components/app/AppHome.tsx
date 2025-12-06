@@ -979,16 +979,6 @@ export function AppHome() {
                 <h1 className="text-lg md:text-xl font-semibold text-foreground">Financeiro</h1>
                 <p className="text-muted-foreground text-xs">Gestão de saldo e saques</p>
               </div>
-              <Button 
-                onClick={() => {
-                  triggerHaptic('medium');
-                  setShowWithdrawalModal(true);
-                }} 
-                className="bg-emerald-600 hover:bg-emerald-700 text-white h-8 px-3 text-xs"
-                size="sm"
-              >
-                Sacar
-              </Button>
             </div>
             
             {/* Financial Cards */}
@@ -997,11 +987,23 @@ export function AppHome() {
               <div className="bg-card rounded-xl border border-border/40 shadow-sm flex overflow-hidden">
                 <div className="w-1 bg-emerald-500 shrink-0" />
                 <div className="flex-1 p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                      <Wallet className="h-4 w-4 text-emerald-600" />
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                        <Wallet className="h-4 w-4 text-emerald-600" />
+                      </div>
+                      <p className="text-xs text-muted-foreground font-medium">Disponível para Saque</p>
                     </div>
-                    <p className="text-xs text-muted-foreground font-medium">Disponível para Saque</p>
+                    <Button 
+                      onClick={() => {
+                        triggerHaptic('medium');
+                        setShowWithdrawalModal(true);
+                      }} 
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white h-7 px-2.5 text-[10px]"
+                      size="sm"
+                    >
+                      Sacar
+                    </Button>
                   </div>
                   <div className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
                     {formatPriceForSeller(financialData.availableBalance, 'KZ')}
