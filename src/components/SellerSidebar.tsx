@@ -16,7 +16,8 @@ import {
   Bell,
   ChevronDown,
   Search,
-  AlertCircle
+  AlertCircle,
+  ArrowLeftRight
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/contexts/AuthContext";
@@ -588,6 +589,10 @@ export function TopBar() {
               <DropdownMenuItem onClick={() => navigate('/vendedor/configuracoes')}>
                 <Settings className="mr-2 h-4 w-4" />
                 Configurações
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate('/meus-acessos')}>
+                <ArrowLeftRight className="mr-2 h-4 w-4" />
+                Ver como Cliente
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleSignOut}>
