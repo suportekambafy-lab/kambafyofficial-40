@@ -413,6 +413,21 @@ Deno.serve(async (req) => {
         // Referência expira em 5 dias (forçado)
         expiresAt = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString();
       }
+
+      // Buscar user_id do vendedor (dono do produto)
+      let sellerUserId = checkoutOrderData?.user_id || null;
+      if (!sellerUserId && productId) {
+        const { data: productData } = await supabase
+          .from('products')
+          .select('user_id')
+          .eq('id', productId)
+          .single();
+        
+        if (productData?.user_id) {
+          sellerUserId = productData.user_id;
+          logStep("Found seller user_id from product", { sellerUserId });
+        }
+      }
       
       const orderDataToSave = checkoutOrderData ? {
         ...checkoutOrderData,
@@ -423,7 +438,8 @@ Deno.serve(async (req) => {
         amount: grossAmount.toString(), // Garantir que amount está correto
         seller_commission: sellerCommission, // SOBRESCREVER com desconto de 8%
         expires_at: expiresAt,
-        customer_country: customerCountry || checkoutOrderData.customer_country || null
+        customer_country: customerCountry || checkoutOrderData.customer_country || null,
+        user_id: sellerUserId // Garantir que user_id é o vendedor
       } : {
         product_id: productId,
         order_id: orderId,
@@ -437,7 +453,7 @@ Deno.serve(async (req) => {
         currency: originalCurrency,
         payment_method: paymentMethod,
         status: orderStatus,
-        user_id: null, // Anonymous checkout - user_id should be null for anonymous orders
+        user_id: sellerUserId, // user_id é o vendedor do produto
         seller_commission: sellerCommission, // 8% platform fee já calculado acima
         expires_at: expiresAt
       };
