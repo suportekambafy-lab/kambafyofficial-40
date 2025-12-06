@@ -293,8 +293,8 @@ export function ModernSalesChart({
         <div className="bg-card rounded-xl border border-border/40 p-3 shadow-sm flex-1">
           <div className="flex items-center justify-between mb-0.5">
             <span className="text-xs text-muted-foreground">Pedidos feitos</span>
-            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 ${ordersTrend >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'}`}>
-              {ordersTrend >= 0 ? '+' : ''}{ordersTrend}
+            <span className={`text-[10px] font-semibold flex items-center gap-0.5 ${ordersTrend >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+              {ordersTrend >= 0 ? '+' : ''}{ordersTrend}%
               {ordersTrend >= 0 ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
             </span>
           </div>
@@ -305,8 +305,8 @@ export function ModernSalesChart({
         <div className="bg-card rounded-xl border border-border/40 p-3 shadow-sm flex-1">
           <div className="flex items-center justify-between mb-0.5">
             <span className="text-xs text-muted-foreground">Pedidos pagos</span>
-            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 ${paidTrend >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'}`}>
-              {paidTrend >= 0 ? '+' : ''}{paidTrend}
+            <span className={`text-[10px] font-semibold flex items-center gap-0.5 ${paidTrend >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+              {paidTrend >= 0 ? '+' : ''}{paidTrend}%
               {paidTrend >= 0 ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
             </span>
           </div>
