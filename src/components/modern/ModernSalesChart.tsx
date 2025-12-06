@@ -336,11 +336,17 @@ export function ModernSalesChart({
           }}>
                 <defs>
                   <linearGradient id="colorVendasGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.16} />
-                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.02} />
+                    <stop offset="0%" stopColor="#22c55e" stopOpacity={0.4} />
+                    <stop offset="50%" stopColor="#22c55e" stopOpacity={0.15} />
+                    <stop offset="100%" stopColor="#22c55e" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="strokeGradient" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="#16a34a" />
+                    <stop offset="50%" stopColor="#22c55e" />
+                    <stop offset="100%" stopColor="#4ade80" />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={true} stroke="hsl(var(--border))" strokeOpacity={0.5} />
+                <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.3} />
                 <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{
               fontSize: 10,
               fill: 'hsl(var(--muted-foreground))'
@@ -355,16 +361,11 @@ export function ModernSalesChart({
               return value.toString();
             }} width={45} domain={[0, 'auto']} />
                 <ChartTooltip content={<ChartTooltipContent />} formatter={(value: number) => [`${value.toLocaleString()} KZ`, 'Vendas']} />
-                <Area type="monotone" dataKey="vendas" stroke="hsl(var(--primary))" strokeWidth={2} fillOpacity={1} fill="url(#colorVendasGradient)" dot={{
-              fill: 'hsl(var(--primary))',
+                <Area type="monotone" dataKey="vendas" stroke="url(#strokeGradient)" strokeWidth={2.5} fillOpacity={1} fill="url(#colorVendasGradient)" dot={false} activeDot={{
+              fill: '#22c55e',
               stroke: 'white',
-              strokeWidth: 2,
-              r: 3
-            }} activeDot={{
-              fill: 'hsl(var(--primary))',
-              stroke: 'white',
-              strokeWidth: 2,
-              r: 5
+              strokeWidth: 3,
+              r: 6
             }} />
               </AreaChart>
             </ChartContainer>}
