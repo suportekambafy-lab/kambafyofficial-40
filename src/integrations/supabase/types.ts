@@ -2598,6 +2598,7 @@ export type Database = {
           retention_release_date: string | null
           updated_at: string
           user_id: string
+          withdrawal_methods: Json | null
         }
         Insert: {
           account_holder?: string | null
@@ -2622,6 +2623,7 @@ export type Database = {
           retention_release_date?: string | null
           updated_at?: string
           user_id: string
+          withdrawal_methods?: Json | null
         }
         Update: {
           account_holder?: string | null
@@ -2646,6 +2648,7 @@ export type Database = {
           retention_release_date?: string | null
           updated_at?: string
           user_id?: string
+          withdrawal_methods?: Json | null
         }
         Relationships: []
       }
