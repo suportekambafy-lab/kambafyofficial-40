@@ -248,11 +248,6 @@ export default function MeusAcessos() {
                                   Ebook
                                 </Badge>}
                             </div>
-                            <div className="text-right">
-                              <Badge variant="secondary" className="bg-green-100 text-green-800">
-                                Acesso Ativo
-                              </Badge>
-                            </div>
                           </div>
                           <div className="mt-4 flex items-center space-x-2 flex-wrap gap-2">
                             {access.products ? access.products.type === 'Curso' && access.products.member_areas ? <Button onClick={() => handleAccessProduct(access.products)} size="sm" className="bg-checkout-green hover:bg-checkout-green/90" disabled={accessingProduct === access.products.id}>
