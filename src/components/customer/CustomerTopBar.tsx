@@ -276,14 +276,6 @@ export function CustomerTopBar({ showAppBanner = true }: CustomerTopBarProps) {
                 
                 <DropdownMenuItem
                   className="cursor-pointer"
-                  onClick={handleDownloadApp}
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Baixar Aplicativo
-                </DropdownMenuItem>
-                
-                <DropdownMenuItem
-                  className="cursor-pointer"
                   onClick={() => navigate('/ajuda')}
                 >
                   <HelpCircle className="h-4 w-4 mr-2" />
