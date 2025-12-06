@@ -1407,18 +1407,24 @@ export function AppHome() {
             </div>
 
             {/* Info Banner */}
-            <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-xl border border-primary/20 p-4">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-                  <TrendingUp className="h-5 w-5 text-primary" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground">Dica para vender mais</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Compartilhe o link do seu produto nas redes sociais para alcançar mais clientes potenciais.
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary to-primary/80 p-4">
+              <div className="flex items-center gap-4">
+                <div className="flex-1 min-w-0 z-10">
+                  <p className="text-base font-semibold text-primary-foreground">Dica para vender mais</p>
+                  <p className="text-sm text-primary-foreground/80 mt-1">
+                    Compartilhe o link do seu produto nas redes sociais para alcançar mais clientes.
                   </p>
                 </div>
+                <div className="relative shrink-0">
+                  <img 
+                    src="/lovable-uploads/65ca54b1-d149-4d61-b1f7-13da8b2a1893.png" 
+                    alt="Profissional"
+                    className="w-20 h-20 object-cover rounded-full border-2 border-primary-foreground/20"
+                  />
+                </div>
               </div>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
             </div>
           </div>;
     }
