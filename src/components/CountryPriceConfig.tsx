@@ -14,7 +14,8 @@ interface CountryPriceConfigProps {
 const allCountries = [
   { code: 'AO', name: 'Angola', currency: 'KZ', flag: '🇦🇴' },
   { code: 'PT', name: 'Portugal', currency: 'EUR', flag: '🇵🇹' },
-  { code: 'MZ', name: 'Moçambique', currency: 'MZN', flag: '🇲🇿' }
+  { code: 'MZ', name: 'Moçambique', currency: 'MZN', flag: '🇲🇿' },
+  { code: 'GB', name: 'Reino Unido', currency: 'GBP', flag: '🇬🇧' }
 ];
 
 // Filtrar Angola (moeda base) das opções de preços personalizados
@@ -74,7 +75,8 @@ export default function CountryPriceConfig({
     return {
       'AO': basePriceNumber, // Base é KZ
       'PT': (basePriceNumber * 0.00095).toFixed(2), // KZ para EUR
-      'MZ': (basePriceNumber * 0.0722).toFixed(2) // KZ para MZN
+      'MZ': (basePriceNumber * 0.0722).toFixed(2), // KZ para MZN
+      'GB': (basePriceNumber * 0.0008).toFixed(2) // KZ para GBP
     };
   };
 

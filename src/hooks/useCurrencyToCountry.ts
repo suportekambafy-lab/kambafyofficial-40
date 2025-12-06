@@ -3,7 +3,8 @@ export const useCurrencyToCountry = () => {
     const currencyMap: Record<string, { country: string; flag: string; name: string }> = {
       'KZ': { country: 'AO', flag: '🇦🇴', name: 'Angola' },
       'EUR': { country: 'PT', flag: '🇵🇹', name: 'Portugal' },
-      'MZN': { country: 'MZ', flag: '🇲🇿', name: 'Moçambique' }
+      'MZN': { country: 'MZ', flag: '🇲🇿', name: 'Moçambique' },
+      'GBP': { country: 'GB', flag: '🇬🇧', name: 'Reino Unido' }
     };
 
     return currencyMap[currency.toUpperCase()] || { 
@@ -18,7 +19,8 @@ export const useCurrencyToCountry = () => {
     const exchangeRates: Record<string, number> = {
       'KZ': 1, // Base currency
       'EUR': 1053, // 1 EUR = ~1053 KZ (aproximado)
-      'MZN': 14.3 // 1 MZN = ~14.3 KZ (aproximado)
+      'MZN': 14.3, // 1 MZN = ~14.3 KZ (aproximado)
+      'GBP': 1250 // 1 GBP = ~1250 KZ (aproximado)
     };
 
     const rate = exchangeRates[fromCurrency.toUpperCase()] || 1;
