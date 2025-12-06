@@ -91,6 +91,8 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
       return 'usd';
     } else if (fromCurrency === 'GBP') {
       return 'gbp';
+    } else if (fromCurrency === 'USD') {
+      return 'usd';
     }
     return 'usd';
   };
