@@ -216,10 +216,14 @@ export default function AdminLiveView() {
       const uniqueSellerIds = [...new Set(paidOrders.map(o => (o.products as any)?.user_id).filter(Boolean))];
       
       // Fetch all profiles at once for efficiency (using user_id, not id)
-      const { data: sellerProfiles } = await supabase
+      const { data: sellerProfiles, error: profileError } = await supabase
         .from('profiles')
         .select('user_id, full_name, email')
         .in('user_id', uniqueSellerIds);
+      
+      console.log('Seller IDs:', uniqueSellerIds);
+      console.log('Profiles found:', sellerProfiles);
+      if (profileError) console.error('Profile fetch error:', profileError);
       
       const profileMap = new Map((sellerProfiles || []).map(p => [p.user_id, p]));
       
