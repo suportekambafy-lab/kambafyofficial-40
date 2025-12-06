@@ -1073,146 +1073,123 @@ export function AppHome() {
           });
         }} />;
       case 'profile':
-        return <div className="p-3 md:p-4 space-y-4 bg-background min-h-full">
-            {/* Modern Profile Header */}
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-transparent p-5 border border-primary/10">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-              <div className="absolute bottom-0 left-0 w-24 h-24 bg-primary/5 rounded-full translate-y-1/2 -translate-x-1/2" />
-              
-              <div className="relative flex items-center gap-4">
-                <div className="relative cursor-pointer group" onClick={async () => {
-                  triggerHaptic('light');
-                  const photo = await pickPhoto();
-                  if (photo && user) {
-                    toast({
-                      title: "Foto Selecionada",
-                      description: "Funcionalidade de upload em desenvolvimento"
-                    });
-                    triggerHaptic('success');
-                  }
-                }}>
-                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary/60 p-0.5 shadow-lg shadow-primary/20">
-                    <Avatar className="w-full h-full rounded-[14px]">
-                      <AvatarImage src={profileAvatar} alt="Profile" className="rounded-[14px]" />
-                      <AvatarFallback className="rounded-[14px] bg-card">
-                        {currentLevel ? <img src={currentLevel.badge} alt={currentLevel.name} className="w-12 h-12 object-contain" /> : <User className="h-8 w-8 text-primary" />}
-                      </AvatarFallback>
-                    </Avatar>
-                  </div>
-                  <div className="absolute -bottom-1 -right-1 bg-card text-primary rounded-xl p-1.5 shadow-lg border border-border/50 group-hover:scale-110 transition-transform">
-                    <Camera className="w-3.5 h-3.5" />
-                  </div>
-                </div>
-                
-                <div className="flex-1 min-w-0">
-                  <h2 className="font-bold text-lg text-foreground truncate">
-                    {editingProfile.full_name || user?.email?.split('@')[0]}
-                  </h2>
-                  <p className="text-sm text-muted-foreground truncate">
-                    {user?.email}
-                  </p>
-                  {currentLevel && (
-                    <div className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20">
-                      <span className="text-xs font-medium text-primary">{currentLevel.name}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Actions Grid */}
-            <div className="grid grid-cols-2 gap-3">
-              <button onClick={() => setShowEditProfile(true)} className="group relative overflow-hidden bg-card rounded-2xl border border-border/40 p-4 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="relative flex flex-col items-center text-center gap-2">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <User className="h-5 w-5 text-primary" />
-                  </div>
-                  <span className="font-medium text-sm text-foreground">Editar Perfil</span>
-                </div>
-              </button>
-
-              <button onClick={() => setActiveTab('my-courses')} className="group relative overflow-hidden bg-card rounded-2xl border border-border/40 p-4 hover:border-emerald-500/30 hover:shadow-lg hover:shadow-emerald-500/5 transition-all duration-300">
-                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="relative flex flex-col items-center text-center gap-2">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <GraduationCap className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                  </div>
-                  <span className="font-medium text-sm text-foreground">Meus Cursos</span>
-                </div>
-              </button>
-            </div>
-
-            {/* Settings List */}
-            <div className="bg-card rounded-2xl border border-border/40 overflow-hidden divide-y divide-border/30">
-              <div className="flex items-center justify-between px-4 py-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-blue-500/5 flex items-center justify-center">
-                    <Bell className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <div>
-                    <span className="font-medium text-sm text-foreground block">Notificações</span>
-                    <span className="text-xs text-muted-foreground">Receber alertas de vendas</span>
-                  </div>
-                </div>
-                <Switch checked={pushEnabled} onCheckedChange={checked => {
-                  console.log('🔔 [Switch] onCheckedChange triggered with:', checked);
-                  handlePushToggle(checked);
-                }} />
-              </div>
-
-              <button onClick={() => {
+        return <div className="p-4 space-y-6 bg-background min-h-full">
+            {/* Profile Header - Clean iOS style */}
+            <div className="flex flex-col items-center pt-4">
+              <div className="relative cursor-pointer" onClick={async () => {
                 triggerHaptic('light');
-                const newTheme = isDark ? 'light' : 'dark';
-                setTheme(newTheme);
-              }} className="w-full flex items-center justify-between px-4 py-4 hover:bg-muted/50 transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500/20 to-violet-500/5 flex items-center justify-center">
-                    {isDark ? <Moon className="h-5 w-5 text-violet-600 dark:text-violet-400" /> : <Sun className="h-5 w-5 text-violet-600 dark:text-violet-400" />}
-                  </div>
-                  <div>
-                    <span className="font-medium text-sm text-foreground block">Aparência</span>
-                    <span className="text-xs text-muted-foreground">{isDark ? 'Modo escuro' : 'Modo claro'}</span>
-                  </div>
+                const photo = await pickPhoto();
+                if (photo && user) {
+                  toast({
+                    title: "Foto Selecionada",
+                    description: "Funcionalidade de upload em desenvolvimento"
+                  });
+                  triggerHaptic('success');
+                }
+              }}>
+                <Avatar className="w-24 h-24 ring-4 ring-muted/50">
+                  <AvatarImage src={profileAvatar} alt="Profile" />
+                  <AvatarFallback className="bg-muted text-2xl font-semibold text-muted-foreground">
+                    {(editingProfile.full_name || user?.email || 'U').charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="absolute bottom-0 right-0 bg-muted border-2 border-background rounded-full p-1.5">
+                  <Camera className="w-4 h-4 text-muted-foreground" />
                 </div>
-                <ChevronRight className="h-5 w-5 text-muted-foreground" />
-              </button>
+              </div>
+              
+              <h2 className="mt-4 font-semibold text-xl text-foreground">
+                {editingProfile.full_name || user?.email?.split('@')[0]}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {user?.email}
+              </p>
+              {currentLevel && (
+                <span className="mt-2 text-xs text-muted-foreground">{currentLevel.name}</span>
+              )}
             </div>
 
-            {/* Danger Zone */}
-            <div className="space-y-2">
-              <p className="text-xs font-medium text-muted-foreground px-1">Zona de Perigo</p>
-              <div className="bg-card rounded-2xl border border-border/40 overflow-hidden divide-y divide-border/30">
-                <button onClick={() => signOut()} className="w-full flex items-center justify-between px-4 py-4 hover:bg-orange-500/5 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-500/5 flex items-center justify-center">
-                      <LogOut className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+            {/* Settings Groups - iOS Style */}
+            <div className="space-y-6">
+              {/* Account Section */}
+              <div>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide px-4 mb-2">Conta</p>
+                <div className="bg-card rounded-xl border border-border/50 overflow-hidden divide-y divide-border/50">
+                  <button onClick={() => setShowEditProfile(true)} className="w-full flex items-center justify-between px-4 py-3.5 active:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <User className="h-5 w-5 text-muted-foreground" />
+                      <span className="text-[15px] text-foreground">Dados Pessoais</span>
                     </div>
-                    <span className="font-medium text-sm text-orange-600 dark:text-orange-400">Sair da conta</span>
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                </button>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground/50" />
+                  </button>
 
-                <button onClick={() => {
-                  if (window.confirm('Tem a certeza que deseja encerrar a sua conta? Esta ação é irreversível.')) {
-                    alert('Funcionalidade de encerramento de conta em desenvolvimento.');
-                  }
-                }} className="w-full flex items-center justify-between px-4 py-4 hover:bg-destructive/5 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-destructive/20 to-destructive/5 flex items-center justify-center">
-                      <Trash2 className="h-5 w-5 text-destructive" />
+                  <button onClick={() => setActiveTab('my-courses')} className="w-full flex items-center justify-between px-4 py-3.5 active:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <GraduationCap className="h-5 w-5 text-muted-foreground" />
+                      <span className="text-[15px] text-foreground">Meus Cursos</span>
                     </div>
-                    <span className="font-medium text-sm text-destructive">Encerrar Conta</span>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground/50" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Preferences Section */}
+              <div>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide px-4 mb-2">Preferências</p>
+                <div className="bg-card rounded-xl border border-border/50 overflow-hidden divide-y divide-border/50">
+                  <div className="flex items-center justify-between px-4 py-3.5">
+                    <div className="flex items-center gap-3">
+                      <Bell className="h-5 w-5 text-muted-foreground" />
+                      <span className="text-[15px] text-foreground">Notificações</span>
+                    </div>
+                    <Switch checked={pushEnabled} onCheckedChange={checked => {
+                      console.log('🔔 [Switch] onCheckedChange triggered with:', checked);
+                      handlePushToggle(checked);
+                    }} />
                   </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                </button>
+
+                  <button onClick={() => {
+                    triggerHaptic('light');
+                    const newTheme = isDark ? 'light' : 'dark';
+                    setTheme(newTheme);
+                  }} className="w-full flex items-center justify-between px-4 py-3.5 active:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-3">
+                      {isDark ? <Moon className="h-5 w-5 text-muted-foreground" /> : <Sun className="h-5 w-5 text-muted-foreground" />}
+                      <span className="text-[15px] text-foreground">Modo {isDark ? 'Escuro' : 'Claro'}</span>
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground/50" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Actions Section */}
+              <div>
+                <div className="bg-card rounded-xl border border-border/50 overflow-hidden divide-y divide-border/50">
+                  <button onClick={() => signOut()} className="w-full flex items-center justify-between px-4 py-3.5 active:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <LogOut className="h-5 w-5 text-muted-foreground" />
+                      <span className="text-[15px] text-foreground">Sair da Conta</span>
+                    </div>
+                  </button>
+
+                  <button onClick={() => {
+                    if (window.confirm('Tem a certeza que deseja encerrar a sua conta? Esta ação é irreversível.')) {
+                      alert('Funcionalidade de encerramento de conta em desenvolvimento.');
+                    }
+                  }} className="w-full flex items-center justify-between px-4 py-3.5 active:bg-destructive/5 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <Trash2 className="h-5 w-5 text-destructive/70" />
+                      <span className="text-[15px] text-destructive">Encerrar Conta</span>
+                    </div>
+                  </button>
+                </div>
               </div>
             </div>
 
-            {/* App Version & Logo */}
-            <div className="flex flex-col items-center gap-2 pt-6 pb-4">
-              <img src={kambafyIconGreen} alt="Logo" className="h-10 w-auto opacity-30" />
-              <span className="text-[11px] text-muted-foreground/60">Versão 1.1</span>
+            {/* Footer */}
+            <div className="flex flex-col items-center gap-1 pt-4 pb-8">
+              <img src={kambafyIconGreen} alt="Logo" className="h-8 w-auto opacity-20 grayscale" />
+              <span className="text-[11px] text-muted-foreground/50">Versão 1.1</span>
             </div>
           </div>;
       case 'sales-history':
