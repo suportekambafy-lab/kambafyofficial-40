@@ -337,9 +337,25 @@ const Checkout = () => {
   };
   const getDisplayPrice = useCallback((priceInKZ: number, isAlreadyConverted = false): string => {
     // Se já é um valor convertido (total calculado), apenas formatar
-    if (isAlreadyConverted && userCountry?.currency === 'EUR') {
-      const displayPrice = `€${priceInKZ.toFixed(2)}`;
-      console.log(`🚨 getDisplayPrice - VALOR JÁ CONVERTIDO: ${displayPrice}`);
+    if (isAlreadyConverted) {
+      if (userCountry?.currency === 'EUR') {
+        const displayPrice = `€${priceInKZ.toFixed(2)}`;
+        console.log(`🚨 getDisplayPrice - VALOR JÁ CONVERTIDO EUR: ${displayPrice}`);
+        return displayPrice;
+      }
+      if (userCountry?.currency === 'GBP') {
+        const displayPrice = `£${priceInKZ.toFixed(2)}`;
+        console.log(`🚨 getDisplayPrice - VALOR JÁ CONVERTIDO GBP: ${displayPrice}`);
+        return displayPrice;
+      }
+      if (userCountry?.currency === 'MZN') {
+        const displayPrice = `${priceInKZ.toFixed(2)} MZN`;
+        console.log(`🚨 getDisplayPrice - VALOR JÁ CONVERTIDO MZN: ${displayPrice}`);
+        return displayPrice;
+      }
+      // KZ ou outro
+      const displayPrice = `${parseFloat(priceInKZ.toString()).toLocaleString('pt-BR')} KZ`;
+      console.log(`🚨 getDisplayPrice - VALOR JÁ CONVERTIDO KZ: ${displayPrice}`);
       return displayPrice;
     }
 
@@ -352,7 +368,16 @@ const Checkout = () => {
     // SEMPRE usar preços personalizados se disponíveis para o país do usuário
     if (product?.custom_prices && userCountry?.code && product.custom_prices[userCountry.code] && priceInKZ === originalPriceKZ) {
       const customPrice = parseFloat(product.custom_prices[userCountry.code]);
-      const displayPrice = userCountry.currency === 'EUR' ? `€${customPrice.toFixed(2)}` : userCountry.currency === 'MZN' ? `${customPrice.toFixed(2)} MZN` : `${customPrice.toLocaleString()} KZ`;
+      let displayPrice: string;
+      if (userCountry.currency === 'EUR') {
+        displayPrice = `€${customPrice.toFixed(2)}`;
+      } else if (userCountry.currency === 'GBP') {
+        displayPrice = `£${customPrice.toFixed(2)}`;
+      } else if (userCountry.currency === 'MZN') {
+        displayPrice = `${customPrice.toFixed(2)} MZN`;
+      } else {
+        displayPrice = `${customPrice.toLocaleString()} KZ`;
+      }
       console.log(`🚨 getDisplayPrice - USANDO PREÇO PERSONALIZADO: ${priceInKZ} KZ -> ${displayPrice}`);
       return displayPrice;
     }
