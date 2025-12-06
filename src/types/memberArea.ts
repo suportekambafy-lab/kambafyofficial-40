@@ -68,6 +68,7 @@ export interface MemberArea {
   updated_at: string;
   user_id: string;
   hero_image_url?: string | null;
+  hero_video_url?: string | null;
   hero_title?: string | null;
   hero_description?: string | null;
   logo_url?: string | null;

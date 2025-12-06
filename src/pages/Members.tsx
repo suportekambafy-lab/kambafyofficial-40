@@ -50,6 +50,7 @@ interface CustomizationData {
   name: string;
   description: string;
   hero_image_url: string;
+  hero_video_url: string;
   hero_title: string;
   hero_description: string;
   logo_url: string;
@@ -98,6 +99,7 @@ export default function Members() {
     name: '',
     description: '',
     hero_image_url: '',
+    hero_video_url: '',
     hero_title: '',
     hero_description: '',
     logo_url: '',
@@ -216,6 +218,7 @@ export default function Members() {
         name: selectedArea.name || '',
         description: selectedArea.description || '',
         hero_image_url: selectedArea.hero_image_url || '',
+        hero_video_url: (selectedArea as any).hero_video_url || '',
         hero_title: selectedArea.hero_title || '',
         hero_description: selectedArea.hero_description || '',
         logo_url: selectedArea.logo_url || '',
@@ -236,6 +239,7 @@ export default function Members() {
         name: areaCustomizationData.name,
         description: areaCustomizationData.description,
         hero_image_url: areaCustomizationData.hero_image_url || null,
+        hero_video_url: areaCustomizationData.hero_video_url || null,
         hero_title: areaCustomizationData.hero_title || null,
         hero_description: areaCustomizationData.hero_description || null,
         logo_url: areaCustomizationData.logo_url || null,
@@ -1603,6 +1607,21 @@ export default function Members() {
                         }))} bucket="member-area-assets" folder={`${user?.id}/hero`} aspectRatio="16/9" />
                           <p className="text-xs text-muted-foreground">
                             Grande imagem de destaque no topo da área
+                          </p>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label>Vídeo de Capa (opcional)</Label>
+                          <Input 
+                            placeholder="URL do vídeo (ex: https://vz-xxx.b-cdn.net/xxx/play_720p.mp4)"
+                            value={areaCustomizationData.hero_video_url}
+                            onChange={(e) => setAreaCustomizationData(prev => ({
+                              ...prev,
+                              hero_video_url: e.target.value
+                            }))}
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Se preenchido, o vídeo será exibido em loop no topo da área (substitui a imagem de capa)
                           </p>
                         </div>
                       </div>
