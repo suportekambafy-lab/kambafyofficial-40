@@ -21,6 +21,7 @@ import CohortsManager from "@/components/members/CohortsManager";
 import { MemberAreaSettings } from '@/components/MemberAreaSettings';
 import MemberAreaPreview from "@/components/MemberAreaPreview";
 import { ImageUploader } from "@/components/ImageUploader";
+import { HeroVideoUploader } from "@/components/HeroVideoUploader";
 import { MemberAreaCreationForm } from "@/components/MemberAreaCreationForm";
 import { MemberAreaOffersManager } from "@/components/MemberAreaOffersManager";
 import { useNavigate } from "react-router-dom";
@@ -1610,20 +1611,14 @@ export default function Members() {
                           </p>
                         </div>
                         
-                        <div className="space-y-2">
-                          <Label>Vídeo de Capa (opcional)</Label>
-                          <Input 
-                            placeholder="URL do vídeo (ex: https://vz-xxx.b-cdn.net/xxx/play_720p.mp4)"
-                            value={areaCustomizationData.hero_video_url}
-                            onChange={(e) => setAreaCustomizationData(prev => ({
-                              ...prev,
-                              hero_video_url: e.target.value
-                            }))}
-                          />
-                          <p className="text-xs text-muted-foreground">
-                            Se preenchido, o vídeo será exibido em loop no topo da área (substitui a imagem de capa)
-                          </p>
-                        </div>
+                        <HeroVideoUploader
+                          value={areaCustomizationData.hero_video_url}
+                          onChange={(url) => setAreaCustomizationData(prev => ({
+                            ...prev,
+                            hero_video_url: url
+                          }))}
+                          userId={user?.id || ''}
+                        />
                       </div>
                     </CardContent>
                   </Card>
