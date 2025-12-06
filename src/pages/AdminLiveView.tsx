@@ -154,6 +154,9 @@ export default function AdminLiveView() {
         ? Math.round((totalSessions - yesterdaySessionCount) / yesterdaySessionCount * 100)
         : 0;
 
+      console.log('Active checkouts (last 10 min):', activeCheckouts?.length);
+      console.log('Today sessions:', totalSessions);
+      
       setMetrics({
         kambafyCommission: kambafyCommissionValue,
         activeVisitors: activeCheckouts?.length || 0,
@@ -368,40 +371,6 @@ export default function AdminLiveView() {
               <Card className="bg-white border-[hsl(var(--admin-border))]">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <DollarSign className="h-4 w-4 text-[hsl(var(--admin-primary))]" />
-                    <p className="text-sm text-[hsl(var(--admin-text-secondary))]">Comissão Kambafy</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {isInitialLoad ? (
-                      <Skeleton className="h-8 w-24" />
-                    ) : (
-                      <p className="text-xl font-bold text-green-600">
-                        {formatPriceForAdmin(metrics.kambafyCommission, 'KZ')}
-                      </p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-white border-[hsl(var(--admin-border))]">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Users className="h-4 w-4 text-cyan-500" />
-                    <p className="text-sm text-[hsl(var(--admin-text-secondary))]">Visitantes Agora</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <p className="text-xl font-bold text-[hsl(var(--admin-text))]">{metrics.activeVisitors}</p>
-                    {metrics.activeVisitors > 0 && <span className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* KPI Cards Row 2 */}
-            <div className="grid grid-cols-2 gap-4">
-              <Card className="bg-white border-[hsl(var(--admin-border))]">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 mb-2">
                     <DollarSign className="h-4 w-4 text-green-500" />
                     <p className="text-sm text-[hsl(var(--admin-text-secondary))]">Vendas Hoje</p>
                   </div>
@@ -416,13 +385,44 @@ export default function AdminLiveView() {
                   </div>
                 </CardContent>
               </Card>
-            </div>
 
-            {/* KPI Cards Row 3 */}
-            <div className="grid grid-cols-3 gap-4">
               <Card className="bg-white border-[hsl(var(--admin-border))]">
                 <CardContent className="p-4">
-                  <p className="text-sm text-[hsl(var(--admin-text-secondary))] mb-1">Sessões</p>
+                  <div className="flex items-center gap-2 mb-2">
+                    <DollarSign className="h-4 w-4 text-[hsl(var(--admin-primary))]" />
+                    <p className="text-sm text-[hsl(var(--admin-text-secondary))]">Comissão Kambafy</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {isInitialLoad ? (
+                      <Skeleton className="h-8 w-24" />
+                    ) : (
+                      <p className="text-xl font-bold text-green-600">
+                        {formatPriceForAdmin(metrics.kambafyCommission, 'KZ')}
+                      </p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* KPI Cards Row 2 */}
+            <div className="grid grid-cols-2 gap-4">
+              <Card className="bg-white border-[hsl(var(--admin-border))]">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Users className="h-4 w-4 text-cyan-500" />
+                    <p className="text-sm text-[hsl(var(--admin-text-secondary))]">Visitantes Agora</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <p className="text-xl font-bold text-[hsl(var(--admin-text))]">{metrics.activeVisitors}</p>
+                    {metrics.activeVisitors > 0 && <span className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-white border-[hsl(var(--admin-border))]">
+                <CardContent className="p-4">
+                  <p className="text-sm text-[hsl(var(--admin-text-secondary))] mb-1">Sessões Hoje</p>
                   <div className="flex items-center gap-2">
                     {isInitialLoad ? (
                       <Skeleton className="h-7 w-16" />
@@ -440,7 +440,10 @@ export default function AdminLiveView() {
                   </div>
                 </CardContent>
               </Card>
+            </div>
 
+            {/* KPI Cards Row 3 */}
+            <div className="grid grid-cols-2 gap-4">
               <Card className="bg-white border-[hsl(var(--admin-border))]">
                 <CardContent className="p-4">
                   <p className="text-sm text-[hsl(var(--admin-text-secondary))] mb-1">Pedidos Pagos</p>
