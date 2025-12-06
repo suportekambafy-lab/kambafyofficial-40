@@ -208,10 +208,10 @@ export const ProductCard = memo(({ product, onEdit, onShare, onDelete, onToggleS
                 )}
               </div>
               
-              {/* Second row - Share and Delete OR Request Revision */}
+              {/* Second row - Share and Delete OR Request Revision (only for Banido status) */}
               <div className="flex gap-2">
                 {product.status === 'Banido' && !product.revision_requested ? (
-                  // Produto banido - mostrar botão de solicitar revisão
+                  // Produto banido pelo admin - mostrar botão de solicitar revisão
                   <Button
                     variant="outline"
                     size="sm"
@@ -222,17 +222,17 @@ export const ProductCard = memo(({ product, onEdit, onShare, onDelete, onToggleS
                     <span>Solicitar Revisão</span>
                   </Button>
                 ) : (
-                  // Produto normal - mostrar botões padrão
+                  // Produto normal ou inativo pelo vendedor - mostrar botões padrão
                   <>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => onShare(product)}
                       className="flex-1 text-xs h-8"
-                      disabled={product.status === 'Rascunho'}
+                      disabled={product.status === 'Rascunho' || product.status === 'Inativo'}
                     >
                       <Share className="w-3 h-3 mr-1" />
-                      <span>{product.status === 'Rascunho' ? 'Indisponível' : 'Partilhar'}</span>
+                      <span>{(product.status === 'Rascunho' || product.status === 'Inativo') ? 'Indisponível' : 'Partilhar'}</span>
                     </Button>
                     <Button
                       variant="outline"
