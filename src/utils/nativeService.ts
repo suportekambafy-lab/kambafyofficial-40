@@ -34,9 +34,9 @@ export async function configureStatusBar(isDarkMode: boolean = false) {
       style: isDarkMode ? Style.Dark : Style.Light
     });
 
-    // Configurar cor de fundo (verde Kambafy)
+    // Configurar cor de fundo baseado no tema
     await StatusBar.setBackgroundColor({
-      color: isDarkMode ? '#1a1a1a' : '#10b981'
+      color: isDarkMode ? '#1a1d26' : '#ffffff'
     });
 
     // Sobrepor conteúdo web
