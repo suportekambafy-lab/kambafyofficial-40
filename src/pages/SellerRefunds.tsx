@@ -94,70 +94,69 @@ export default function SellerRefunds() {
   };
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold flex items-center gap-2 mb-3 text-foreground">
-          <AlertCircle className="h-8 w-8" />
+    <div className="container mx-auto p-4">
+      <div className="mb-6">
+        <h1 className="text-xl font-bold flex items-center gap-2 mb-2 text-foreground">
+          <AlertCircle className="h-5 w-5" />
           {t('refunds.title')}
         </h1>
-        <p className="text-muted-foreground text-lg mb-4">
+        <p className="text-muted-foreground text-sm mb-3">
           {t('refunds.subtitle')}
         </p>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-3 gap-3 mb-4">
           <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-yellow-100 rounded-lg">
-                  <Clock className="h-6 w-6 text-yellow-600" />
+            <CardContent className="p-3">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-yellow-100 rounded-md">
+                  <Clock className="h-4 w-4 text-yellow-600" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{pendingRefunds.length}</p>
-                  <p className="text-sm text-muted-foreground">Pendentes</p>
+                  <p className="text-lg font-bold">{pendingRefunds.length}</p>
+                  <p className="text-xs text-muted-foreground">Pendentes</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           
           <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-blue-100 rounded-lg">
-                  <MessageSquare className="h-6 w-6 text-blue-600" />
+            <CardContent className="p-3">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-blue-100 rounded-md">
+                  <MessageSquare className="h-4 w-4 text-blue-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Prazo de resposta</p>
-                  <p className="text-lg font-semibold">48h úteis</p>
+                  <p className="text-xs text-muted-foreground">Prazo</p>
+                  <p className="text-sm font-semibold">48h úteis</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           
           <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-red-100 rounded-lg">
-                  <AlertCircle className="h-6 w-6 text-red-600" />
+            <CardContent className="p-3">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-red-100 rounded-md">
+                  <AlertCircle className="h-4 w-4 text-red-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Impacto no saldo</p>
-                  <p className="text-lg font-semibold">Imediato</p>
+                  <p className="text-xs text-muted-foreground">Impacto</p>
+                  <p className="text-sm font-semibold">Imediato</p>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex gap-3">
-            <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-            <div className="text-sm text-blue-900">
-              <p className="font-semibold mb-1">Como funciona:</p>
-              <ul className="list-disc list-inside space-y-1 text-blue-800">
-                <li>Analise o motivo da solicitação antes de decidir</li>
-                <li>Ao aprovar, o valor é descontado automaticamente do seu saldo</li>
-                <li>Se rejeitar, explique o motivo para manter um bom relacionamento</li>
-                <li>O prazo máximo de resposta é de 7 dias corridos</li>
+        <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+          <div className="flex gap-2">
+            <AlertCircle className="h-4 w-4 text-blue-600 flex-shrink-0 mt-0.5" />
+            <div className="text-xs text-blue-900">
+              <p className="font-medium mb-1">Como funciona:</p>
+              <ul className="list-disc list-inside space-y-0.5 text-blue-800">
+                <li>Analise o motivo antes de decidir</li>
+                <li>Ao aprovar, o valor é descontado do seu saldo</li>
+                <li>Se rejeitar, explique o motivo</li>
               </ul>
             </div>
           </div>
@@ -167,81 +166,76 @@ export default function SellerRefunds() {
       {loading ? (
         <PageSkeleton variant="refunds" />
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-6">
           {/* Pendentes */}
           <div>
-            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-              <Clock className="h-5 w-5 text-yellow-600" />
+            <h2 className="text-base font-semibold mb-3 flex items-center gap-2">
+              <Clock className="h-4 w-4 text-yellow-600" />
               Solicitações Pendentes
             </h2>
             {pendingRefunds.length === 0 ? (
               <Card>
-                <CardContent className="py-8 text-center">
-                  <CheckCircle className="h-12 w-12 mx-auto mb-3 text-green-500" />
-                  <p className="text-muted-foreground">Nenhuma solicitação pendente</p>
+                <CardContent className="py-6 text-center">
+                  <CheckCircle className="h-8 w-8 mx-auto mb-2 text-green-500" />
+                  <p className="text-sm text-muted-foreground">Nenhuma solicitação pendente</p>
                 </CardContent>
               </Card>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {pendingRefunds.map((refund) => (
                   <Card key={refund.id} className="border-l-4 border-l-yellow-500">
-                    <CardContent className="p-6">
-                      <div className="flex justify-between items-start mb-4">
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start mb-3">
                         <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Clock className="h-5 w-5 text-yellow-600" />
-                            <h3 className="font-semibold text-lg">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Clock className="h-4 w-4 text-yellow-600" />
+                            <h3 className="font-medium text-sm">
                               Pedido: {refund.order_id}
                             </h3>
                             {getStatusBadge(refund.status)}
                           </div>
-                          <p className="text-sm text-muted-foreground mb-1">
+                          <p className="text-xs text-muted-foreground">
                             Produto: {refund.products?.name || 'N/A'}
                           </p>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-xs text-muted-foreground">
                             Cliente: {refund.buyer_email}
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="text-2xl font-bold text-red-600">
+                          <p className="text-lg font-bold text-red-600">
                             {refund.amount} {refund.currency}
                           </p>
-                          <p className="text-xs text-muted-foreground mt-1">
+                          <p className="text-xs text-muted-foreground">
                             {format(new Date(refund.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
                           </p>
                         </div>
                       </div>
 
-                      <div className="mb-4 p-4 bg-muted rounded-lg">
-                        <p className="text-sm font-medium mb-2 flex items-center gap-2">
-                          <MessageSquare className="h-4 w-4" />
-                          Motivo do Cliente:
+                      <div className="mb-3 p-2 bg-muted rounded-md">
+                        <p className="text-xs font-medium mb-1 flex items-center gap-1">
+                          <MessageSquare className="h-3 w-3" />
+                          Motivo:
                         </p>
-                        <p className="text-sm text-muted-foreground">{refund.reason}</p>
+                        <p className="text-xs text-muted-foreground">{refund.reason}</p>
                       </div>
 
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-                        <p className="text-sm text-yellow-800">
-                          <strong>Atenção:</strong> Ao aprovar, o valor de {refund.amount} {refund.currency} será 
-                          automaticamente descontado do seu saldo disponível.
-                        </p>
-                      </div>
-
-                      <div className="flex gap-3">
+                      <div className="flex gap-2">
                         <Button
+                          size="sm"
                           onClick={() => openDialog(refund, 'approve')}
-                          className="flex-1 bg-green-600 hover:bg-green-700"
+                          className="flex-1 bg-green-600 hover:bg-green-700 h-8 text-xs"
                         >
-                          <CheckCircle className="h-4 w-4 mr-2" />
-                          Aprovar Reembolso
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Aprovar
                         </Button>
                         <Button
+                          size="sm"
                           onClick={() => openDialog(refund, 'reject')}
                           variant="destructive"
-                          className="flex-1"
+                          className="flex-1 h-8 text-xs"
                         >
-                          <XCircle className="h-4 w-4 mr-2" />
-                          Rejeitar Pedido
+                          <XCircle className="h-3 w-3 mr-1" />
+                          Rejeitar
                         </Button>
                       </div>
                     </CardContent>
@@ -254,58 +248,42 @@ export default function SellerRefunds() {
           {/* Histórico */}
           {processedRefunds.length > 0 && (
             <div>
-              <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                <MessageSquare className="h-5 w-5 text-muted-foreground" />
+              <h2 className="text-base font-semibold mb-3 flex items-center gap-2">
+                <MessageSquare className="h-4 w-4 text-muted-foreground" />
                 Histórico de Reembolsos
               </h2>
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {processedRefunds.map((refund) => (
-                  <Card key={refund.id} className="border-l-4 border-l-muted">
-                    <CardContent className="p-4">
+                  <Card key={refund.id} className="border-l-2 border-l-muted">
+                    <CardContent className="p-3">
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
+                          <div className="flex items-center gap-2 mb-1">
                             {getStatusIcon(refund.status)}
-                            <h3 className="font-medium">
-                              Pedido: {refund.order_id}
-                            </h3>
+                            <span className="font-medium text-xs">
+                              {refund.order_id}
+                            </span>
                             {getStatusBadge(refund.status)}
                           </div>
-                          <p className="text-sm text-muted-foreground mb-1">
-                            Produto: {refund.products?.name || 'N/A'}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            Cliente: {refund.buyer_email}
+                          <p className="text-xs text-muted-foreground">
+                            {refund.products?.name || 'N/A'} • {refund.buyer_email}
                           </p>
                           
-                          <div className="mt-2 text-sm">
-                            <p className="text-muted-foreground">
-                              <span className="font-medium">Motivo:</span> {refund.reason}
-                            </p>
-                            {refund.seller_comment && (
-                              <p className="text-muted-foreground mt-1">
-                                <span className="font-medium">Seu comentário:</span> {refund.seller_comment}
-                              </p>
-                            )}
-                            {refund.admin_comment && (
-                              <p className="text-muted-foreground mt-1">
-                                <span className="font-medium">Comentário Admin:</span> {refund.admin_comment}
-                              </p>
-                            )}
-                          </div>
+                          {(refund.seller_comment || refund.admin_comment) && (
+                            <div className="mt-1 text-xs text-muted-foreground">
+                              {refund.seller_comment && (
+                                <p><span className="font-medium">Comentário:</span> {refund.seller_comment}</p>
+                              )}
+                            </div>
+                          )}
                         </div>
                         <div className="text-right">
-                          <p className="text-lg font-semibold">
+                          <p className="text-sm font-semibold">
                             {refund.amount} {refund.currency}
                           </p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {format(new Date(refund.created_at), "dd/MM/yyyy", { locale: ptBR })}
+                          <p className="text-xs text-muted-foreground">
+                            {format(new Date(refund.created_at), "dd/MM/yy", { locale: ptBR })}
                           </p>
-                          {refund.updated_at && refund.updated_at !== refund.created_at && (
-                            <p className="text-xs text-muted-foreground">
-                              Atualizado: {format(new Date(refund.updated_at), "dd/MM/yyyy", { locale: ptBR })}
-                            </p>
-                          )}
                         </div>
                       </div>
                     </CardContent>
@@ -322,45 +300,44 @@ export default function SellerRefunds() {
         setAction(null);
         setComment('');
       }}>
-        <DialogContent>
+        <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="text-base">
               {action === 'approve' ? 'Aprovar Reembolso' : 'Rejeitar Reembolso'}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
+          <div className="space-y-3 py-2">
             {action === 'approve' && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <p className="text-sm text-red-800">
-                  <strong>Confirmação Necessária:</strong><br />
-                  O valor de <strong>{selectedRefund?.amount} {selectedRefund?.currency}</strong> será 
-                  descontado do seu saldo imediatamente após aprovação.
+              <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                <p className="text-xs text-red-800">
+                  <strong>Atenção:</strong> O valor de <strong>{selectedRefund?.amount} {selectedRefund?.currency}</strong> será descontado do seu saldo.
                 </p>
               </div>
             )}
 
-            <div className="space-y-2">
-              <Label htmlFor="comment">
+            <div className="space-y-1">
+              <Label htmlFor="comment" className="text-sm">
                 Comentário {action === 'reject' ? '(obrigatório)' : '(opcional)'}
               </Label>
               <Textarea
                 id="comment"
                 placeholder={
                   action === 'approve' 
-                    ? "Adicione um comentário opcional..." 
-                    : "Explique o motivo da rejeição..."
+                    ? "Comentário opcional..." 
+                    : "Motivo da rejeição..."
                 }
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
-                rows={4}
-                className="resize-none"
+                rows={3}
+                className="resize-none text-sm"
               />
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="gap-2">
             <Button 
+              size="sm"
               variant="outline" 
               onClick={() => {
                 setSelectedRefund(null);
@@ -372,11 +349,12 @@ export default function SellerRefunds() {
               Cancelar
             </Button>
             <Button
+              size="sm"
               onClick={handleProcess}
               disabled={processing || (action === 'reject' && !comment.trim())}
               variant={action === 'approve' ? 'default' : 'destructive'}
             >
-              {processing ? 'Processando...' : action === 'approve' ? 'Confirmar Aprovação' : 'Confirmar Rejeição'}
+              {processing ? 'Processando...' : 'Confirmar'}
             </Button>
           </DialogFooter>
         </DialogContent>
