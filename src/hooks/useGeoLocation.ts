@@ -213,7 +213,14 @@ export const useGeoLocation = () => {
     }
     
     const convertedValue = priceInKZ * country.exchangeRate;
-    return Math.round(convertedValue * 100) / 100;
+    const roundedValue = Math.round(convertedValue * 100) / 100;
+    
+    // Garantir mínimo de 1 para GBP
+    if (country.currency === 'GBP' && roundedValue < 1) {
+      return 1;
+    }
+    
+    return roundedValue;
   };
 
   const formatPrice = (priceInKZ: number, targetCountry?: CountryInfo, customPrices?: Record<string, string>): string => {
