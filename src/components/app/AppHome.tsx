@@ -1410,7 +1410,7 @@ export function AppHome() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
   return <div className={isDark ? 'dark' : ''}>
-      <div className="min-h-screen bg-white dark:bg-background pb-28 pt-0 overflow-x-hidden">
+      <div className="min-h-screen bg-white dark:bg-background overflow-x-hidden">
         {/* Fixed Header - Similar to Landing */}
         <header className="fixed top-0 left-0 right-0 z-50">
         <nav className="px-2 pt-2">
@@ -1440,7 +1440,7 @@ export function AppHome() {
       </header>
 
       {/* Content with padding for fixed header and bottom nav */}
-      <div className="pt-20 pb-28 min-h-screen">
+      <div className="pt-20 pb-24">
         {/* Offline Banner */}
         {!isOnline && <div className="sticky top-20 z-10 mx-4 mb-4 bg-destructive/90 backdrop-blur-md text-destructive-foreground px-4 py-3 rounded-lg shadow-lg flex items-center gap-3">
             <WifiOff className="h-5 w-5 flex-shrink-0" />
