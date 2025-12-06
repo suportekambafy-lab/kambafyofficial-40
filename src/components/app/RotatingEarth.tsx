@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react"
 import * as d3 from "d3"
-import { Plus, Minus } from "lucide-react"
+import { Plus, Minus, Pause, Play } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface SessionLocation {
@@ -103,9 +103,11 @@ export default function RotatingEarth({
   const [isDarkMode, setIsDarkMode] = useState(false)
   const [tooltip, setTooltip] = useState<{ x: number; y: number; country: string; count: number; type: 'sale' | 'visitor' } | null>(null)
   const [zoomLevel, setZoomLevel] = useState(1)
+  const [isPaused, setIsPaused] = useState(false)
   const markersRef = useRef<Array<{ x: number; y: number; country: string; count: number; size: number; type: 'sale' | 'visitor' }>>([]);
   const projectionRef = useRef<d3.GeoProjection | null>(null)
   const renderRef = useRef<(() => void) | null>(null)
+  const autoRotateRef = useRef(true)
   
   // Store locations in refs to avoid re-running main effect
   const activeLocationsRef = useRef(activeLocations);
@@ -430,11 +432,10 @@ export default function RotatingEarth({
     }
 
     const rotation: [number, number, number] = [0, -10, 0]
-    let autoRotate = true
     const rotationSpeed = 0.3
 
     const rotate = () => {
-      if (autoRotate) {
+      if (autoRotateRef.current && !isPaused) {
         rotation[0] += rotationSpeed
         projection.rotate(rotation)
         render()
@@ -444,7 +445,7 @@ export default function RotatingEarth({
     const rotationTimer = d3.timer(rotate)
 
     const handleMouseDown = (event: MouseEvent) => {
-      autoRotate = false
+      autoRotateRef.current = false
       const startX = event.clientX
       const startY = event.clientY
       const startRotation: [number, number, number] = [...rotation]
@@ -467,7 +468,7 @@ export default function RotatingEarth({
         document.removeEventListener("mouseup", handleMouseUp)
 
         setTimeout(() => {
-          autoRotate = true
+          autoRotateRef.current = true
         }, 2000)
       }
 
@@ -477,7 +478,7 @@ export default function RotatingEarth({
 
     const handleTouchStart = (event: TouchEvent) => {
       if (event.touches.length !== 1) return
-      autoRotate = false
+      autoRotateRef.current = false
       const touch = event.touches[0]
       const startX = touch.clientX
       const startY = touch.clientY
@@ -503,7 +504,7 @@ export default function RotatingEarth({
         document.removeEventListener("touchend", handleTouchEnd)
 
         setTimeout(() => {
-          autoRotate = true
+          autoRotateRef.current = true
         }, 2000)
       }
 
@@ -542,7 +543,7 @@ export default function RotatingEarth({
       canvas.removeEventListener("touchstart", handleTouchStart)
       canvas.removeEventListener("click", handleClick)
     }
-  }, [width, height, isDarkMode, zoomLevel]) // Removed activeLocations and visitorLocations from deps
+  }, [width, height, isDarkMode, zoomLevel, isPaused]) // Removed activeLocations and visitorLocations from deps
 
   if (error) {
     return (
@@ -557,7 +558,11 @@ export default function RotatingEarth({
   }
 
   const handleZoomOut = () => {
-    setZoomLevel(prev => Math.max(prev - 0.2, 0.6))
+    setZoomLevel(prev => Math.max(prev - 0.2, 1)) // Minimum is 1 (default)
+  }
+
+  const handleTogglePause = () => {
+    setIsPaused(prev => !prev)
   }
 
   return (
@@ -591,8 +596,17 @@ export default function RotatingEarth({
           size="icon"
           className="h-9 w-9 bg-background/95 backdrop-blur-sm border-border shadow-lg"
           onClick={handleZoomOut}
+          disabled={zoomLevel <= 1}
         >
           <Minus className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-9 w-9 bg-background/95 backdrop-blur-sm border-border shadow-lg"
+          onClick={handleTogglePause}
+        >
+          {isPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
         </Button>
       </div>
 
