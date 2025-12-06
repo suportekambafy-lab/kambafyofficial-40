@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
-import { Home, BarChart3, Package, User, TrendingUp, LayoutDashboard, LogOut, ChevronLeft, ShoppingCart, Settings, Bell, Trash2, Info, ChevronRight, Wallet, ArrowDownToLine, Sun, Moon, Menu, X, Calendar as CalendarIcon, Camera, WifiOff, GraduationCap } from 'lucide-react';
+import { Home, BarChart3, Package, User, TrendingUp, LayoutDashboard, LogOut, ChevronLeft, ShoppingCart, Settings, Bell, Trash2, Info, ChevronRight, Wallet, ArrowDownToLine, Sun, Moon, Menu, X, Calendar as CalendarIcon, Camera, WifiOff, GraduationCap, Copy } from 'lucide-react';
 import kambafyIconGreen from '@/assets/kambafy-icon-green.png';
 import { useSellerTheme } from '@/hooks/useSellerTheme';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
@@ -922,41 +922,49 @@ export function AppHome() {
                   Use a versão desktop para criar produtos.
                 </p>
               </div> : <div className="space-y-2">
-                {products.map(product => <div key={product.id} className="bg-card rounded-xl border border-border/40 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+                {products.map(product => <div key={product.id} className="bg-card rounded-xl border border-border/50 overflow-hidden">
                     <div className="p-3">
                       <div className="flex gap-3">
                         {/* Product Image */}
-                        <div className="relative flex-shrink-0">
-                          {product.cover ? <img src={product.cover} alt={product.name} className="w-16 h-16 rounded-lg object-cover" /> : <div className="w-16 h-16 rounded-lg bg-primary/10 flex items-center justify-center">
-                              <Package className="h-6 w-6 text-primary" />
+                        <div className="flex-shrink-0">
+                          {product.cover ? <img src={product.cover} alt={product.name} className="w-14 h-14 rounded-lg object-cover" /> : <div className="w-14 h-14 rounded-lg bg-muted flex items-center justify-center">
+                              <Package className="h-5 w-5 text-muted-foreground" />
                             </div>}
                         </div>
 
                         {/* Product Info */}
-                        <div className="flex-1 min-w-0 flex flex-col justify-between">
-                          <div>
-                            <h3 className="font-semibold text-sm text-foreground line-clamp-1 mb-1">
-                              {product.name}
-                            </h3>
-                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${product.status === 'Ativo' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'}`}>
-                              {product.status}
-                            </span>
-                          </div>
-
-                          {/* Price and Sales */}
-                          <div className="flex items-center justify-between pt-2 mt-2 border-t border-border/30">
-                            <div>
-                              <p className="text-[10px] text-muted-foreground">Preço</p>
-                              <p className="font-bold text-sm text-foreground">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <h3 className="font-medium text-[15px] text-foreground truncate">
+                                {product.name}
+                              </h3>
+                              <p className="text-sm text-muted-foreground">
                                 {formatPriceForSeller(parseFloat(product.price || '0'), 'KZ')}
                               </p>
                             </div>
-                            <div className="text-right">
-                              <p className="text-[10px] text-muted-foreground">Vendas</p>
-                              <p className="font-bold text-sm text-primary">
-                                {product.sales || 0}
-                              </p>
-                            </div>
+                            <button 
+                              onClick={() => {
+                                const baseUrl = window.location.origin;
+                                const checkoutUrl = `${baseUrl}/checkout/${product.id}`;
+                                navigator.clipboard.writeText(checkoutUrl);
+                                triggerHaptic('light');
+                                toast({
+                                  title: "Link copiado",
+                                  description: "O link do checkout foi copiado"
+                                });
+                              }}
+                              className="p-2 -mr-1 rounded-lg active:bg-muted transition-colors"
+                            >
+                              <Copy className="h-5 w-5 text-muted-foreground" />
+                            </button>
+                          </div>
+                          <div className="flex items-center gap-3 mt-2">
+                            <span className={`text-xs ${product.status === 'Ativo' ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}`}>
+                              {product.status}
+                            </span>
+                            <span className="text-xs text-muted-foreground">•</span>
+                            <span className="text-xs text-muted-foreground">{product.sales || 0} vendas</span>
                           </div>
                         </div>
                       </div>
