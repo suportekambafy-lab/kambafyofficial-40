@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { Home, BarChart3, Package, User, TrendingUp, LayoutDashboard, LogOut, ChevronLeft, ShoppingCart, Settings, Bell, Trash2, Info, ChevronRight, Wallet, ArrowDownToLine, Sun, Moon, Menu, X, Calendar as CalendarIcon, Camera, WifiOff, GraduationCap, Copy, Check } from 'lucide-react';
 import kambafyIconGreen from '@/assets/kambafy-icon-green.png';
+import personPhoneSmiling from '@/assets/person-phone-smiling.png';
 import { useSellerTheme } from '@/hooks/useSellerTheme';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { countTotalSales, countOrderItems } from '@/utils/orderUtils';
@@ -1417,7 +1418,7 @@ export function AppHome() {
                 </div>
                 <div className="relative shrink-0">
                   <img 
-                    src="/lovable-uploads/d78cb5d7-0aa7-4ec7-8dc1-e2bbca3e6f57.png" 
+                    src={personPhoneSmiling}
                     alt="Profissional com telefone"
                     className="w-24 h-24 object-cover object-top rounded-xl border-2 border-primary-foreground/20"
                   />
