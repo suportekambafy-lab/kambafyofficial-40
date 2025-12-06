@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingBag, AlertCircle, Clock } from 'lucide-react';
+import { ShoppingBag, AlertCircle, Clock, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { RefundRequestDialog } from '@/components/refunds/RefundRequestDialog';
@@ -16,51 +16,31 @@ export default function MyPurchases() {
   const [purchases, setPurchases] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [isReopening, setIsReopening] = useState(false);
 
-  // ✅ Verificação automática de OneSignal (área de compras)
   useOneSignalAutoLink(user?.email, user?.id);
 
   const loadPurchases = async () => {
     if (!user?.email) {
-      console.warn('MyPurchases: User or email not available');
       setLoading(false);
       return;
     }
 
     try {
       setLoading(true);
-      console.log('🛒 MyPurchases: Loading purchases for', user.email);
       
       const { data, error } = await supabase
         .from('orders')
         .select(`
           *,
           products(name),
-          refund_requests!refund_requests_order_id_fkey(id, status, created_at)
+          refund_requests!refund_requests_order_id_fkey(id, status, reason, seller_comment, admin_comment, created_at, updated_at)
         `)
         .eq('customer_email', user.email)
         .eq('status', 'completed')
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('❌ MyPurchases: Error loading purchases', error);
-        throw error;
-      }
-
-      console.log('✅ MyPurchases: Loaded', data?.length || 0, 'purchases');
-      console.log('🔍 MyPurchases: Dados das compras:', data);
-      
-      // Debug: verificar campos importantes para reembolso
-      data?.forEach((order, idx) => {
-        console.log(`📦 Compra ${idx + 1}:`, {
-          id: order.id,
-          has_active_refund: order.has_active_refund,
-          refund_deadline: order.refund_deadline,
-          refund_requests: order.refund_requests,
-          created_at: order.created_at
-        });
-      });
-      
+      if (error) throw error;
       setPurchases(data || []);
     } catch (error) {
       console.error('Error loading purchases:', error);
@@ -74,48 +54,74 @@ export default function MyPurchases() {
   }, [user]);
 
   const canRequestRefund = (order: any) => {
-    console.log('🔍 Verificando se pode solicitar reembolso:', {
-      order_id: order.id,
-      has_active_refund: order.has_active_refund,
-      refund_deadline: order.refund_deadline,
-      deadline_passou: order.refund_deadline ? new Date(order.refund_deadline) > new Date() : false
-    });
-    
-    if (order.has_active_refund) {
-      console.log('❌ Já tem reembolso ativo');
+    const refund = order.refund_requests?.[0];
+    // Se tem reembolso pendente ou aprovado, não pode solicitar
+    if (refund && ['pending', 'approved', 'approved_by_seller', 'approved_by_admin'].includes(refund.status)) {
       return false;
     }
-    if (!order.refund_deadline) {
-      console.log('❌ Sem refund_deadline definido');
+    if (!order.refund_deadline) return false;
+    return new Date(order.refund_deadline) > new Date();
+  };
+
+  const canReopenRefund = (order: any) => {
+    const refund = order.refund_requests?.[0];
+    if (!refund) return false;
+    // Pode reabrir se foi rejeitado e ainda está no prazo
+    if (!['rejected', 'rejected_by_seller', 'rejected_by_admin', 'cancelled'].includes(refund.status)) {
       return false;
     }
-    const canRefund = new Date(order.refund_deadline) > new Date();
-    console.log(canRefund ? '✅ Pode solicitar reembolso' : '❌ Prazo expirado');
-    return canRefund;
+    if (!order.refund_deadline) return false;
+    return new Date(order.refund_deadline) > new Date();
   };
 
   const getDaysLeft = (deadline: string) => {
     return differenceInDays(new Date(deadline), new Date());
   };
 
+  const getStatusInfo = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return { label: 'Pendente', variant: 'outline' as const, color: 'text-yellow-600', icon: Clock };
+      case 'approved':
+      case 'approved_by_seller':
+        return { label: 'Aprovado', variant: 'outline' as const, color: 'text-green-600', icon: CheckCircle };
+      case 'approved_by_admin':
+        return { label: 'Aprovado (Admin)', variant: 'outline' as const, color: 'text-green-600', icon: CheckCircle };
+      case 'rejected':
+      case 'rejected_by_seller':
+        return { label: 'Rejeitado', variant: 'outline' as const, color: 'text-red-600', icon: XCircle };
+      case 'rejected_by_admin':
+        return { label: 'Rejeitado (Admin)', variant: 'outline' as const, color: 'text-red-600', icon: XCircle };
+      case 'cancelled':
+        return { label: 'Cancelado', variant: 'outline' as const, color: 'text-gray-600', icon: XCircle };
+      default:
+        return { label: status, variant: 'outline' as const, color: 'text-muted-foreground', icon: Clock };
+    }
+  };
+
+  const handleOpenRefundDialog = (order: any, reopen: boolean = false) => {
+    setIsReopening(reopen);
+    setSelectedOrder(order);
+  };
+
   return (
-    <div className="container mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold flex items-center gap-2 mb-3">
-          <ShoppingBag className="h-8 w-8" />
+    <div className="container mx-auto p-4">
+      <div className="mb-6">
+        <h1 className="text-xl font-bold flex items-center gap-2 mb-2">
+          <ShoppingBag className="h-5 w-5" />
           Minhas Compras
         </h1>
-        <p className="text-muted-foreground text-lg mb-2">
-          Visualize todas as suas compras e gerencie solicitações de reembolso
+        <p className="text-muted-foreground text-sm mb-3">
+          Gerencie suas compras e solicitações de reembolso
         </p>
-        <div className="flex flex-col sm:flex-row gap-2 mt-4">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 px-4 py-2 rounded-lg">
-            <AlertCircle className="h-4 w-4" />
-            <span>Prazo: 7 dias corridos após a compra</span>
+        <div className="flex flex-wrap gap-2">
+          <div className="flex items-center gap-1 text-xs text-muted-foreground bg-muted/50 px-3 py-1.5 rounded-md">
+            <AlertCircle className="h-3 w-3" />
+            <span>Prazo: 7 dias</span>
           </div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 px-4 py-2 rounded-lg">
-            <Clock className="h-4 w-4" />
-            <span>Processamento: até 48 horas úteis</span>
+          <div className="flex items-center gap-1 text-xs text-muted-foreground bg-muted/50 px-3 py-1.5 rounded-md">
+            <Clock className="h-3 w-3" />
+            <span>Processamento: 48h</span>
           </div>
         </div>
       </div>
@@ -124,76 +130,109 @@ export default function MyPurchases() {
         <PageSkeleton variant="list" />
       ) : purchases.length === 0 ? (
         <Card>
-          <CardContent className="py-12 text-center">
-            <ShoppingBag className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-            <p className="text-muted-foreground">Você ainda não fez nenhuma compra</p>
+          <CardContent className="py-8 text-center">
+            <ShoppingBag className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">Nenhuma compra encontrada</p>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4">
+        <div className="grid gap-3">
           {purchases.map((order) => {
-            const activeRefund = order.refund_requests?.[0];
+            const refund = order.refund_requests?.[0];
             const canRefund = canRequestRefund(order);
+            const canReopen = canReopenRefund(order);
             const daysLeft = order.refund_deadline ? getDaysLeft(order.refund_deadline) : 0;
 
             return (
-              <Card key={order.id} className="hover:shadow-lg transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex flex-col md:flex-row gap-4">
-                    <div className="w-full md:w-32 h-32 bg-muted rounded-lg overflow-hidden flex-shrink-0">
+              <Card key={order.id}>
+                <CardContent className="p-4">
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="w-full sm:w-20 h-20 bg-muted rounded-md overflow-hidden flex-shrink-0">
                       <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">
-                        <ShoppingBag className="h-12 w-12 text-primary" />
+                        <ShoppingBag className="h-8 w-8 text-primary" />
                       </div>
                     </div>
 
-                    <div className="flex-1">
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <h3 className="font-semibold text-lg">{order.products?.name || 'Produto'}</h3>
-                          <p className="text-sm text-muted-foreground">Pedido: {order.order_id}</p>
-                          <p className="text-sm text-muted-foreground">
-                            Comprado em: {format(new Date(order.created_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start gap-2 mb-1">
+                        <div className="min-w-0">
+                          <h3 className="font-medium text-sm truncate">{order.products?.name || 'Produto'}</h3>
+                          <p className="text-xs text-muted-foreground">Pedido: {order.order_id}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {format(new Date(order.created_at), "dd/MM/yyyy", { locale: ptBR })}
                           </p>
                         </div>
-                        <div className="text-right">
-                          <p className="text-2xl font-bold">{order.amount} {order.currency}</p>
-                          <Badge variant="default">Pago</Badge>
+                        <div className="text-right flex-shrink-0">
+                          <p className="text-base font-bold">{order.amount} {order.currency}</p>
+                          <Badge variant="default" className="text-xs">Pago</Badge>
                         </div>
                       </div>
 
-                      {activeRefund && (
-                        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                          <div className="flex items-center gap-2">
-                            <AlertCircle className="h-5 w-5 text-blue-600" />
-                            <span className="font-medium text-blue-900">
-                              Reembolso em andamento
-                            </span>
-                            <Badge variant="outline">{activeRefund.status}</Badge>
+                      {/* Status do Reembolso */}
+                      {refund && (
+                        <div className="mt-2 p-2 bg-muted/50 rounded-md">
+                          <div className="flex items-center gap-2 mb-1">
+                            {(() => {
+                              const status = getStatusInfo(refund.status);
+                              const IconComponent = status.icon;
+                              return (
+                                <>
+                                  <IconComponent className={`h-4 w-4 ${status.color}`} />
+                                  <span className={`text-xs font-medium ${status.color}`}>
+                                    Reembolso: {status.label}
+                                  </span>
+                                </>
+                              );
+                            })()}
                           </div>
-                          <p className="text-sm text-blue-700 mt-1">
-                            Solicitado em: {format(new Date(activeRefund.created_at), "dd/MM/yyyy HH:mm")}
-                          </p>
+                          
+                          {refund.seller_comment && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              <span className="font-medium">Vendedor:</span> {refund.seller_comment}
+                            </p>
+                          )}
+                          
+                          {refund.admin_comment && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              <span className="font-medium">Admin:</span> {refund.admin_comment}
+                            </p>
+                          )}
+
+                          {/* Botão para solicitar novamente se rejeitado */}
+                          {canReopen && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="mt-2 h-7 text-xs"
+                              onClick={() => handleOpenRefundDialog(order, true)}
+                            >
+                              <RefreshCw className="h-3 w-3 mr-1" />
+                              Solicitar Novamente
+                            </Button>
+                          )}
                         </div>
                       )}
 
-                      {!activeRefund && (
-                        <div className="mt-4 flex items-center justify-between">
+                      {/* Opção de solicitar reembolso (primeira vez) */}
+                      {!refund && (
+                        <div className="mt-2 flex items-center justify-between">
                           {canRefund ? (
                             <>
-                              <p className="text-sm text-muted-foreground">
-                                {daysLeft > 0 && `${daysLeft} ${daysLeft === 1 ? 'dia' : 'dias'} restantes para solicitar reembolso`}
+                              <p className="text-xs text-muted-foreground">
+                                {daysLeft > 0 && `${daysLeft} dia${daysLeft !== 1 ? 's' : ''} restante${daysLeft !== 1 ? 's' : ''}`}
                               </p>
                               <Button
                                 variant="destructive"
                                 size="sm"
-                                onClick={() => setSelectedOrder(order)}
+                                className="h-7 text-xs"
+                                onClick={() => handleOpenRefundDialog(order, false)}
                               >
                                 Solicitar Reembolso
                               </Button>
                             </>
                           ) : (
-                            <p className="text-sm text-muted-foreground italic">
-                              Prazo de 7 dias para reembolso expirado
+                            <p className="text-xs text-muted-foreground italic">
+                              Prazo de reembolso expirado
                             </p>
                           )}
                         </div>
@@ -210,9 +249,13 @@ export default function MyPurchases() {
       {selectedOrder && (
         <RefundRequestDialog
           open={!!selectedOrder}
-          onClose={() => setSelectedOrder(null)}
+          onClose={() => {
+            setSelectedOrder(null);
+            setIsReopening(false);
+          }}
           order={selectedOrder}
           onSuccess={loadPurchases}
+          isReopen={isReopening}
         />
       )}
     </div>

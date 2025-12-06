@@ -91,6 +91,33 @@ export function useRefunds(userType: 'buyer' | 'seller' | 'admin') {
     }
   };
 
+  const reopenRefund = async (orderId: string, reason: string) => {
+    try {
+      const { data, error } = await supabase.rpc('reopen_refund_request', {
+        p_order_id: orderId,
+        p_reason: reason
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Solicitação Reenviada",
+        description: "Sua nova solicitação foi enviada ao vendedor",
+      });
+
+      await loadRefunds();
+      return { success: true, refundId: data };
+    } catch (error: any) {
+      console.error('Error reopening refund:', error);
+      toast({
+        title: "Erro",
+        description: error.message || "Não foi possível reenviar a solicitação",
+        variant: "destructive"
+      });
+      return { success: false };
+    }
+  };
+
   const sellerProcessRefund = async (refundId: string, action: 'approve' | 'reject', comment?: string) => {
     try {
       const { data, error } = await supabase.rpc('seller_process_refund', {
@@ -179,6 +206,7 @@ export function useRefunds(userType: 'buyer' | 'seller' | 'admin') {
     refunds,
     loading,
     createRefund,
+    reopenRefund,
     sellerProcessRefund,
     adminProcessRefund,
     loadRefunds
