@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { TrendingDown, TrendingUp, Search, Radio, Users, ShoppingCart, DollarSign, Package } from 'lucide-react';
-import { formatPriceForSeller } from '@/utils/priceFormatting';
+import { formatPriceForAdmin } from '@/utils/priceFormatting';
 import RotatingEarth from '@/components/app/RotatingEarth';
 import { Progress } from '@/components/ui/progress';
 import { AdminHeader } from '@/components/admin/AdminHeader';
@@ -106,10 +106,10 @@ export default function AdminLiveView() {
       const pendingOrders = allTodayOrders.filter(o => o.status === 'pending' || o.status === 'Pendente');
       const recentPending = (recentOrders || []).filter(o => o.status === 'pending' || o.status === 'Pendente');
 
-      // Calculate total sales value
+      // Calculate total sales value (full amount with platform fee for admin)
       let totalSalesValue = 0;
       paidOrders.forEach(order => {
-        let amount = parseFloat(order.seller_commission?.toString() || order.amount || '0');
+        let amount = parseFloat(order.amount || '0');
         if (order.currency && order.currency !== 'KZ') {
           const exchangeRates: Record<string, number> = {
             'EUR': 1053,
@@ -231,7 +231,7 @@ export default function AdminLiveView() {
           };
         }
         
-        let amount = parseFloat(order.seller_commission?.toString() || order.amount || '0');
+        let amount = parseFloat(order.amount || '0');
         if (order.currency && order.currency !== 'KZ') {
           const exchangeRates: Record<string, number> = {
             'EUR': 1053,
@@ -370,7 +370,7 @@ export default function AdminLiveView() {
                       <Skeleton className="h-8 w-24" />
                     ) : (
                       <p className="text-xl font-bold text-[hsl(var(--admin-text))]">
-                        {formatPriceForSeller(metrics.totalSales, 'KZ')}
+                        {formatPriceForAdmin(metrics.totalSales, 'KZ')}
                       </p>
                     )}
                   </div>
@@ -494,7 +494,7 @@ export default function AdminLiveView() {
                         </div>
                         <div className="flex items-center gap-4">
                           <span className="text-sm text-[hsl(var(--admin-text-secondary))]">{seller.sales} vendas</span>
-                          <span className="text-sm font-medium text-[hsl(var(--admin-text))]">{formatPriceForSeller(seller.revenue, 'KZ')}</span>
+                          <span className="text-sm font-medium text-[hsl(var(--admin-text))]">{formatPriceForAdmin(seller.revenue, 'KZ')}</span>
                         </div>
                       </div>
                     ))}
