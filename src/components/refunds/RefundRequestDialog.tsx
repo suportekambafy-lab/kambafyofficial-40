@@ -11,17 +11,18 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useRefunds } from '@/hooks/useRefunds';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, RefreshCw } from 'lucide-react';
 
 interface Props {
   open: boolean;
   onClose: () => void;
   order: any;
   onSuccess: () => void;
+  isReopen?: boolean;
 }
 
-export function RefundRequestDialog({ open, onClose, order, onSuccess }: Props) {
-  const { createRefund } = useRefunds('buyer');
+export function RefundRequestDialog({ open, onClose, order, onSuccess, isReopen = false }: Props) {
+  const { createRefund, reopenRefund } = useRefunds('buyer');
   const [reason, setReason] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -31,7 +32,14 @@ export function RefundRequestDialog({ open, onClose, order, onSuccess }: Props) 
     }
 
     setLoading(true);
-    const result = await createRefund(order.order_id, reason);
+    
+    let result;
+    if (isReopen) {
+      result = await reopenRefund(order.order_id, reason);
+    } else {
+      result = await createRefund(order.order_id, reason);
+    }
+    
     setLoading(false);
 
     if (result.success) {
@@ -43,49 +51,55 @@ export function RefundRequestDialog({ open, onClose, order, onSuccess }: Props) 
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>Solicitar Reembolso</DialogTitle>
-          <DialogDescription>
-            Descreva o motivo da solicitação de reembolso para o pedido {order.order_id}
+          <DialogTitle className="text-base flex items-center gap-2">
+            {isReopen && <RefreshCw className="h-4 w-4" />}
+            {isReopen ? 'Solicitar Novamente' : 'Solicitar Reembolso'}
+          </DialogTitle>
+          <DialogDescription className="text-xs">
+            {isReopen 
+              ? `Envie uma nova solicitação para o pedido ${order.order_id}`
+              : `Descreva o motivo para o pedido ${order.order_id}`
+            }
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex gap-3">
-            <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-            <div className="text-sm text-yellow-800">
-              <p className="font-medium mb-1">Atenção</p>
-              <p>O vendedor será notificado e terá que aprovar sua solicitação. Após aprovação, o valor será automaticamente creditado na sua conta.</p>
-            </div>
+        <div className="space-y-3 py-2">
+          <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 flex gap-2">
+            <AlertCircle className="h-4 w-4 text-yellow-600 flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-yellow-800">
+              {isReopen 
+                ? 'O vendedor será notificado novamente sobre sua solicitação.'
+                : 'O vendedor será notificado e precisará aprovar sua solicitação.'
+              }
+            </p>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="reason">Motivo do Reembolso *</Label>
+          <div className="space-y-1">
+            <Label htmlFor="reason" className="text-sm">Motivo *</Label>
             <Textarea
               id="reason"
-              placeholder="Ex: O produto não corresponde à descrição, não consegui acessar o conteúdo, etc."
+              placeholder="Descreva o motivo..."
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              rows={5}
-              className="resize-none"
+              rows={3}
+              className="resize-none text-sm"
             />
-            <p className="text-xs text-muted-foreground">
-              Seja claro e detalhado para facilitar a análise do vendedor
-            </p>
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={loading}>
+        <DialogFooter className="gap-2">
+          <Button size="sm" variant="outline" onClick={onClose} disabled={loading}>
             Cancelar
           </Button>
           <Button 
+            size="sm"
             onClick={handleSubmit} 
             disabled={!reason.trim() || loading}
             variant="destructive"
           >
-            {loading ? 'Enviando...' : 'Solicitar Reembolso'}
+            {loading ? 'Enviando...' : isReopen ? 'Reenviar' : 'Solicitar'}
           </Button>
         </DialogFooter>
       </DialogContent>

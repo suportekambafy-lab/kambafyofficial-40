@@ -4114,6 +4114,10 @@ export type Database = {
       }
       release_expired_retentions: { Args: never; Returns: Json }
       remove_duplicate_withdrawals: { Args: never; Returns: number }
+      reopen_refund_request: {
+        Args: { p_order_id: string; p_reason: string }
+        Returns: string
+      }
       seller_process_refund: {
         Args: { p_action: string; p_comment?: string; p_refund_id: string }
         Returns: Json
