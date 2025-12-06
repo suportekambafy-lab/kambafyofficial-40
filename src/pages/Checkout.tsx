@@ -2390,7 +2390,7 @@ const Checkout = () => {
                     <div className="flex justify-between items-center">
                       <span className="text-gray-700">{product?.name || 'Produto'}</span>
                       <span className="font-medium text-gray-900">
-                        {getDisplayPrice(finalProductPrice)}
+                        {getDisplayPrice(finalProductPrice, true)}
                       </span>
                     </div>
                     
