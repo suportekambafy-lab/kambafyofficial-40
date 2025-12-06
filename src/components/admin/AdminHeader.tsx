@@ -15,10 +15,9 @@ import { cn } from '@/lib/utils';
 interface AdminHeaderProps {
   title: string;
   description?: string;
-  sidebarCollapsed?: boolean;
 }
 
-export function AdminHeader({ title, description, sidebarCollapsed }: AdminHeaderProps) {
+export function AdminHeader({ title, description }: AdminHeaderProps) {
   const navigate = useNavigate();
   const { admin, logout } = useAdminAuth();
 
@@ -37,10 +36,7 @@ export function AdminHeader({ title, description, sidebarCollapsed }: AdminHeade
   };
 
   return (
-    <header className={cn(
-      "h-16 bg-white border-b border-[hsl(var(--admin-border))] flex items-center justify-between px-6 sticky top-0 z-40 transition-all duration-300",
-      sidebarCollapsed ? "ml-20" : "ml-64"
-    )}>
+    <header className="h-16 bg-white border-b border-[hsl(var(--admin-border))] flex items-center justify-between px-6 sticky top-0 z-40">
       {/* Left side - Title */}
       <div>
         <h1 className="text-xl font-semibold text-[hsl(var(--admin-text))]">{title}</h1>
