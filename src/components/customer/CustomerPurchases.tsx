@@ -124,12 +124,12 @@ export default function CustomerPurchases() {
               <Card key={order.id} className="hover:shadow-lg transition-shadow">
                 <CardContent className="p-6">
                   <div className="flex flex-col md:flex-row gap-4">
-                    <div className="w-full md:w-32 h-32 rounded-lg overflow-hidden flex-shrink-0">
+                    <div className="w-20 h-20 md:w-24 md:h-24 rounded-lg overflow-hidden flex-shrink-0">
                       <ProductImage 
                         src={order.products?.cover ? getProductImageUrl(order.products.cover) : null}
                         name={order.products?.name}
                         className="w-full h-full object-cover"
-                        size="lg"
+                        size="md"
                       />
                     </div>
 
