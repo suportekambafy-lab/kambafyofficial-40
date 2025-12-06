@@ -11,6 +11,7 @@ export interface PaymentMethod {
   isMozambique?: boolean;
   isPortugal?: boolean;
   isUK?: boolean;
+  isUS?: boolean;
   countryFlag?: string;
   countryName?: string;
 }
@@ -100,7 +101,7 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
   {
     id: "card_uk",
     name: "Card Payment",
-    image: getPaymentMethodImage("card"),
+    image: getPaymentMethodImage("card_uk"),
     enabled: true,
     isUK: true,
     countryFlag: "🇬🇧",
@@ -109,11 +110,20 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
   {
     id: "klarna_uk",
     name: "Klarna",
-    image: getPaymentMethodImage("klarna"),
+    image: getPaymentMethodImage("klarna_uk"),
     enabled: true,
     isUK: true,
     countryFlag: "🇬🇧",
     countryName: "United Kingdom"
+  },
+  {
+    id: "card_us",
+    name: "Card Payment",
+    image: getPaymentMethodImage("card_us"),
+    enabled: true,
+    isUS: true,
+    countryFlag: "🇺🇸",
+    countryName: "United States"
   }
 ];
 
@@ -138,6 +148,9 @@ export const getCountryByPaymentMethod = (paymentMethod: string) => {
     // Reino Unido
     'card_uk': { code: 'GB', name: 'United Kingdom', flag: '🇬🇧' },
     'klarna_uk': { code: 'GB', name: 'United Kingdom', flag: '🇬🇧' },
+    
+    // Estados Unidos
+    'card_us': { code: 'US', name: 'United States', flag: '🇺🇸' },
   };
   
   return paymentToCountry[paymentMethod] || { code: 'AO', name: 'Angola', flag: '🇦🇴' };
@@ -172,6 +185,10 @@ export const getUKPaymentMethods = (): PaymentMethod[] => {
   return PAYMENT_METHODS.filter(method => method.isUK);
 };
 
+export const getUSPaymentMethods = (): PaymentMethod[] => {
+  return PAYMENT_METHODS.filter(method => method.isUS);
+};
+
 export const getPaymentMethodsByCountry = (countryCode: string): PaymentMethod[] => {
   switch (countryCode) {
     case 'AO':
@@ -182,6 +199,8 @@ export const getPaymentMethodsByCountry = (countryCode: string): PaymentMethod[]
       return getPortugalPaymentMethods();
     case 'GB':
       return getUKPaymentMethods();
+    case 'US':
+      return getUSPaymentMethods();
     default:
       return [];
   }

@@ -140,7 +140,7 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
 
       let confirmResult;
       
-      if (paymentMethod === 'card' || paymentMethod === 'card_uk') {
+      if (paymentMethod === 'card' || paymentMethod === 'card_uk' || paymentMethod === 'card_us') {
         const cardElement = elements.getElement(CardElement);
         if (!cardElement) {
           throw new Error('Elemento do cartão não encontrado');
@@ -360,6 +360,7 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
       case 'card':
         return 'CARTÃO';
       case 'card_uk':
+      case 'card_us':
         return 'CARD';
       case 'klarna':
       case 'klarna_uk':

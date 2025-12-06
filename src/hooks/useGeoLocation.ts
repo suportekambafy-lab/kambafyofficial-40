@@ -37,6 +37,13 @@ const SUPPORTED_COUNTRIES: Record<string, CountryInfo> = {
     currency: 'GBP',
     flag: '🇬🇧',
     exchangeRate: 0.001
+  },
+  US: {
+    code: 'US',
+    name: 'United States',
+    currency: 'USD',
+    flag: '🇺🇸',
+    exchangeRate: 0.0011
   }
 };
 
@@ -44,7 +51,8 @@ const COUNTRY_LANGUAGES: Record<string, string> = {
   'AO': 'pt',
   'PT': 'pt',
   'MZ': 'pt',
-  'GB': 'en'
+  'GB': 'en',
+  'US': 'en'
 };
 
 const SAFETY_MARGIN = 1.05;
@@ -245,6 +253,8 @@ export const useGeoLocation = () => {
             return `€${customPrice.toFixed(2)}`;
           case 'GBP':
             return `£${customPrice.toFixed(2)}`;
+          case 'USD':
+            return `$${customPrice.toFixed(2)}`;
           case 'MZN':
             return `${customPrice.toFixed(2)} MZN`;
           case 'KZ':
@@ -262,6 +272,8 @@ export const useGeoLocation = () => {
         return `€${convertedPrice.toFixed(2)}`;
       case 'GBP':
         return `£${convertedPrice.toFixed(2)}`;
+      case 'USD':
+        return `$${convertedPrice.toFixed(2)}`;
       case 'MZN':
         return `${convertedPrice.toFixed(2)} MZN`;
       case 'KZ':
