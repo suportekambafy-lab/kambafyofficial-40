@@ -6,36 +6,41 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Plus, Trash2 } from 'lucide-react';
 import { useFacebookPixelList } from '@/hooks/useFacebookPixelList';
-
 interface FacebookPixelListProps {
   productId: string;
   onSaveSuccess: () => void;
 }
-
-export function FacebookPixelList({ productId, onSaveSuccess }: FacebookPixelListProps) {
-  const { pixels, loading, addPixel, updatePixel, deletePixel } = useFacebookPixelList(productId);
+export function FacebookPixelList({
+  productId,
+  onSaveSuccess
+}: FacebookPixelListProps) {
+  const {
+    pixels,
+    loading,
+    addPixel,
+    updatePixel,
+    deletePixel
+  } = useFacebookPixelList(productId);
   const [newPixelId, setNewPixelId] = useState('');
   const [isAdding, setIsAdding] = useState(false);
-
   const handleAddPixel = async () => {
     if (!newPixelId.trim()) return;
-
     const success = await addPixel({
       pixelId: newPixelId,
       enabled: true
     });
-
     if (success) {
       setNewPixelId('');
       setIsAdding(false);
       onSaveSuccess();
     }
   };
-
   const handleTogglePixel = async (pixelId: string, enabled: boolean, pixelIdValue: string) => {
-    await updatePixel(pixelId, { pixelId: pixelIdValue, enabled });
+    await updatePixel(pixelId, {
+      pixelId: pixelIdValue,
+      enabled
+    });
   };
-
   const handleDeletePixel = async (pixelId: string) => {
     if (confirm('Tem certeza que deseja remover este pixel?')) {
       const success = await deletePixel(pixelId);
@@ -44,21 +49,16 @@ export function FacebookPixelList({ productId, onSaveSuccess }: FacebookPixelLis
       }
     }
   };
-
   if (loading) {
-    return (
-      <Card>
+    return <Card>
         <CardContent className="py-8">
           <p className="text-center text-muted-foreground">Carregando pixels...</p>
         </CardContent>
-      </Card>
-    );
+      </Card>;
   }
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       <div className="text-center">
-        <h2 className="text-2xl font-bold mb-2">📊 Facebook Pixel (Client-Side)</h2>
+        <h2 className="text-2xl font-bold mb-2">Facebook Pixel </h2>
         <p className="text-muted-foreground">
           Rastreamento de eventos no navegador do cliente. Adicione múltiplos pixels.
         </p>
@@ -68,31 +68,18 @@ export function FacebookPixelList({ productId, onSaveSuccess }: FacebookPixelLis
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span>Pixels Configurados ({pixels.length})</span>
-            {!isAdding && (
-              <Button
-                size="sm"
-                onClick={() => setIsAdding(true)}
-                className="gap-2"
-              >
+            {!isAdding && <Button size="sm" onClick={() => setIsAdding(true)} className="gap-2">
                 <Plus className="h-4 w-4" />
                 Adicionar Pixel
-              </Button>
-            )}
+              </Button>}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {isAdding && (
-            <Card className="border-2 border-primary">
+          {isAdding && <Card className="border-2 border-primary">
               <CardContent className="pt-6 space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="new-pixel">ID do Novo Pixel</Label>
-                  <Input
-                    id="new-pixel"
-                    placeholder="Digite o ID do Facebook Pixel"
-                    value={newPixelId}
-                    onChange={(e) => setNewPixelId(e.target.value)}
-                    autoComplete="off"
-                  />
+                  <Input id="new-pixel" placeholder="Digite o ID do Facebook Pixel" value={newPixelId} onChange={e => setNewPixelId(e.target.value)} autoComplete="off" />
                   <p className="text-xs text-muted-foreground">
                     Encontre o Pixel ID no Gerenciador de Eventos do Facebook
                   </p>
@@ -102,44 +89,30 @@ export function FacebookPixelList({ productId, onSaveSuccess }: FacebookPixelLis
                   <Button onClick={handleAddPixel} className="flex-1">
                     Adicionar
                   </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setIsAdding(false);
-                      setNewPixelId('');
-                    }}
-                    className="flex-1"
-                  >
+                  <Button variant="outline" onClick={() => {
+                setIsAdding(false);
+                setNewPixelId('');
+              }} className="flex-1">
                     Cancelar
                   </Button>
                 </div>
               </CardContent>
-            </Card>
-          )}
+            </Card>}
 
-          {pixels.length === 0 && !isAdding && (
-            <div className="text-center py-8 text-muted-foreground">
+          {pixels.length === 0 && !isAdding && <div className="text-center py-8 text-muted-foreground">
               <p className="mb-4">Nenhum pixel configurado</p>
               <Button onClick={() => setIsAdding(true)} className="gap-2">
                 <Plus className="h-4 w-4" />
                 Adicionar Primeiro Pixel
               </Button>
-            </div>
-          )}
+            </div>}
 
-          {pixels.map((pixel) => (
-            <Card key={pixel.id} className="border">
+          {pixels.map(pixel => <Card key={pixel.id} className="border">
               <CardContent className="pt-6 space-y-4">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 space-y-3">
                     <div className="flex items-center gap-2">
-                      <Switch
-                        id={`pixel-${pixel.id}`}
-                        checked={pixel.enabled}
-                        onCheckedChange={(checked) =>
-                          handleTogglePixel(pixel.id!, checked, pixel.pixelId)
-                        }
-                      />
+                      <Switch id={`pixel-${pixel.id}`} checked={pixel.enabled} onCheckedChange={checked => handleTogglePixel(pixel.id!, checked, pixel.pixelId)} />
                       <Label htmlFor={`pixel-${pixel.id}`}>
                         {pixel.enabled ? 'Ativo' : 'Inativo'}
                       </Label>
@@ -155,20 +128,13 @@ export function FacebookPixelList({ productId, onSaveSuccess }: FacebookPixelLis
                     </div>
                   </div>
 
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                    onClick={() => handleDeletePixel(pixel.id!)}
-                  >
+                  <Button size="icon" variant="ghost" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleDeletePixel(pixel.id!)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </CardContent>
-            </Card>
-          ))}
+            </Card>)}
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 }
