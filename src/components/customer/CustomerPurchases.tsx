@@ -122,9 +122,9 @@ export default function CustomerPurchases() {
 
             return (
               <Card key={order.id} className="hover:shadow-lg transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex flex-col md:flex-row gap-4">
-                    <div className="w-20 h-20 md:w-24 md:h-24 rounded-lg overflow-hidden flex-shrink-0">
+                <CardContent className="p-4 md:p-6">
+                  <div className="flex gap-3 md:gap-4">
+                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden flex-shrink-0">
                       <ProductImage 
                         src={order.products?.cover ? getProductImageUrl(order.products.cover) : null}
                         name={order.products?.name}
@@ -133,18 +133,18 @@ export default function CustomerPurchases() {
                       />
                     </div>
 
-                    <div className="flex-1">
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <h3 className="font-semibold text-lg">{order.products?.name || 'Produto'}</h3>
-                          <p className="text-sm text-muted-foreground">Pedido: {order.order_id}</p>
-                          <p className="text-sm text-muted-foreground">
-                            Comprado em: {format(new Date(order.created_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-2">
+                        <div className="min-w-0">
+                          <h3 className="font-semibold text-base md:text-lg truncate">{order.products?.name || 'Produto'}</h3>
+                          <p className="text-xs md:text-sm text-muted-foreground">Pedido: {order.order_id}</p>
+                          <p className="text-xs md:text-sm text-muted-foreground">
+                            {format(new Date(order.created_at), "dd/MM/yyyy", { locale: ptBR })}
                           </p>
                         </div>
-                        <div className="text-right">
-                          <p className="text-2xl font-bold">{order.amount} {order.currency}</p>
-                          <Badge variant="default">Pago</Badge>
+                        <div className="flex items-center gap-2 md:flex-col md:items-end">
+                          <p className="text-lg md:text-xl font-bold">{order.amount} {order.currency}</p>
+                          <Badge variant="default" className="text-xs">Pago</Badge>
                         </div>
                       </div>
 
