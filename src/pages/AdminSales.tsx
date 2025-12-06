@@ -269,12 +269,16 @@ export default function AdminSales() {
       .reduce((sum, order) => sum + parseFloat(order.amount || '0'), 0);
     const pendingSales = orders.filter(o => o.status === 'pending').length;
     const completedSales = orders.filter(o => o.status === 'completed').length;
+    const refundedSales = orders.filter(o => o.status === 'refunded').length;
+    const failedSales = orders.filter(o => o.status === 'failed' || o.status === 'canceled' || o.status === 'cancelled').length;
     
     return {
       totalSales,
       totalRevenue,
       pendingSales,
       completedSales,
+      refundedSales,
+      failedSales,
     };
   }, [orders]);
 
@@ -295,6 +299,14 @@ export default function AdminSales() {
       canceled: { 
         label: 'Cancelado', 
         className: 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-100' 
+      },
+      cancelled: { 
+        label: 'Cancelado', 
+        className: 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-100' 
+      },
+      refunded: { 
+        label: 'Reembolsado', 
+        className: 'bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-100' 
       },
     };
     
@@ -410,17 +422,17 @@ export default function AdminSales() {
           </div>
           <div>
             <p className="text-sm text-[hsl(var(--admin-text-secondary))]">Com falhas</p>
-            <p className="text-2xl font-bold text-[hsl(var(--admin-text))]">{stats.pendingSales.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-[hsl(var(--admin-text))]">{stats.failedSales.toLocaleString()}</p>
           </div>
         </div>
 
         <div className="bg-white rounded-2xl border border-[hsl(var(--admin-border))] p-5 flex items-center gap-4">
-          <div className="h-12 w-12 rounded-full bg-[hsl(var(--admin-bg))] flex items-center justify-center">
-            <RefreshCcw className="h-5 w-5 text-[hsl(var(--admin-text-secondary))]" />
+          <div className="h-12 w-12 rounded-full bg-blue-50 flex items-center justify-center">
+            <RefreshCcw className="h-5 w-5 text-blue-600" />
           </div>
           <div>
             <p className="text-sm text-[hsl(var(--admin-text-secondary))]">Reembolsados</p>
-            <p className="text-2xl font-bold text-[hsl(var(--admin-text))]">0</p>
+            <p className="text-2xl font-bold text-[hsl(var(--admin-text))]">{stats.refundedSales.toLocaleString()}</p>
           </div>
         </div>
       </div>
