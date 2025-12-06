@@ -378,13 +378,13 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {(paymentMethod === 'card' || paymentMethod === 'card_uk') && (
+      {(paymentMethod === 'card' || paymentMethod === 'card_uk' || paymentMethod === 'card_us') && (
         <Card className="border-gray-200">
           <CardContent className="p-4">
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
                 <CreditCard className="w-4 h-4" />
-                {paymentMethod === 'card_uk' ? 'Card Details' : 'Informações do Cartão'}
+                {(paymentMethod === 'card_uk' || paymentMethod === 'card_us') ? 'Card Details' : 'Informações do Cartão'}
               </div>
               
               <div className="p-3 border border-gray-300 rounded-md bg-white">
@@ -400,7 +400,7 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
 
               <div className="flex items-center gap-2 text-xs text-gray-500">
                 <Lock className="w-3 h-3" />
-                {paymentMethod === 'card_uk' ? 'Your data is protected with SSL encryption' : 'Seus dados estão protegidos com criptografia SSL'}
+                {(paymentMethod === 'card_uk' || paymentMethod === 'card_us') ? 'Your data is protected with SSL encryption' : 'Seus dados estão protegidos com criptografia SSL'}
               </div>
             </div>
           </CardContent>
