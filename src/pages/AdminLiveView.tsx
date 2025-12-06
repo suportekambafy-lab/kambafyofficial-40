@@ -138,10 +138,21 @@ export default function AdminLiveView() {
       });
 
       // Sessions from checkout_sessions table
-      const { data: todaySessions } = await supabase
+      const { data: todaySessions, error: sessionsError } = await supabase
         .from('checkout_sessions')
-        .select('country, city, region')
+        .select('country, city, region, created_at')
         .gte('created_at', todayStart.toISOString());
+
+      console.log('=== DEBUG SESSIONS ===');
+      console.log('Now:', now.toISOString());
+      console.log('Today start (UTC):', todayStart.toISOString());
+      console.log('Last 10 min:', last10min.toISOString());
+      console.log('Sessions query error:', sessionsError);
+      console.log('Today sessions data:', todaySessions);
+      console.log('Today sessions count:', todaySessions?.length);
+      console.log('Active checkouts data:', activeCheckouts);
+      console.log('Active checkouts count:', activeCheckouts?.length);
+      console.log('=== END DEBUG ===');
 
       const { data: yesterdaySessions } = await supabase
         .from('checkout_sessions')
@@ -154,9 +165,6 @@ export default function AdminLiveView() {
       const sessionsChange = yesterdaySessionCount > 0
         ? Math.round((totalSessions - yesterdaySessionCount) / yesterdaySessionCount * 100)
         : 0;
-
-      console.log('Active checkouts (last 10 min):', activeCheckouts?.length);
-      console.log('Today sessions:', totalSessions);
       
       setMetrics({
         kambafyCommission: kambafyCommissionValue,
