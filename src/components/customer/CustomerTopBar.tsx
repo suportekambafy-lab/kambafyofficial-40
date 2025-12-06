@@ -183,7 +183,7 @@ export function CustomerTopBar({ showAppBanner = true }: CustomerTopBarProps) {
             <img 
               src="/kambafy-logo-new.svg" 
               alt="Kambafy" 
-              className="h-10 sm:h-12 w-auto dark:brightness-0 dark:invert"
+              className="h-14 sm:h-16 w-auto dark:brightness-0 dark:invert"
             />
           </div>
 
