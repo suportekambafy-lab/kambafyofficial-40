@@ -143,7 +143,7 @@ export default function AdminLogin() {
           
           <div className="mt-4 p-3 bg-orange-50 rounded-md">
             <p className="text-xs text-orange-800 text-center">
-              <Shield className="w-4 h-4 inline mr-1" />
+              
               Autenticação de dois fatores obrigatória para administradores
             </p>
           </div>
