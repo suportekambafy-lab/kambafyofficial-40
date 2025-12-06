@@ -162,6 +162,36 @@ export default function MeusAfiliados() {
     }
   };
 
+  const handleBulkStatusUpdate = async (newStatus: string) => {
+    if (selectedAffiliates.length === 0) {
+      toast({ message: 'Selecione pelo menos um afiliado' });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('affiliates')
+        .update({ 
+          status: newStatus,
+          approved_at: newStatus === 'ativo' ? new Date().toISOString() : null
+        })
+        .in('id', selectedAffiliates);
+
+      if (error) {
+        console.error('Erro ao atualizar status em massa:', error);
+        toast({ message: 'Erro ao atualizar status dos afiliados' });
+        return;
+      }
+
+      toast({ message: `${selectedAffiliates.length} afiliado(s) atualizado(s) com sucesso!` });
+      setSelectedAffiliates([]);
+      fetchAffiliates();
+    } catch (error) {
+      console.error('Erro ao atualizar status em massa:', error);
+      toast({ message: 'Erro ao atualizar status dos afiliados' });
+    }
+  };
+
   const handleSelectAffiliate = (affiliateId: string) => {
     setSelectedAffiliates(prev => 
       prev.includes(affiliateId) 
@@ -230,13 +260,22 @@ export default function MeusAfiliados() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                  <DropdownMenuItem disabled={selectedAffiliates.length === 0}>
+                  <DropdownMenuItem 
+                    disabled={selectedAffiliates.length === 0}
+                    onClick={() => handleBulkStatusUpdate('ativo')}
+                  >
                     Aprovar selecionados
                   </DropdownMenuItem>
-                  <DropdownMenuItem disabled={selectedAffiliates.length === 0}>
+                  <DropdownMenuItem 
+                    disabled={selectedAffiliates.length === 0}
+                    onClick={() => handleBulkStatusUpdate('recusado')}
+                  >
                     Recusar selecionados
                   </DropdownMenuItem>
-                  <DropdownMenuItem disabled={selectedAffiliates.length === 0}>
+                  <DropdownMenuItem 
+                    disabled={selectedAffiliates.length === 0}
+                    onClick={() => handleBulkStatusUpdate('bloqueado')}
+                  >
                     Bloquear selecionados
                   </DropdownMenuItem>
                 </DropdownMenuContent>
