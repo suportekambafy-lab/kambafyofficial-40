@@ -979,6 +979,16 @@ export function AppHome() {
                 <h1 className="text-lg md:text-xl font-semibold text-foreground">Financeiro</h1>
                 <p className="text-muted-foreground text-xs">Gestão de saldo e saques</p>
               </div>
+              <Button 
+                onClick={() => {
+                  triggerHaptic('medium');
+                  setShowWithdrawalModal(true);
+                }} 
+                className="bg-emerald-600 hover:bg-emerald-700 text-white h-8 px-3 text-xs"
+                size="sm"
+              >
+                Sacar
+              </Button>
             </div>
             
             {/* Financial Cards */}
@@ -993,16 +1003,9 @@ export function AppHome() {
                     </div>
                     <p className="text-xs text-muted-foreground font-medium">Disponível para Saque</p>
                   </div>
-                  <div className="text-2xl md:text-3xl font-bold tracking-tight text-foreground mb-3">
+                  <div className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
                     {formatPriceForSeller(financialData.availableBalance, 'KZ')}
                   </div>
-                  <Button onClick={() => {
-                  triggerHaptic('medium');
-                  setShowWithdrawalModal(true);
-                }} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white" size="sm">
-                    <ArrowDownToLine className="h-4 w-4 mr-2" />
-                    Solicitar Saque
-                  </Button>
                 </div>
               </div>
 
