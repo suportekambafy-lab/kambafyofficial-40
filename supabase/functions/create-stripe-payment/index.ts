@@ -106,21 +106,23 @@ Deno.serve(async (req) => {
       cancel_url: `${req.headers.get("origin")}/checkout/${productId}`,
       metadata: {
         product_id: productId,
+        product_name: productName,
         order_id: orderId,
         customer_email: customerEmail,
-        original_amount: amount.toString(), // Valor original antes da conversão para centavos
-        original_currency: currency.toUpperCase(), // Moeda original
-        has_custom_prices: hasCustomPrices.toString(), // Indicar se usa preço personalizado
+        original_amount: amount.toString(),
+        original_currency: currency.toUpperCase(),
+        has_custom_prices: hasCustomPrices.toString(),
         expires_at: expiresAt
       },
       payment_intent_data: {
         metadata: {
           product_id: productId,
+          product_name: productName,
           order_id: orderId,
           customer_email: customerEmail,
-          original_amount: amount.toString(), // Valor original antes da conversão para centavos
-          original_currency: currency.toUpperCase(), // Moeda original
-          has_custom_prices: hasCustomPrices.toString(), // Indicar se usa preço personalizado
+          original_amount: amount.toString(),
+          original_currency: currency.toUpperCase(),
+          has_custom_prices: hasCustomPrices.toString(),
           expires_at: expiresAt
         }
       }
