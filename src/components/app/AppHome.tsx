@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
-import { Home, BarChart3, Package, User, TrendingUp, LayoutDashboard, LogOut, ChevronLeft, ShoppingCart, Settings, Bell, Trash2, Info, ChevronRight, Wallet, ArrowDownToLine, Sun, Moon, Menu, X, Calendar as CalendarIcon, Camera, WifiOff, GraduationCap, Copy } from 'lucide-react';
+import { Home, BarChart3, Package, User, TrendingUp, LayoutDashboard, LogOut, ChevronLeft, ShoppingCart, Settings, Bell, Trash2, Info, ChevronRight, Wallet, ArrowDownToLine, Sun, Moon, Menu, X, Calendar as CalendarIcon, Camera, WifiOff, GraduationCap, Copy, Check } from 'lucide-react';
 import kambafyIconGreen from '@/assets/kambafy-icon-green.png';
 import { useSellerTheme } from '@/hooks/useSellerTheme';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
@@ -86,6 +86,7 @@ export function AppHome() {
     checkPermissionStatus
   } = useOneSignal();
   const [activeTab, setActiveTab] = useState('home');
+  const [copiedProductId, setCopiedProductId] = useState<string | null>(null);
   const [selectedCourse, setSelectedCourse] = useState<{
     id: string;
     name: string;
@@ -949,14 +950,16 @@ export function AppHome() {
                                 const checkoutUrl = `${baseUrl}/checkout/${product.id}`;
                                 navigator.clipboard.writeText(checkoutUrl);
                                 triggerHaptic('light');
-                                toast({
-                                  title: "Link copiado",
-                                  description: "O link do checkout foi copiado"
-                                });
+                                setCopiedProductId(product.id);
+                                setTimeout(() => setCopiedProductId(null), 2000);
                               }}
                               className="p-2 -mr-1 rounded-lg active:bg-muted transition-colors"
                             >
-                              <Copy className="h-5 w-5 text-muted-foreground" />
+                              {copiedProductId === product.id ? (
+                                <Check className="h-5 w-5 text-emerald-500" />
+                              ) : (
+                                <Copy className="h-5 w-5 text-muted-foreground" />
+                              )}
                             </button>
                           </div>
                           <div className="flex items-center gap-3 mt-2">
