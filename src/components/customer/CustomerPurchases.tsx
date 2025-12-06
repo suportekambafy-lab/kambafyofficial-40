@@ -12,39 +12,35 @@ import { PageSkeleton } from '@/components/ui/page-skeleton';
 import { Link } from 'react-router-dom';
 import { ProductImage } from '@/components/ui/fallback-image';
 import { getProductImageUrl } from '@/utils/imageUtils';
-
 export default function CustomerPurchases() {
-  const { user } = useAuth();
+  const {
+    user
+  } = useAuth();
   const [purchases, setPurchases] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
-
   const loadPurchases = async () => {
     if (!user?.email) {
       console.warn('CustomerPurchases: User or email not available');
       setLoading(false);
       return;
     }
-
     try {
       setLoading(true);
       console.log('🛒 CustomerPurchases: Loading purchases for', user.email);
-      
-      const { data, error } = await supabase
-        .from('orders')
-        .select(`
+      const {
+        data,
+        error
+      } = await supabase.from('orders').select(`
           *,
           products(name, cover)
-        `)
-        .eq('customer_email', user.email)
-        .eq('status', 'completed')
-        .order('created_at', { ascending: false });
-
+        `).eq('customer_email', user.email).eq('status', 'completed').order('created_at', {
+        ascending: false
+      });
       if (error) {
         console.error('❌ CustomerPurchases: Error loading purchases', error);
         throw error;
       }
-
       console.log('✅ CustomerPurchases: Loaded', data?.length || 0, 'purchases');
       setPurchases(data || []);
     } catch (error) {
@@ -53,11 +49,9 @@ export default function CustomerPurchases() {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     loadPurchases();
   }, [user]);
-
   const getRefundDeadline = (order: any) => {
     if (order.refund_deadline) {
       return new Date(order.refund_deadline);
@@ -67,22 +61,17 @@ export default function CustomerPurchases() {
     createdAt.setDate(createdAt.getDate() + 7);
     return createdAt;
   };
-
   const canRequestRefund = (order: any) => {
     if (order.has_active_refund) return false;
     const deadline = getRefundDeadline(order);
     return deadline > new Date();
   };
-
   const getDaysLeft = (order: any) => {
     const deadline = getRefundDeadline(order);
     return differenceInDays(deadline, new Date());
   };
-
   const totalCompras = purchases.length;
-
-  return (
-    <div className="p-4 md:p-6 space-y-6">
+  return <div className="p-4 md:p-6 space-y-6">
       {/* Header with back button */}
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" asChild>
@@ -92,7 +81,7 @@ export default function CustomerPurchases() {
         </Button>
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
-            <ShoppingBag className="h-6 w-6" />
+            
             Minhas Compras
             <Badge variant="secondary" className="ml-1">
               {totalCompras}
@@ -110,38 +99,23 @@ export default function CustomerPurchases() {
           <AlertCircle className="h-4 w-4" />
           <span>Prazo: 7 dias corridos após a compra</span>
         </div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 px-4 py-2 rounded-lg">
-          <Clock className="h-4 w-4" />
-          <span>Processamento: até 48 horas úteis</span>
-        </div>
+        
       </div>
 
-      {loading ? (
-        <PageSkeleton variant="list" />
-      ) : purchases.length === 0 ? (
-        <Card>
+      {loading ? <PageSkeleton variant="list" /> : purchases.length === 0 ? <Card>
           <CardContent className="py-12 text-center">
             <ShoppingBag className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
             <p className="text-muted-foreground">Você ainda não fez nenhuma compra</p>
           </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-4">
-          {purchases.map((order) => {
-            const canRefund = canRequestRefund(order);
-            const daysLeft = getDaysLeft(order);
-
-            return (
-              <Card key={order.id} className="hover:shadow-lg transition-shadow">
+        </Card> : <div className="grid gap-4">
+          {purchases.map(order => {
+        const canRefund = canRequestRefund(order);
+        const daysLeft = getDaysLeft(order);
+        return <Card key={order.id} className="hover:shadow-lg transition-shadow">
                 <CardContent className="p-4 md:p-6">
                   <div className="flex gap-3 md:gap-4">
                     <div className="w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden flex-shrink-0">
-                      <ProductImage 
-                        src={order.products?.cover ? getProductImageUrl(order.products.cover) : null}
-                        name={order.products?.name}
-                        className="w-full h-full object-cover"
-                        size="md"
-                      />
+                      <ProductImage src={order.products?.cover ? getProductImageUrl(order.products.cover) : null} name={order.products?.name} className="w-full h-full object-cover" size="md" />
                     </div>
 
                     <div className="flex-1 min-w-0">
@@ -150,7 +124,9 @@ export default function CustomerPurchases() {
                           <h3 className="font-semibold text-base md:text-lg truncate">{order.products?.name || 'Produto'}</h3>
                           <p className="text-xs md:text-sm text-muted-foreground">Pedido: {order.order_id}</p>
                           <p className="text-xs md:text-sm text-muted-foreground">
-                            {format(new Date(order.created_at), "dd/MM/yyyy", { locale: ptBR })}
+                            {format(new Date(order.created_at), "dd/MM/yyyy", {
+                        locale: ptBR
+                      })}
                           </p>
                         </div>
                         <div className="flex items-center gap-2 md:flex-col md:items-end">
@@ -159,54 +135,32 @@ export default function CustomerPurchases() {
                         </div>
                       </div>
 
-                      {order.has_active_refund ? (
-                        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      {order.has_active_refund ? <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                           <div className="flex items-center gap-2">
                             <AlertCircle className="h-5 w-5 text-blue-600" />
                             <span className="font-medium text-blue-900">
                               Reembolso em andamento
                             </span>
                           </div>
-                        </div>
-                      ) : (
-                        <div className="mt-4 flex items-center justify-between">
-                          {canRefund ? (
-                            <>
+                        </div> : <div className="mt-4 flex items-center justify-between">
+                          {canRefund ? <>
                               <p className="text-sm text-muted-foreground">
                                 {daysLeft > 0 && `${daysLeft} ${daysLeft === 1 ? 'dia' : 'dias'} restantes para solicitar reembolso`}
                               </p>
-                              <Button
-                                variant="destructive"
-                                size="sm"
-                                onClick={() => setSelectedOrder(order)}
-                              >
+                              <Button variant="destructive" size="sm" onClick={() => setSelectedOrder(order)}>
                                 Solicitar Reembolso
                               </Button>
-                            </>
-                          ) : (
-                            <p className="text-xs text-muted-foreground italic">
+                            </> : <p className="text-xs text-muted-foreground italic">
                               Prazo expirado
-                            </p>
-                          )}
-                        </div>
-                      )}
+                            </p>}
+                        </div>}
                     </div>
                   </div>
                 </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
+              </Card>;
+      })}
+        </div>}
 
-      {selectedOrder && (
-        <RefundRequestDialog
-          open={!!selectedOrder}
-          onClose={() => setSelectedOrder(null)}
-          order={selectedOrder}
-          onSuccess={loadPurchases}
-        />
-      )}
-    </div>
-  );
+      {selectedOrder && <RefundRequestDialog open={!!selectedOrder} onClose={() => setSelectedOrder(null)} order={selectedOrder} onSuccess={loadPurchases} />}
+    </div>;
 }
