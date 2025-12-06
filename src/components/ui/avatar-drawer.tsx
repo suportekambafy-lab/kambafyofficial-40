@@ -72,12 +72,6 @@ export function AvatarDrawer({
       onClick: () => handleNavigation("/vendedor/configuracoes")
     },
     {
-      label: "Ver minhas compras",
-      href: "/minhas-compras",
-      icon: ShoppingBag,
-      onClick: () => handleNavigation("/minhas-compras")
-    },
-    {
       label: "Ver meus acessos",
       href: "/meus-acessos",
       icon: ArrowLeftRight,
