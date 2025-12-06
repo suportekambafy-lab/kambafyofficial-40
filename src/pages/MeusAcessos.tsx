@@ -5,20 +5,15 @@ import { createMemberAreaLinks } from '@/utils/memberAreaLinks';
 import { getFileUrl } from '@/utils/fileUtils';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, ShoppingBag, Calendar, Eye, User, LogOut, Settings, ExternalLink, BookOpen, TrendingUp, Wallet, CreditCard } from "lucide-react";
+import { ShoppingBag, Calendar, Eye, ExternalLink, BookOpen } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { useAuth } from '@/contexts/AuthContext';
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { AvatarDrawer } from "@/components/ui/avatar-drawer";
-import { CustomerBalanceModal } from "@/components/CustomerBalanceModal";
-import { useKambaPayBalance } from '@/hooks/useKambaPayBalance';
-import professionalManImage from "@/assets/professional-man.jpg";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { toast } from 'sonner';
+import { CustomerTopBar } from "@/components/customer/CustomerTopBar";
 
 interface Access {
   id: string;
@@ -47,12 +42,6 @@ export default function MeusAcessos() {
   const { user, signOut } = useAuth();
   const [accesses, setAccesses] = useState<Access[]>([]);
   const [loading, setLoading] = useState(true);
-  const [avatarDrawerOpen, setAvatarDrawerOpen] = useState(false);
-  const [profileAvatar, setProfileAvatar] = useState("");
-  const [profileName, setProfileName] = useState("");
-  
-  // Hook para buscar saldo KambaPay
-  const { balance, fetchBalanceByEmail } = useKambaPayBalance();
 
   useEffect(() => {
     const fetchAccesses = async () => {
@@ -135,44 +124,9 @@ export default function MeusAcessos() {
     }
   }, [user]);
 
-  // Buscar saldo KambaPay quando o usuário estiver logado
-  useEffect(() => {
-    if (user?.email) {
-      fetchBalanceByEmail(user.email);
-    }
-  }, [user, fetchBalanceByEmail]);
-
-  // Buscar dados do perfil do usuário
-  useEffect(() => {
-    const loadProfile = async () => {
-      if (!user) return;
-
-      try {
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .select('avatar_url, full_name')
-          .eq('user_id', user.id)
-          .maybeSingle();
-
-        if (error) {
-          console.error('Error loading profile:', error);
-          return;
-        }
-
-        if (profile) {
-          setProfileAvatar(profile.avatar_url || "");
-          setProfileName(profile.full_name || "");
-        }
-      } catch (error) {
-        console.error('Error loading profile data:', error);
-      }
-    };
-
-    loadProfile();
-  }, [user]);
 
   const getProductImage = (cover: string) => {
-    if (!cover) return professionalManImage;
+    if (!cover) return '/placeholder.svg';
     if (cover.startsWith('data:')) {
       return cover;
     }
@@ -263,45 +217,7 @@ export default function MeusAcessos() {
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-background">
-        <header className="bg-gradient-to-r from-green-400 to-green-500 text-white p-4 border-b shadow-lg">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <img 
-                src="/kambafy-logo-new.svg" 
-                alt="Kambafy" 
-                className="h-12 w-auto brightness-0 invert"
-              />
-              <div>
-                <p className="text-green-100 text-sm">Meus acessos</p>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-white hover:bg-white/10"
-                onClick={() => navigate('/minhas-compras')}
-              >
-                <CreditCard className="w-4 h-4 mr-2" />
-                Minhas Compras
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="w-10 h-10 rounded-full p-0 hover:bg-white/10"
-                onClick={() => setAvatarDrawerOpen(true)}
-              >
-                <Avatar className="w-8 h-8">
-                  <AvatarImage src={profileAvatar} />
-                  <AvatarFallback className="bg-green-600 text-white text-sm">
-                    {profileName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </div>
-          </div>
-        </header>
+        <CustomerTopBar />
 
         <div className="p-4 md:p-6 space-y-6">
           {/* Modern Summary Cards */}
@@ -450,15 +366,6 @@ export default function MeusAcessos() {
             </CardContent>
           </Card>
         </div>
-
-        <AvatarDrawer
-          isOpen={avatarDrawerOpen}
-          onClose={() => setAvatarDrawerOpen(false)}
-          profileAvatar={profileAvatar}
-          profileName={profileName || user?.email || 'Usuário'}
-          isMobile={false}
-        />
-
       </div>
     </ProtectedRoute>
   );
