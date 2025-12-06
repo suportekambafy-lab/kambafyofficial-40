@@ -21,6 +21,8 @@ export const formatPrice = (
       switch (targetCountry.currency) {
         case 'EUR':
           return `€${customPrice.toFixed(2)}`;
+        case 'GBP':
+          return `£${customPrice.toFixed(2)}`;
         case 'MZN':
           return `${customPrice.toFixed(2)} MZN`;
         case 'KZ':
@@ -48,6 +50,8 @@ export const formatPrice = (
   switch (targetCountry.currency) {
     case 'EUR':
       return `€${convertedPrice.toFixed(2)}`;
+    case 'GBP':
+      return `£${convertedPrice.toFixed(2)}`;
     case 'MZN':
       return `${convertedPrice.toFixed(2)} MZN`;
     case 'KZ':
@@ -83,6 +87,7 @@ export const formatPriceForSeller = (
     // Taxas de conversão para KZ (baseadas nas taxas reais do useGeoLocation)
     const exchangeRates: Record<string, number> = {
       'EUR': 1100, // 1 EUR = ~1100 KZ (aproximado - ajustado)
+      'GBP': 1300, // 1 GBP = ~1300 KZ (aproximado)
       'MZN': 14.3  // 1 MZN = ~14.3 KZ (aproximado)
     };
     
@@ -107,6 +112,7 @@ export const formatPriceForAdmin = (
   if (currency.toUpperCase() !== 'KZ') {
     const exchangeRates: Record<string, number> = {
       'EUR': 1053,
+      'GBP': 1250,
       'MZN': 14.3
     };
     
