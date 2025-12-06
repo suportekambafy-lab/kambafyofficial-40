@@ -72,11 +72,12 @@ export default function CountryPriceConfig({
 
   const getExchangeRates = () => {
     const basePriceNumber = parseFloat(basePrice) || 0;
+    const gbpValue = basePriceNumber * 0.0008;
     return {
       'AO': basePriceNumber, // Base é KZ
       'PT': (basePriceNumber * 0.00095).toFixed(2), // KZ para EUR
       'MZ': (basePriceNumber * 0.0722).toFixed(2), // KZ para MZN
-      'GB': (basePriceNumber * 0.0008).toFixed(2) // KZ para GBP
+      'GB': (gbpValue < 1 ? 1 : gbpValue).toFixed(2) // KZ para GBP (mínimo £1)
     };
   };
 

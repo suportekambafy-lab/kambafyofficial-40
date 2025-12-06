@@ -45,7 +45,12 @@ export const formatPrice = (
   }
 
   // Converter preço para a moeda do país (fallback automático)
-  const convertedPrice = priceInKZ / targetCountry.exchangeRate;
+  let convertedPrice = priceInKZ / targetCountry.exchangeRate;
+  
+  // Garantir mínimo de 1 para GBP
+  if (targetCountry.currency === 'GBP' && convertedPrice < 1) {
+    convertedPrice = 1;
+  }
   
   switch (targetCountry.currency) {
     case 'EUR':
