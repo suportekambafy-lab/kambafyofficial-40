@@ -215,13 +215,13 @@ export default function AdminLiveView() {
       // Top sellers today - get all unique seller IDs first
       const uniqueSellerIds = [...new Set(paidOrders.map(o => (o.products as any)?.user_id).filter(Boolean))];
       
-      // Fetch all profiles at once for efficiency
+      // Fetch all profiles at once for efficiency (using user_id, not id)
       const { data: sellerProfiles } = await supabase
         .from('profiles')
-        .select('id, full_name, email')
-        .in('id', uniqueSellerIds);
+        .select('user_id, full_name, email')
+        .in('user_id', uniqueSellerIds);
       
-      const profileMap = new Map((sellerProfiles || []).map(p => [p.id, p]));
+      const profileMap = new Map((sellerProfiles || []).map(p => [p.user_id, p]));
       
       const sellerSales: Record<string, { name: string; email: string; sales: number; revenue: number }> = {};
       for (const order of paidOrders) {
