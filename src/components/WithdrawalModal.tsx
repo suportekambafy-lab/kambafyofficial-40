@@ -211,9 +211,9 @@ export function WithdrawalModal({
             )}
           </div>
 
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-            <p className="text-xs text-blue-800">
-              <strong>Informação:</strong> Os saques são processados em até 3 dias úteis após a solicitação.
+          <div className="bg-muted/50 border border-border rounded-lg p-3">
+            <p className="text-xs text-muted-foreground">
+              <strong className="text-foreground">Informação:</strong> Os saques são processados em até 3 dias úteis após a solicitação.
             </p>
           </div>
           
