@@ -32,8 +32,7 @@ export default function CustomerPurchases() {
         .from('orders')
         .select(`
           *,
-          products(name),
-          refund_requests!refund_requests_order_id_fkey(id, status, created_at)
+          products(name)
         `)
         .eq('customer_email', user.email)
         .eq('status', 'completed')
@@ -116,7 +115,6 @@ export default function CustomerPurchases() {
       ) : (
         <div className="grid gap-4">
           {purchases.map((order) => {
-            const activeRefund = order.refund_requests?.[0];
             const canRefund = canRequestRefund(order);
             const daysLeft = order.refund_deadline ? getDaysLeft(order.refund_deadline) : 0;
 
@@ -145,22 +143,16 @@ export default function CustomerPurchases() {
                         </div>
                       </div>
 
-                      {activeRefund && (
+                      {order.has_active_refund ? (
                         <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                           <div className="flex items-center gap-2">
                             <AlertCircle className="h-5 w-5 text-blue-600" />
                             <span className="font-medium text-blue-900">
                               Reembolso em andamento
                             </span>
-                            <Badge variant="outline">{activeRefund.status}</Badge>
                           </div>
-                          <p className="text-sm text-blue-700 mt-1">
-                            Solicitado em: {format(new Date(activeRefund.created_at), "dd/MM/yyyy HH:mm")}
-                          </p>
                         </div>
-                      )}
-
-                      {!activeRefund && (
+                      ) : (
                         <div className="mt-4 flex items-center justify-between">
                           {canRefund ? (
                             <>
