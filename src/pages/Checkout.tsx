@@ -16,6 +16,7 @@ import { useCustomToast } from "@/hooks/useCustomToast";
 import { PhoneInput } from "@/components/PhoneInput";
 import { useGeoLocation } from "@/hooks/useGeoLocation";
 import { getPaymentMethodsByCountry } from "@/utils/paymentMethods";
+import { getPaymentMethodImage } from "@/utils/paymentMethodImages";
 import { SEO } from "@/components/SEO";
 import { setProductSEO } from "@/utils/seoUtils";
 import { useAffiliateTracking } from "@/hooks/useAffiliateTracking";
@@ -806,11 +807,17 @@ const Checkout = () => {
       
       // Ordenar de acordo com a ordem definida para o país
       const order = paymentOrder[userCountry.code] || [];
-      return countryMethods.sort((a: any, b: any) => {
+      const sortedMethods = countryMethods.sort((a: any, b: any) => {
         const indexA = order.indexOf(a.id);
         const indexB = order.indexOf(b.id);
         return indexA - indexB;
       });
+      
+      // Adicionar imagens aos métodos de pagamento se não existirem
+      return sortedMethods.map((method: any) => ({
+        ...method,
+        image: method.image || getPaymentMethodImage(method.id)
+      }));
     }
 
     // Fallback: usar métodos baseados no país selecionado
