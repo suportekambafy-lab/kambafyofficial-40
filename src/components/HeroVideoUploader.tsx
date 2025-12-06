@@ -34,6 +34,17 @@ export function HeroVideoUploader({ value, onChange, userId }: HeroVideoUploader
       return;
     }
 
+    // Bloquear MOV - não funciona na maioria dos navegadores
+    const fileExt = file.name.split('.').pop()?.toLowerCase();
+    if (fileExt === 'mov') {
+      toast({
+        title: "Formato não suportado",
+        description: "Arquivos MOV não funcionam na maioria dos navegadores. Por favor, converta para MP4 ou WebM.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     // Limite de 100MB para vídeos de capa
     const maxSizeInBytes = 100 * 1024 * 1024;
     if (file.size > maxSizeInBytes) {
@@ -137,7 +148,7 @@ export function HeroVideoUploader({ value, onChange, userId }: HeroVideoUploader
             <Input
               ref={fileInputRef}
               type="file"
-              accept="video/mp4,video/webm,video/ogg,video/quicktime,.mov"
+              accept="video/mp4,video/webm"
               onChange={handleFileSelect}
               disabled={uploading}
               className="flex-1"
@@ -203,7 +214,9 @@ export function HeroVideoUploader({ value, onChange, userId }: HeroVideoUploader
       )}
       
       <p className="text-xs text-muted-foreground">
-        O vídeo será exibido em loop no topo da área de membros (máx. 100MB)
+        O vídeo será exibido em loop no topo da área de membros (máx. 100MB).
+        <br />
+        <span className="text-amber-500 font-medium">Apenas MP4 ou WebM. MOV não é suportado.</span>
       </p>
     </div>
   );
