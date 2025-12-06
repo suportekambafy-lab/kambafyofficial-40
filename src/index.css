@@ -24,10 +24,10 @@ All colors MUST be HSL.
 
   :root {
     /* Kambafy Clean Design System */
-    --background: 0 0% 98%; /* Clean white background */
+    --background: 0 0% 100%; /* White background (was card) */
     --foreground: 0 0% 15%;
 
-    --card: 0 0% 100%;
+    --card: 0 0% 98%; /* Light gray cards (was background) */
     --card-foreground: 0 0% 15%;
 
     --popover: 0 0% 100%;
