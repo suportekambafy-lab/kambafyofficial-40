@@ -148,8 +148,13 @@ export const OptimizedProductHeader = memo(({ product, formatPrice, userCountry,
   };
 
   const getDisplayPrice = (priceInKZ: number): string => {
-    // Use formatPrice que já considera o userCountry
-    return formatPrice(priceInKZ);
+    // Use formatPrice passando userCountry e custom_prices
+    console.log('🔄 OptimizedProductHeader getDisplayPrice:', {
+      priceInKZ,
+      userCountry: userCountry?.code,
+      customPrices: product?.custom_prices
+    });
+    return formatPrice(priceInKZ, userCountry, product?.custom_prices);
   };
 
   return (
