@@ -19,6 +19,7 @@ interface SessionLocation {
 
 interface SellerActivity {
   id: string;
+  name: string;
   email: string;
   sales: number;
   revenue: number;
@@ -211,21 +212,22 @@ export default function AdminLiveView() {
       setVisitorLocations(Object.values(visitorLocationCounts));
 
       // Top sellers today
-      const sellerSales: Record<string, { email: string; sales: number; revenue: number }> = {};
+      const sellerSales: Record<string, { name: string; email: string; sales: number; revenue: number }> = {};
       for (const order of paidOrders) {
         const sellerId = (order.products as any)?.user_id;
         if (!sellerId) continue;
         
         if (!sellerSales[sellerId]) {
-          // Get seller email
+          // Get seller name and email
           const { data: profile } = await supabase
             .from('profiles')
-            .select('email')
+            .select('full_name, email')
             .eq('id', sellerId)
             .single();
           
           sellerSales[sellerId] = {
-            email: profile?.email || 'Desconhecido',
+            name: profile?.full_name || profile?.email || 'Desconhecido',
+            email: profile?.email || '',
             sales: 0,
             revenue: 0
           };
@@ -490,7 +492,7 @@ export default function AdminLiveView() {
                       <div key={seller.id} className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-medium text-[hsl(var(--admin-text-secondary))]">#{index + 1}</span>
-                          <span className="text-sm truncate max-w-[200px] text-[hsl(var(--admin-text))]">{seller.email}</span>
+                          <span className="text-sm truncate max-w-[200px] text-[hsl(var(--admin-text))]">{seller.name}</span>
                         </div>
                         <div className="flex items-center gap-4">
                           <span className="text-sm text-[hsl(var(--admin-text-secondary))]">{seller.sales} vendas</span>
