@@ -299,6 +299,10 @@ export default function Sales() {
       return <Badge variant="destructive" className="text-xs">
           {t('sales.cancelled')}
         </Badge>;
+    } else if (status === 'refunded') {
+      return <Badge variant="outline" className="text-xs bg-blue-100 text-blue-800 border-blue-200">
+          {t('sales.refunded')}
+        </Badge>;
     }
     return <Badge variant="secondary" className="text-xs">
         {status}
