@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HighlightedCard, HighlightedCardHeader, HighlightedCardTitle, HighlightedCardContent } from "@/components/ui/highlighted-card";
 import { createMemberAreaLinks } from '@/utils/memberAreaLinks';
@@ -14,7 +13,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { toast } from 'sonner';
 import { CustomerTopBar } from "@/components/customer/CustomerTopBar";
-
 interface Access {
   id: string;
   customer_email: string;
@@ -35,14 +33,15 @@ interface Access {
     };
   } | null;
 }
-
 export default function MeusAcessos() {
   const navigate = useNavigate();
   const memberAreaLinks = createMemberAreaLinks();
-  const { user, signOut } = useAuth();
+  const {
+    user,
+    signOut
+  } = useAuth();
   const [accesses, setAccesses] = useState<Access[]>([]);
   const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     const fetchAccesses = async () => {
       if (!user?.email) {
@@ -50,15 +49,15 @@ export default function MeusAcessos() {
         setLoading(false);
         return;
       }
-
       try {
         console.log('Fetching accesses for user email:', user.email);
         setLoading(true);
-        
+
         // Buscar todos os acessos do usuário logado via customer_access
-        const { data: accesses, error } = await supabase
-          .from('customer_access')
-          .select(`
+        const {
+          data: accesses,
+          error
+        } = await supabase.from('customer_access').select(`
             *,
             products (
               id,
@@ -72,11 +71,9 @@ export default function MeusAcessos() {
                 url
               )
             )
-          `)
-          .eq('customer_email', user.email)
-          .eq('is_active', true)
-          .order('access_granted_at', { ascending: false });
-
+          `).eq('customer_email', user.email).eq('is_active', true).order('access_granted_at', {
+          ascending: false
+        });
         if (error) {
           console.error('Error fetching accesses:', error);
         } else {
@@ -91,40 +88,28 @@ export default function MeusAcessos() {
         setLoading(false);
       }
     };
-
     if (user) {
       fetchAccesses();
-      
+
       // ✅ WebSocket: Escutar mudanças em tempo real
       console.log('🔑 [Meus Acessos] Conectando ao realtime...');
-      
-      const channel = supabase
-        .channel(`customer_access_${user.email}`)
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'customer_access',
-            filter: `customer_email=eq.${user.email}`
-          },
-          (payload) => {
-            console.log('🔑 [Meus Acessos] Mudança detectada:', payload);
-            fetchAccesses();
-          }
-        )
-        .subscribe((status) => {
-          console.log('🔑 [Meus Acessos] Status da conexão:', status);
-        });
-      
+      const channel = supabase.channel(`customer_access_${user.email}`).on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'customer_access',
+        filter: `customer_email=eq.${user.email}`
+      }, payload => {
+        console.log('🔑 [Meus Acessos] Mudança detectada:', payload);
+        fetchAccesses();
+      }).subscribe(status => {
+        console.log('🔑 [Meus Acessos] Status da conexão:', status);
+      });
       return () => {
         console.log('🔑 [Meus Acessos] Desconectando...');
         supabase.removeChannel(channel);
       };
     }
   }, [user]);
-
-
   const getProductImage = (cover: string) => {
     if (!cover) return '/placeholder.svg';
     if (cover.startsWith('data:')) {
@@ -137,48 +122,38 @@ export default function MeusAcessos() {
     // Caso contrário, assumir que é ID do Unsplash (compatibilidade)
     return `https://images.unsplash.com/${cover}`;
   };
-
   const [accessingProduct, setAccessingProduct] = useState<string | null>(null);
-
   const handleAccessProduct = async (product: any) => {
     console.log('🚀 MinhasCompras - Tentando acessar produto:', {
       product,
       productType: product.type,
       memberAreaId: product.member_areas?.id
     });
-    
+
     // Para cursos, fazer verificação direta de acesso
     if (product.type === 'Curso' && product.member_areas?.id) {
       setAccessingProduct(product.id);
-      
       try {
         // Verificar se o usuário tem acesso diretamente
-        const { data: memberAreaData, error: memberAreaError } = await supabase
-          .from('member_areas')
-          .select('id, name, user_id')
-          .eq('id', product.member_areas.id)
-          .single();
-
+        const {
+          data: memberAreaData,
+          error: memberAreaError
+        } = await supabase.from('member_areas').select('id, name, user_id').eq('id', product.member_areas.id).single();
         if (memberAreaError || !memberAreaData) {
           throw new Error('Área de membros não encontrada');
         }
 
         // Verificar se tem acesso válido via customer_access
-        const { data: customerAccess, error: accessError } = await supabase
-          .from('customer_access')
-          .select('*')
-          .eq('customer_email', user?.email)
-          .eq('product_id', product.id)
-          .eq('is_active', true)
-          .maybeSingle();
-
+        const {
+          data: customerAccess,
+          error: accessError
+        } = await supabase.from('customer_access').select('*').eq('customer_email', user?.email).eq('product_id', product.id).eq('is_active', true).maybeSingle();
         if (accessError || !customerAccess) {
           throw new Error('Você não tem acesso a esta área de membros');
         }
 
         // Se chegou até aqui, tem acesso - redirecionar diretamente para área com query params
         window.location.href = `/members/area/${product.member_areas.id}?verified=true&email=${encodeURIComponent(user?.email || '')}`;
-        
       } catch (error) {
         console.error('Erro ao verificar acesso:', error);
         toast.error('Erro ao acessar produto', {
@@ -190,9 +165,11 @@ export default function MeusAcessos() {
     } else if (product.share_link) {
       const fileUrl = getFileUrl(product.share_link);
       console.log('🔗 MinhasCompras - Abrindo share_link:', fileUrl);
-      
+
       // Import dinamically to avoid circular deps
-      import('@/utils/fileUtils').then(({ openFile }) => {
+      import('@/utils/fileUtils').then(({
+        openFile
+      }) => {
         openFile(fileUrl, product.name);
       });
     } else {
@@ -200,22 +177,15 @@ export default function MeusAcessos() {
       alert('Link de acesso não disponível para este produto.');
     }
   };
-
   const handleLogout = async () => {
     await signOut();
   };
 
   // Calcular estatísticas dos acessos
   const totalAcessos = accesses.length;
-  const cursosDisponiveis = accesses.filter(access => 
-    access.products?.type === 'Curso' && access.products?.member_areas
-  ).length;
-  const ebooksDisponiveis = accesses.filter(access => 
-    access.products?.type === 'Ebook'
-  ).length;
-
-  return (
-    <ProtectedRoute>
+  const cursosDisponiveis = accesses.filter(access => access.products?.type === 'Curso' && access.products?.member_areas).length;
+  const ebooksDisponiveis = accesses.filter(access => access.products?.type === 'Ebook').length;
+  return <ProtectedRoute>
       <div className="min-h-screen bg-background">
         <CustomerTopBar />
 
@@ -240,15 +210,12 @@ export default function MeusAcessos() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <ShoppingBag className="h-5 w-5" />
+                
                 Meus Acessos
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              {loading ? (
-                <PageSkeleton variant="accesses" />
-              ) : accesses.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 px-4">
+              {loading ? <PageSkeleton variant="accesses" /> : accesses.length === 0 ? <div className="flex flex-col items-center justify-center py-16 px-4">
                   <div className="text-center space-y-4">
                     <div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center">
                       <ShoppingBag className="h-8 w-8 text-muted-foreground" />
@@ -263,17 +230,10 @@ export default function MeusAcessos() {
                       <Link to="/">Explorar Produtos</Link>
                     </Button>
                   </div>
-                </div>
-              ) : (
-                <div className="divide-y">
-                  {accesses.map((access) => (
-                    <div key={access.id} className="p-6 hover:bg-muted/50 transition-colors">
+                </div> : <div className="divide-y">
+                  {accesses.map(access => <div key={access.id} className="p-6 hover:bg-muted/50 transition-colors">
                       <div className="flex items-start space-x-4">
-                        <img
-                          src={getProductImage(access.products?.cover || '')}
-                          alt={access.products?.name || 'Produto'}
-                          className="w-16 h-20 object-cover rounded-lg shadow-sm"
-                        />
+                        <img src={getProductImage(access.products?.cover || '')} alt={access.products?.name || 'Produto'} className="w-16 h-20 object-cover rounded-lg shadow-sm" />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between">
                             <div>
@@ -281,16 +241,12 @@ export default function MeusAcessos() {
                               <p className="text-sm text-muted-foreground">
                                 Acesso liberado em {new Date(access.access_granted_at).toLocaleDateString('pt-BR')}
                               </p>
-                              {access.products?.type === 'Curso' && access.products?.member_areas && (
-                                <Badge variant="secondary" className="mt-1 bg-blue-100 text-blue-800">
+                              {access.products?.type === 'Curso' && access.products?.member_areas && <Badge variant="secondary" className="mt-1 bg-blue-100 text-blue-800">
                                   Curso: {access.products.member_areas.name}
-                                </Badge>
-                              )}
-                              {access.products?.type === 'Ebook' && (
-                                <Badge variant="secondary" className="mt-1 bg-purple-100 text-purple-800">
+                                </Badge>}
+                              {access.products?.type === 'Ebook' && <Badge variant="secondary" className="mt-1 bg-purple-100 text-purple-800">
                                   Ebook
-                                </Badge>
-                              )}
+                                </Badge>}
                             </div>
                             <div className="text-right">
                               <Badge variant="secondary" className="bg-green-100 text-green-800">
@@ -299,74 +255,35 @@ export default function MeusAcessos() {
                             </div>
                           </div>
                           <div className="mt-4 flex items-center space-x-2 flex-wrap gap-2">
-                            {access.products ? (
-                              access.products.type === 'Curso' && access.products.member_areas ? (
-                                <Button
-                                  onClick={() => handleAccessProduct(access.products)}
-                                  size="sm"
-                                  className="bg-checkout-green hover:bg-checkout-green/90"
-                                  disabled={accessingProduct === access.products.id}
-                                >
-                                  {accessingProduct === access.products.id ? (
-                                    <>
+                            {access.products ? access.products.type === 'Curso' && access.products.member_areas ? <Button onClick={() => handleAccessProduct(access.products)} size="sm" className="bg-checkout-green hover:bg-checkout-green/90" disabled={accessingProduct === access.products.id}>
+                                  {accessingProduct === access.products.id ? <>
                                       <div className="w-4 h-4 border border-current border-t-transparent rounded-full animate-spin mr-2" />
                                       Verificando...
-                                    </>
-                                  ) : (
-                                    <>
+                                    </> : <>
                                       <ExternalLink className="w-4 h-4 mr-2" />
                                       Acessar Curso
-                                    </>
-                                  )}
-                                </Button>
-                              ) : access.products.share_link ? (
-                                <Button
-                                  onClick={() => handleAccessProduct(access.products)}
-                                  size="sm"
-                                  className="bg-checkout-green hover:bg-checkout-green/90"
-                                  disabled={accessingProduct === access.products.id}
-                                >
-                                  {accessingProduct === access.products.id ? (
-                                    <>
+                                    </>}
+                                </Button> : access.products.share_link ? <Button onClick={() => handleAccessProduct(access.products)} size="sm" className="bg-checkout-green hover:bg-checkout-green/90" disabled={accessingProduct === access.products.id}>
+                                  {accessingProduct === access.products.id ? <>
                                       <div className="w-4 h-4 border border-current border-t-transparent rounded-full animate-spin mr-2" />
                                       Verificando...
-                                    </>
-                                  ) : (
-                                    <>
+                                    </> : <>
                                       <ExternalLink className="w-4 h-4 mr-2" />
                                       Acessar Produto
-                                    </>
-                                  )}
-                                </Button>
-                              ) : (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  disabled
-                                >
+                                    </>}
+                                </Button> : <Button size="sm" variant="outline" disabled>
                                   Link não disponível
-                                </Button>
-                              )
-                            ) : (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                disabled
-                              >
+                                </Button> : <Button size="sm" variant="outline" disabled>
                                 Produto Indisponível
-                              </Button>
-                            )}
+                              </Button>}
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    </div>)}
+                </div>}
             </CardContent>
           </Card>
         </div>
       </div>
-    </ProtectedRoute>
-  );
+    </ProtectedRoute>;
 }
