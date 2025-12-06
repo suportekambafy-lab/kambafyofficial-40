@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { PageSkeleton } from '@/components/ui/page-skeleton';
+import { AdminLayout } from '@/components/admin/AdminLayout';
 import { 
   CheckCircle, 
   XCircle, 
@@ -155,19 +156,16 @@ export default function AdminRefunds() {
   };
 
   if (isLoading) {
-    return <PageSkeleton variant="refunds" />;
+    return (
+      <AdminLayout title="Gestão de Reembolsos" description="Carregando dados...">
+        <PageSkeleton variant="list" />
+      </AdminLayout>
+    );
   }
 
   return (
-    <div className="p-4">
+    <AdminLayout title="Gestão de Reembolsos" description="Intervenha em disputas entre compradores e vendedores">
       <div className="mb-6">
-        <h1 className="text-xl font-bold flex items-center gap-2 mb-2 text-foreground">
-          <Shield className="h-5 w-5" />
-          Gestão de Reembolsos
-        </h1>
-        <p className="text-muted-foreground text-sm mb-3">
-          Intervenha em disputas entre compradores e vendedores
-        </p>
         
         <div className="grid grid-cols-3 gap-3 mb-4">
           <Card>
@@ -432,6 +430,6 @@ export default function AdminRefunds() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </AdminLayout>
   );
 }
