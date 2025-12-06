@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ShoppingBag, AlertCircle, Clock, ArrowLeft } from 'lucide-react';
@@ -10,6 +10,8 @@ import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { PageSkeleton } from '@/components/ui/page-skeleton';
 import { Link } from 'react-router-dom';
+import { ProductImage } from '@/components/ui/fallback-image';
+import { getProductImageUrl } from '@/utils/imageUtils';
 
 export default function CustomerPurchases() {
   const { user } = useAuth();
@@ -32,7 +34,7 @@ export default function CustomerPurchases() {
         .from('orders')
         .select(`
           *,
-          products(name)
+          products(name, cover)
         `)
         .eq('customer_email', user.email)
         .eq('status', 'completed')
@@ -122,10 +124,13 @@ export default function CustomerPurchases() {
               <Card key={order.id} className="hover:shadow-lg transition-shadow">
                 <CardContent className="p-6">
                   <div className="flex flex-col md:flex-row gap-4">
-                    <div className="w-full md:w-32 h-32 bg-muted rounded-lg overflow-hidden flex-shrink-0">
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">
-                        <ShoppingBag className="h-12 w-12 text-primary" />
-                      </div>
+                    <div className="w-full md:w-32 h-32 rounded-lg overflow-hidden flex-shrink-0">
+                      <ProductImage 
+                        src={order.products?.cover ? getProductImageUrl(order.products.cover) : null}
+                        name={order.products?.name}
+                        className="w-full h-full object-cover"
+                        size="lg"
+                      />
                     </div>
 
                     <div className="flex-1">
