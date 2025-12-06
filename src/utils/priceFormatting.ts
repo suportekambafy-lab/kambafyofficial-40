@@ -23,6 +23,8 @@ export const formatPrice = (
           return `€${customPrice.toFixed(2)}`;
         case 'GBP':
           return `£${customPrice.toFixed(2)}`;
+        case 'USD':
+          return `$${customPrice.toFixed(2)}`;
         case 'MZN':
           return `${customPrice.toFixed(2)} MZN`;
         case 'KZ':
@@ -48,8 +50,8 @@ export const formatPrice = (
   // Usar multiplicação (exchangeRate = quantos da moeda estrangeira por 1 KZ)
   let convertedPrice = priceInKZ * targetCountry.exchangeRate;
   
-  // Garantir mínimo de 1 para GBP e EUR
-  if ((targetCountry.currency === 'GBP' || targetCountry.currency === 'EUR') && convertedPrice < 1) {
+  // Garantir mínimo de 1 para GBP, EUR e USD
+  if ((targetCountry.currency === 'GBP' || targetCountry.currency === 'EUR' || targetCountry.currency === 'USD') && convertedPrice < 1) {
     convertedPrice = 1;
   }
   
@@ -58,6 +60,8 @@ export const formatPrice = (
       return `€${convertedPrice.toFixed(2)}`;
     case 'GBP':
       return `£${convertedPrice.toFixed(2)}`;
+    case 'USD':
+      return `$${convertedPrice.toFixed(2)}`;
     case 'MZN':
       return `${convertedPrice.toFixed(2)} MZN`;
     case 'KZ':

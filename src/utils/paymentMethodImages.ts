@@ -17,7 +17,10 @@ export const PAYMENT_METHOD_IMAGES = {
   
   // UK - Métodos de pagamento Reino Unido (usa mesmas imagens)
   card_uk: "/lovable-uploads/3253c01d-89da-4a32-846f-4861dd03645c.png",
-  klarna_uk: "/lovable-uploads/86f49c10-3542-43ce-89aa-cbef30d98480.png"
+  klarna_uk: "/lovable-uploads/86f49c10-3542-43ce-89aa-cbef30d98480.png",
+  
+  // US - Métodos de pagamento Estados Unidos
+  card_us: "/lovable-uploads/3253c01d-89da-4a32-846f-4861dd03645c.png"
 };
 
 // Function to get image for payment method
