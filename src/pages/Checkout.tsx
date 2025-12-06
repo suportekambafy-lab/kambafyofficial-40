@@ -407,6 +407,8 @@ const Checkout = () => {
     // Apenas formatar com o símbolo correto da moeda
     if (userCountry.currency === 'EUR') {
       return `€${price.toFixed(2)}`;
+    } else if (userCountry.currency === 'GBP') {
+      return `£${price.toFixed(2)}`;
     } else if (userCountry.currency === 'MZN') {
       return `${price.toFixed(2)} MZN`;
     } else {
