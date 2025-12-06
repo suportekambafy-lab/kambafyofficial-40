@@ -226,10 +226,20 @@ export const useGeoLocation = () => {
   const formatPrice = (priceInKZ: number, targetCountry?: CountryInfo, customPrices?: Record<string, string>): string => {
     const country = targetCountry || userCountry;
     
+    console.log('🔄 formatPrice DEBUG:', {
+      priceInKZ,
+      countryCode: country?.code,
+      currency: country?.currency,
+      exchangeRate: country?.exchangeRate,
+      customPrices,
+      hasCustomPrice: customPrices && customPrices[country?.code]
+    });
+    
     if (customPrices && customPrices[country.code]) {
       const customPrice = parseFloat(customPrices[country.code]);
       
       if (!isNaN(customPrice)) {
+        console.log('🔄 Using custom price:', customPrice);
         switch (country.currency) {
           case 'EUR':
             return `€${customPrice.toFixed(2)}`;
@@ -245,6 +255,7 @@ export const useGeoLocation = () => {
     }
     
     const convertedPrice = convertPrice(priceInKZ, country);
+    console.log('🔄 Converted price:', convertedPrice, 'from', priceInKZ, '* rate', country?.exchangeRate);
     
     switch (country?.currency) {
       case 'EUR':
