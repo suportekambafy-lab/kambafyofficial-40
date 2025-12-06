@@ -33,7 +33,8 @@ export default function AdminLiveView() {
 
   // Platform-wide live metrics
   const [metrics, setMetrics] = useState({
-    activeCheckouts: 0,
+    kambafyCommission: 0,
+    activeVisitors: 0,
     totalSales: 0,
     sessions: 0,
     sessionsChange: 0,
@@ -107,10 +108,13 @@ export default function AdminLiveView() {
       const pendingOrders = allTodayOrders.filter(o => o.status === 'pending' || o.status === 'Pendente');
       const recentPending = (recentOrders || []).filter(o => o.status === 'pending' || o.status === 'Pendente');
 
-      // Calculate total sales value (full amount with platform fee for admin)
+      // Calculate total sales value and Kambafy commission
       let totalSalesValue = 0;
+      let kambafyCommissionValue = 0;
       paidOrders.forEach(order => {
         let amount = parseFloat(order.amount || '0');
+        let sellerCommission = parseFloat(order.seller_commission?.toString() || '0');
+        
         if (order.currency && order.currency !== 'KZ') {
           const exchangeRates: Record<string, number> = {
             'EUR': 1053,
@@ -118,8 +122,10 @@ export default function AdminLiveView() {
           };
           const rate = exchangeRates[order.currency.toUpperCase()] || 1;
           amount = Math.round(amount * rate);
+          sellerCommission = Math.round(sellerCommission * rate);
         }
         totalSalesValue += amount;
+        kambafyCommissionValue += (amount - sellerCommission);
       });
 
       const recentCompleted = (recentOrders || []).filter(o => o.status === 'completed');
@@ -149,7 +155,8 @@ export default function AdminLiveView() {
         : 0;
 
       setMetrics({
-        activeCheckouts: activeCheckouts?.length || 0,
+        kambafyCommission: kambafyCommissionValue,
+        activeVisitors: activeCheckouts?.length || 0,
         totalSales: totalSalesValue,
         sessions: totalSessions,
         sessionsChange,
@@ -361,16 +368,37 @@ export default function AdminLiveView() {
               <Card className="bg-white border-[hsl(var(--admin-border))]">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <ShoppingCart className="h-4 w-4 text-[hsl(var(--admin-primary))]" />
-                    <p className="text-sm text-[hsl(var(--admin-text-secondary))]">Checkouts Activos</p>
+                    <DollarSign className="h-4 w-4 text-[hsl(var(--admin-primary))]" />
+                    <p className="text-sm text-[hsl(var(--admin-text-secondary))]">Comissão Kambafy</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <p className="text-xl font-bold text-[hsl(var(--admin-text))]">{metrics.activeCheckouts}</p>
-                    {metrics.activeCheckouts > 0 && <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />}
+                    {isInitialLoad ? (
+                      <Skeleton className="h-8 w-24" />
+                    ) : (
+                      <p className="text-xl font-bold text-green-600">
+                        {formatPriceForAdmin(metrics.kambafyCommission, 'KZ')}
+                      </p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
 
+              <Card className="bg-white border-[hsl(var(--admin-border))]">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Users className="h-4 w-4 text-cyan-500" />
+                    <p className="text-sm text-[hsl(var(--admin-text-secondary))]">Visitantes Agora</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <p className="text-xl font-bold text-[hsl(var(--admin-text))]">{metrics.activeVisitors}</p>
+                    {metrics.activeVisitors > 0 && <span className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* KPI Cards Row 2 */}
+            <div className="grid grid-cols-2 gap-4">
               <Card className="bg-white border-[hsl(var(--admin-border))]">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2 mb-2">
@@ -390,7 +418,7 @@ export default function AdminLiveView() {
               </Card>
             </div>
 
-            {/* KPI Cards Row 2 */}
+            {/* KPI Cards Row 3 */}
             <div className="grid grid-cols-3 gap-4">
               <Card className="bg-white border-[hsl(var(--admin-border))]">
                 <CardContent className="p-4">
