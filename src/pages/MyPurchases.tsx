@@ -80,6 +80,32 @@ export default function MyPurchases() {
     loadPurchases();
   }, [user]);
 
+  // Real-time subscription para atualizações de reembolsos
+  useEffect(() => {
+    if (!user?.email) return;
+
+    const channel = supabase
+      .channel('refund-updates-buyer')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'refund_requests',
+          filter: `buyer_email=eq.${user.email}`
+        },
+        (payload) => {
+          console.log('Refund update received:', payload);
+          loadPurchases();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.email]);
+
   const canRequestRefund = (order: any) => {
     const refund = order.refund;
     // Se tem reembolso pendente ou aprovado, não pode solicitar
