@@ -18,18 +18,17 @@ export function AdminLayout({ children, title, description }: AdminLayoutProps) 
   const { collapsed } = useAdminSidebar();
 
   return (
-    <>
+    <div className={cn(
+      "min-h-screen transition-all duration-300",
+      collapsed ? "ml-20" : "ml-64"
+    )}>
       <AdminHeader 
         title={title} 
         description={description}
-        sidebarCollapsed={collapsed}
       />
-      <main className={cn(
-        "p-6 transition-all duration-300",
-        collapsed ? "ml-20" : "ml-64"
-      )}>
+      <main className="p-6">
         {children}
       </main>
-    </>
+    </div>
   );
 }
