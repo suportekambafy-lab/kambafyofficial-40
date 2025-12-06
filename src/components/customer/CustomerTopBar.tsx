@@ -177,17 +177,14 @@ export function CustomerTopBar({ showAppBanner = true }: CustomerTopBarProps) {
 
       {/* Main TopBar */}
       <header className="sticky top-0 z-40 w-full border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
-        <div className="flex h-14 items-center justify-between px-4">
+        <div className="flex h-[70px] items-center justify-between px-4 md:px-6">
           {/* Logo */}
           <div className="flex items-center gap-3">
             <img 
               src="/kambafy-logo-new.svg" 
               alt="Kambafy" 
-              className="h-8 w-auto dark:brightness-0 dark:invert"
+              className="h-10 sm:h-12 w-auto dark:brightness-0 dark:invert"
             />
-            <div className="hidden sm:block">
-              <span className="text-xs text-muted-foreground font-medium">Área do Cliente</span>
-            </div>
           </div>
 
           {/* Navigation & Actions */}
