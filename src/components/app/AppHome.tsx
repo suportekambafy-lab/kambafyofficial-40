@@ -1387,18 +1387,19 @@ export function AppHome() {
             } : null} />
             </div>
 
-            {/* Quick Actions */}
-            <div className="grid grid-cols-2 gap-2">
-              <button onClick={() => setActiveTab('sales-history')} className="bg-card rounded-xl border border-border/40 shadow-sm p-4 text-left hover:shadow-md transition-shadow">
-                <ShoppingCart className="h-5 w-5 text-primary mb-2" />
-                <p className="text-sm font-medium text-foreground">Ver Vendas</p>
-                <p className="text-xs text-muted-foreground">{stats.totalSales} vendas</p>
-              </button>
-              <button onClick={() => setActiveTab('stats')} className="bg-card rounded-xl border border-border/40 shadow-sm p-4 text-left hover:shadow-md transition-shadow">
-                <Wallet className="h-5 w-5 text-emerald-500 mb-2" />
-                <p className="text-sm font-medium text-foreground">Financeiro</p>
-                <p className="text-xs text-muted-foreground">Ver saldo</p>
-              </button>
+            {/* Info Banner */}
+            <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-xl border border-primary/20 p-4">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                  <TrendingUp className="h-5 w-5 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground">Dica para vender mais</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Compartilhe o link do seu produto nas redes sociais para alcançar mais clientes potenciais.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>;
     }
