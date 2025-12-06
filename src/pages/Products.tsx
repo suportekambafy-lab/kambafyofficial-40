@@ -97,7 +97,7 @@ export default function Products() {
       }
 
       // Buscar vendas de order bumps para produtos do usuário
-      // Buscar order_bump_settings para criar mapa de bump_product_name -> bump_product_id
+      // Usar bump_product_id diretamente para evitar confusão entre produtos de vendedores diferentes
       const allProductIds = [
         ...(ownProducts || []).map(p => p.id),
         ...affiliateProducts.map(p => p.id)
@@ -106,57 +106,37 @@ export default function Products() {
       let orderBumpSalesMap: Record<string, number> = {};
       
       if (allProductIds.length > 0) {
-        // Buscar settings onde o bump_product_id é um dos produtos do usuário
-        const { data: bumpSettings } = await supabase
-          .from('order_bump_settings')
-          .select('bump_product_id, bump_product_name')
-          .in('bump_product_id', allProductIds);
+        // Buscar todas as orders com order_bump_data
+        const { data: ordersWithBumps } = await supabase
+          .from('orders')
+          .select('order_bump_data')
+          .in('status', ['completed', 'paid'])
+          .not('order_bump_data', 'is', null);
         
-        if (bumpSettings && bumpSettings.length > 0) {
-          // Criar mapa de bump_product_name (normalizado) -> bump_product_id
-          const bumpNameToProductId: Record<string, string> = {};
-          for (const setting of bumpSettings) {
-            if (setting.bump_product_name && setting.bump_product_id) {
-              const normalizedName = setting.bump_product_name.toLowerCase().trim();
-              bumpNameToProductId[normalizedName] = setting.bump_product_id;
-            }
-          }
-          
-          // Buscar todas as orders com order_bump_data
-          const { data: ordersWithBumps } = await supabase
-            .from('orders')
-            .select('order_bump_data')
-            .in('status', ['completed', 'paid'])
-            .not('order_bump_data', 'is', null);
-          
-          if (ordersWithBumps) {
-            for (const order of ordersWithBumps) {
-              try {
-                // order_bump_data pode ser string JSON escapada dentro do JSONB
-                let bumpData: any = order.order_bump_data;
-                
-                // Parse múltiplo para lidar com string JSON escapada
-                while (typeof bumpData === 'string') {
-                  try {
-                    bumpData = JSON.parse(bumpData);
-                  } catch {
-                    break;
-                  }
+        if (ordersWithBumps) {
+          for (const order of ordersWithBumps) {
+            try {
+              // order_bump_data pode ser string JSON escapada dentro do JSONB
+              let bumpData: any = order.order_bump_data;
+              
+              // Parse múltiplo para lidar com string JSON escapada
+              while (typeof bumpData === 'string') {
+                try {
+                  bumpData = JSON.parse(bumpData);
+                } catch {
+                  break;
                 }
-                
-                const bumpProductName = bumpData?.bump_product_name as string | undefined;
-                if (bumpProductName) {
-                  const normalizedBumpName = bumpProductName.toLowerCase().trim();
-                  
-                  // Verificar se este bump_product_name corresponde a um produto do usuário
-                  const matchedProductId = bumpNameToProductId[normalizedBumpName];
-                  if (matchedProductId) {
-                    orderBumpSalesMap[matchedProductId] = (orderBumpSalesMap[matchedProductId] || 0) + 1;
-                  }
-                }
-              } catch (e) {
-                // Ignorar erros de parse
               }
+              
+              // Usar bump_product_id diretamente - é a forma correta de identificar o produto
+              const bumpProductId = bumpData?.bump_product_id as string | undefined;
+              
+              if (bumpProductId && allProductIds.includes(bumpProductId)) {
+                // Este order bump é de um produto do vendedor atual
+                orderBumpSalesMap[bumpProductId] = (orderBumpSalesMap[bumpProductId] || 0) + 1;
+              }
+            } catch (e) {
+              // Ignorar erros de parse
             }
           }
         }
