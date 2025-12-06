@@ -99,9 +99,15 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
         if (userCountry.code === 'AO') {
           // Angola usa KambaPay e métodos tradicionais
           return ['express', 'reference', 'transfer', 'kambapay'].includes(method.id);
-        } else if (['PT', 'MZ'].includes(userCountry.code)) {
-          // Portugal e Moçambique usam métodos tradicionais
-          return ['express', 'reference', 'transfer', 'multibanco', 'card'].includes(method.id);
+        } else if (userCountry.code === 'PT') {
+          // Portugal usa métodos tradicionais
+          return ['card', 'klarna', 'multibanco', 'mbway'].includes(method.id);
+        } else if (userCountry.code === 'MZ') {
+          // Moçambique usa métodos tradicionais
+          return ['emola', 'epesa'].includes(method.id);
+        } else if (userCountry.code === 'GB') {
+          // UK usa card e klarna
+          return ['card_uk', 'klarna_uk'].includes(method.id);
         }
         return false;
       });
