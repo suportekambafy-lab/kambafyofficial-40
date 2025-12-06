@@ -93,13 +93,10 @@ export default function CustomerPurchases() {
         </div>
       </div>
 
-      {/* Info cards */}
-      <div className="flex flex-col sm:flex-row gap-2">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 px-4 py-2 rounded-lg">
-          <AlertCircle className="h-4 w-4" />
-          <span>Prazo: 7 dias corridos após a compra</span>
-        </div>
-        
+      {/* Info card */}
+      <div className="flex items-center gap-2.5 text-sm text-muted-foreground bg-muted/30 border border-border/50 px-4 py-2.5 rounded-xl w-fit">
+        <Clock className="h-4 w-4 text-primary/70" />
+        <span>Prazo para reembolso: <strong className="text-foreground">7 dias</strong> após a compra</span>
       </div>
 
       {loading ? <PageSkeleton variant="list" /> : purchases.length === 0 ? <Card>
