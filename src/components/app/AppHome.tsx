@@ -922,9 +922,8 @@ export function AppHome() {
                   Use a versão desktop para criar produtos.
                 </p>
               </div> : <div className="space-y-2">
-                {products.map(product => <div key={product.id} className="bg-card rounded-xl border border-border/40 shadow-sm flex overflow-hidden hover:shadow-md transition-shadow">
-                    <div className={`w-1 shrink-0 ${product.status === 'Ativo' ? 'bg-emerald-500' : 'bg-gray-300'}`} />
-                    <div className="flex-1 p-3">
+                {products.map(product => <div key={product.id} className="bg-card rounded-xl border border-border/40 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+                    <div className="p-3">
                       <div className="flex gap-3">
                         {/* Product Image */}
                         <div className="relative flex-shrink-0">
