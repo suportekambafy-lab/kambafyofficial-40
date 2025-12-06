@@ -50,14 +50,6 @@ export function CustomerTopBar({ showAppBanner = true }: CustomerTopBarProps) {
     }
   }, [user]);
 
-  // Check if banner was dismissed in this session
-  useEffect(() => {
-    const dismissed = sessionStorage.getItem('appBannerDismissed');
-    if (dismissed) {
-      setBannerDismissed(true);
-    }
-  }, []);
-
   const loadProfileData = async () => {
     if (!user) return;
 
@@ -101,7 +93,6 @@ export function CustomerTopBar({ showAppBanner = true }: CustomerTopBarProps) {
 
   const dismissBanner = () => {
     setBannerDismissed(true);
-    sessionStorage.setItem('appBannerDismissed', 'true');
   };
 
   const handleDownloadApp = () => {
