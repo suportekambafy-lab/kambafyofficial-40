@@ -203,8 +203,7 @@ const App = () => {
                        <Route path="/apps/*" element={<OptimizedRoutes.Apps />} />
                          <Route path="/vendedor/*" element={<OptimizedRoutes.SellerDashboard />} />
                           <Route path="/meus-afiliados" element={<OptimizedRoutes.MeusAfiliados />} />
-                          <Route path="/minhas-compras" element={<OptimizedRoutes.MyPurchases />} />
-                          <Route path="/meus-acessos" element={<OptimizedRoutes.MeusAcessos />} />
+                          <Route path="/meus-acessos/*" element={<OptimizedRoutes.CustomerArea />} />
                           <Route path="/identidade" element={<OptimizedRoutes.UserIdentity />} />
                           <Route path="/vimeo-settings" element={<OptimizedRoutes.VimeoSettings />} />
                           
