@@ -10,15 +10,16 @@ import {
   HelpCircle,
   CreditCard,
   ArrowLeftRight,
-  Download,
   X,
-  Smartphone
+  Smartphone,
+  ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useKambaPayBalance } from '@/hooks/useKambaPayBalance';
 import { AppStoreButton } from '@/components/ui/app-store-button';
 import { PlayStoreButton } from '@/components/ui/play-store-button';
+import { useIsMobile } from '@/hooks/use-mobile';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +28,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from '@/components/ui/drawer';
 
 interface CustomerTopBarProps {
   showAppBanner?: boolean;
@@ -36,9 +44,11 @@ export function CustomerTopBar({ showAppBanner = true }: CustomerTopBarProps) {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [profileAvatar, setProfileAvatar] = useState("");
   const [profileName, setProfileName] = useState("");
   const [bannerDismissed, setBannerDismissed] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const { balance, fetchBalanceByEmail } = useKambaPayBalance();
 
   useEffect(() => {
@@ -219,80 +229,174 @@ export function CustomerTopBar({ showAppBanner = true }: CustomerTopBarProps) {
               <span className="hidden md:inline">Painel Vendedor</span>
             </Button>
 
-            {/* User Menu */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="flex items-center gap-2 px-2"
-                >
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={profileAvatar} />
-                    <AvatarFallback className="bg-primary text-primary-foreground text-sm">
-                      {profileName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="hidden sm:inline text-sm font-medium max-w-[100px] truncate">
-                    {profileName || user?.email?.split('@')[0]}
-                  </span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56" sideOffset={8}>
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium">{profileName || 'Usuário'}</p>
-                    <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+            {/* User Menu - Drawer for Mobile, Dropdown for Desktop */}
+            {isMobile ? (
+              <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
+                <DrawerTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="flex items-center gap-2 px-2"
+                  >
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={profileAvatar} />
+                      <AvatarFallback className="bg-primary text-primary-foreground text-sm">
+                        {profileName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DrawerTrigger>
+                <DrawerContent className="px-4 pb-8">
+                  <DrawerHeader className="text-left pb-4">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-12 w-12">
+                        <AvatarImage src={profileAvatar} />
+                        <AvatarFallback className="bg-primary text-primary-foreground text-lg">
+                          {profileName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <DrawerTitle className="text-base">{profileName || 'Usuário'}</DrawerTitle>
+                        <p className="text-sm text-muted-foreground truncate">{user?.email}</p>
+                      </div>
+                    </div>
+                  </DrawerHeader>
+                  
+                  <div className="space-y-1">
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-between h-12 px-3"
+                      onClick={() => {
+                        setDrawerOpen(false);
+                        navigate('/meus-acessos/compras');
+                      }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <CreditCard className="h-5 w-5 text-muted-foreground" />
+                        <span>Minhas Compras</span>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </Button>
+                    
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-between h-12 px-3"
+                      onClick={() => {
+                        setDrawerOpen(false);
+                        navigate('/vendedor');
+                      }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <ArrowLeftRight className="h-5 w-5 text-muted-foreground" />
+                        <span>Painel Vendedor</span>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </Button>
+                    
+                    <div className="h-px bg-border my-2" />
+                    
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-between h-12 px-3"
+                      onClick={() => {
+                        setDrawerOpen(false);
+                        navigate('/configuracoes');
+                      }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Settings className="h-5 w-5 text-muted-foreground" />
+                        <span>Configurações</span>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </Button>
+                    
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-between h-12 px-3"
+                      onClick={() => {
+                        setDrawerOpen(false);
+                        navigate('/ajuda');
+                      }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <HelpCircle className="h-5 w-5 text-muted-foreground" />
+                        <span>Ajuda</span>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </Button>
+                    
+                    <div className="h-px bg-border my-2" />
+                    
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start h-12 px-3 text-destructive hover:text-destructive hover:bg-destructive/10"
+                      onClick={() => {
+                        setDrawerOpen(false);
+                        handleSignOut();
+                      }}
+                    >
+                      <LogOut className="h-5 w-5 mr-3" />
+                      <span>Sair</span>
+                    </Button>
                   </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                
-                {/* Mobile-only buttons */}
-                <DropdownMenuItem
-                  className="sm:hidden cursor-pointer"
-                  onClick={() => navigate('/meus-acessos/compras')}
-                >
-                  <CreditCard className="h-4 w-4 mr-2" />
-                  Minhas Compras
-                </DropdownMenuItem>
-                
-                <DropdownMenuItem
-                  className="sm:hidden cursor-pointer"
-                  onClick={() => navigate('/vendedor')}
-                >
-                  <ArrowLeftRight className="h-4 w-4 mr-2" />
-                  Painel Vendedor
-                </DropdownMenuItem>
-                
-                <DropdownMenuSeparator className="sm:hidden" />
-                
-                <DropdownMenuItem
-                  className="cursor-pointer"
-                  onClick={() => navigate('/configuracoes')}
-                >
-                  <Settings className="h-4 w-4 mr-2" />
-                  Configurações
-                </DropdownMenuItem>
-                
-                <DropdownMenuItem
-                  className="cursor-pointer"
-                  onClick={() => navigate('/ajuda')}
-                >
-                  <HelpCircle className="h-4 w-4 mr-2" />
-                  Ajuda
-                </DropdownMenuItem>
-                
-                <DropdownMenuSeparator />
-                
-                <DropdownMenuItem
-                  className="cursor-pointer text-destructive focus:text-destructive"
-                  onClick={handleSignOut}
-                >
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Sair
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                </DrawerContent>
+              </Drawer>
+            ) : (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="flex items-center gap-2 px-2"
+                  >
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={profileAvatar} />
+                      <AvatarFallback className="bg-primary text-primary-foreground text-sm">
+                        {profileName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-sm font-medium max-w-[100px] truncate">
+                      {profileName || user?.email?.split('@')[0]}
+                    </span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56" sideOffset={8}>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium">{profileName || 'Usuário'}</p>
+                      <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  
+                  <DropdownMenuItem
+                    className="cursor-pointer"
+                    onClick={() => navigate('/configuracoes')}
+                  >
+                    <Settings className="h-4 w-4 mr-2" />
+                    Configurações
+                  </DropdownMenuItem>
+                  
+                  <DropdownMenuItem
+                    className="cursor-pointer"
+                    onClick={() => navigate('/ajuda')}
+                  >
+                    <HelpCircle className="h-4 w-4 mr-2" />
+                    Ajuda
+                  </DropdownMenuItem>
+                  
+                  <DropdownMenuSeparator />
+                  
+                  <DropdownMenuItem
+                    className="cursor-pointer text-destructive focus:text-destructive"
+                    onClick={handleSignOut}
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sair
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </div>
       </header>
