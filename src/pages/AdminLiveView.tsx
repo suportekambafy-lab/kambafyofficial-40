@@ -212,21 +212,26 @@ export default function AdminLiveView() {
       setVisitorLocations(Object.values(visitorLocationCounts));
 
       // Top sellers today
+      // Top sellers today - get all unique seller IDs first
+      const uniqueSellerIds = [...new Set(paidOrders.map(o => (o.products as any)?.user_id).filter(Boolean))];
+      
+      // Fetch all profiles at once for efficiency
+      const { data: sellerProfiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .in('id', uniqueSellerIds);
+      
+      const profileMap = new Map((sellerProfiles || []).map(p => [p.id, p]));
+      
       const sellerSales: Record<string, { name: string; email: string; sales: number; revenue: number }> = {};
       for (const order of paidOrders) {
         const sellerId = (order.products as any)?.user_id;
         if (!sellerId) continue;
         
         if (!sellerSales[sellerId]) {
-          // Get seller name and email
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('full_name, email')
-            .eq('id', sellerId)
-            .single();
-          
+          const profile = profileMap.get(sellerId);
           sellerSales[sellerId] = {
-            name: profile?.full_name || profile?.email || 'Desconhecido',
+            name: profile?.full_name || profile?.email || `Vendedor ${sellerId.substring(0, 8)}`,
             email: profile?.email || '',
             sales: 0,
             revenue: 0
