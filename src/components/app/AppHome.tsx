@@ -1293,13 +1293,24 @@ export function AppHome() {
           </div>;
       default:
         return <div className="p-3 md:p-4 space-y-3 bg-background min-h-full max-w-full overflow-x-hidden">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-              <div>
-                
-                
-              </div>
-              <Button variant="outline" size="sm" onClick={() => setActiveTab('live-view')} className="flex items-center gap-2 text-foreground">
+            {/* Header with Live View and Period Filter */}
+            <div className="flex items-center justify-between gap-2">
+              <select value={timeFilter} onChange={e => {
+                const value = e.target.value as typeof timeFilter;
+                setTimeFilter(value);
+                if (value !== 'custom') {
+                  setCustomDateRange({});
+                }
+              }} className="flex-1 h-9 px-3 rounded-lg border border-border/40 bg-card text-sm font-medium text-foreground shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors">
+                <option value="today">Hoje</option>
+                <option value="yesterday">Ontem</option>
+                <option value="7d">Últimos 7 dias</option>
+                <option value="30d">Últimos 30 dias</option>
+                <option value="90d">Últimos 90 dias</option>
+                <option value="all">Todo período</option>
+                <option value="custom">Personalizado</option>
+              </select>
+              <Button variant="outline" size="sm" onClick={() => setActiveTab('live-view')} className="flex items-center gap-2 text-foreground shrink-0">
                 <Radio className="h-4 w-4" />
                 <span className="flex items-center gap-1.5">
                   Live View
@@ -1308,26 +1319,8 @@ export function AppHome() {
               </Button>
             </div>
 
-            {/* Filters - Compact Layout */}
+            {/* Custom Date Range - Only shows when custom is selected */}
             <div className="flex flex-col gap-2 max-w-full">
-              <div className="space-y-1.5">
-                <label className="text-[13px] font-medium text-foreground">Período</label>
-                <select value={timeFilter} onChange={e => {
-                const value = e.target.value as typeof timeFilter;
-                setTimeFilter(value);
-                if (value !== 'custom') {
-                  setCustomDateRange({});
-                }
-              }} className="w-full h-9 px-3 rounded-lg border border-border/40 bg-card text-sm font-medium text-foreground shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors">
-                  <option value="today">Hoje</option>
-                  <option value="yesterday">Ontem</option>
-                  <option value="7d">Últimos 7 dias</option>
-                  <option value="30d">Últimos 30 dias</option>
-                  <option value="90d">Últimos 90 dias</option>
-                  <option value="all">Todo período</option>
-                  <option value="custom">Personalizado</option>
-                </select>
-              </div>
 
               {timeFilter === 'custom' && <div className="space-y-1.5">
                   <label className="text-[13px] font-medium text-foreground">Selecionar Data</label>
