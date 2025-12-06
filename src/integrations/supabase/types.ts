@@ -1682,6 +1682,7 @@ export type Database = {
           hero_description: string | null
           hero_image_url: string | null
           hero_title: string | null
+          hero_video_url: string | null
           id: string
           login_logo_url: string | null
           logo_url: string | null
@@ -1703,6 +1704,7 @@ export type Database = {
           hero_description?: string | null
           hero_image_url?: string | null
           hero_title?: string | null
+          hero_video_url?: string | null
           id?: string
           login_logo_url?: string | null
           logo_url?: string | null
@@ -1724,6 +1726,7 @@ export type Database = {
           hero_description?: string | null
           hero_image_url?: string | null
           hero_title?: string | null
+          hero_video_url?: string | null
           id?: string
           login_logo_url?: string | null
           logo_url?: string | null

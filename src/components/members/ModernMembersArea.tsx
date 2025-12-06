@@ -827,11 +827,25 @@ export default function ModernMembersArea({ memberAreaId: propMemberAreaId, isEm
           <div className="absolute inset-0 bg-grid-white/[0.01] bg-[size:40px_40px]" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
           
-          {/* Hero Image Background */}
-          {currentMemberArea?.hero_image_url && <div className="absolute inset-0 opacity-40">
+          {/* Hero Video Background (se tiver vídeo, usa vídeo; senão usa imagem) */}
+          {(currentMemberArea as any)?.hero_video_url ? (
+            <div className="absolute inset-0 opacity-50">
+              <video 
+                src={(currentMemberArea as any).hero_video_url} 
+                autoPlay 
+                loop 
+                muted 
+                playsInline
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
+            </div>
+          ) : currentMemberArea?.hero_image_url ? (
+            <div className="absolute inset-0 opacity-40">
               <img src={currentMemberArea.hero_image_url} alt={currentMemberArea.name} className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent" />
-            </div>}
+            </div>
+          ) : null}
           
           <div className="relative container mx-auto px-4 py-20">
             {/* Header */}
