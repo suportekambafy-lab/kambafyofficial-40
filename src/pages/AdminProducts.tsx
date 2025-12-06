@@ -651,6 +651,7 @@ export default function AdminProducts() {
     
     const search = searchTerm.toLowerCase();
     const searchMatch = 
+      product.id.toLowerCase().includes(search) ||
       product.name.toLowerCase().includes(search) ||
       product.description?.toLowerCase().includes(search) ||
       product.type.toLowerCase().includes(search) ||
@@ -678,11 +679,11 @@ export default function AdminProducts() {
       
       {/* Pesquisa e Filtros */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
-        <div className="relative w-full sm:w-64">
+        <div className="relative w-full sm:w-80">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(var(--admin-text-secondary))]" />
           <Input
             type="text"
-            placeholder="Pesquisar produtos..."
+            placeholder="Pesquisar por nome, ID, vendedor..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-9 w-full bg-[hsl(var(--admin-card-bg))] border-[hsl(var(--admin-border))]"
@@ -778,9 +779,7 @@ export default function AdminProducts() {
                   </TableCell>
                   <TableCell>
                     <div className="font-medium text-sm">{product.name}</div>
-                    {product.description && (
-                      <p className="text-xs text-muted-foreground line-clamp-1 max-w-[200px]">{product.description}</p>
-                    )}
+                    <p className="text-xs text-muted-foreground font-mono">{product.id.slice(0, 8)}...</p>
                   </TableCell>
                   <TableCell>
                     <div className="text-sm">{product.profiles?.full_name || 'N/A'}</div>

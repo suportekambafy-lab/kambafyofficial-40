@@ -239,10 +239,11 @@ export default function AdminSales() {
         return matchesStatus;
       }
       
-      // Buscar por nome, email ou ID do pedido (com null checks)
+      // Buscar por nome, email, ID do pedido ou ID do produto (com null checks)
       const customerName = (order.customer_name || '').toLowerCase();
       const customerEmail = (order.customer_email || '').toLowerCase();
       const orderId = (order.order_id || '').toLowerCase();
+      const orderDbId = (order.id || '').toLowerCase();
       const customerPhone = (order.customer_phone || '').toLowerCase();
       const productName = (order.products?.name || '').toLowerCase();
       const sellerName = (order.seller?.full_name || '').toLowerCase();
@@ -251,6 +252,7 @@ export default function AdminSales() {
         customerName.includes(search) ||
         customerEmail.includes(search) ||
         orderId.includes(search) ||
+        orderDbId.includes(search) ||
         customerPhone.includes(search) ||
         productName.includes(search) ||
         sellerName.includes(search);
