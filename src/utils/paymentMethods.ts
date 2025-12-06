@@ -10,6 +10,7 @@ export interface PaymentMethod {
   isAngola?: boolean;
   isMozambique?: boolean;
   isPortugal?: boolean;
+  isUK?: boolean;
   countryFlag?: string;
   countryName?: string;
 }
@@ -95,6 +96,24 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
     isPortugal: true,
     countryFlag: "🇵🇹",
     countryName: "Portugal"
+  },
+  {
+    id: "card_uk",
+    name: "Card Payment",
+    image: getPaymentMethodImage("card"),
+    enabled: true,
+    isUK: true,
+    countryFlag: "🇬🇧",
+    countryName: "United Kingdom"
+  },
+  {
+    id: "klarna_uk",
+    name: "Klarna",
+    image: getPaymentMethodImage("klarna"),
+    enabled: true,
+    isUK: true,
+    countryFlag: "🇬🇧",
+    countryName: "United Kingdom"
   }
 ];
 
@@ -115,6 +134,10 @@ export const getCountryByPaymentMethod = (paymentMethod: string) => {
     // Moçambique
     'emola': { code: 'MZ', name: 'Moçambique', flag: '🇲🇿' },
     'epesa': { code: 'MZ', name: 'Moçambique', flag: '🇲🇿' },
+    
+    // Reino Unido
+    'card_uk': { code: 'GB', name: 'United Kingdom', flag: '🇬🇧' },
+    'klarna_uk': { code: 'GB', name: 'United Kingdom', flag: '🇬🇧' },
   };
   
   return paymentToCountry[paymentMethod] || { code: 'AO', name: 'Angola', flag: '🇦🇴' };
@@ -145,6 +168,10 @@ export const getPortugalPaymentMethods = (): PaymentMethod[] => {
   return PAYMENT_METHODS.filter(method => method.isPortugal);
 };
 
+export const getUKPaymentMethods = (): PaymentMethod[] => {
+  return PAYMENT_METHODS.filter(method => method.isUK);
+};
+
 export const getPaymentMethodsByCountry = (countryCode: string): PaymentMethod[] => {
   switch (countryCode) {
     case 'AO':
@@ -153,6 +180,8 @@ export const getPaymentMethodsByCountry = (countryCode: string): PaymentMethod[]
       return getMozambiquePaymentMethods();
     case 'PT':
       return getPortugalPaymentMethods();
+    case 'GB':
+      return getUKPaymentMethods();
     default:
       return [];
   }

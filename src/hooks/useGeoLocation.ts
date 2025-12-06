@@ -30,13 +30,21 @@ const SUPPORTED_COUNTRIES: Record<string, CountryInfo> = {
     currency: 'MZN',
     flag: '🇲🇿',
     exchangeRate: 0.0697
+  },
+  GB: {
+    code: 'GB',
+    name: 'United Kingdom',
+    currency: 'GBP',
+    flag: '🇬🇧',
+    exchangeRate: 0.001
   }
 };
 
 const COUNTRY_LANGUAGES: Record<string, string> = {
   'AO': 'pt',
   'PT': 'pt',
-  'MZ': 'pt'
+  'MZ': 'pt',
+  'GB': 'en'
 };
 
 const SAFETY_MARGIN = 1.05;
@@ -63,6 +71,7 @@ const getInitialRates = (): Record<string, CountryInfo> => {
       const countries = { ...SUPPORTED_COUNTRIES };
       if (rates.EUR) countries.PT.exchangeRate = rates.EUR;
       if (rates.MZN) countries.MZ.exchangeRate = rates.MZN;
+      if (rates.GBP) countries.GB.exchangeRate = rates.GBP;
       return countries;
     }
   } catch {
@@ -113,11 +122,16 @@ export const useGeoLocation = () => {
         updatedCountries.MZ.exchangeRate = data.rates.MZN * SAFETY_MARGIN;
       }
       
+      if (data.rates.GBP) {
+        updatedCountries.GB.exchangeRate = data.rates.GBP * SAFETY_MARGIN;
+      }
+      
       setSupportedCountries(updatedCountries);
       
       localStorage.setItem('exchangeRates', JSON.stringify({
         EUR: updatedCountries.PT.exchangeRate,
-        MZN: updatedCountries.MZ.exchangeRate
+        MZN: updatedCountries.MZ.exchangeRate,
+        GBP: updatedCountries.GB.exchangeRate
       }));
       localStorage.setItem('ratesLastUpdate', Date.now().toString());
       
@@ -212,6 +226,8 @@ export const useGeoLocation = () => {
         switch (country.currency) {
           case 'EUR':
             return `€${customPrice.toFixed(2)}`;
+          case 'GBP':
+            return `£${customPrice.toFixed(2)}`;
           case 'MZN':
             return `${customPrice.toFixed(2)} MZN`;
           case 'KZ':
@@ -226,6 +242,8 @@ export const useGeoLocation = () => {
     switch (country?.currency) {
       case 'EUR':
         return `€${convertedPrice.toFixed(2)}`;
+      case 'GBP':
+        return `£${convertedPrice.toFixed(2)}`;
       case 'MZN':
         return `${convertedPrice.toFixed(2)} MZN`;
       case 'KZ':
