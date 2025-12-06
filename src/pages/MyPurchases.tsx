@@ -33,15 +33,42 @@ export default function MyPurchases() {
         .from('orders')
         .select(`
           *,
-          products(name),
-          refund_requests!refund_requests_order_id_fkey(id, status, reason, seller_comment, admin_comment, created_at, updated_at)
+          products(name)
         `)
         .eq('customer_email', user.email)
         .eq('status', 'completed')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setPurchases(data || []);
+
+      // Buscar refunds separadamente para pegar o mais recente por order_id
+      const orderIds = data?.map(o => o.order_id) || [];
+      
+      if (orderIds.length > 0) {
+        const { data: refunds } = await supabase
+          .from('refund_requests')
+          .select('*')
+          .in('order_id', orderIds)
+          .order('updated_at', { ascending: false });
+
+        // Agrupar refunds por order_id (pegar o mais recente)
+        const refundsByOrder = new Map();
+        refunds?.forEach(r => {
+          if (!refundsByOrder.has(r.order_id)) {
+            refundsByOrder.set(r.order_id, r);
+          }
+        });
+
+        // Anexar o refund mais recente a cada order
+        const ordersWithRefunds = data?.map(order => ({
+          ...order,
+          refund: refundsByOrder.get(order.order_id) || null
+        }));
+
+        setPurchases(ordersWithRefunds || []);
+      } else {
+        setPurchases(data || []);
+      }
     } catch (error) {
       console.error('Error loading purchases:', error);
     } finally {
@@ -54,7 +81,7 @@ export default function MyPurchases() {
   }, [user]);
 
   const canRequestRefund = (order: any) => {
-    const refund = order.refund_requests?.[0];
+    const refund = order.refund;
     // Se tem reembolso pendente ou aprovado, não pode solicitar
     if (refund && ['pending', 'approved', 'approved_by_seller', 'approved_by_admin'].includes(refund.status)) {
       return false;
@@ -64,7 +91,7 @@ export default function MyPurchases() {
   };
 
   const canReopenRefund = (order: any) => {
-    const refund = order.refund_requests?.[0];
+    const refund = order.refund;
     if (!refund) return false;
     // Pode reabrir se foi rejeitado e ainda está no prazo
     if (!['rejected', 'rejected_by_seller', 'rejected_by_admin', 'cancelled'].includes(refund.status)) {
@@ -138,7 +165,7 @@ export default function MyPurchases() {
       ) : (
         <div className="grid gap-3">
           {purchases.map((order) => {
-            const refund = order.refund_requests?.[0];
+            const refund = order.refund;
             const canRefund = canRequestRefund(order);
             const canReopen = canReopenRefund(order);
             const daysLeft = order.refund_deadline ? getDaysLeft(order.refund_deadline) : 0;
