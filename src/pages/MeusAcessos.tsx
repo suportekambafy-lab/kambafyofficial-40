@@ -190,28 +190,14 @@ export default function MeusAcessos() {
         <CustomerTopBar />
 
         <div className="p-4 md:p-6 space-y-6">
-          {/* Modern Summary Cards */}
-          <div className="grid grid-cols-1 gap-4">
-            <HighlightedCard highlightColor="blue">
-              <HighlightedCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <HighlightedCardTitle className="text-sm font-medium">Total de Acessos</HighlightedCardTitle>
-                <ShoppingBag className="h-4 w-4 text-muted-foreground" />
-              </HighlightedCardHeader>
-              <HighlightedCardContent>
-                <div className="text-2xl font-bold">{totalAcessos}</div>
-                <p className="text-xs text-muted-foreground">
-                  {totalAcessos === 0 ? 'Nenhum acesso disponível' : `${totalAcessos} acesso${totalAcessos > 1 ? 's' : ''} disponível${totalAcessos > 1 ? 'eis' : ''}`}
-                </p>
-              </HighlightedCardContent>
-            </HighlightedCard>
-          </div>
-
           {/* Accesses List */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                
                 Meus Acessos
+                <Badge variant="secondary" className="ml-1">
+                  {totalAcessos}
+                </Badge>
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
