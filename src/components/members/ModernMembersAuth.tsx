@@ -11,6 +11,7 @@ interface MemberArea {
   hero_description?: string;
   logo_url?: string;
   hero_image_url?: string;
+  hero_video_url?: string;
 }
 
 interface ModernMembersAuthContextType {
