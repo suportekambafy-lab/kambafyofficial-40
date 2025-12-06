@@ -16,7 +16,8 @@ import {
   PanelLeftClose,
   PanelLeft,
   Wrench,
-  Radio
+  Radio,
+  RefreshCw
 } from 'lucide-react';
 import kambabyLogo from '@/assets/kambafy-logo.png';
 
@@ -76,6 +77,11 @@ const menuItems = [
     href: '/admin/payment-approvals',
     label: 'Aprovar Pagamentos',
     icon: CreditCard,
+  },
+  {
+    href: '/admin/refunds',
+    label: 'Reembolsos',
+    icon: RefreshCw,
   },
   {
     href: '/admin/extras',
