@@ -58,7 +58,7 @@ interface CustomizationData {
 
   // Logo de Login (separado do logo principal)
   login_logo_url: string;
-  
+
   // Botão Personalizado
   custom_button_enabled: boolean;
   custom_button_text: string;
@@ -176,35 +176,30 @@ export default function Members() {
       loadUserProducts();
     }
   }, [selectedArea, user]);
-  
   const loadCohorts = async () => {
     if (!selectedArea) return;
-    
     try {
-      const { data, error } = await supabase
-        .from('member_area_cohorts')
-        .select('*')
-        .eq('member_area_id', selectedArea.id)
-        .order('created_at', { ascending: false });
-      
+      const {
+        data,
+        error
+      } = await supabase.from('member_area_cohorts').select('*').eq('member_area_id', selectedArea.id).order('created_at', {
+        ascending: false
+      });
       if (error) throw error;
       setCohorts(data || []);
     } catch (error) {
       console.error('Error loading cohorts:', error);
     }
   };
-
   const loadUserProducts = async () => {
     if (!user) return;
-    
     try {
-      const { data, error } = await supabase
-        .from('products')
-        .select('id, name, price, type')
-        .eq('user_id', user.id)
-        .eq('status', 'Ativo')
-        .order('name', { ascending: true });
-      
+      const {
+        data,
+        error
+      } = await supabase.from('products').select('id, name, price, type').eq('user_id', user.id).eq('status', 'Ativo').order('name', {
+        ascending: true
+      });
       if (error) throw error;
       setUserProducts(data || []);
     } catch (error) {
@@ -885,24 +880,24 @@ export default function Members() {
     console.log('Form reset complete');
   };
   const resetModuleForm = () => {
-      setModuleFormData({
-        title: '',
-        description: '',
-        status: 'draft',
-        cover_image_url: '',
-        cover_orientation: 'horizontal',
-        coming_soon: false,
-        cohort_access: 'all',
-        cohort_ids: [],
-        coming_soon_access: 'all',
-        coming_soon_cohort_ids: [],
-        is_paid: false,
-        paid_price: '',
-        paid_product_id: null,
-        paid_access: 'all',
-        paid_cohort_ids: []
-      });
-      setEditingModule(null);
+    setModuleFormData({
+      title: '',
+      description: '',
+      status: 'draft',
+      cover_image_url: '',
+      cover_orientation: 'horizontal',
+      coming_soon: false,
+      cohort_access: 'all',
+      cohort_ids: [],
+      coming_soon_access: 'all',
+      coming_soon_cohort_ids: [],
+      is_paid: false,
+      paid_price: '',
+      paid_product_id: null,
+      paid_access: 'all',
+      paid_cohort_ids: []
+    });
+    setEditingModule(null);
   };
   const handleVideoUploaded = (videoUrl: string, videoData?: any) => {
     console.log('Video uploaded callback received:', videoUrl, videoData);
@@ -911,18 +906,15 @@ export default function Members() {
         ...prev,
         video_url: videoData?.embedUrl || videoUrl,
         bunny_embed_url: videoData?.embedUrl || videoUrl,
-        hls_url: videoData?.hlsUrl || null, // null para Vimeo
-        duration: videoData?.duration || 0,
+        hls_url: videoData?.hlsUrl || null,
+        // null para Vimeo
+        duration: videoData?.duration || 0
       };
       console.log('Updated formData with video:', newFormData);
       return newFormData;
     });
     setVideoUploaderOpen(false);
-    
-    const durationText = videoData?.duration > 0 
-      ? `${Math.floor(videoData.duration / 60)}:${(videoData.duration % 60).toString().padStart(2, '0')}` 
-      : 'processando...';
-    
+    const durationText = videoData?.duration > 0 ? `${Math.floor(videoData.duration / 60)}:${(videoData.duration % 60).toString().padStart(2, '0')}` : 'processando...';
     toast({
       title: "Sucesso",
       description: `Vídeo enviado com sucesso! Duração: ${durationText}`
@@ -1121,88 +1113,71 @@ export default function Members() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {modules.length > 0 ? <div className="space-y-4 w-full max-w-full">
-                    {modules.sort((a, b) => a.order_number - b.order_number).map((module, index) => <div 
-                      key={module.id} 
-                      className="border rounded-lg p-3 md:p-4 space-y-3 transition-all hover:shadow-md w-full max-w-full"
-                      draggable
-                      onDragStart={(e) => {
-                        e.dataTransfer.effectAllowed = 'move';
-                        e.dataTransfer.setData('moduleId', module.id);
-                        e.currentTarget.style.opacity = '0.5';
-                        console.log('🎯 Drag started for module:', module.title);
-                      }}
-                      onDragEnd={(e) => {
-                        e.currentTarget.style.opacity = '1';
-                      }}
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                        e.dataTransfer.dropEffect = 'move';
-                        e.currentTarget.style.borderColor = '#3b82f6';
-                        e.currentTarget.style.borderWidth = '2px';
-                      }}
-                      onDragLeave={(e) => {
-                        e.currentTarget.style.borderColor = '';
-                        e.currentTarget.style.borderWidth = '';
-                      }}
-                      onDrop={async (e) => {
-                        e.preventDefault();
-                        e.currentTarget.style.borderColor = '';
-                        e.currentTarget.style.borderWidth = '';
-                        
-                        const draggedId = e.dataTransfer.getData('moduleId');
-                        console.log('🎯 Drop event - draggedId:', draggedId, 'targetId:', module.id);
-                        
-                        if (draggedId === module.id) return;
+                    {modules.sort((a, b) => a.order_number - b.order_number).map((module, index) => <div key={module.id} className="border rounded-lg p-3 md:p-4 space-y-3 transition-all hover:shadow-md w-full max-w-full" draggable onDragStart={e => {
+                  e.dataTransfer.effectAllowed = 'move';
+                  e.dataTransfer.setData('moduleId', module.id);
+                  e.currentTarget.style.opacity = '0.5';
+                  console.log('🎯 Drag started for module:', module.title);
+                }} onDragEnd={e => {
+                  e.currentTarget.style.opacity = '1';
+                }} onDragOver={e => {
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = 'move';
+                  e.currentTarget.style.borderColor = '#3b82f6';
+                  e.currentTarget.style.borderWidth = '2px';
+                }} onDragLeave={e => {
+                  e.currentTarget.style.borderColor = '';
+                  e.currentTarget.style.borderWidth = '';
+                }} onDrop={async e => {
+                  e.preventDefault();
+                  e.currentTarget.style.borderColor = '';
+                  e.currentTarget.style.borderWidth = '';
+                  const draggedId = e.dataTransfer.getData('moduleId');
+                  console.log('🎯 Drop event - draggedId:', draggedId, 'targetId:', module.id);
+                  if (draggedId === module.id) return;
+                  const draggedModule = modules.find(m => m.id === draggedId);
+                  const targetModule = module;
+                  if (!draggedModule) return;
+                  console.log('🔄 Reordering:', draggedModule.title, '->', targetModule.title);
 
-                        const draggedModule = modules.find(m => m.id === draggedId);
-                        const targetModule = module;
+                  // Reordenar módulos
+                  const reorderedModules = [...modules];
+                  const draggedIndex = reorderedModules.findIndex(m => m.id === draggedId);
+                  const targetIndex = reorderedModules.findIndex(m => m.id === targetModule.id);
+                  reorderedModules.splice(draggedIndex, 1);
+                  reorderedModules.splice(targetIndex, 0, draggedModule);
 
-                        if (!draggedModule) return;
+                  // Atualizar ordem no estado
+                  const updatedModules = reorderedModules.map((m, idx) => ({
+                    ...m,
+                    order_number: idx + 1
+                  }));
+                  setModules(updatedModules);
 
-                        console.log('🔄 Reordering:', draggedModule.title, '->', targetModule.title);
-
-                        // Reordenar módulos
-                        const reorderedModules = [...modules];
-                        const draggedIndex = reorderedModules.findIndex(m => m.id === draggedId);
-                        const targetIndex = reorderedModules.findIndex(m => m.id === targetModule.id);
-
-                        reorderedModules.splice(draggedIndex, 1);
-                        reorderedModules.splice(targetIndex, 0, draggedModule);
-
-                        // Atualizar ordem no estado
-                        const updatedModules = reorderedModules.map((m, idx) => ({
-                          ...m,
-                          order_number: idx + 1
-                        }));
-
-                        setModules(updatedModules);
-
-                        // Atualizar no banco de dados
-                        try {
-                          for (const mod of updatedModules) {
-                            const { error } = await supabase
-                              .from('modules')
-                              .update({ order_number: mod.order_number })
-                              .eq('id', mod.id);
-
-                            if (error) throw error;
-                          }
-
-                          toast({
-                            title: "Ordem atualizada",
-                            description: "A ordem dos módulos foi atualizada com sucesso."
-                          });
-                        } catch (error) {
-                          console.error('Erro ao reordenar módulos:', error);
-                          toast({
-                            title: "Erro ao reordenar",
-                            description: "Não foi possível atualizar a ordem dos módulos.",
-                            variant: "destructive"
-                          });
-                          loadModules(); // Recarregar em caso de erro
-                        }
-                      }}
-                    >
+                  // Atualizar no banco de dados
+                  try {
+                    for (const mod of updatedModules) {
+                      const {
+                        error
+                      } = await supabase.from('modules').update({
+                        order_number: mod.order_number
+                      }).eq('id', mod.id);
+                      if (error) throw error;
+                    }
+                    toast({
+                      title: "Ordem atualizada",
+                      description: "A ordem dos módulos foi atualizada com sucesso."
+                    });
+                  } catch (error) {
+                    console.error('Erro ao reordenar módulos:', error);
+                    toast({
+                      title: "Erro ao reordenar",
+                      description: "Não foi possível atualizar a ordem dos módulos.",
+                      variant: "destructive"
+                    });
+                    loadModules(); // Recarregar em caso de erro
+                  }
+                }}>
                         {/* Cabeçalho do Módulo */}
                         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                           <div className="flex items-center gap-2 md:gap-3">
@@ -1371,7 +1346,7 @@ export default function Members() {
               <CardContent className="space-y-3 md:space-y-4">
                 {loadingProducts ? <div className="text-center py-6 md:py-8 space-y-3">
                     <div className="animate-pulse space-y-3">
-                      {[1,2,3].map(i => <div key={i} className="h-12 bg-muted rounded-lg" />)}
+                      {[1, 2, 3].map(i => <div key={i} className="h-12 bg-muted rounded-lg" />)}
                     </div>
                   </div> : products.length > 0 ? <div className="space-y-2 md:space-y-3">
                     {products.map(product => <div key={product.id} className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between p-3 border rounded-lg hover:bg-gray-50">
@@ -1424,18 +1399,13 @@ export default function Members() {
           </TabsContent>
 
           <TabsContent value="alunos" className="space-y-6 max-w-full">
-            <StudentsManager 
-              memberAreaId={selectedArea.id} 
-              memberAreaName={selectedArea.name}
-              externalDialogOpen={addStudentDialogOpen}
-              onExternalDialogChange={setAddStudentDialogOpen}
-            />
+            <StudentsManager memberAreaId={selectedArea.id} memberAreaName={selectedArea.name} externalDialogOpen={addStudentDialogOpen} onExternalDialogChange={setAddStudentDialogOpen} />
           </TabsContent>
 
           <TabsContent value="configuracoes">
             <div className="space-y-6">
               <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border">
-                <h3 className="font-semibold text-lg mb-2">💎 Personalização Avançada da Área</h3>
+                
                 <p className="text-sm text-gray-600">Configure todos os aspectos visuais e funcionais da sua área de membros</p>
               </div>
 
@@ -1506,64 +1476,40 @@ export default function Members() {
                             <Label htmlFor="custom-button-enabled" className="text-base font-medium">Botão Personalizado</Label>
                             <p className="text-sm text-muted-foreground">Adicione um botão que aparecerá abaixo da descrição na área de membros</p>
                           </div>
-                          <Checkbox
-                            id="custom-button-enabled"
-                            checked={areaCustomizationData.custom_button_enabled}
-                            onCheckedChange={(checked) => setAreaCustomizationData(prev => ({
-                              ...prev,
-                              custom_button_enabled: checked === true
-                            }))}
-                          />
+                          <Checkbox id="custom-button-enabled" checked={areaCustomizationData.custom_button_enabled} onCheckedChange={checked => setAreaCustomizationData(prev => ({
+                          ...prev,
+                          custom_button_enabled: checked === true
+                        }))} />
                         </div>
                         
-                        {areaCustomizationData.custom_button_enabled && (
-                          <div className="grid gap-4 md:grid-cols-2 bg-muted/50 p-4 rounded-lg">
+                        {areaCustomizationData.custom_button_enabled && <div className="grid gap-4 md:grid-cols-2 bg-muted/50 p-4 rounded-lg">
                             <div className="space-y-2">
                               <Label htmlFor="custom-button-text">Texto do Botão *</Label>
-                              <Input 
-                                id="custom-button-text" 
-                                value={areaCustomizationData.custom_button_text} 
-                                onChange={e => setAreaCustomizationData(prev => ({
-                                  ...prev,
-                                  custom_button_text: e.target.value
-                                }))} 
-                                placeholder="Ex: Acesse nosso WhatsApp" 
-                              />
+                              <Input id="custom-button-text" value={areaCustomizationData.custom_button_text} onChange={e => setAreaCustomizationData(prev => ({
+                            ...prev,
+                            custom_button_text: e.target.value
+                          }))} placeholder="Ex: Acesse nosso WhatsApp" />
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="custom-button-url">Link do Botão *</Label>
-                              <Input 
-                                id="custom-button-url" 
-                                value={areaCustomizationData.custom_button_url} 
-                                onChange={e => setAreaCustomizationData(prev => ({
-                                  ...prev,
-                                  custom_button_url: e.target.value
-                                }))} 
-                                placeholder="https://wa.me/244900000000" 
-                              />
+                              <Input id="custom-button-url" value={areaCustomizationData.custom_button_url} onChange={e => setAreaCustomizationData(prev => ({
+                            ...prev,
+                            custom_button_url: e.target.value
+                          }))} placeholder="https://wa.me/244900000000" />
                             </div>
-                          </div>
-                        )}
+                          </div>}
                        </div>
                      </CardContent>
                      <div className="px-6 pb-6">
-                       <Button 
-                         onClick={handleUpdateArea} 
-                         disabled={isUpdatingArea}
-                         className="w-full"
-                       >
-                         {isUpdatingArea ? (
-                           <>
+                       <Button onClick={handleUpdateArea} disabled={isUpdatingArea} className="w-full">
+                         {isUpdatingArea ? <>
                              <Save className="w-4 h-4 mr-2 animate-spin" />
                              Salvando...
-                           </>
-                         ) : (
-                           <>
+                           </> : <>
                              <Save className="w-4 h-4 mr-2" />
                              Salvar Configurações
-                           </>
-                         )}
+                           </>}
                        </Button>
                      </div>
                    </Card>
@@ -1611,14 +1557,10 @@ export default function Members() {
                           </p>
                         </div>
                         
-                        <HeroVideoUploader
-                          value={areaCustomizationData.hero_video_url}
-                          onChange={(url) => setAreaCustomizationData(prev => ({
-                            ...prev,
-                            hero_video_url: url
-                          }))}
-                          userId={user?.id || ''}
-                        />
+                        <HeroVideoUploader value={areaCustomizationData.hero_video_url} onChange={url => setAreaCustomizationData(prev => ({
+                        ...prev,
+                        hero_video_url: url
+                      }))} userId={user?.id || ''} />
                       </div>
                     </CardContent>
                   </Card>
@@ -1792,14 +1734,13 @@ export default function Members() {
               </div>
 
               {/* Controle "Em Breve" por Turma */}
-              {moduleFormData.coming_soon && (
-                <div className="space-y-3 p-4 border rounded-lg bg-amber-50 dark:bg-amber-950/10 border-amber-200">
+              {moduleFormData.coming_soon && <div className="space-y-3 p-4 border rounded-lg bg-amber-50 dark:bg-amber-950/10 border-amber-200">
                   <Label>Mostrar "Em Breve" para:</Label>
                   <Select value={moduleFormData.coming_soon_access} onValueChange={(value: 'all' | 'specific') => setModuleFormData(prev => ({
-                    ...prev,
-                    coming_soon_access: value,
-                    coming_soon_cohort_ids: value === 'all' ? [] : prev.coming_soon_cohort_ids
-                  }))}>
+                ...prev,
+                coming_soon_access: value,
+                coming_soon_cohort_ids: value === 'all' ? [] : prev.coming_soon_cohort_ids
+              }))}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -1809,66 +1750,47 @@ export default function Members() {
                     </SelectContent>
                   </Select>
 
-                  {moduleFormData.coming_soon_access === 'specific' && (
-                    <div className="space-y-2 mt-3">
+                  {moduleFormData.coming_soon_access === 'specific' && <div className="space-y-2 mt-3">
                       <Label className="text-sm text-muted-foreground">
                         Selecione as turmas que verão este módulo como "Em Breve":
                       </Label>
-                      {cohorts.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">
+                      {cohorts.length === 0 ? <p className="text-sm text-muted-foreground">
                           Nenhuma turma criada ainda.
-                        </p>
-                      ) : (
-                        <div className="space-y-2 max-h-[200px] overflow-y-auto">
-                          {cohorts.map((cohort) => (
-                            <div key={cohort.id} className="flex items-center space-x-2">
-                              <Checkbox
-                                id={`coming-soon-cohort-${cohort.id}`}
-                                checked={moduleFormData.coming_soon_cohort_ids.includes(cohort.id)}
-                                onCheckedChange={(checked) => {
-                                  if (checked) {
-                                    setModuleFormData(prev => ({
-                                      ...prev,
-                                      coming_soon_cohort_ids: [...prev.coming_soon_cohort_ids, cohort.id]
-                                    }));
-                                  } else {
-                                    setModuleFormData(prev => ({
-                                      ...prev,
-                                      coming_soon_cohort_ids: prev.coming_soon_cohort_ids.filter(id => id !== cohort.id)
-                                    }));
-                                  }
-                                }}
-                              />
+                        </p> : <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                          {cohorts.map(cohort => <div key={cohort.id} className="flex items-center space-x-2">
+                              <Checkbox id={`coming-soon-cohort-${cohort.id}`} checked={moduleFormData.coming_soon_cohort_ids.includes(cohort.id)} onCheckedChange={checked => {
+                      if (checked) {
+                        setModuleFormData(prev => ({
+                          ...prev,
+                          coming_soon_cohort_ids: [...prev.coming_soon_cohort_ids, cohort.id]
+                        }));
+                      } else {
+                        setModuleFormData(prev => ({
+                          ...prev,
+                          coming_soon_cohort_ids: prev.coming_soon_cohort_ids.filter(id => id !== cohort.id)
+                        }));
+                      }
+                    }} />
                               <Label htmlFor={`coming-soon-cohort-${cohort.id}`} className="font-normal cursor-pointer">
                                 {cohort.name}
                               </Label>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      {moduleFormData.coming_soon_cohort_ids.length > 0 && (
-                        <p className="text-xs text-muted-foreground">
+                            </div>)}
+                        </div>}
+                      {moduleFormData.coming_soon_cohort_ids.length > 0 && <p className="text-xs text-muted-foreground">
                           {moduleFormData.coming_soon_cohort_ids.length} turma(s) selecionada(s)
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
+                        </p>}
+                    </div>}
+                </div>}
 
               {/* Módulo Pago */}
               <div className="space-y-3 p-4 border rounded-lg bg-green-50 dark:bg-green-950/10 border-green-200">
                 <div className="flex items-center space-x-3">
-                  <Checkbox 
-                    id="is-paid" 
-                    checked={moduleFormData.is_paid} 
-                    onCheckedChange={checked => setModuleFormData(prev => ({
-                      ...prev,
-                      is_paid: checked === true,
-                      paid_price: checked ? prev.paid_price : '',
-                      paid_product_id: checked ? prev.paid_product_id : null
-                    }))} 
-                  />
+                  <Checkbox id="is-paid" checked={moduleFormData.is_paid} onCheckedChange={checked => setModuleFormData(prev => ({
+                  ...prev,
+                  is_paid: checked === true,
+                  paid_price: checked ? prev.paid_price : '',
+                  paid_product_id: checked ? prev.paid_product_id : null
+                }))} />
                   <div className="flex-1">
                     <Label htmlFor="is-paid" className="font-medium text-green-900 dark:text-green-100">
                       Módulo Pago
@@ -1879,40 +1801,29 @@ export default function Members() {
                   </div>
                 </div>
 
-                {moduleFormData.is_paid && (
-                  <div className="space-y-3 mt-3">
+                {moduleFormData.is_paid && <div className="space-y-3 mt-3">
                     <div className="space-y-2">
                       <Label htmlFor="paid-price">Preço</Label>
-                      <Input 
-                        id="paid-price" 
-                        value={moduleFormData.paid_price} 
-                        onChange={e => setModuleFormData(prev => ({
-                          ...prev,
-                          paid_price: e.target.value
-                        }))}
-                        placeholder="Ex: 5000 KZ"
-                      />
+                      <Input id="paid-price" value={moduleFormData.paid_price} onChange={e => setModuleFormData(prev => ({
+                    ...prev,
+                    paid_price: e.target.value
+                  }))} placeholder="Ex: 5000 KZ" />
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="paid-product">Produto de Pagamento (Opcional)</Label>
-                      <Select 
-                        value={moduleFormData.paid_product_id || 'none'} 
-                        onValueChange={(value) => setModuleFormData(prev => ({
-                          ...prev,
-                          paid_product_id: value === 'none' ? null : value
-                        }))}
-                      >
+                      <Select value={moduleFormData.paid_product_id || 'none'} onValueChange={value => setModuleFormData(prev => ({
+                    ...prev,
+                    paid_product_id: value === 'none' ? null : value
+                  }))}>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione um produto" />
                         </SelectTrigger>
                         <SelectContent className="z-[102]">
                           <SelectItem value="none">Nenhum produto</SelectItem>
-                          {userProducts.map((product) => (
-                            <SelectItem key={product.id} value={product.id}>
+                          {userProducts.map(product => <SelectItem key={product.id} value={product.id}>
                               {product.name} - {product.price} ({product.type})
-                            </SelectItem>
-                          ))}
+                            </SelectItem>)}
                         </SelectContent>
                       </Select>
                       <p className="text-xs text-muted-foreground">
@@ -1922,14 +1833,11 @@ export default function Members() {
 
                     <div className="space-y-3 p-3 border rounded-lg bg-green-100 dark:bg-green-950/20">
                       <Label>Requer pagamento para:</Label>
-                      <Select 
-                        value={moduleFormData.paid_access} 
-                        onValueChange={(value: 'all' | 'specific') => setModuleFormData(prev => ({
-                          ...prev,
-                          paid_access: value,
-                          paid_cohort_ids: value === 'all' ? [] : prev.paid_cohort_ids
-                        }))}
-                      >
+                      <Select value={moduleFormData.paid_access} onValueChange={(value: 'all' | 'specific') => setModuleFormData(prev => ({
+                    ...prev,
+                    paid_access: value,
+                    paid_cohort_ids: value === 'all' ? [] : prev.paid_cohort_ids
+                  }))}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -1939,63 +1847,48 @@ export default function Members() {
                         </SelectContent>
                       </Select>
 
-                      {moduleFormData.paid_access === 'specific' && (
-                        <div className="space-y-2 mt-3">
+                      {moduleFormData.paid_access === 'specific' && <div className="space-y-2 mt-3">
                           <Label className="text-sm text-muted-foreground">
                             Selecione as turmas que precisarão pagar:
                           </Label>
-                          {cohorts.length === 0 ? (
-                            <p className="text-sm text-muted-foreground">
+                          {cohorts.length === 0 ? <p className="text-sm text-muted-foreground">
                               Nenhuma turma criada ainda.
-                            </p>
-                          ) : (
-                            <div className="space-y-2 max-h-[200px] overflow-y-auto">
-                              {cohorts.map((cohort) => (
-                                <div key={cohort.id} className="flex items-center space-x-2">
-                                  <Checkbox
-                                    id={`paid-cohort-${cohort.id}`}
-                                    checked={moduleFormData.paid_cohort_ids.includes(cohort.id)}
-                                    onCheckedChange={(checked) => {
-                                      if (checked) {
-                                        setModuleFormData(prev => ({
-                                          ...prev,
-                                          paid_cohort_ids: [...prev.paid_cohort_ids, cohort.id]
-                                        }));
-                                      } else {
-                                        setModuleFormData(prev => ({
-                                          ...prev,
-                                          paid_cohort_ids: prev.paid_cohort_ids.filter(id => id !== cohort.id)
-                                        }));
-                                      }
-                                    }}
-                                  />
+                            </p> : <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                              {cohorts.map(cohort => <div key={cohort.id} className="flex items-center space-x-2">
+                                  <Checkbox id={`paid-cohort-${cohort.id}`} checked={moduleFormData.paid_cohort_ids.includes(cohort.id)} onCheckedChange={checked => {
+                          if (checked) {
+                            setModuleFormData(prev => ({
+                              ...prev,
+                              paid_cohort_ids: [...prev.paid_cohort_ids, cohort.id]
+                            }));
+                          } else {
+                            setModuleFormData(prev => ({
+                              ...prev,
+                              paid_cohort_ids: prev.paid_cohort_ids.filter(id => id !== cohort.id)
+                            }));
+                          }
+                        }} />
                                   <Label htmlFor={`paid-cohort-${cohort.id}`} className="font-normal cursor-pointer">
                                     {cohort.name}
                                   </Label>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                          {moduleFormData.paid_cohort_ids.length > 0 && (
-                            <p className="text-xs text-muted-foreground">
+                                </div>)}
+                            </div>}
+                          {moduleFormData.paid_cohort_ids.length > 0 && <p className="text-xs text-muted-foreground">
                               {moduleFormData.paid_cohort_ids.length} turma(s) selecionada(s)
-                            </p>
-                          )}
-                        </div>
-                      )}
+                            </p>}
+                        </div>}
                     </div>
-                  </div>
-                )}
+                  </div>}
               </div>
 
               {/* Seleção de Turmas */}
               <div className="space-y-3 p-4 border rounded-lg">
                 <Label>Disponibilidade por Turma</Label>
                 <Select value={moduleFormData.cohort_access} onValueChange={(value: 'all' | 'specific') => setModuleFormData(prev => ({
-                  ...prev,
-                  cohort_access: value,
-                  cohort_ids: value === 'all' ? [] : prev.cohort_ids
-                }))}>
+                ...prev,
+                cohort_access: value,
+                cohort_ids: value === 'all' ? [] : prev.cohort_ids
+              }))}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -2005,50 +1898,36 @@ export default function Members() {
                   </SelectContent>
                 </Select>
 
-                {moduleFormData.cohort_access === 'specific' && (
-                  <div className="space-y-2 mt-3">
+                {moduleFormData.cohort_access === 'specific' && <div className="space-y-2 mt-3">
                     <Label className="text-sm text-muted-foreground">
                       Selecione as turmas que terão acesso a este módulo:
                     </Label>
-                    {cohorts.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">
+                    {cohorts.length === 0 ? <p className="text-sm text-muted-foreground">
                         Nenhuma turma criada ainda. Crie turmas na aba "Turmas".
-                      </p>
-                    ) : (
-                      <div className="space-y-2 max-h-[200px] overflow-y-auto">
-                        {cohorts.map((cohort) => (
-                          <div key={cohort.id} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`cohort-${cohort.id}`}
-                              checked={moduleFormData.cohort_ids.includes(cohort.id)}
-                              onCheckedChange={(checked) => {
-                                if (checked) {
-                                  setModuleFormData(prev => ({
-                                    ...prev,
-                                    cohort_ids: [...prev.cohort_ids, cohort.id]
-                                  }));
-                                } else {
-                                  setModuleFormData(prev => ({
-                                    ...prev,
-                                    cohort_ids: prev.cohort_ids.filter(id => id !== cohort.id)
-                                  }));
-                                }
-                              }}
-                            />
+                      </p> : <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                        {cohorts.map(cohort => <div key={cohort.id} className="flex items-center space-x-2">
+                            <Checkbox id={`cohort-${cohort.id}`} checked={moduleFormData.cohort_ids.includes(cohort.id)} onCheckedChange={checked => {
+                      if (checked) {
+                        setModuleFormData(prev => ({
+                          ...prev,
+                          cohort_ids: [...prev.cohort_ids, cohort.id]
+                        }));
+                      } else {
+                        setModuleFormData(prev => ({
+                          ...prev,
+                          cohort_ids: prev.cohort_ids.filter(id => id !== cohort.id)
+                        }));
+                      }
+                    }} />
                             <Label htmlFor={`cohort-${cohort.id}`} className="font-normal cursor-pointer">
                               {cohort.name}
                             </Label>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {moduleFormData.cohort_ids.length > 0 && (
-                      <p className="text-xs text-muted-foreground">
+                          </div>)}
+                      </div>}
+                    {moduleFormData.cohort_ids.length > 0 && <p className="text-xs text-muted-foreground">
                         {moduleFormData.cohort_ids.length} turma(s) selecionada(s)
-                      </p>
-                    )}
-                  </div>
-                )}
+                      </p>}
+                  </div>}
               </div>
               
               <DialogFooter>
@@ -2149,22 +2028,15 @@ export default function Members() {
               
               <div className="space-y-2">
                 <Label htmlFor="duration">Duração (em minutos)</Label>
-                <Input 
-                  id="duration" 
-                  type="number" 
-                  min="0" 
-                  step="0.1" 
-                  value={(formData.duration / 60).toFixed(1)} // Sempre 1 casa decimal
-                  onChange={e => {
-                    const minutes = parseFloat(e.target.value) || 0;
-                    const seconds = Math.round(minutes * 60);
-                    setFormData(prev => ({
-                      ...prev,
-                      duration: seconds
-                    }));
-                  }} 
-                  placeholder="Ex: 15 (minutos)" 
-                />
+                <Input id="duration" type="number" min="0" step="0.1" value={(formData.duration / 60).toFixed(1)} // Sempre 1 casa decimal
+              onChange={e => {
+                const minutes = parseFloat(e.target.value) || 0;
+                const seconds = Math.round(minutes * 60);
+                setFormData(prev => ({
+                  ...prev,
+                  duration: seconds
+                }));
+              }} placeholder="Ex: 15 (minutos)" />
                 <p className="text-sm text-muted-foreground">
                   Para vídeos Bunny.net, insira a duração manualmente. Para outros vídeos, será detectado automaticamente.
                 </p>
@@ -2410,7 +2282,7 @@ export default function Members() {
               <CardContent className="p-0">
                 {loadingProducts ? <div className="text-center py-6 md:py-8 space-y-3">
                     <div className="animate-pulse space-y-3 p-4">
-                      {[1,2,3].map(i => <div key={i} className="h-16 bg-muted rounded-lg" />)}
+                      {[1, 2, 3].map(i => <div key={i} className="h-16 bg-muted rounded-lg" />)}
                     </div>
                   </div> : <>
                     {/* Versão móvel - Cards */}
