@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import personPhoneSmiling from '@/assets/person-phone-smiling.png';
+import womanLaptopSuccess from '@/assets/woman-laptop-success.png';
+import personThumbsUp from '@/assets/person-thumbs-up.png';
 
 const banners = [
   {
@@ -15,14 +17,14 @@ const banners = [
     title: 'Aumente suas conversões',
     description: 'Use imagens de alta qualidade e descrições detalhadas nos seus produtos.',
     gradient: 'from-blue-600 to-blue-500',
-    image: personPhoneSmiling,
+    image: womanLaptopSuccess,
   },
   {
     id: 3,
     title: 'Fidelize seus clientes',
     description: 'Responda rapidamente às dúvidas e ofereça um excelente atendimento.',
     gradient: 'from-purple-600 to-purple-500',
-    image: personPhoneSmiling,
+    image: personThumbsUp,
   },
 ];
 
