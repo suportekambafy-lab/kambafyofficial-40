@@ -151,7 +151,7 @@ Deno.serve(async (req) => {
         allow_redirects: 'never'
       };
       allowRedirects = 'never';
-    } else if (paymentMethod === 'klarna') {
+    } else if (paymentMethod === 'klarna' || paymentMethod === 'klarna_uk') {
       automaticPaymentMethods = {
         enabled: true,
         allow_redirects: 'always'
@@ -170,6 +170,7 @@ Deno.serve(async (req) => {
       };
       allowRedirects = 'always';
     } else {
+      // card, card_uk e outros
       automaticPaymentMethods = {
         enabled: true,
       };
@@ -221,7 +222,8 @@ Deno.serve(async (req) => {
     const exchangeRates: Record<string, number> = {
       'EUR': 1100, // 1 EUR = ~1100 KZ (atualizado)
       'MZN': 14.3, // 1 MZN = ~14.3 KZ  
-      'USD': 825   // 1 USD = ~825 KZ
+      'USD': 825,  // 1 USD = ~825 KZ
+      'GBP': 1300  // 1 GBP = ~1300 KZ
     };
     
     let finalAmount: string;
