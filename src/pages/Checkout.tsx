@@ -757,7 +757,8 @@ const Checkout = () => {
     const paymentOrder: Record<string, string[]> = {
       'AO': ['express', 'reference', 'transfer'],
       'MZ': ['emola', 'epesa'],
-      'PT': ['card', 'klarna', 'multibanco', 'mbway']
+      'PT': ['card', 'klarna', 'multibanco', 'mbway'],
+      'GB': ['card_uk', 'klarna_uk']
     };
 
     // Primeiro, verificar se o produto tem métodos de pagamento configurados
@@ -770,6 +771,8 @@ const Checkout = () => {
           return ['emola', 'epesa'].includes(method.id);
         } else if (userCountry.code === 'PT') {
           return ['card', 'klarna', 'multibanco', 'mbway'].includes(method.id);
+        } else if (userCountry.code === 'GB') {
+          return ['card_uk', 'klarna_uk'].includes(method.id);
         }
         return false;
       });
