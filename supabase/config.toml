@@ -155,3 +155,6 @@ verify_jwt = false
 
 [functions.test-webhook-event]
 verify_jwt = false
+
+[functions.set-admin-password]
+verify_jwt = false
