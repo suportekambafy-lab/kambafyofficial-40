@@ -1004,16 +1004,18 @@ export function AppHome() {
                       </div>
                       <p className="text-xs text-muted-foreground font-medium">Disponível para Saque</p>
                     </div>
-                    <Button 
-                      onClick={() => {
-                        triggerHaptic('medium');
-                        setShowWithdrawalModal(true);
-                      }} 
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white h-7 px-2.5 text-[10px]"
-                      size="sm"
-                    >
-                      Sacar
-                    </Button>
+                    {financialData.availableBalance > 0 && (
+                      <Button 
+                        onClick={() => {
+                          triggerHaptic('medium');
+                          setShowWithdrawalModal(true);
+                        }} 
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white h-7 px-2.5 text-[10px]"
+                        size="sm"
+                      >
+                        Sacar
+                      </Button>
+                    )}
                   </div>
                   <div className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
                     {formatPriceForSeller(financialData.availableBalance, 'KZ')}
