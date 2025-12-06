@@ -72,7 +72,7 @@ export function AvatarDrawer({
       onClick: () => handleNavigation("/vendedor/configuracoes")
     },
     {
-      label: "Ver meus acessos",
+      label: "Ver como Cliente",
       href: "/meus-acessos",
       icon: ArrowLeftRight,
       onClick: () => handleNavigation("/meus-acessos")
