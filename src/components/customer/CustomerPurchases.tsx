@@ -229,44 +229,39 @@ export default function CustomerPurchases() {
 
                       {/* Status do Reembolso */}
                       {order.refund && (
-                        <div className={`mt-4 p-3 rounded-lg border ${getStatusInfo(order.refund.status).bgColor}`}>
-                          <div className="flex items-center gap-2 mb-2">
-                            {(() => {
-                              const status = getStatusInfo(order.refund.status);
-                              const IconComponent = status.icon;
-                              return (
-                                <>
-                                  <IconComponent className={`h-5 w-5 ${status.color}`} />
-                                  <span className={`font-medium ${status.color}`}>
-                                    Reembolso: {status.label}
-                                  </span>
-                                </>
-                              );
-                            })()}
-                          </div>
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                          {(() => {
+                            const status = getStatusInfo(order.refund.status);
+                            const IconComponent = status.icon;
+                            return (
+                              <Badge variant="outline" className={`${status.color} border-current/30 gap-1`}>
+                                <IconComponent className="h-3 w-3" />
+                                {status.label}
+                              </Badge>
+                            );
+                          })()}
                           
                           {order.refund.seller_comment && (
-                            <p className="text-sm text-muted-foreground mt-2">
-                              <span className="font-medium">Resposta do vendedor:</span> {order.refund.seller_comment}
-                            </p>
+                            <span className="text-xs text-muted-foreground">
+                              "{order.refund.seller_comment}"
+                            </span>
                           )}
                           
                           {order.refund.admin_comment && (
-                            <p className="text-sm text-muted-foreground mt-1">
-                              <span className="font-medium">Admin:</span> {order.refund.admin_comment}
-                            </p>
+                            <span className="text-xs text-muted-foreground italic">
+                              Admin: {order.refund.admin_comment}
+                            </span>
                           )}
 
-                          {/* Botão para solicitar novamente se rejeitado */}
                           {canReopenRefund(order) && (
                             <Button
                               size="sm"
-                              variant="outline"
-                              className="mt-3"
+                              variant="ghost"
+                              className="h-7 text-xs px-2"
                               onClick={() => handleOpenRefundDialog(order, true)}
                             >
-                              <RefreshCw className="h-4 w-4 mr-2" />
-                              Solicitar Novamente
+                              <RefreshCw className="h-3 w-3 mr-1" />
+                              Tentar novamente
                             </Button>
                           )}
                         </div>
