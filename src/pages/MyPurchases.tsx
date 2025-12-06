@@ -36,7 +36,7 @@ export default function MyPurchases() {
           products(name)
         `)
         .eq('customer_email', user.email)
-        .eq('status', 'completed')
+        .in('status', ['completed', 'refunded'])
         .order('created_at', { ascending: false });
 
       if (error) throw error;

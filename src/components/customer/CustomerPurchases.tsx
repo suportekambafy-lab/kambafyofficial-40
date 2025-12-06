@@ -33,7 +33,7 @@ export default function CustomerPurchases() {
         .from('orders')
         .select(`*, products(name, cover)`)
         .eq('customer_email', user.email)
-        .eq('status', 'completed')
+        .in('status', ['completed', 'refunded'])
         .order('created_at', { ascending: false });
 
       if (error) {
