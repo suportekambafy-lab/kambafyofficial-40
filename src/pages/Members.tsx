@@ -248,13 +248,23 @@ export default function Members() {
       // Adicionar campos de personalização se existirem
       if (areaCustomizationData.login_logo_url) updateData.login_logo_url = areaCustomizationData.login_logo_url;
       const {
+        data: updatedArea,
         error
-      } = await supabase.from('member_areas').update(updateData).eq('id', selectedArea.id);
+      } = await supabase.from('member_areas').update(updateData).eq('id', selectedArea.id).select().single();
       if (error) throw error;
+      
+      // Atualizar o selectedArea com os novos dados
+      if (updatedArea) {
+        setSelectedArea(prev => prev ? { ...prev, ...updatedArea } : null);
+      }
+      
       toast({
         title: "Sucesso",
         description: "Personalização atualizada com sucesso!"
       });
+      
+      // Limpar cache para forçar recarregamento
+      sessionStorage.removeItem(`member-areas-${user.id}`);
       await loadData(); // Recarregar dados para atualizar a UI
     } catch (error: any) {
       console.error('Error updating member area:', error);
