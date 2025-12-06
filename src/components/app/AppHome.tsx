@@ -909,174 +909,192 @@ export function AppHome() {
       case 'live-view':
         return <AppLiveView onBack={() => setActiveTab('home')} />;
       case 'products':
-        return <div className="p-4 space-y-4">
-            <div className="flex items-center justify-between px-2 mb-2">
-              <h2 className="text-xl font-bold text-foreground">Meus Produtos</h2>
-              <span className="text-sm text-muted-foreground">{products.length}</span>
+        return <div className="p-3 md:p-4 space-y-3 bg-background min-h-full">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-lg md:text-xl font-semibold text-foreground">Meus Produtos</h1>
+                <p className="text-muted-foreground text-xs">{products.length} produtos cadastrados</p>
+              </div>
             </div>
 
-            {loading ? <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
-                <CardContent className="p-8 text-center">
-                  <p className="text-muted-foreground">Carregando...</p>
-                </CardContent>
-              </Card> : products.length === 0 ? <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
-                <CardContent className="p-8 text-center">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mx-auto mb-4">
-                    <Package className="h-8 w-8 text-primary" />
-                  </div>
-                  <h3 className="font-semibold text-base mb-2 text-foreground">Nenhum produto</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    Você ainda não criou produtos. Use a versão desktop para começar.
-                  </p>
-                </CardContent>
-              </Card> : <div className="space-y-3">
-                {products.map(product => <Card key={product.id} className="overflow-hidden border-none shadow-sm hover:shadow-md transition-shadow">
-                    <CardContent className="p-0">
-                      <div className="flex gap-4 p-4">
+            {loading ? (
+              <div className="bg-card rounded-xl border border-border/40 shadow-sm p-8 text-center">
+                <p className="text-muted-foreground text-sm">Carregando...</p>
+              </div>
+            ) : products.length === 0 ? (
+              <div className="bg-card rounded-xl border border-border/40 shadow-sm p-8 text-center">
+                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                  <Package className="h-7 w-7 text-primary" />
+                </div>
+                <h3 className="font-semibold text-sm mb-1 text-foreground">Nenhum produto</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Use a versão desktop para criar produtos.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {products.map(product => (
+                  <div key={product.id} className="bg-card rounded-xl border border-border/40 shadow-sm flex overflow-hidden hover:shadow-md transition-shadow">
+                    <div className={`w-1 shrink-0 ${product.status === 'Ativo' ? 'bg-emerald-500' : 'bg-gray-300'}`} />
+                    <div className="flex-1 p-3">
+                      <div className="flex gap-3">
                         {/* Product Image */}
                         <div className="relative flex-shrink-0">
-                          {product.cover ? <img src={product.cover} alt={product.name} className="w-24 h-24 rounded-xl object-cover" /> : <div className="w-24 h-24 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
-                              <Package className="h-8 w-8 text-primary" />
-                            </div>}
-                          {product.status === 'Ativo' && <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-background"></div>}
+                          {product.cover ? (
+                            <img src={product.cover} alt={product.name} className="w-16 h-16 rounded-lg object-cover" />
+                          ) : (
+                            <div className="w-16 h-16 rounded-lg bg-primary/10 flex items-center justify-center">
+                              <Package className="h-6 w-6 text-primary" />
+                            </div>
+                          )}
                         </div>
 
                         {/* Product Info */}
                         <div className="flex-1 min-w-0 flex flex-col justify-between">
                           <div>
-                            <h3 className="font-semibold text-base text-foreground line-clamp-2 mb-2">
+                            <h3 className="font-semibold text-sm text-foreground line-clamp-1 mb-1">
                               {product.name}
                             </h3>
-                            <div className="flex items-center gap-2 mb-2">
-                              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${product.status === 'Ativo' ? 'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'}`}>
-                                {product.status}
-                              </span>
-                            </div>
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                              product.status === 'Ativo' 
+                                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400' 
+                                : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
+                            }`}>
+                              {product.status}
+                            </span>
                           </div>
 
                           {/* Price and Sales */}
-                          <div className="flex items-center justify-between pt-2 border-t border-border/50">
+                          <div className="flex items-center justify-between pt-2 mt-2 border-t border-border/30">
                             <div>
-                              <p className="text-xs text-muted-foreground mb-0.5">Preço</p>
-                              <p className="font-bold text-base text-foreground">
+                              <p className="text-[10px] text-muted-foreground">Preço</p>
+                              <p className="font-bold text-sm text-foreground">
                                 {formatPriceForSeller(parseFloat(product.price || '0'), 'KZ')}
                               </p>
                             </div>
                             <div className="text-right">
-                              <p className="text-xs text-muted-foreground mb-0.5">Vendas</p>
-                              <p className="font-bold text-base text-primary">
+                              <p className="text-[10px] text-muted-foreground">Vendas</p>
+                              <p className="font-bold text-sm text-primary">
                                 {product.sales || 0}
                               </p>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>)}
+                    </div>
+                  </div>
+                ))}
 
-                <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-primary/5">
-                  <CardContent className="p-4 text-center">
-                    <p className="text-xs text-muted-foreground">
-                      💡 Para editar produtos, acesse a versão desktop
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>}
+                <div className="bg-primary/5 rounded-xl p-3 text-center">
+                  <p className="text-xs text-muted-foreground">
+                    💡 Para editar produtos, acesse a versão desktop
+                  </p>
+                </div>
+              </div>
+            )}
           </div>;
       case 'stats':
-        return <div className="p-4 space-y-4">
-            <h2 className="text-xl font-bold px-2 text-foreground">Financeiro</h2>
+        return <div className="p-3 md:p-4 space-y-3 bg-background min-h-full">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-lg md:text-xl font-semibold text-foreground">Financeiro</h1>
+                <p className="text-muted-foreground text-xs">Gestão de saldo e saques</p>
+              </div>
+            </div>
             
             {/* Financial Cards */}
             <div className="space-y-3">
-              <Card className="overflow-hidden rounded-xl border-l-[6px] shadow-sm bg-card" style={{
-              borderLeftColor: 'hsl(142, 76%, 36%)'
-            }}>
-                <CardContent className="p-6">
-                  <div className="space-y-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                          <Wallet className="h-5 w-5 text-primary" />
-                        </div>
-                        <p className="text-sm font-medium text-muted-foreground">Disponível para Saque</p>
-                      </div>
+              {/* Available Balance Card */}
+              <div className="bg-card rounded-xl border border-border/40 shadow-sm flex overflow-hidden">
+                <div className="w-1 bg-emerald-500 shrink-0" />
+                <div className="flex-1 p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                      <Wallet className="h-4 w-4 text-emerald-600" />
                     </div>
-                    <div className="text-3xl font-bold tracking-tight text-foreground">
-                      {(() => {
-                      console.log('💰 [AppHome - UI] Exibindo saldo:', {
-                        availableBalance: financialData.availableBalance,
-                        formatted: formatPriceForSeller(financialData.availableBalance, 'KZ')
-                      });
-                      return formatPriceForSeller(financialData.availableBalance, 'KZ');
-                    })()}
-                    </div>
-                <Button onClick={() => {
-                    triggerHaptic('medium');
-                    setShowWithdrawalModal(true);
-                  }} className="w-full mt-2 bg-primary/80 hover:bg-primary/70" size="sm">
-                  <ArrowDownToLine className="h-4 w-4 mr-2" />
-                  Solicitar Saque
-                </Button>
+                    <p className="text-xs text-muted-foreground font-medium">Disponível para Saque</p>
                   </div>
-                </CardContent>
-              </Card>
+                  <div className="text-2xl md:text-3xl font-bold tracking-tight text-foreground mb-3">
+                    {formatPriceForSeller(financialData.availableBalance, 'KZ')}
+                  </div>
+                  <Button 
+                    onClick={() => {
+                      triggerHaptic('medium');
+                      setShowWithdrawalModal(true);
+                    }} 
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white" 
+                    size="sm"
+                  >
+                    <ArrowDownToLine className="h-4 w-4 mr-2" />
+                    Solicitar Saque
+                  </Button>
+                </div>
+              </div>
 
-              <Card className="overflow-hidden rounded-xl border-l-[6px] shadow-sm bg-card" style={{
-              borderLeftColor: 'hsl(142, 76%, 36%)'
-            }}>
-                <CardContent className="p-6">
-                  <div className="space-y-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
-                          <ArrowDownToLine className="h-5 w-5 text-green-600 dark:text-green-500" />
-                        </div>
-                        <p className="text-sm font-medium text-muted-foreground">Total de Saques</p>
-                      </div>
+              {/* Total Withdrawn Card */}
+              <div className="bg-card rounded-xl border border-border/40 shadow-sm flex overflow-hidden">
+                <div className="w-1 bg-blue-500 shrink-0" />
+                <div className="flex-1 p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                      <ArrowDownToLine className="h-4 w-4 text-blue-600" />
                     </div>
-                    <div className="text-3xl font-bold tracking-tight text-foreground">
-                      {formatPriceForSeller(financialData.totalWithdrawn, 'KZ')}
-                    </div>
+                    <p className="text-xs text-muted-foreground font-medium">Total de Saques</p>
                   </div>
-                </CardContent>
-              </Card>
+                  <div className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
+                    {formatPriceForSeller(financialData.totalWithdrawn, 'KZ')}
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Withdrawal History */}
-            <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
-              <CardContent className="p-6">
-                <div className="mb-4">
-                  <h3 className="font-semibold text-base text-foreground mb-1">Histórico de Saques</h3>
-                  <p className="text-sm text-muted-foreground">Últimas solicitações</p>
-                </div>
-                
-                {withdrawalHistory.length === 0 ? <div className="text-center py-8 text-muted-foreground">
+            <div className="bg-card rounded-xl border border-border/40 shadow-sm overflow-hidden">
+              <div className="p-4 border-b border-border/30">
+                <h3 className="font-semibold text-sm text-foreground">Histórico de Saques</h3>
+                <p className="text-xs text-muted-foreground">Últimas solicitações</p>
+              </div>
+              <div className="p-4">
+                {withdrawalHistory.length === 0 ? (
+                  <div className="text-center py-6 text-muted-foreground">
+                    <ArrowDownToLine className="h-8 w-8 mx-auto mb-2 opacity-30" />
                     <p className="text-sm">Nenhum saque solicitado ainda</p>
-                  </div> : <div className="space-y-3">
-                    {withdrawalHistory.slice(0, 5).map(withdrawal => <div key={withdrawal.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {withdrawalHistory.slice(0, 5).map(withdrawal => (
+                      <div key={withdrawal.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-foreground">
+                            <span className="text-sm font-semibold text-foreground">
                               {formatPriceForSeller(parseFloat(withdrawal.amount || '0'), 'KZ')}
                             </span>
-                            <span className={`text-xs px-2 py-0.5 rounded-full ${withdrawal.status === 'aprovado' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : withdrawal.status === 'rejeitado' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'}`}>
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                              withdrawal.status === 'aprovado' 
+                                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' 
+                                : withdrawal.status === 'rejeitado' 
+                                  ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' 
+                                  : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
+                            }`}>
                               {withdrawal.status === 'aprovado' ? 'Aprovado' : withdrawal.status === 'rejeitado' ? 'Rejeitado' : 'Pendente'}
                             </span>
                           </div>
-                          <p className="text-xs text-muted-foreground mt-1">
+                          <p className="text-[11px] text-muted-foreground mt-0.5">
                             {new Date(withdrawal.created_at).toLocaleDateString('pt-AO', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric'
-                      })}
+                              day: '2-digit',
+                              month: 'short',
+                              year: 'numeric'
+                            })}
                           </p>
                         </div>
-                      </div>)}
-                  </div>}
-              </CardContent>
-            </Card>
-
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>;
       case 'my-courses':
         return <AppCourses onCourseSelect={(courseId, courseName) => {
@@ -1090,341 +1108,384 @@ export function AppHome() {
           });
         }} />;
       case 'profile':
-        return <div className="p-4 flex flex-col h-full">
-            {/* User Info */}
-            <div className="flex items-center space-x-4 pb-4">
-              <div className="relative cursor-pointer" onClick={async () => {
-              triggerHaptic('light');
-              const photo = await pickPhoto();
-              if (photo && user) {
-                toast({
-                  title: "Foto Selecionada",
-                  description: "Funcionalidade de upload em desenvolvimento"
-                });
-                triggerHaptic('success');
-              }
-            }}>
-                <Avatar className="w-16 h-16 rounded-xl flex-shrink-0 hover:opacity-80 transition-opacity">
-                  <AvatarImage src={profileAvatar} alt="Profile" />
-                  <AvatarFallback className="rounded-xl bg-gradient-to-br from-primary/10 to-primary/5">
-                    {currentLevel ? <img src={currentLevel.badge} alt={currentLevel.name} className="w-11 h-11 object-contain" /> : <User className="h-8 w-8 text-primary" />}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="absolute -bottom-0.5 -right-0.5 bg-primary text-primary-foreground rounded-full p-1 shadow-md">
-                  <Camera className="w-3.5 h-3.5" />
-                </div>
+        return <div className="p-3 md:p-4 space-y-3 bg-background min-h-full">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <h1 className="text-lg md:text-xl font-semibold text-foreground">Meu Perfil</h1>
+                <p className="text-muted-foreground text-xs">Configurações e preferências</p>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-base text-foreground truncate">
-                  {editingProfile.full_name || user?.email}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {currentLevel ? `${currentLevel.name}` : 'Vendedor Kambafy'}
-                </p>
+            </div>
+
+            {/* User Info Card */}
+            <div className="bg-card rounded-xl border border-border/40 shadow-sm p-4">
+              <div className="flex items-center space-x-4">
+                <div className="relative cursor-pointer" onClick={async () => {
+                  triggerHaptic('light');
+                  const photo = await pickPhoto();
+                  if (photo && user) {
+                    toast({
+                      title: "Foto Selecionada",
+                      description: "Funcionalidade de upload em desenvolvimento"
+                    });
+                    triggerHaptic('success');
+                  }
+                }}>
+                  <Avatar className="w-14 h-14 rounded-xl flex-shrink-0 hover:opacity-80 transition-opacity">
+                    <AvatarImage src={profileAvatar} alt="Profile" />
+                    <AvatarFallback className="rounded-xl bg-primary/10">
+                      {currentLevel ? <img src={currentLevel.badge} alt={currentLevel.name} className="w-10 h-10 object-contain" /> : <User className="h-7 w-7 text-primary" />}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="absolute -bottom-0.5 -right-0.5 bg-primary text-primary-foreground rounded-full p-1 shadow-md">
+                    <Camera className="w-3 h-3" />
+                  </div>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm text-foreground truncate">
+                    {editingProfile.full_name || user?.email}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {currentLevel ? `${currentLevel.name}` : 'Vendedor Kambafy'}
+                  </p>
+                </div>
               </div>
             </div>
 
             {/* Settings Cards */}
-            <div className="flex-1 flex flex-col justify-center space-y-3 py-4">
-              <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
-                <CardContent className="p-0">
-                  <button onClick={() => setShowEditProfile(true)} className="w-full flex items-center justify-between px-5 py-5 hover:bg-accent rounded-xl transition-colors">
-                    <div className="flex items-center gap-4">
-                      <Settings className="h-6 w-6 text-primary" />
-                      <span className="font-medium text-base text-foreground">Dados Pessoais</span>
-                    </div>
-                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                  </button>
-                </CardContent>
-              </Card>
-
-              <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
-                <CardContent className="p-0">
-                  <button onClick={() => setActiveTab('my-courses')} className="w-full flex items-center justify-between px-5 py-5 hover:bg-accent rounded-xl transition-colors">
-                    <div className="flex items-center gap-4">
-                      <GraduationCap className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
-                      <span className="font-medium text-base text-foreground">Ver como aluno</span>
-                    </div>
-                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                  </button>
-                </CardContent>
-              </Card>
-
-              <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
-                <CardContent className="p-0">
-                  <div className="w-full flex items-center justify-between px-5 py-5">
-                    <div className="flex items-center gap-4">
-                      <Bell className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                      <span className="font-medium text-base text-foreground">Notificações Push</span>
-                    </div>
-                    <Switch checked={pushEnabled} onCheckedChange={checked => {
-                    console.log('🔔 [Switch] onCheckedChange triggered with:', checked);
-                    handlePushToggle(checked);
-                  }} />
+            <div className="space-y-2">
+              <button 
+                onClick={() => setShowEditProfile(true)} 
+                className="w-full bg-card rounded-xl border border-border/40 shadow-sm flex items-center justify-between px-4 py-4 hover:shadow-md transition-shadow"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Settings className="h-4 w-4 text-primary" />
                   </div>
-                </CardContent>
-              </Card>
+                  <span className="font-medium text-sm text-foreground">Dados Pessoais</span>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </button>
 
-              <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
-                <CardContent className="p-0">
-                  <button onClick={() => {
+              <button 
+                onClick={() => setActiveTab('my-courses')} 
+                className="w-full bg-card rounded-xl border border-border/40 shadow-sm flex items-center justify-between px-4 py-4 hover:shadow-md transition-shadow"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                    <GraduationCap className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                  </div>
+                  <span className="font-medium text-sm text-foreground">Ver como aluno</span>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </button>
+
+              <div className="bg-card rounded-xl border border-border/40 shadow-sm flex items-center justify-between px-4 py-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                    <Bell className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <span className="font-medium text-sm text-foreground">Notificações Push</span>
+                </div>
+                <Switch checked={pushEnabled} onCheckedChange={checked => {
+                  console.log('🔔 [Switch] onCheckedChange triggered with:', checked);
+                  handlePushToggle(checked);
+                }} />
+              </div>
+
+              <button 
+                onClick={() => {
                   if (window.confirm('Tem a certeza que deseja encerrar a sua conta? Esta ação é irreversível.')) {
                     alert('Funcionalidade de encerramento de conta em desenvolvimento.');
                   }
-                }} className="w-full flex items-center justify-between px-5 py-5 hover:bg-destructive/5 rounded-xl transition-colors">
-                    <div className="flex items-center gap-4">
-                      <Trash2 className="h-6 w-6 text-destructive" />
-                      <span className="font-medium text-base text-destructive">Encerrar Conta</span>
-                    </div>
-                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                  </button>
-                </CardContent>
-              </Card>
+                }} 
+                className="w-full bg-card rounded-xl border border-border/40 shadow-sm flex items-center justify-between px-4 py-4 hover:border-destructive/50 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-destructive/10 flex items-center justify-center">
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </div>
+                  <span className="font-medium text-sm text-destructive">Encerrar Conta</span>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </button>
 
-              <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
-                <CardContent className="p-0">
-                  <button onClick={() => signOut()} className="w-full flex items-center justify-between px-5 py-5 hover:bg-orange-50 dark:hover:bg-orange-500/10 rounded-xl transition-colors">
-                    <div className="flex items-center gap-4">
-                      <LogOut className="h-6 w-6 text-orange-600 dark:text-orange-400" />
-                      <span className="font-medium text-base text-orange-600 dark:text-orange-400">Sair da conta</span>
-                    </div>
-                  </button>
-                </CardContent>
-              </Card>
+              <button 
+                onClick={() => signOut()} 
+                className="w-full bg-card rounded-xl border border-border/40 shadow-sm flex items-center justify-between px-4 py-4 hover:border-orange-500/50 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-orange-500/10 flex items-center justify-center">
+                    <LogOut className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                  </div>
+                  <span className="font-medium text-sm text-orange-600 dark:text-orange-400">Sair da conta</span>
+                </div>
+              </button>
             </div>
 
             {/* App Version & Logo */}
-            <div className="flex flex-col items-center gap-1.5 pb-2">
-              <img src={kambafyIconGreen} alt="Logo" className="h-10 w-auto opacity-50" />
-              <span className="text-xs text-muted-foreground">Versão 1.1</span>
+            <div className="flex flex-col items-center gap-1.5 pt-4">
+              <img src={kambafyIconGreen} alt="Logo" className="h-8 w-auto opacity-40" />
+              <span className="text-[10px] text-muted-foreground">Versão 1.1</span>
             </div>
           </div>;
       case 'sales-history':
-        return <div className="p-4 space-y-4">
-            <div className="flex items-center justify-between px-2 mb-2">
-              <h2 className="text-xl font-bold text-foreground">Histórico de Vendas</h2>
-              <span className="text-sm text-muted-foreground">
-                {orders.reduce((sum, order) => sum + countOrderItems(order), 0)} vendas
-              </span>
+        return <div className="p-3 md:p-4 space-y-3 bg-background min-h-full">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-lg md:text-xl font-semibold text-foreground">Histórico de Vendas</h1>
+                <p className="text-muted-foreground text-xs">
+                  {orders.reduce((sum, order) => sum + countOrderItems(order), 0)} vendas registradas
+                </p>
+              </div>
             </div>
 
-            {/* Filtro de Status */}
-            <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
-              <CardContent className="p-4">
-                <Label className="text-xs text-muted-foreground mb-2 block">Status</Label>
-                <select value={salesStatusFilter} onChange={e => setSalesStatusFilter(e.target.value as typeof salesStatusFilter)} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm">
-                  <option value="all">Todas</option>
-                  <option value="completed">Pagas</option>
-                  <option value="pending">Pendentes</option>
-                  <option value="cancelled">Canceladas</option>
-                </select>
-              </CardContent>
-            </Card>
+            {/* Status Filter */}
+            <div className="space-y-1.5">
+              <label className="text-[13px] font-medium text-foreground">Status</label>
+              <select 
+                value={salesStatusFilter} 
+                onChange={e => setSalesStatusFilter(e.target.value as typeof salesStatusFilter)} 
+                className="w-full h-9 px-3 rounded-lg border border-border/40 bg-card text-sm font-medium text-foreground shadow-sm"
+              >
+                <option value="all">Todas</option>
+                <option value="completed">Pagas</option>
+                <option value="pending">Pendentes</option>
+                <option value="cancelled">Canceladas</option>
+              </select>
+            </div>
 
-            {loadingSalesHistory ? <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
-                <CardContent className="p-8 text-center">
-                  <p className="text-muted-foreground">Carregando vendas...</p>
-                </CardContent>
-              </Card> : orders.length === 0 ? <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
-                <CardContent className="p-8 text-center">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mx-auto mb-4">
-                    <ShoppingCart className="h-8 w-8 text-primary" />
-                  </div>
-                  <h3 className="font-semibold text-base mb-2 text-foreground">Nenhuma venda</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    Não há vendas {salesStatusFilter !== 'all' && `${salesStatusFilter === 'completed' ? 'pagas' : salesStatusFilter === 'pending' ? 'pendentes' : 'canceladas'}`} no momento.
-                  </p>
-                </CardContent>
-              </Card> : <div className="space-y-3">
+            {loadingSalesHistory ? (
+              <div className="bg-card rounded-xl border border-border/40 shadow-sm p-8 text-center">
+                <p className="text-muted-foreground text-sm">Carregando vendas...</p>
+              </div>
+            ) : orders.length === 0 ? (
+              <div className="bg-card rounded-xl border border-border/40 shadow-sm p-8 text-center">
+                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                  <ShoppingCart className="h-7 w-7 text-primary" />
+                </div>
+                <h3 className="font-semibold text-sm mb-1 text-foreground">Nenhuma venda</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Não há vendas {salesStatusFilter !== 'all' && `${salesStatusFilter === 'completed' ? 'pagas' : salesStatusFilter === 'pending' ? 'pendentes' : 'canceladas'}`} no momento.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2">
                 {orders.map(order => {
-              const statusConfig = {
-                completed: {
-                  color: 'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400',
-                  label: 'Pago'
-                },
-                pending: {
-                  color: 'bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-400',
-                  label: 'Pendente'
-                },
-                cancelled: {
-                  color: 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400',
-                  label: 'Cancelado'
-                }
-              };
+                  const statusConfig = {
+                    completed: { color: 'bg-emerald-500', label: 'Pago', textColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400' },
+                    pending: { color: 'bg-orange-500', label: 'Pendente', textColor: 'bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-400' },
+                    cancelled: { color: 'bg-red-500', label: 'Cancelado', textColor: 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400' }
+                  };
 
-              // Normalizar status para suportar variações de cancelamento
-              const normalizedStatus = order.status === 'canceled' || order.status === 'failed' ? 'cancelled' : order.status;
-              const status = statusConfig[normalizedStatus as keyof typeof statusConfig] || statusConfig.pending;
-              return <Card key={order.id} className="overflow-hidden border-none shadow-sm hover:shadow-md transition-shadow">
-                      <CardContent className="p-0">
-                        <div className="flex gap-4 p-4">
+                  const normalizedStatus = order.status === 'canceled' || order.status === 'failed' ? 'cancelled' : order.status;
+                  const status = statusConfig[normalizedStatus as keyof typeof statusConfig] || statusConfig.pending;
+                  
+                  return (
+                    <div key={order.id} className="bg-card rounded-xl border border-border/40 shadow-sm flex overflow-hidden hover:shadow-md transition-shadow">
+                      <div className={`w-1 shrink-0 ${status.color}`} />
+                      <div className="flex-1 p-3">
+                        <div className="flex gap-3">
                           {/* Product Image */}
                           <div className="relative flex-shrink-0">
-                            {order.products?.cover ? <img src={order.products.cover} alt={order.products.name} className="w-20 h-20 rounded-lg object-cover" /> : <div className="w-20 h-20 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
-                                <Package className="h-8 w-8 text-primary" />
-                              </div>}
+                            {order.products?.cover ? (
+                              <img src={order.products.cover} alt={order.products.name} className="w-14 h-14 rounded-lg object-cover" />
+                            ) : (
+                              <div className="w-14 h-14 rounded-lg bg-primary/10 flex items-center justify-center">
+                                <Package className="h-6 w-6 text-primary" />
+                              </div>
+                            )}
                           </div>
 
                           {/* Order Info */}
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between mb-2">
+                            <div className="flex items-start justify-between mb-1">
                               <div className="flex-1 min-w-0">
-                                <h3 className="font-semibold text-sm text-foreground line-clamp-1 mb-1">
+                                <h3 className="font-semibold text-sm text-foreground line-clamp-1">
                                   {order.products?.name || 'Produto'}
                                 </h3>
-                                <p className="text-xs text-muted-foreground line-clamp-1">
+                                <p className="text-[11px] text-muted-foreground line-clamp-1">
                                   {order.customer_name || 'Cliente'}
                                 </p>
                               </div>
-                              <span className={`text-xs px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${status.color}`}>
+                              <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${status.textColor}`}>
                                 {status.label}
                               </span>
                             </div>
 
                             {/* Amount and Date */}
-                            <div className="flex items-center justify-between pt-2 border-t border-border/50">
+                            <div className="flex items-center justify-between pt-2 mt-1 border-t border-border/30">
                               <div>
-                                <p className="text-xs text-muted-foreground">Valor</p>
+                                <p className="text-[10px] text-muted-foreground">Valor</p>
                                 <p className="font-bold text-sm text-foreground">
                                   {formatPriceForSeller(parseFloat(order.seller_commission?.toString() || order.amount || '0'), order.currency || 'KZ')}
                                 </p>
                               </div>
                               <div className="text-right">
-                                <p className="text-xs text-muted-foreground">Data</p>
+                                <p className="text-[10px] text-muted-foreground">Data</p>
                                 <p className="text-xs text-foreground">
                                   {new Date(order.created_at).toLocaleDateString('pt-BR', {
-                              day: '2-digit',
-                              month: '2-digit',
-                              year: 'numeric'
-                            })}
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    year: 'numeric'
+                                  })}
                                 </p>
                               </div>
                             </div>
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>;
-            })}
+                      </div>
+                    </div>
+                  );
+                })}
 
-                <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-primary/5">
-                  <CardContent className="p-4 text-center">
-                    <p className="text-xs text-muted-foreground">
-                      💡 Para ver mais detalhes, acesse a versão desktop
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>}
+                <div className="bg-primary/5 rounded-xl p-3 text-center">
+                  <p className="text-xs text-muted-foreground">
+                    💡 Para ver mais detalhes, acesse a versão desktop
+                  </p>
+                </div>
+              </div>
+            )}
           </div>;
       default:
-        return <div className="p-4 space-y-6">
-            {/* Welcome */}
-            <div className="px-2">
-              <h1 className="text-xl font-bold mb-1 text-foreground">Dashboard</h1>
-              <p className="text-sm text-muted-foreground">Acompanhe o desempenho do seu negócio</p>
+        return <div className="p-3 md:p-4 space-y-3 bg-background min-h-full max-w-full overflow-x-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-lg md:text-xl font-semibold text-foreground">Dashboard</h1>
+                <p className="text-muted-foreground text-xs">Acompanhe o desempenho do seu negócio</p>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setActiveTab('live-view')}
+                className="flex items-center gap-2 text-foreground"
+              >
+                <Radio className="h-4 w-4" />
+                <span className="flex items-center gap-1.5">
+                  Live View
+                  <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                </span>
+              </Button>
             </div>
 
-            {/* Filtros */}
-            <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-card">
-              <CardContent className="p-4 space-y-3">
-                <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">Período</Label>
-                  <select value={timeFilter} onChange={e => {
-                  const value = e.target.value as typeof timeFilter;
-                  setTimeFilter(value);
-                  if (value !== 'custom') {
-                    setCustomDateRange({});
-                  }
-                }} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm">
-                    <option value="today">Hoje</option>
-                    <option value="yesterday">Ontem</option>
-                    <option value="7d">Últimos 7 dias</option>
-                    <option value="30d">Últimos 30 dias</option>
-                    <option value="90d">Últimos 90 dias</option>
-                    <option value="all">Todo período</option>
-                    <option value="custom">Personalizado</option>
-                  </select>
+            {/* Filters - Compact Layout */}
+            <div className="flex flex-col gap-2 max-w-full">
+              <div className="space-y-1.5">
+                <label className="text-[13px] font-medium text-foreground">Período</label>
+                <select 
+                  value={timeFilter} 
+                  onChange={e => {
+                    const value = e.target.value as typeof timeFilter;
+                    setTimeFilter(value);
+                    if (value !== 'custom') {
+                      setCustomDateRange({});
+                    }
+                  }} 
+                  className="w-full h-9 px-3 rounded-lg border border-border/40 bg-card text-sm font-medium text-foreground shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+                >
+                  <option value="today">Hoje</option>
+                  <option value="yesterday">Ontem</option>
+                  <option value="7d">Últimos 7 dias</option>
+                  <option value="30d">Últimos 30 dias</option>
+                  <option value="90d">Últimos 90 dias</option>
+                  <option value="all">Todo período</option>
+                  <option value="custom">Personalizado</option>
+                </select>
+              </div>
+
+              {timeFilter === 'custom' && (
+                <div className="space-y-1.5">
+                  <label className="text-[13px] font-medium text-foreground">Selecionar Data</label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full justify-start text-left font-normal h-9 border-border/40 shadow-sm">
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {customDateRange.from ? customDateRange.to ? <>
+                              {format(customDateRange.from, "dd/MM/yyyy", { locale: pt })} -{" "}
+                              {format(customDateRange.to, "dd/MM/yyyy", { locale: pt })}
+                            </> : format(customDateRange.from, "dd/MM/yyyy", { locale: pt }) 
+                        : <span className="text-muted-foreground">Escolher data</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 bg-popover z-[120]" align="start">
+                      <Calendar 
+                        mode="range" 
+                        selected={{ from: customDateRange.from, to: customDateRange.to }} 
+                        onSelect={range => setCustomDateRange({ from: range?.from, to: range?.to })} 
+                        initialFocus 
+                        className="pointer-events-auto" 
+                        locale={pt} 
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
+              )}
 
-                {timeFilter === 'custom' && <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground">Selecionar Data</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" className="w-full justify-start text-left font-normal h-9">
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {customDateRange.from ? customDateRange.to ? <>
-                                {format(customDateRange.from, "dd/MM/yyyy", {
-                          locale: pt
-                        })} -{" "}
-                                {format(customDateRange.to, "dd/MM/yyyy", {
-                          locale: pt
-                        })}
-                              </> : format(customDateRange.from, "dd/MM/yyyy", {
-                        locale: pt
-                      }) : <span className="text-muted-foreground">Escolher data</span>}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 bg-popover z-[120]" align="start">
-                        <Calendar mode="range" selected={{
-                      from: customDateRange.from,
-                      to: customDateRange.to
-                    }} onSelect={range => {
-                      setCustomDateRange({
-                        from: range?.from,
-                        to: range?.to
-                      });
-                    }} initialFocus className="pointer-events-auto" locale={pt} />
-                      </PopoverContent>
-                    </Popover>
-                  </div>}
+              <div className="space-y-1.5">
+                <label className="text-[13px] font-medium text-foreground">Produto</label>
+                <select 
+                  value={productFilter} 
+                  onChange={e => setProductFilter(e.target.value)} 
+                  className="w-full h-9 px-3 rounded-lg border border-border/40 bg-card text-sm font-medium text-foreground shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+                >
+                  <option value="all">Todos os produtos</option>
+                  {products.filter(p => p.status === 'Ativo').map(product => (
+                    <option key={product.id} value={product.id}>{product.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
 
-                <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">Produto</Label>
-                  <select value={productFilter} onChange={e => setProductFilter(e.target.value)} className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm">
-                    <option value="all">Todos os produtos</option>
-                    {products.filter(p => p.status === 'Ativo').map(product => <option key={product.id} value={product.id}>
-                        {product.name}
-                      </option>)}
-                  </select>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Quick Stats */}
-            <Card className="overflow-hidden rounded-xl border-l-[6px] shadow-sm bg-card" style={{
-              borderLeftColor: 'hsl(142, 76%, 36%)'
-            }}>
-              <CardContent className="p-4">
-                <div className="space-y-2">
-                  <div className="text-xs font-medium text-muted-foreground">Vendas líquidas</div>
-                  <div className="text-2xl font-bold tracking-tight text-foreground">
+            {/* Total Sales Card - Compact with left border accent */}
+            <div className="bg-card rounded-xl border border-border/40 shadow-sm flex overflow-hidden">
+              <div className="w-1 bg-emerald-500 shrink-0" />
+              <div className="flex-1 p-4">
+                <p className="text-xs text-muted-foreground mb-0.5">Total em vendas</p>
+                <div className="flex items-center justify-between">
+                  <h2 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">
                     {loading ? '...' : formatPriceForSeller(stats.totalRevenue, 'KZ')}
-                  </div>
+                  </h2>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
             {/* Sales Chart */}
-            <ModernSalesChart 
-              timeFilter={
-                timeFilter === 'today' ? 'hoje' :
-                timeFilter === 'yesterday' ? 'ontem' :
-                timeFilter === '7d' ? 'ultimos-7-dias' :
-                timeFilter === '30d' ? 'ultimos-30-dias' :
-                timeFilter === '90d' ? 'ultimos-30-dias' :
-                timeFilter === 'custom' ? 'custom' :
-                'ultimos-7-dias'
-              }
-              customDateRange={customDateRange.from && customDateRange.to ? { from: customDateRange.from, to: customDateRange.to } : null}
-            />
+            <div className="w-full">
+              <ModernSalesChart 
+                timeFilter={
+                  timeFilter === 'today' ? 'hoje' :
+                  timeFilter === 'yesterday' ? 'ontem' :
+                  timeFilter === '7d' ? 'ultimos-7-dias' :
+                  timeFilter === '30d' ? 'ultimos-30-dias' :
+                  timeFilter === '90d' ? 'ultimos-30-dias' :
+                  timeFilter === 'custom' ? 'custom' :
+                  'ultimos-7-dias'
+                }
+                customDateRange={customDateRange.from && customDateRange.to ? { from: customDateRange.from, to: customDateRange.to } : null}
+              />
+            </div>
 
-            {/* Info Card */}
-            <Card className="overflow-hidden rounded-xl border-none shadow-sm bg-primary/5">
-              <CardContent className="p-5">
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  <strong className="text-foreground font-semibold">💡 Dica:</strong> Para criar produtos e acessar todos os recursos, use a versão desktop.
-                </p>
-              </CardContent>
-            </Card>
+            {/* Quick Actions */}
+            <div className="grid grid-cols-2 gap-2">
+              <button 
+                onClick={() => setActiveTab('sales-history')}
+                className="bg-card rounded-xl border border-border/40 shadow-sm p-4 text-left hover:shadow-md transition-shadow"
+              >
+                <ShoppingCart className="h-5 w-5 text-primary mb-2" />
+                <p className="text-sm font-medium text-foreground">Ver Vendas</p>
+                <p className="text-xs text-muted-foreground">{stats.totalSales} vendas</p>
+              </button>
+              <button 
+                onClick={() => setActiveTab('stats')}
+                className="bg-card rounded-xl border border-border/40 shadow-sm p-4 text-left hover:shadow-md transition-shadow"
+              >
+                <Wallet className="h-5 w-5 text-emerald-500 mb-2" />
+                <p className="text-sm font-medium text-foreground">Financeiro</p>
+                <p className="text-xs text-muted-foreground">Ver saldo</p>
+              </button>
+            </div>
           </div>;
     }
   };
