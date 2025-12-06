@@ -17,7 +17,8 @@ import {
   TrendingUp,
   UserCheck,
   Calendar,
-  Store
+  Store,
+  RefreshCw
 } from 'lucide-react';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 
@@ -80,6 +81,12 @@ const menuItems = [
     icon: CreditCard,
     description: 'Aprovar solicitações',
     badge: 'withdrawals'
+  },
+  {
+    href: '/admin/refunds',
+    label: 'Reembolsos',
+    icon: RefreshCw,
+    description: 'Disputas e intervenções'
   },
   {
     href: '/admin/identity',
