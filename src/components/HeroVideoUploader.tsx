@@ -137,7 +137,7 @@ export function HeroVideoUploader({ value, onChange, userId }: HeroVideoUploader
             <Input
               ref={fileInputRef}
               type="file"
-              accept="video/mp4,video/webm,video/ogg"
+              accept="video/mp4,video/webm,video/ogg,video/quicktime,.mov"
               onChange={handleFileSelect}
               disabled={uploading}
               className="flex-1"
