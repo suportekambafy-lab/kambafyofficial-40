@@ -290,82 +290,74 @@ export function ModernSalesChart({
   return <div className="flex flex-col md:flex-row gap-3">
       {/* KPI Cards - First on mobile, second on desktop */}
       <div className="flex flex-row md:flex-col gap-2 md:w-40 order-first md:order-last">
-        <div className="bg-card rounded-xl border border-border/40 p-3 shadow-sm flex-1">
-          <div className="flex items-center justify-between mb-0.5">
-            <span className="text-xs text-muted-foreground">Pedidos feitos</span>
-            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 ${ordersTrend >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'}`}>
+        <div className="bg-muted/40 rounded-2xl p-4 flex-1">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs font-medium text-muted-foreground">Pedidos feitos</span>
+            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 ${ordersTrend >= 0 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'}`}>
               {ordersTrend >= 0 ? '+' : ''}{ordersTrend}
               {ordersTrend >= 0 ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
             </span>
           </div>
-          <span className="text-[10px] text-muted-foreground">{filterLabel}</span>
-          <p className="text-xl font-bold text-foreground">{ordersCount.toLocaleString()}</p>
+          <p className="text-2xl font-bold text-foreground">{ordersCount.toLocaleString()}</p>
         </div>
 
-        <div className="bg-card rounded-xl border border-border/40 p-3 shadow-sm flex-1">
-          <div className="flex items-center justify-between mb-0.5">
-            <span className="text-xs text-muted-foreground">Pedidos pagos</span>
-            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 ${paidTrend >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'}`}>
+        <div className="bg-muted/40 rounded-2xl p-4 flex-1">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs font-medium text-muted-foreground">Pedidos pagos</span>
+            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 ${paidTrend >= 0 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'}`}>
               {paidTrend >= 0 ? '+' : ''}{paidTrend}
               {paidTrend >= 0 ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
             </span>
           </div>
-          <span className="text-[10px] text-muted-foreground">{filterLabel}</span>
-          <p className="text-xl font-bold text-foreground">{paidOrdersCount.toLocaleString()}</p>
+          <p className="text-2xl font-bold text-foreground">{paidOrdersCount.toLocaleString()}</p>
         </div>
       </div>
 
       {/* Chart Card */}
-      <Card className="flex-1 rounded-xl shadow-sm border border-border/40 bg-card overflow-hidden order-last md:order-first">
-        <CardHeader className="pb-1 px-4 pt-3">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            
-            <span className="text-sm font-medium">Desempenho de vendas</span>
+      <Card className="flex-1 rounded-2xl shadow-sm border-0 bg-muted/40 overflow-hidden order-last md:order-first">
+        <CardHeader className="pb-2 px-5 pt-4">
+          <div className="flex items-center justify-between">
+            <span className="text-base font-semibold text-foreground">Vendas</span>
+            <span className="text-xs text-muted-foreground">{filterLabel}</span>
           </div>
         </CardHeader>
         
-        <CardContent className="px-4 pb-3">
-          {loading ? <div className="h-[180px] flex items-center justify-center">
+        <CardContent className="px-3 pb-4">
+          {loading ? <div className="h-[160px] flex items-center justify-center">
               <span className="text-muted-foreground text-sm">Carregando...</span>
-            </div> : <ChartContainer config={chartConfig} className="h-[180px] w-full">
+            </div> : <ChartContainer config={chartConfig} className="h-[160px] w-full">
               <AreaChart data={chartData} margin={{
-            top: 5,
-            right: 5,
-            left: 0,
+            top: 10,
+            right: 10,
+            left: -10,
             bottom: 0
           }}>
                 <defs>
                   <linearGradient id="colorVendasGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#22c55e" stopOpacity={0.4} />
-                    <stop offset="50%" stopColor="#22c55e" stopOpacity={0.15} />
-                    <stop offset="100%" stopColor="#22c55e" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="strokeGradient" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="#16a34a" />
-                    <stop offset="50%" stopColor="#22c55e" />
-                    <stop offset="100%" stopColor="#4ade80" />
+                    <stop offset="0%" stopColor="hsl(142 76% 36%)" stopOpacity={0.2} />
+                    <stop offset="100%" stopColor="hsl(142 76% 36%)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.3} />
+                <CartesianGrid horizontal={true} vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.4} strokeDasharray="0" />
                 <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{
-              fontSize: 10,
+              fontSize: 11,
               fill: 'hsl(var(--muted-foreground))'
-            }} dy={5} interval="preserveStartEnd" />
+            }} dy={8} interval="preserveStartEnd" />
                 <YAxis axisLine={false} tickLine={false} tick={{
-              fontSize: 10,
+              fontSize: 11,
               fill: 'hsl(var(--muted-foreground))'
             }} tickFormatter={value => {
               if (value === 0) return '0';
               if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
               if (value >= 1000) return `${(value / 1000).toFixed(0)}K`;
               return value.toString();
-            }} width={45} domain={[0, 'auto']} />
+            }} width={40} domain={[0, 'auto']} />
                 <ChartTooltip content={<ChartTooltipContent />} formatter={(value: number) => [`${value.toLocaleString()} KZ`, 'Vendas']} />
-                <Area type="monotone" dataKey="vendas" stroke="url(#strokeGradient)" strokeWidth={2.5} fillOpacity={1} fill="url(#colorVendasGradient)" dot={false} activeDot={{
-              fill: '#22c55e',
+                <Area type="monotone" dataKey="vendas" stroke="hsl(142 76% 36%)" strokeWidth={2} fillOpacity={1} fill="url(#colorVendasGradient)" dot={false} activeDot={{
+              fill: 'hsl(142 76% 36%)',
               stroke: 'white',
-              strokeWidth: 3,
-              r: 6
+              strokeWidth: 2,
+              r: 5
             }} />
               </AreaChart>
             </ChartContainer>}
