@@ -23,10 +23,31 @@ serve(async (req) => {
     
     console.log('Creating multibanco order:', orderData);
 
+    // Buscar user_id do vendedor (dono do produto)
+    let sellerUserId = orderData.user_id;
+    if (!sellerUserId && orderData.product_id) {
+      const { data: product } = await supabaseAdmin
+        .from('products')
+        .select('user_id')
+        .eq('id', orderData.product_id)
+        .single();
+      
+      if (product?.user_id) {
+        sellerUserId = product.user_id;
+        console.log('📌 Found seller user_id from product:', sellerUserId);
+      }
+    }
+
+    // Garantir que user_id é o vendedor
+    const orderToInsert = {
+      ...orderData,
+      user_id: sellerUserId
+    };
+
     // Insert order using service role (bypasses RLS)
     const { data: insertedOrder, error: orderError } = await supabaseAdmin
       .from('orders')
-      .insert(orderData)
+      .insert(orderToInsert)
       .select()
       .single();
 
