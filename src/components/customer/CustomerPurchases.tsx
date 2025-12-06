@@ -58,14 +58,25 @@ export default function CustomerPurchases() {
     loadPurchases();
   }, [user]);
 
-  const canRequestRefund = (order: any) => {
-    if (order.has_active_refund) return false;
-    if (!order.refund_deadline) return false;
-    return new Date(order.refund_deadline) > new Date();
+  const getRefundDeadline = (order: any) => {
+    if (order.refund_deadline) {
+      return new Date(order.refund_deadline);
+    }
+    // Se não tem refund_deadline, calcula 7 dias após a compra
+    const createdAt = new Date(order.created_at);
+    createdAt.setDate(createdAt.getDate() + 7);
+    return createdAt;
   };
 
-  const getDaysLeft = (deadline: string) => {
-    return differenceInDays(new Date(deadline), new Date());
+  const canRequestRefund = (order: any) => {
+    if (order.has_active_refund) return false;
+    const deadline = getRefundDeadline(order);
+    return deadline > new Date();
+  };
+
+  const getDaysLeft = (order: any) => {
+    const deadline = getRefundDeadline(order);
+    return differenceInDays(deadline, new Date());
   };
 
   const totalCompras = purchases.length;
@@ -118,7 +129,7 @@ export default function CustomerPurchases() {
         <div className="grid gap-4">
           {purchases.map((order) => {
             const canRefund = canRequestRefund(order);
-            const daysLeft = order.refund_deadline ? getDaysLeft(order.refund_deadline) : 0;
+            const daysLeft = getDaysLeft(order);
 
             return (
               <Card key={order.id} className="hover:shadow-lg transition-shadow">
