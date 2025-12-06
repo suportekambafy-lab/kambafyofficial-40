@@ -386,14 +386,11 @@ export function AppHome() {
 
       // ✅ Buscar vendas de order bumps para produtos do usuário (igual à Web)
       let orderBumpSalesMap: Record<string, number> = {};
-      
       if (productIds.length > 0) {
         // Buscar settings onde o bump_product_id é um dos produtos do usuário
-        const { data: bumpSettings } = await supabase
-          .from('order_bump_settings')
-          .select('bump_product_id, bump_product_name')
-          .in('bump_product_id', productIds);
-        
+        const {
+          data: bumpSettings
+        } = await supabase.from('order_bump_settings').select('bump_product_id, bump_product_name').in('bump_product_id', productIds);
         if (bumpSettings && bumpSettings.length > 0) {
           // Criar mapa de bump_product_name (normalizado) -> bump_product_id
           const bumpNameToProductId: Record<string, string> = {};
@@ -403,19 +400,16 @@ export function AppHome() {
               bumpNameToProductId[normalizedName] = setting.bump_product_id;
             }
           }
-          
+
           // Buscar todas as orders com order_bump_data
-          const { data: ordersWithBumps } = await supabase
-            .from('orders')
-            .select('order_bump_data')
-            .in('status', ['completed', 'paid'])
-            .not('order_bump_data', 'is', null);
-          
+          const {
+            data: ordersWithBumps
+          } = await supabase.from('orders').select('order_bump_data').in('status', ['completed', 'paid']).not('order_bump_data', 'is', null);
           if (ordersWithBumps) {
             for (const order of ordersWithBumps) {
               try {
                 let bumpData: any = order.order_bump_data;
-                
+
                 // Parse múltiplo para lidar com string JSON escapada
                 while (typeof bumpData === 'string') {
                   try {
@@ -424,11 +418,10 @@ export function AppHome() {
                     break;
                   }
                 }
-                
                 const bumpProductName = bumpData?.bump_product_name as string | undefined;
                 if (bumpProductName) {
                   const normalizedBumpName = bumpProductName.toLowerCase().trim();
-                  
+
                   // Verificar se este bump_product_name corresponde a um produto do usuário
                   const matchedProductId = bumpNameToProductId[normalizedBumpName];
                   if (matchedProductId) {
@@ -918,12 +911,9 @@ export function AppHome() {
               </div>
             </div>
 
-            {loading ? (
-              <div className="bg-card rounded-xl border border-border/40 shadow-sm p-8 text-center">
+            {loading ? <div className="bg-card rounded-xl border border-border/40 shadow-sm p-8 text-center">
                 <p className="text-muted-foreground text-sm">Carregando...</p>
-              </div>
-            ) : products.length === 0 ? (
-              <div className="bg-card rounded-xl border border-border/40 shadow-sm p-8 text-center">
+              </div> : products.length === 0 ? <div className="bg-card rounded-xl border border-border/40 shadow-sm p-8 text-center">
                 <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
                   <Package className="h-7 w-7 text-primary" />
                 </div>
@@ -931,23 +921,16 @@ export function AppHome() {
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   Use a versão desktop para criar produtos.
                 </p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {products.map(product => (
-                  <div key={product.id} className="bg-card rounded-xl border border-border/40 shadow-sm flex overflow-hidden hover:shadow-md transition-shadow">
+              </div> : <div className="space-y-2">
+                {products.map(product => <div key={product.id} className="bg-card rounded-xl border border-border/40 shadow-sm flex overflow-hidden hover:shadow-md transition-shadow">
                     <div className={`w-1 shrink-0 ${product.status === 'Ativo' ? 'bg-emerald-500' : 'bg-gray-300'}`} />
                     <div className="flex-1 p-3">
                       <div className="flex gap-3">
                         {/* Product Image */}
                         <div className="relative flex-shrink-0">
-                          {product.cover ? (
-                            <img src={product.cover} alt={product.name} className="w-16 h-16 rounded-lg object-cover" />
-                          ) : (
-                            <div className="w-16 h-16 rounded-lg bg-primary/10 flex items-center justify-center">
+                          {product.cover ? <img src={product.cover} alt={product.name} className="w-16 h-16 rounded-lg object-cover" /> : <div className="w-16 h-16 rounded-lg bg-primary/10 flex items-center justify-center">
                               <Package className="h-6 w-6 text-primary" />
-                            </div>
-                          )}
+                            </div>}
                         </div>
 
                         {/* Product Info */}
@@ -956,11 +939,7 @@ export function AppHome() {
                             <h3 className="font-semibold text-sm text-foreground line-clamp-1 mb-1">
                               {product.name}
                             </h3>
-                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
-                              product.status === 'Ativo' 
-                                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400' 
-                                : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
-                            }`}>
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${product.status === 'Ativo' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'}`}>
                               {product.status}
                             </span>
                           </div>
@@ -983,16 +962,14 @@ export function AppHome() {
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  </div>)}
 
                 <div className="bg-primary/5 rounded-xl p-3 text-center">
                   <p className="text-xs text-muted-foreground">
                     💡 Para editar produtos, acesse a versão desktop
                   </p>
                 </div>
-              </div>
-            )}
+              </div>}
           </div>;
       case 'stats':
         return <div className="p-3 md:p-4 space-y-3 bg-background min-h-full">
@@ -1019,14 +996,10 @@ export function AppHome() {
                   <div className="text-2xl md:text-3xl font-bold tracking-tight text-foreground mb-3">
                     {formatPriceForSeller(financialData.availableBalance, 'KZ')}
                   </div>
-                  <Button 
-                    onClick={() => {
-                      triggerHaptic('medium');
-                      setShowWithdrawalModal(true);
-                    }} 
-                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white" 
-                    size="sm"
-                  >
+                  <Button onClick={() => {
+                  triggerHaptic('medium');
+                  setShowWithdrawalModal(true);
+                }} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white" size="sm">
                     <ArrowDownToLine className="h-4 w-4 mr-2" />
                     Solicitar Saque
                   </Button>
@@ -1057,42 +1030,30 @@ export function AppHome() {
                 <p className="text-xs text-muted-foreground">Últimas solicitações</p>
               </div>
               <div className="p-4">
-                {withdrawalHistory.length === 0 ? (
-                  <div className="text-center py-6 text-muted-foreground">
+                {withdrawalHistory.length === 0 ? <div className="text-center py-6 text-muted-foreground">
                     <ArrowDownToLine className="h-8 w-8 mx-auto mb-2 opacity-30" />
                     <p className="text-sm">Nenhum saque solicitado ainda</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {withdrawalHistory.slice(0, 5).map(withdrawal => (
-                      <div key={withdrawal.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+                  </div> : <div className="space-y-2">
+                    {withdrawalHistory.slice(0, 5).map(withdrawal => <div key={withdrawal.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-semibold text-foreground">
                               {formatPriceForSeller(parseFloat(withdrawal.amount || '0'), 'KZ')}
                             </span>
-                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
-                              withdrawal.status === 'aprovado' 
-                                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' 
-                                : withdrawal.status === 'rejeitado' 
-                                  ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' 
-                                  : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
-                            }`}>
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${withdrawal.status === 'aprovado' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : withdrawal.status === 'rejeitado' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'}`}>
                               {withdrawal.status === 'aprovado' ? 'Aprovado' : withdrawal.status === 'rejeitado' ? 'Rejeitado' : 'Pendente'}
                             </span>
                           </div>
                           <p className="text-[11px] text-muted-foreground mt-0.5">
                             {new Date(withdrawal.created_at).toLocaleDateString('pt-AO', {
-                              day: '2-digit',
-                              month: 'short',
-                              year: 'numeric'
-                            })}
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric'
+                      })}
                           </p>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                      </div>)}
+                  </div>}
               </div>
             </div>
           </div>;
@@ -1121,16 +1082,16 @@ export function AppHome() {
             <div className="bg-card rounded-xl border border-border/40 shadow-sm p-4">
               <div className="flex items-center space-x-4">
                 <div className="relative cursor-pointer" onClick={async () => {
-                  triggerHaptic('light');
-                  const photo = await pickPhoto();
-                  if (photo && user) {
-                    toast({
-                      title: "Foto Selecionada",
-                      description: "Funcionalidade de upload em desenvolvimento"
-                    });
-                    triggerHaptic('success');
-                  }
-                }}>
+                triggerHaptic('light');
+                const photo = await pickPhoto();
+                if (photo && user) {
+                  toast({
+                    title: "Foto Selecionada",
+                    description: "Funcionalidade de upload em desenvolvimento"
+                  });
+                  triggerHaptic('success');
+                }
+              }}>
                   <Avatar className="w-14 h-14 rounded-xl flex-shrink-0 hover:opacity-80 transition-opacity">
                     <AvatarImage src={profileAvatar} alt="Profile" />
                     <AvatarFallback className="rounded-xl bg-primary/10">
@@ -1154,10 +1115,7 @@ export function AppHome() {
 
             {/* Settings Cards */}
             <div className="space-y-2">
-              <button 
-                onClick={() => setShowEditProfile(true)} 
-                className="w-full bg-card rounded-xl border border-border/40 shadow-sm flex items-center justify-between px-4 py-4 hover:shadow-md transition-shadow"
-              >
+              <button onClick={() => setShowEditProfile(true)} className="w-full bg-card rounded-xl border border-border/40 shadow-sm flex items-center justify-between px-4 py-4 hover:shadow-md transition-shadow">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
                     <Settings className="h-4 w-4 text-primary" />
@@ -1167,10 +1125,7 @@ export function AppHome() {
                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
               </button>
 
-              <button 
-                onClick={() => setActiveTab('my-courses')} 
-                className="w-full bg-card rounded-xl border border-border/40 shadow-sm flex items-center justify-between px-4 py-4 hover:shadow-md transition-shadow"
-              >
+              <button onClick={() => setActiveTab('my-courses')} className="w-full bg-card rounded-xl border border-border/40 shadow-sm flex items-center justify-between px-4 py-4 hover:shadow-md transition-shadow">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center">
                     <GraduationCap className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
@@ -1188,19 +1143,16 @@ export function AppHome() {
                   <span className="font-medium text-sm text-foreground">Notificações Push</span>
                 </div>
                 <Switch checked={pushEnabled} onCheckedChange={checked => {
-                  console.log('🔔 [Switch] onCheckedChange triggered with:', checked);
-                  handlePushToggle(checked);
-                }} />
+                console.log('🔔 [Switch] onCheckedChange triggered with:', checked);
+                handlePushToggle(checked);
+              }} />
               </div>
 
-              <button 
-                onClick={() => {
-                  if (window.confirm('Tem a certeza que deseja encerrar a sua conta? Esta ação é irreversível.')) {
-                    alert('Funcionalidade de encerramento de conta em desenvolvimento.');
-                  }
-                }} 
-                className="w-full bg-card rounded-xl border border-border/40 shadow-sm flex items-center justify-between px-4 py-4 hover:border-destructive/50 transition-colors"
-              >
+              <button onClick={() => {
+              if (window.confirm('Tem a certeza que deseja encerrar a sua conta? Esta ação é irreversível.')) {
+                alert('Funcionalidade de encerramento de conta em desenvolvimento.');
+              }
+            }} className="w-full bg-card rounded-xl border border-border/40 shadow-sm flex items-center justify-between px-4 py-4 hover:border-destructive/50 transition-colors">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-lg bg-destructive/10 flex items-center justify-center">
                     <Trash2 className="h-4 w-4 text-destructive" />
@@ -1210,10 +1162,7 @@ export function AppHome() {
                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
               </button>
 
-              <button 
-                onClick={() => signOut()} 
-                className="w-full bg-card rounded-xl border border-border/40 shadow-sm flex items-center justify-between px-4 py-4 hover:border-orange-500/50 transition-colors"
-              >
+              <button onClick={() => signOut()} className="w-full bg-card rounded-xl border border-border/40 shadow-sm flex items-center justify-between px-4 py-4 hover:border-orange-500/50 transition-colors">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-lg bg-orange-500/10 flex items-center justify-center">
                     <LogOut className="h-4 w-4 text-orange-600 dark:text-orange-400" />
@@ -1244,11 +1193,7 @@ export function AppHome() {
             {/* Status Filter */}
             <div className="space-y-1.5">
               <label className="text-[13px] font-medium text-foreground">Status</label>
-              <select 
-                value={salesStatusFilter} 
-                onChange={e => setSalesStatusFilter(e.target.value as typeof salesStatusFilter)} 
-                className="w-full h-9 px-3 rounded-lg border border-border/40 bg-card text-sm font-medium text-foreground shadow-sm"
-              >
+              <select value={salesStatusFilter} onChange={e => setSalesStatusFilter(e.target.value as typeof salesStatusFilter)} className="w-full h-9 px-3 rounded-lg border border-border/40 bg-card text-sm font-medium text-foreground shadow-sm">
                 <option value="all">Todas</option>
                 <option value="completed">Pagas</option>
                 <option value="pending">Pendentes</option>
@@ -1256,12 +1201,9 @@ export function AppHome() {
               </select>
             </div>
 
-            {loadingSalesHistory ? (
-              <div className="bg-card rounded-xl border border-border/40 shadow-sm p-8 text-center">
+            {loadingSalesHistory ? <div className="bg-card rounded-xl border border-border/40 shadow-sm p-8 text-center">
                 <p className="text-muted-foreground text-sm">Carregando vendas...</p>
-              </div>
-            ) : orders.length === 0 ? (
-              <div className="bg-card rounded-xl border border-border/40 shadow-sm p-8 text-center">
+              </div> : orders.length === 0 ? <div className="bg-card rounded-xl border border-border/40 shadow-sm p-8 text-center">
                 <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
                   <ShoppingCart className="h-7 w-7 text-primary" />
                 </div>
@@ -1269,33 +1211,36 @@ export function AppHome() {
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   Não há vendas {salesStatusFilter !== 'all' && `${salesStatusFilter === 'completed' ? 'pagas' : salesStatusFilter === 'pending' ? 'pendentes' : 'canceladas'}`} no momento.
                 </p>
-              </div>
-            ) : (
-              <div className="space-y-2">
+              </div> : <div className="space-y-2">
                 {orders.map(order => {
-                  const statusConfig = {
-                    completed: { color: 'bg-emerald-500', label: 'Pago', textColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400' },
-                    pending: { color: 'bg-orange-500', label: 'Pendente', textColor: 'bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-400' },
-                    cancelled: { color: 'bg-red-500', label: 'Cancelado', textColor: 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400' }
-                  };
-
-                  const normalizedStatus = order.status === 'canceled' || order.status === 'failed' ? 'cancelled' : order.status;
-                  const status = statusConfig[normalizedStatus as keyof typeof statusConfig] || statusConfig.pending;
-                  
-                  return (
-                    <div key={order.id} className="bg-card rounded-xl border border-border/40 shadow-sm flex overflow-hidden hover:shadow-md transition-shadow">
+              const statusConfig = {
+                completed: {
+                  color: 'bg-emerald-500',
+                  label: 'Pago',
+                  textColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400'
+                },
+                pending: {
+                  color: 'bg-orange-500',
+                  label: 'Pendente',
+                  textColor: 'bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-400'
+                },
+                cancelled: {
+                  color: 'bg-red-500',
+                  label: 'Cancelado',
+                  textColor: 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400'
+                }
+              };
+              const normalizedStatus = order.status === 'canceled' || order.status === 'failed' ? 'cancelled' : order.status;
+              const status = statusConfig[normalizedStatus as keyof typeof statusConfig] || statusConfig.pending;
+              return <div key={order.id} className="bg-card rounded-xl border border-border/40 shadow-sm flex overflow-hidden hover:shadow-md transition-shadow">
                       <div className={`w-1 shrink-0 ${status.color}`} />
                       <div className="flex-1 p-3">
                         <div className="flex gap-3">
                           {/* Product Image */}
                           <div className="relative flex-shrink-0">
-                            {order.products?.cover ? (
-                              <img src={order.products.cover} alt={order.products.name} className="w-14 h-14 rounded-lg object-cover" />
-                            ) : (
-                              <div className="w-14 h-14 rounded-lg bg-primary/10 flex items-center justify-center">
+                            {order.products?.cover ? <img src={order.products.cover} alt={order.products.name} className="w-14 h-14 rounded-lg object-cover" /> : <div className="w-14 h-14 rounded-lg bg-primary/10 flex items-center justify-center">
                                 <Package className="h-6 w-6 text-primary" />
-                              </div>
-                            )}
+                              </div>}
                           </div>
 
                           {/* Order Info */}
@@ -1326,42 +1271,35 @@ export function AppHome() {
                                 <p className="text-[10px] text-muted-foreground">Data</p>
                                 <p className="text-xs text-foreground">
                                   {new Date(order.created_at).toLocaleDateString('pt-BR', {
-                                    day: '2-digit',
-                                    month: '2-digit',
-                                    year: 'numeric'
-                                  })}
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric'
+                            })}
                                 </p>
                               </div>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    </div>;
+            })}
 
                 <div className="bg-primary/5 rounded-xl p-3 text-center">
                   <p className="text-xs text-muted-foreground">
                     💡 Para ver mais detalhes, acesse a versão desktop
                   </p>
                 </div>
-              </div>
-            )}
+              </div>}
           </div>;
       default:
         return <div className="p-3 md:p-4 space-y-3 bg-background min-h-full max-w-full overflow-x-hidden">
             {/* Header */}
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-lg md:text-xl font-semibold text-foreground">Dashboard</h1>
-                <p className="text-muted-foreground text-xs">Acompanhe o desempenho do seu negócio</p>
+                
+                
               </div>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setActiveTab('live-view')}
-                className="flex items-center gap-2 text-foreground"
-              >
+              <Button variant="outline" size="sm" onClick={() => setActiveTab('live-view')} className="flex items-center gap-2 text-foreground">
                 <Radio className="h-4 w-4" />
                 <span className="flex items-center gap-1.5">
                   Live View
@@ -1374,17 +1312,13 @@ export function AppHome() {
             <div className="flex flex-col gap-2 max-w-full">
               <div className="space-y-1.5">
                 <label className="text-[13px] font-medium text-foreground">Período</label>
-                <select 
-                  value={timeFilter} 
-                  onChange={e => {
-                    const value = e.target.value as typeof timeFilter;
-                    setTimeFilter(value);
-                    if (value !== 'custom') {
-                      setCustomDateRange({});
-                    }
-                  }} 
-                  className="w-full h-9 px-3 rounded-lg border border-border/40 bg-card text-sm font-medium text-foreground shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
-                >
+                <select value={timeFilter} onChange={e => {
+                const value = e.target.value as typeof timeFilter;
+                setTimeFilter(value);
+                if (value !== 'custom') {
+                  setCustomDateRange({});
+                }
+              }} className="w-full h-9 px-3 rounded-lg border border-border/40 bg-card text-sm font-medium text-foreground shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors">
                   <option value="today">Hoje</option>
                   <option value="yesterday">Ontem</option>
                   <option value="7d">Últimos 7 dias</option>
@@ -1395,45 +1329,41 @@ export function AppHome() {
                 </select>
               </div>
 
-              {timeFilter === 'custom' && (
-                <div className="space-y-1.5">
+              {timeFilter === 'custom' && <div className="space-y-1.5">
                   <label className="text-[13px] font-medium text-foreground">Selecionar Data</label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button variant="outline" className="w-full justify-start text-left font-normal h-9 border-border/40 shadow-sm">
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {customDateRange.from ? customDateRange.to ? <>
-                              {format(customDateRange.from, "dd/MM/yyyy", { locale: pt })} -{" "}
-                              {format(customDateRange.to, "dd/MM/yyyy", { locale: pt })}
-                            </> : format(customDateRange.from, "dd/MM/yyyy", { locale: pt }) 
-                        : <span className="text-muted-foreground">Escolher data</span>}
+                              {format(customDateRange.from, "dd/MM/yyyy", {
+                        locale: pt
+                      })} -{" "}
+                              {format(customDateRange.to, "dd/MM/yyyy", {
+                        locale: pt
+                      })}
+                            </> : format(customDateRange.from, "dd/MM/yyyy", {
+                      locale: pt
+                    }) : <span className="text-muted-foreground">Escolher data</span>}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0 bg-popover z-[120]" align="start">
-                      <Calendar 
-                        mode="range" 
-                        selected={{ from: customDateRange.from, to: customDateRange.to }} 
-                        onSelect={range => setCustomDateRange({ from: range?.from, to: range?.to })} 
-                        initialFocus 
-                        className="pointer-events-auto" 
-                        locale={pt} 
-                      />
+                      <Calendar mode="range" selected={{
+                    from: customDateRange.from,
+                    to: customDateRange.to
+                  }} onSelect={range => setCustomDateRange({
+                    from: range?.from,
+                    to: range?.to
+                  })} initialFocus className="pointer-events-auto" locale={pt} />
                     </PopoverContent>
                   </Popover>
-                </div>
-              )}
+                </div>}
 
               <div className="space-y-1.5">
                 <label className="text-[13px] font-medium text-foreground">Produto</label>
-                <select 
-                  value={productFilter} 
-                  onChange={e => setProductFilter(e.target.value)} 
-                  className="w-full h-9 px-3 rounded-lg border border-border/40 bg-card text-sm font-medium text-foreground shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
-                >
+                <select value={productFilter} onChange={e => setProductFilter(e.target.value)} className="w-full h-9 px-3 rounded-lg border border-border/40 bg-card text-sm font-medium text-foreground shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors">
                   <option value="all">Todos os produtos</option>
-                  {products.filter(p => p.status === 'Ativo').map(product => (
-                    <option key={product.id} value={product.id}>{product.name}</option>
-                  ))}
+                  {products.filter(p => p.status === 'Ativo').map(product => <option key={product.id} value={product.id}>{product.name}</option>)}
                 </select>
               </div>
             </div>
@@ -1453,34 +1383,20 @@ export function AppHome() {
 
             {/* Sales Chart */}
             <div className="w-full">
-              <ModernSalesChart 
-                timeFilter={
-                  timeFilter === 'today' ? 'hoje' :
-                  timeFilter === 'yesterday' ? 'ontem' :
-                  timeFilter === '7d' ? 'ultimos-7-dias' :
-                  timeFilter === '30d' ? 'ultimos-30-dias' :
-                  timeFilter === '90d' ? 'ultimos-30-dias' :
-                  timeFilter === 'custom' ? 'custom' :
-                  'ultimos-7-dias'
-                }
-                customDateRange={customDateRange.from && customDateRange.to ? { from: customDateRange.from, to: customDateRange.to } : null}
-              />
+              <ModernSalesChart timeFilter={timeFilter === 'today' ? 'hoje' : timeFilter === 'yesterday' ? 'ontem' : timeFilter === '7d' ? 'ultimos-7-dias' : timeFilter === '30d' ? 'ultimos-30-dias' : timeFilter === '90d' ? 'ultimos-30-dias' : timeFilter === 'custom' ? 'custom' : 'ultimos-7-dias'} customDateRange={customDateRange.from && customDateRange.to ? {
+              from: customDateRange.from,
+              to: customDateRange.to
+            } : null} />
             </div>
 
             {/* Quick Actions */}
             <div className="grid grid-cols-2 gap-2">
-              <button 
-                onClick={() => setActiveTab('sales-history')}
-                className="bg-card rounded-xl border border-border/40 shadow-sm p-4 text-left hover:shadow-md transition-shadow"
-              >
+              <button onClick={() => setActiveTab('sales-history')} className="bg-card rounded-xl border border-border/40 shadow-sm p-4 text-left hover:shadow-md transition-shadow">
                 <ShoppingCart className="h-5 w-5 text-primary mb-2" />
                 <p className="text-sm font-medium text-foreground">Ver Vendas</p>
                 <p className="text-xs text-muted-foreground">{stats.totalSales} vendas</p>
               </button>
-              <button 
-                onClick={() => setActiveTab('stats')}
-                className="bg-card rounded-xl border border-border/40 shadow-sm p-4 text-left hover:shadow-md transition-shadow"
-              >
+              <button onClick={() => setActiveTab('stats')} className="bg-card rounded-xl border border-border/40 shadow-sm p-4 text-left hover:shadow-md transition-shadow">
                 <Wallet className="h-5 w-5 text-emerald-500 mb-2" />
                 <p className="text-sm font-medium text-foreground">Financeiro</p>
                 <p className="text-xs text-muted-foreground">Ver saldo</p>
