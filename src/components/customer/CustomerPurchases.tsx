@@ -173,8 +173,8 @@ export default function CustomerPurchases() {
                               </Button>
                             </>
                           ) : (
-                            <p className="text-sm text-muted-foreground italic">
-                              Prazo de 7 dias para reembolso expirado
+                            <p className="text-xs text-muted-foreground italic">
+                              Prazo expirado
                             </p>
                           )}
                         </div>
