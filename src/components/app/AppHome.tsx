@@ -1073,113 +1073,146 @@ export function AppHome() {
           });
         }} />;
       case 'profile':
-        return <div className="p-3 md:p-4 space-y-3 bg-background min-h-full">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-2">
-              <div>
-                <h1 className="text-lg md:text-xl font-semibold text-foreground">Meu Perfil</h1>
-                <p className="text-muted-foreground text-xs">Configurações e preferências</p>
-              </div>
-            </div>
-
-            {/* User Info Card */}
-            <div className="bg-card rounded-xl border border-border/40 shadow-sm p-4">
-              <div className="flex items-center space-x-4">
-                <div className="relative cursor-pointer" onClick={async () => {
-                triggerHaptic('light');
-                const photo = await pickPhoto();
-                if (photo && user) {
-                  toast({
-                    title: "Foto Selecionada",
-                    description: "Funcionalidade de upload em desenvolvimento"
-                  });
-                  triggerHaptic('success');
-                }
-              }}>
-                  <Avatar className="w-14 h-14 rounded-xl flex-shrink-0 hover:opacity-80 transition-opacity">
-                    <AvatarImage src={profileAvatar} alt="Profile" />
-                    <AvatarFallback className="rounded-xl bg-primary/10">
-                      {currentLevel ? <img src={currentLevel.badge} alt={currentLevel.name} className="w-10 h-10 object-contain" /> : <User className="h-7 w-7 text-primary" />}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="absolute -bottom-0.5 -right-0.5 bg-primary text-primary-foreground rounded-full p-1 shadow-md">
-                    <Camera className="w-3 h-3" />
+        return <div className="p-3 md:p-4 space-y-4 bg-background min-h-full">
+            {/* Modern Profile Header */}
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-transparent p-5 border border-primary/10">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-primary/5 rounded-full translate-y-1/2 -translate-x-1/2" />
+              
+              <div className="relative flex items-center gap-4">
+                <div className="relative cursor-pointer group" onClick={async () => {
+                  triggerHaptic('light');
+                  const photo = await pickPhoto();
+                  if (photo && user) {
+                    toast({
+                      title: "Foto Selecionada",
+                      description: "Funcionalidade de upload em desenvolvimento"
+                    });
+                    triggerHaptic('success');
+                  }
+                }}>
+                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary/60 p-0.5 shadow-lg shadow-primary/20">
+                    <Avatar className="w-full h-full rounded-[14px]">
+                      <AvatarImage src={profileAvatar} alt="Profile" className="rounded-[14px]" />
+                      <AvatarFallback className="rounded-[14px] bg-card">
+                        {currentLevel ? <img src={currentLevel.badge} alt={currentLevel.name} className="w-12 h-12 object-contain" /> : <User className="h-8 w-8 text-primary" />}
+                      </AvatarFallback>
+                    </Avatar>
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 bg-card text-primary rounded-xl p-1.5 shadow-lg border border-border/50 group-hover:scale-110 transition-transform">
+                    <Camera className="w-3.5 h-3.5" />
                   </div>
                 </div>
+                
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm text-foreground truncate">
-                    {editingProfile.full_name || user?.email}
+                  <h2 className="font-bold text-lg text-foreground truncate">
+                    {editingProfile.full_name || user?.email?.split('@')[0]}
+                  </h2>
+                  <p className="text-sm text-muted-foreground truncate">
+                    {user?.email}
                   </p>
-                  <p className="text-xs text-muted-foreground">
-                    {currentLevel ? `${currentLevel.name}` : 'Vendedor Kambafy'}
-                  </p>
+                  {currentLevel && (
+                    <div className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20">
+                      <span className="text-xs font-medium text-primary">{currentLevel.name}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Settings Cards */}
-            <div className="space-y-2">
-              <button onClick={() => setShowEditProfile(true)} className="w-full bg-card rounded-xl border border-border/40 shadow-sm flex items-center justify-between px-4 py-4 hover:shadow-md transition-shadow">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Settings className="h-4 w-4 text-primary" />
+            {/* Quick Actions Grid */}
+            <div className="grid grid-cols-2 gap-3">
+              <button onClick={() => setShowEditProfile(true)} className="group relative overflow-hidden bg-card rounded-2xl border border-border/40 p-4 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="relative flex flex-col items-center text-center gap-2">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <User className="h-5 w-5 text-primary" />
                   </div>
-                  <span className="font-medium text-sm text-foreground">Dados Pessoais</span>
+                  <span className="font-medium text-sm text-foreground">Editar Perfil</span>
                 </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
               </button>
 
-              <button onClick={() => setActiveTab('my-courses')} className="w-full bg-card rounded-xl border border-border/40 shadow-sm flex items-center justify-between px-4 py-4 hover:shadow-md transition-shadow">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                    <GraduationCap className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+              <button onClick={() => setActiveTab('my-courses')} className="group relative overflow-hidden bg-card rounded-2xl border border-border/40 p-4 hover:border-emerald-500/30 hover:shadow-lg hover:shadow-emerald-500/5 transition-all duration-300">
+                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="relative flex flex-col items-center text-center gap-2">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <GraduationCap className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                   </div>
-                  <span className="font-medium text-sm text-foreground">Ver como aluno</span>
+                  <span className="font-medium text-sm text-foreground">Meus Cursos</span>
                 </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
               </button>
+            </div>
 
-              <div className="bg-card rounded-xl border border-border/40 shadow-sm flex items-center justify-between px-4 py-4">
+            {/* Settings List */}
+            <div className="bg-card rounded-2xl border border-border/40 overflow-hidden divide-y divide-border/30">
+              <div className="flex items-center justify-between px-4 py-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                    <Bell className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-blue-500/5 flex items-center justify-center">
+                    <Bell className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <span className="font-medium text-sm text-foreground">Notificações Push</span>
+                  <div>
+                    <span className="font-medium text-sm text-foreground block">Notificações</span>
+                    <span className="text-xs text-muted-foreground">Receber alertas de vendas</span>
+                  </div>
                 </div>
                 <Switch checked={pushEnabled} onCheckedChange={checked => {
-                console.log('🔔 [Switch] onCheckedChange triggered with:', checked);
-                handlePushToggle(checked);
-              }} />
+                  console.log('🔔 [Switch] onCheckedChange triggered with:', checked);
+                  handlePushToggle(checked);
+                }} />
               </div>
 
               <button onClick={() => {
-              if (window.confirm('Tem a certeza que deseja encerrar a sua conta? Esta ação é irreversível.')) {
-                alert('Funcionalidade de encerramento de conta em desenvolvimento.');
-              }
-            }} className="w-full bg-card rounded-xl border border-border/40 shadow-sm flex items-center justify-between px-4 py-4 hover:border-destructive/50 transition-colors">
+                triggerHaptic('light');
+                const newTheme = isDark ? 'light' : 'dark';
+                setTheme(newTheme);
+              }} className="w-full flex items-center justify-between px-4 py-4 hover:bg-muted/50 transition-colors">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-destructive/10 flex items-center justify-center">
-                    <Trash2 className="h-4 w-4 text-destructive" />
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500/20 to-violet-500/5 flex items-center justify-center">
+                    {isDark ? <Moon className="h-5 w-5 text-violet-600 dark:text-violet-400" /> : <Sun className="h-5 w-5 text-violet-600 dark:text-violet-400" />}
                   </div>
-                  <span className="font-medium text-sm text-destructive">Encerrar Conta</span>
-                </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </button>
-
-              <button onClick={() => signOut()} className="w-full bg-card rounded-xl border border-border/40 shadow-sm flex items-center justify-between px-4 py-4 hover:border-orange-500/50 transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-orange-500/10 flex items-center justify-center">
-                    <LogOut className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                  <div>
+                    <span className="font-medium text-sm text-foreground block">Aparência</span>
+                    <span className="text-xs text-muted-foreground">{isDark ? 'Modo escuro' : 'Modo claro'}</span>
                   </div>
-                  <span className="font-medium text-sm text-orange-600 dark:text-orange-400">Sair da conta</span>
                 </div>
+                <ChevronRight className="h-5 w-5 text-muted-foreground" />
               </button>
             </div>
 
+            {/* Danger Zone */}
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-muted-foreground px-1">Zona de Perigo</p>
+              <div className="bg-card rounded-2xl border border-border/40 overflow-hidden divide-y divide-border/30">
+                <button onClick={() => signOut()} className="w-full flex items-center justify-between px-4 py-4 hover:bg-orange-500/5 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-500/5 flex items-center justify-center">
+                      <LogOut className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                    </div>
+                    <span className="font-medium text-sm text-orange-600 dark:text-orange-400">Sair da conta</span>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                </button>
+
+                <button onClick={() => {
+                  if (window.confirm('Tem a certeza que deseja encerrar a sua conta? Esta ação é irreversível.')) {
+                    alert('Funcionalidade de encerramento de conta em desenvolvimento.');
+                  }
+                }} className="w-full flex items-center justify-between px-4 py-4 hover:bg-destructive/5 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-destructive/20 to-destructive/5 flex items-center justify-center">
+                      <Trash2 className="h-5 w-5 text-destructive" />
+                    </div>
+                    <span className="font-medium text-sm text-destructive">Encerrar Conta</span>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                </button>
+              </div>
+            </div>
+
             {/* App Version & Logo */}
-            <div className="flex flex-col items-center gap-1.5 pt-4">
-              <img src={kambafyIconGreen} alt="Logo" className="h-8 w-auto opacity-40" />
-              <span className="text-[10px] text-muted-foreground">Versão 1.1</span>
+            <div className="flex flex-col items-center gap-2 pt-6 pb-4">
+              <img src={kambafyIconGreen} alt="Logo" className="h-10 w-auto opacity-30" />
+              <span className="text-[11px] text-muted-foreground/60">Versão 1.1</span>
             </div>
           </div>;
       case 'sales-history':
