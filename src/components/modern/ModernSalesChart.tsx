@@ -4,7 +4,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { TrendingUp, TrendingDown } from 'lucide-react';
+import { ShoppingBag, CheckCircle2 } from 'lucide-react';
 interface ChartData {
   time: string;
   vendas: number;
@@ -287,81 +287,101 @@ export function ModernSalesChart({
     }
   };
   const filterLabel = getFilterLabel(timeFilter);
-  return <div className="flex flex-col md:flex-row gap-3">
-      {/* KPI Cards - First on mobile, second on desktop */}
-      <div className="flex flex-row md:flex-col gap-2 md:w-40 order-first md:order-last">
-        <div className="bg-muted/40 rounded-2xl p-4 flex-1">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-xs font-medium text-muted-foreground">Pedidos feitos</span>
-            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 ${ordersTrend >= 0 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'}`}>
-              {ordersTrend >= 0 ? '+' : ''}{ordersTrend}
-              {ordersTrend >= 0 ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
-            </span>
-          </div>
-          <p className="text-2xl font-bold text-foreground">{ordersCount.toLocaleString()}</p>
-        </div>
+  // KPI cards data structure like Wise
+  const kpiCards = [
+    {
+      icon: ShoppingBag,
+      value: ordersCount,
+      label: "Pedidos feitos",
+      trend: ordersTrend
+    },
+    {
+      icon: CheckCircle2,
+      value: paidOrdersCount,
+      label: "Pedidos pagos",
+      trend: paidTrend
+    }
+  ];
 
-        <div className="bg-muted/40 rounded-2xl p-4 flex-1">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-xs font-medium text-muted-foreground">Pedidos pagos</span>
-            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 ${paidTrend >= 0 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'}`}>
-              {paidTrend >= 0 ? '+' : ''}{paidTrend}
-              {paidTrend >= 0 ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
-            </span>
+  return (
+    <div className="space-y-4">
+      {/* KPI Cards - Wise style */}
+      <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1">
+        {kpiCards.map((card, index) => (
+          <div 
+            key={index}
+            className="flex-1 min-w-[140px] bg-muted/50 dark:bg-muted/30 rounded-2xl p-4 flex flex-col"
+          >
+            <div className="w-10 h-10 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center mb-6">
+              <card.icon className="w-5 h-5 text-primary" />
+            </div>
+            <p className="text-2xl font-bold text-foreground mb-0.5">
+              {card.value.toLocaleString()}
+            </p>
+            <span className="text-sm text-muted-foreground">{card.label}</span>
           </div>
-          <p className="text-2xl font-bold text-foreground">{paidOrdersCount.toLocaleString()}</p>
-        </div>
+        ))}
       </div>
 
-      {/* Chart Card */}
-      <Card className="flex-1 rounded-2xl shadow-sm border-0 bg-muted/40 overflow-hidden order-last md:order-first">
-        <CardHeader className="pb-2 px-5 pt-4">
-          <div className="flex items-center justify-between">
-            <span className="text-base font-semibold text-foreground">Vendas</span>
-            <span className="text-xs text-muted-foreground">{filterLabel}</span>
-          </div>
-        </CardHeader>
+      {/* Chart Card - Wise style */}
+      <div className="bg-muted/50 dark:bg-muted/30 rounded-2xl overflow-hidden">
+        <div className="flex items-center justify-between px-4 pt-4 pb-2">
+          <span className="text-base font-semibold text-foreground">Vendas</span>
+          <span className="text-xs text-muted-foreground">{filterLabel}</span>
+        </div>
         
-        <CardContent className="px-3 pb-4">
-          {loading ? <div className="h-[160px] flex items-center justify-center">
+        <div className="px-2 pb-4">
+          {loading ? (
+            <div className="h-[160px] flex items-center justify-center">
               <span className="text-muted-foreground text-sm">Carregando...</span>
-            </div> : <ChartContainer config={chartConfig} className="h-[160px] w-full">
-              <AreaChart data={chartData} margin={{
-            top: 10,
-            right: 10,
-            left: -10,
-            bottom: 0
-          }}>
+            </div>
+          ) : (
+            <ChartContainer config={chartConfig} className="h-[160px] w-full">
+              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorVendasGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="hsl(142 76% 36%)" stopOpacity={0.2} />
+                    <stop offset="0%" stopColor="hsl(142 76% 36%)" stopOpacity={0.15} />
                     <stop offset="100%" stopColor="hsl(142 76% 36%)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid horizontal={true} vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.4} strokeDasharray="0" />
-                <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{
-              fontSize: 11,
-              fill: 'hsl(var(--muted-foreground))'
-            }} dy={8} interval="preserveStartEnd" />
-                <YAxis axisLine={false} tickLine={false} tick={{
-              fontSize: 11,
-              fill: 'hsl(var(--muted-foreground))'
-            }} tickFormatter={value => {
-              if (value === 0) return '0';
-              if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
-              if (value >= 1000) return `${(value / 1000).toFixed(0)}K`;
-              return value.toString();
-            }} width={40} domain={[0, 'auto']} />
+                <CartesianGrid horizontal={true} vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.3} strokeDasharray="0" />
+                <XAxis 
+                  dataKey="time" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} 
+                  dy={8} 
+                  interval="preserveStartEnd" 
+                />
+                <YAxis 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} 
+                  tickFormatter={value => {
+                    if (value === 0) return '0';
+                    if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
+                    if (value >= 1000) return `${(value / 1000).toFixed(0)}K`;
+                    return value.toString();
+                  }} 
+                  width={40} 
+                  domain={[0, 'auto']} 
+                />
                 <ChartTooltip content={<ChartTooltipContent />} formatter={(value: number) => [`${value.toLocaleString()} KZ`, 'Vendas']} />
-                <Area type="monotone" dataKey="vendas" stroke="hsl(142 76% 36%)" strokeWidth={2} fillOpacity={1} fill="url(#colorVendasGradient)" dot={false} activeDot={{
-              fill: 'hsl(142 76% 36%)',
-              stroke: 'white',
-              strokeWidth: 2,
-              r: 5
-            }} />
+                <Area 
+                  type="monotone" 
+                  dataKey="vendas" 
+                  stroke="hsl(142 76% 36%)" 
+                  strokeWidth={2} 
+                  fillOpacity={1} 
+                  fill="url(#colorVendasGradient)" 
+                  dot={false} 
+                  activeDot={{ fill: 'hsl(142 76% 36%)', stroke: 'white', strokeWidth: 2, r: 5 }} 
+                />
               </AreaChart>
-            </ChartContainer>}
-        </CardContent>
-      </Card>
-    </div>;
+            </ChartContainer>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }
