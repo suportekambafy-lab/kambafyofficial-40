@@ -994,14 +994,10 @@ export function AppHome() {
                       </div>
                       <p className="text-xs text-muted-foreground font-medium">Disponível para Saque</p>
                     </div>
-                    <Button 
-                      onClick={() => {
-                        triggerHaptic('medium');
-                        setShowWithdrawalModal(true);
-                      }} 
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white h-7 px-2.5 text-[10px]"
-                      size="sm"
-                    >
+                    <Button onClick={() => {
+                    triggerHaptic('medium');
+                    setShowWithdrawalModal(true);
+                  }} className="bg-emerald-600 hover:bg-emerald-700 text-white h-7 px-2.5 text-[10px]" size="sm">
                       Sacar
                     </Button>
                   </div>
@@ -1301,12 +1297,12 @@ export function AppHome() {
             {/* Header with Live View and Period Filter */}
             <div className="flex items-center justify-between gap-2">
               <select value={timeFilter} onChange={e => {
-                const value = e.target.value as typeof timeFilter;
-                setTimeFilter(value);
-                if (value !== 'custom') {
-                  setCustomDateRange({});
-                }
-              }} className="flex-1 h-9 px-3 rounded-lg border border-border/40 bg-card text-sm font-medium text-foreground shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors">
+              const value = e.target.value as typeof timeFilter;
+              setTimeFilter(value);
+              if (value !== 'custom') {
+                setCustomDateRange({});
+              }
+            }} className="flex-1 h-9 px-3 rounded-lg border border-border/40 bg-card text-sm font-medium text-foreground shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors">
                 <option value="today">Hoje</option>
                 <option value="yesterday">Ontem</option>
                 <option value="7d">Últimos 7 dias</option>
@@ -1390,9 +1386,7 @@ export function AppHome() {
             {/* Info Banner */}
             <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-xl border border-primary/20 p-4">
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-                  <TrendingUp className="h-5 w-5 text-primary" />
-                </div>
+                
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground">Dica para vender mais</p>
                   <p className="text-xs text-muted-foreground mt-0.5">
