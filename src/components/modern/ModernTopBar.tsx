@@ -17,7 +17,8 @@ import {
   DollarSign,
   Zap,
   Home,
-  Command
+  Command,
+  ArrowLeftRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -265,6 +266,16 @@ export function ModernTopBar({ sidebarCollapsed, onToggleSidebar, isMobile = fal
                   >
                     <Settings className="h-4 w-4 text-muted-foreground" />
                     <span>Configurações</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigate('/meus-acessos');
+                      setUserMenuOpen(false);
+                    }}
+                    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-accent"
+                  >
+                    <ArrowLeftRight className="h-4 w-4 text-muted-foreground" />
+                    <span>Ver como Cliente</span>
                   </button>
                   <button
                     onClick={() => {
