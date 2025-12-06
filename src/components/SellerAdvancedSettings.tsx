@@ -20,14 +20,13 @@ interface WithdrawalMethod {
 
 const WITHDRAWAL_METHOD_TYPES = [
   { 
-    id: "angola_bank", 
-    label: "Banco Angola", 
+    id: "angola_iban", 
+    label: "IBAN Angola", 
     flag: "🇦🇴",
     icon: Building,
     fields: [
-      { key: "bank_name", label: "Nome do Banco", placeholder: "Ex: BFA, BAI, BIC" },
-      { key: "account_number", label: "Número da Conta", placeholder: "Número da conta bancária" },
       { key: "iban", label: "IBAN", placeholder: "AO06 0000 0000 0000 0000 0000 0" },
+      { key: "bank_name", label: "Nome do Banco", placeholder: "Ex: BFA, BAI, BIC" },
       { key: "account_holder", label: "Nome do Titular", placeholder: "Nome completo" },
     ]
   },
@@ -38,8 +37,19 @@ const WITHDRAWAL_METHOD_TYPES = [
     icon: Building,
     fields: [
       { key: "iban", label: "IBAN", placeholder: "PT50 0000 0000 0000 0000 0000 0" },
-      { key: "account_holder", label: "Nome do Titular", placeholder: "Nome completo" },
       { key: "bank_name", label: "Banco", placeholder: "Ex: CGD, Millennium, Santander" },
+      { key: "account_holder", label: "Nome do Titular", placeholder: "Nome completo" },
+    ]
+  },
+  { 
+    id: "mozambique_bank", 
+    label: "Banco Moçambique", 
+    flag: "🇲🇿",
+    icon: Building,
+    fields: [
+      { key: "account_number", label: "NIB / Número da Conta", placeholder: "Número da conta bancária" },
+      { key: "bank_name", label: "Nome do Banco", placeholder: "Ex: BCI, Millennium BIM, Standard Bank" },
+      { key: "account_holder", label: "Nome do Titular", placeholder: "Nome completo" },
     ]
   },
   { 
@@ -50,6 +60,28 @@ const WITHDRAWAL_METHOD_TYPES = [
     fields: [
       { key: "pix_key", label: "Chave PIX", placeholder: "CPF, Email, Telefone ou Chave Aleatória" },
       { key: "pix_type", label: "Tipo de Chave", placeholder: "CPF / Email / Telefone / Aleatória" },
+      { key: "account_holder", label: "Nome do Titular", placeholder: "Nome completo" },
+    ]
+  },
+  { 
+    id: "germany_iban", 
+    label: "IBAN Alemanha", 
+    flag: "🇩🇪",
+    icon: Building,
+    fields: [
+      { key: "iban", label: "IBAN", placeholder: "DE00 0000 0000 0000 0000 00" },
+      { key: "bic", label: "BIC/SWIFT", placeholder: "Código BIC" },
+      { key: "account_holder", label: "Nome do Titular", placeholder: "Nome completo" },
+    ]
+  },
+  { 
+    id: "uk_bank", 
+    label: "Banco Reino Unido", 
+    flag: "🇬🇧",
+    icon: Building,
+    fields: [
+      { key: "sort_code", label: "Sort Code", placeholder: "00-00-00" },
+      { key: "account_number", label: "Account Number", placeholder: "8 dígitos" },
       { key: "account_holder", label: "Nome do Titular", placeholder: "Nome completo" },
     ]
   },
