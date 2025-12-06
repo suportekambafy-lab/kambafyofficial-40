@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react"
 import * as d3 from "d3"
+import { Plus, Minus } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 interface SessionLocation {
   country: string;
@@ -100,7 +102,10 @@ export default function RotatingEarth({
   const [error, setError] = useState<string | null>(null)
   const [isDarkMode, setIsDarkMode] = useState(false)
   const [tooltip, setTooltip] = useState<{ x: number; y: number; country: string; count: number; type: 'sale' | 'visitor' } | null>(null)
+  const [zoomLevel, setZoomLevel] = useState(1)
   const markersRef = useRef<Array<{ x: number; y: number; country: string; count: number; size: number; type: 'sale' | 'visitor' }>>([]);
+  const projectionRef = useRef<d3.GeoProjection | null>(null)
+  const renderRef = useRef<(() => void) | null>(null)
   
   // Store locations in refs to avoid re-running main effect
   const activeLocationsRef = useRef(activeLocations);
@@ -168,10 +173,11 @@ export default function RotatingEarth({
 
     const projection = d3
       .geoOrthographic()
-      .scale(radius)
+      .scale(radius * zoomLevel)
       .translate([containerWidth / 2, containerHeight / 2])
       .clipAngle(90)
 
+    projectionRef.current = projection
     const path = d3.geoPath().projection(projection).context(context)
 
     const pointInPolygon = (point: [number, number], polygon: number[][]): boolean => {
@@ -248,7 +254,7 @@ export default function RotatingEarth({
       context.clearRect(0, 0, containerWidth, containerHeight)
 
       const currentScale = projection.scale()
-      const scaleFactor = currentScale / radius
+      const scaleFactor = currentScale / (radius * zoomLevel)
 
       // Draw ocean
       context.beginPath()
@@ -536,7 +542,7 @@ export default function RotatingEarth({
       canvas.removeEventListener("touchstart", handleTouchStart)
       canvas.removeEventListener("click", handleClick)
     }
-  }, [width, height, isDarkMode]) // Removed activeLocations and visitorLocations from deps
+  }, [width, height, isDarkMode, zoomLevel]) // Removed activeLocations and visitorLocations from deps
 
   if (error) {
     return (
@@ -544,6 +550,14 @@ export default function RotatingEarth({
         <p className="text-muted-foreground text-sm">{error}</p>
       </div>
     )
+  }
+
+  const handleZoomIn = () => {
+    setZoomLevel(prev => Math.min(prev + 0.2, 2))
+  }
+
+  const handleZoomOut = () => {
+    setZoomLevel(prev => Math.max(prev - 0.2, 0.6))
   }
 
   return (
@@ -561,6 +575,27 @@ export default function RotatingEarth({
           height: "auto"
         }}
       />
+      
+      {/* Zoom Controls */}
+      <div className="absolute bottom-4 right-4 flex flex-col gap-1">
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-9 w-9 bg-background/95 backdrop-blur-sm border-border shadow-lg"
+          onClick={handleZoomIn}
+        >
+          <Plus className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-9 w-9 bg-background/95 backdrop-blur-sm border-border shadow-lg"
+          onClick={handleZoomOut}
+        >
+          <Minus className="h-4 w-4" />
+        </Button>
+      </div>
+
       {/* Tooltip */}
       {tooltip && (
         <div 
