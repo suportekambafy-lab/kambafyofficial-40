@@ -15,7 +15,8 @@ import {
   Smartphone,
   PanelLeftClose,
   PanelLeft,
-  Wrench
+  Wrench,
+  Radio
 } from 'lucide-react';
 import kambabyLogo from '@/assets/kambafy-logo.png';
 
@@ -30,6 +31,11 @@ const menuItems = [
     label: 'Painel de Controlo',
     icon: LayoutDashboard,
     end: true
+  },
+  {
+    href: '/admin/live',
+    label: 'Visão ao Vivo',
+    icon: Radio,
   },
   {
     href: '/admin/sales',
