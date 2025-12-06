@@ -213,11 +213,11 @@ export const useGeoLocation = () => {
     }
     
     const convertedValue = priceInKZ * country.exchangeRate;
-    const roundedValue = Math.round(convertedValue * 100) / 100;
+    let roundedValue = Math.round(convertedValue * 100) / 100;
     
-    // Garantir mínimo de 1 para GBP
-    if (country.currency === 'GBP' && roundedValue < 1) {
-      return 1;
+    // Garantir mínimo de 1 para GBP e EUR
+    if ((country.currency === 'GBP' || country.currency === 'EUR') && roundedValue < 1) {
+      roundedValue = 1;
     }
     
     return roundedValue;

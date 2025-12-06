@@ -45,10 +45,11 @@ export const formatPrice = (
   }
 
   // Converter preço para a moeda do país (fallback automático)
-  let convertedPrice = priceInKZ / targetCountry.exchangeRate;
+  // Usar multiplicação (exchangeRate = quantos da moeda estrangeira por 1 KZ)
+  let convertedPrice = priceInKZ * targetCountry.exchangeRate;
   
-  // Garantir mínimo de 1 para GBP
-  if (targetCountry.currency === 'GBP' && convertedPrice < 1) {
+  // Garantir mínimo de 1 para GBP e EUR
+  if ((targetCountry.currency === 'GBP' || targetCountry.currency === 'EUR') && convertedPrice < 1) {
     convertedPrice = 1;
   }
   
