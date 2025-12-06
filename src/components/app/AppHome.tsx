@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { Home, BarChart3, Package, User, TrendingUp, LayoutDashboard, LogOut, ChevronLeft, ShoppingCart, Settings, Bell, Trash2, Info, ChevronRight, Wallet, ArrowDownToLine, Sun, Moon, Menu, X, Calendar as CalendarIcon, Camera, WifiOff, GraduationCap, Copy, Check } from 'lucide-react';
 import kambafyIconGreen from '@/assets/kambafy-icon-green.png';
-import personPhoneSmiling from '@/assets/person-phone-smiling.png';
+import { BannerCarousel } from '@/components/app/BannerCarousel';
 import { useSellerTheme } from '@/hooks/useSellerTheme';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { countTotalSales, countOrderItems } from '@/utils/orderUtils';
@@ -1409,26 +1409,8 @@ export function AppHome() {
             } : null} />
             </div>
 
-            {/* Info Banner */}
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary to-primary/80 p-4">
-              <div className="flex items-center gap-4">
-                <div className="flex-1 min-w-0 z-10">
-                  <p className="text-base font-semibold text-primary-foreground">Dica para vender mais</p>
-                  <p className="text-sm text-primary-foreground/80 mt-1">
-                    Compartilhe o link do seu produto nas redes sociais para alcançar mais clientes.
-                  </p>
-                </div>
-                <div className="relative shrink-0">
-                  <img 
-                    src={personPhoneSmiling}
-                    alt="Profissional com telefone"
-                    className="w-24 h-24 object-cover object-top rounded-xl border-2 border-primary-foreground/20"
-                  />
-                </div>
-              </div>
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
-              <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
-            </div>
+            {/* Info Banners Carousel */}
+            <BannerCarousel />
           </div>;
     }
   };
