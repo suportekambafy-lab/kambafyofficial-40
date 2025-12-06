@@ -50,7 +50,7 @@ export const usePaymentMethods = (countryCode?: string, productPaymentMethods?: 
     const paymentOrder: Record<string, string[]> = {
       'AO': ['express', 'reference', 'transfer'],
       'MZ': ['emola', 'epesa'],
-      'PT': ['card', 'multibanco', 'mbway', 'klarna']
+      'PT': ['card', 'mbway', 'multibanco', 'klarna']
     };
     
     // Países padrão (Angola, Portugal, Moçambique, etc.)
