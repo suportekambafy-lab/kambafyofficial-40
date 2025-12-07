@@ -53,8 +53,8 @@ const sanitizeDescription = (text: string): string => {
   // Remover outros caracteres especiais, mantendo apenas letras, números, espaços e pontuação básica
   sanitized = sanitized.replace(/[^a-zA-Z0-9\s\-_.,:;!?]/g, '');
   
-  // Limitar tamanho (AppyPay pode ter limite)
-  sanitized = sanitized.substring(0, 100);
+  // Limitar tamanho (AppyPay tem limite restrito de caracteres)
+  sanitized = sanitized.substring(0, 40);
   
   // Se ficou vazio, retornar valor padrão
   return sanitized.trim() || 'Produto';
