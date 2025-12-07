@@ -23,6 +23,43 @@ const logStep = (step: string, details?: any) => {
   console.log(`[APPYPAY-CHARGE] ${step}${detailsStr}`);
 };
 
+// Função para sanitizar texto removendo acentos e caracteres especiais
+// AppyPay não aceita caracteres especiais na descrição
+const sanitizeDescription = (text: string): string => {
+  if (!text) return 'Produto';
+  
+  // Mapa de substituição de caracteres acentuados
+  const accentMap: Record<string, string> = {
+    'á': 'a', 'à': 'a', 'ã': 'a', 'â': 'a', 'ä': 'a',
+    'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
+    'í': 'i', 'ì': 'i', 'î': 'i', 'ï': 'i',
+    'ó': 'o', 'ò': 'o', 'õ': 'o', 'ô': 'o', 'ö': 'o',
+    'ú': 'u', 'ù': 'u', 'û': 'u', 'ü': 'u',
+    'ç': 'c', 'ñ': 'n',
+    'Á': 'A', 'À': 'A', 'Ã': 'A', 'Â': 'A', 'Ä': 'A',
+    'É': 'E', 'È': 'E', 'Ê': 'E', 'Ë': 'E',
+    'Í': 'I', 'Ì': 'I', 'Î': 'I', 'Ï': 'I',
+    'Ó': 'O', 'Ò': 'O', 'Õ': 'O', 'Ô': 'O', 'Ö': 'O',
+    'Ú': 'U', 'Ù': 'U', 'Û': 'U', 'Ü': 'U',
+    'Ç': 'C', 'Ñ': 'N'
+  };
+  
+  // Substituir caracteres acentuados
+  let sanitized = text;
+  for (const [accented, plain] of Object.entries(accentMap)) {
+    sanitized = sanitized.split(accented).join(plain);
+  }
+  
+  // Remover outros caracteres especiais, mantendo apenas letras, números, espaços e pontuação básica
+  sanitized = sanitized.replace(/[^a-zA-Z0-9\s\-_.,:;!?]/g, '');
+  
+  // Limitar tamanho (AppyPay pode ter limite)
+  sanitized = sanitized.substring(0, 100);
+  
+  // Se ficou vazio, retornar valor padrão
+  return sanitized.trim() || 'Produto';
+};
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -236,10 +273,14 @@ Deno.serve(async (req) => {
     }
 
     // Preparar dados para AppyPay v2.0
+    // Sanitizar descrição para remover acentos e caracteres especiais
+    const sanitizedDescription = sanitizeDescription(productNameToUse);
+    logStep("Description sanitized", { original: productNameToUse, sanitized: sanitizedDescription });
+    
     const appyPayPayload: any = {
       amount: parseFloat(amount),
       currency: "AOA",
-      description: productNameToUse,
+      description: sanitizedDescription,
       merchantTransactionId: merchantTransactionId,
       paymentMethod: appyPayMethod
     };
