@@ -33,6 +33,7 @@ const documentTypes = [
   { value: 'RG', label: 'RG (Registro Geral)' },
   { value: 'Passaporte', label: 'Passaporte' },
   { value: 'Cartao_Residencia', label: 'Cartão de Residência' },
+  { value: 'Carta_Conducao', label: 'Carta de Condução / Carteira de Motorista' },
   { value: 'Outro', label: 'Outro' }
 ];
 
@@ -90,8 +91,9 @@ export default function UserIdentity() {
   };
 
   // Verificar se o tipo de documento precisa de verso
+  // Apenas Passaporte não precisa de verso, todos os outros precisam
   const documentNeedsBackside = (docType: string) => {
-    return docType === 'BI' || docType === 'RG';
+    return docType !== 'Passaporte' && docType !== '';
   };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, type: 'front' | 'back') => {
@@ -348,7 +350,7 @@ export default function UserIdentity() {
     }
   };
 
-  const needsBackside = formData.document_type === 'BI' || formData.document_type === 'RG';
+  const needsBackside = formData.document_type !== 'Passaporte' && formData.document_type !== '';
   const isReadOnly = verification?.status === 'aprovado' || verification?.status === 'pendente';
   
   // Determinar o texto do botão baseado no status
