@@ -803,21 +803,43 @@ export default function AdminIdentityVerification() {
           )}
           
           {/* Documento */}
-          <div className="flex justify-center items-center p-4 bg-gray-50 rounded-lg">
+          <div className="flex flex-col justify-center items-center p-4 bg-gray-50 rounded-lg">
             {documentModal.imageUrl && (
-              <img 
-                src={documentModal.imageUrl} 
-                alt={documentModal.title}
-                className="max-w-full max-h-[60vh] object-contain rounded-lg shadow-lg"
-                onError={(e) => {
-                  console.error('Erro ao carregar imagem:', e);
-                  toast({
-                    title: 'Erro',
-                    message: 'Erro ao carregar documento',
-                    variant: 'error'
-                  });
-                }}
-              />
+              <>
+                {/* Verificar se é PDF */}
+                {documentModal.imageUrl.toLowerCase().endsWith('.pdf') ? (
+                  <div className="w-full flex flex-col items-center gap-4">
+                    <iframe 
+                      src={documentModal.imageUrl}
+                      className="w-full h-[60vh] rounded-lg shadow-lg border"
+                      title={documentModal.title}
+                    />
+                    <a 
+                      href={documentModal.imageUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      Abrir PDF em nova aba
+                    </a>
+                  </div>
+                ) : (
+                  <img 
+                    src={documentModal.imageUrl} 
+                    alt={documentModal.title}
+                    className="max-w-full max-h-[60vh] object-contain rounded-lg shadow-lg"
+                    onError={(e) => {
+                      console.error('Erro ao carregar imagem:', e);
+                      toast({
+                        title: 'Erro',
+                        message: 'Erro ao carregar documento',
+                        variant: 'error'
+                      });
+                    }}
+                  />
+                )}
+              </>
             )}
           </div>
         </DialogContent>
