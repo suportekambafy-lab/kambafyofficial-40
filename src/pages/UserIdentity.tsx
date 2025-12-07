@@ -89,6 +89,11 @@ export default function UserIdentity() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  // Verificar se o tipo de documento precisa de verso
+  const documentNeedsBackside = (docType: string) => {
+    return docType === 'BI' || docType === 'RG';
+  };
+
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, type: 'front' | 'back') => {
     console.log('📤 Iniciando upload de documento:', { type, hasFile: !!event.target.files?.[0] });
     
@@ -128,12 +133,23 @@ export default function UserIdentity() {
       const newVerification = verification ? {
         ...verification,
         [`document_${type}_url`]: url
-      } : null;
+      } : {
+        id: '',
+        full_name: formData.full_name,
+        birth_date: formData.birth_date,
+        document_type: formData.document_type,
+        document_number: formData.document_number,
+        status: 'pendente' as const,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        [`document_${type}_url`]: url
+      } as IdentityVerification;
       
       setVerification(newVerification);
       console.log('✅ Estado local atualizado');
 
-      // ✅ SALVAR NO BANCO DE DADOS
+      // ✅ SALVAR NO BANCO DE DADOS - apenas se já existir verificação
+      // NÃO criar automaticamente - usuário precisa clicar no botão de enviar
       try {
         if (verification?.id) {
           console.log('🔄 Atualizando verificação existente:', verification.id);
@@ -156,57 +172,26 @@ export default function UserIdentity() {
           
           toast({
             title: 'Sucesso',
-            message: 'Documento enviado e salvo com sucesso',
-            variant: 'success'
-          });
-        } else if (formData.full_name && formData.birth_date && formData.document_type && formData.document_number) {
-          console.log('➕ Criando nova verificação com documento');
-          
-          const insertData = {
-            user_id: user.id,
-            full_name: formData.full_name,
-            birth_date: formData.birth_date,
-            document_type: formData.document_type,
-            document_number: formData.document_number,
-            [`document_${type}_url`]: url,
-            status: 'pendente' as const
-          };
-          
-          console.log('📤 Dados para INSERT:', insertData);
-          
-          const { data, error } = await supabase
-            .from('identity_verification')
-            .insert([insertData])
-            .select()
-            .single();
-
-          console.log('📤 Resultado do INSERT:', { data, error });
-
-          if (error) throw error;
-          
-          if (data) {
-            console.log('✅ Verificação criada no banco:', data);
-            setVerification(data as IdentityVerification);
-          }
-          
-          toast({
-            title: 'Sucesso',
-            message: 'Documento enviado e salvo com sucesso',
+            message: 'Documento enviado com sucesso',
             variant: 'success'
           });
         } else {
-          console.log('⚠️ Campos obrigatórios faltando:', {
-            full_name: !!formData.full_name,
-            birth_date: !!formData.birth_date,
-            document_type: !!formData.document_type,
-            document_number: !!formData.document_number
-          });
+          // ✅ Apenas informar que o documento foi carregado, não submeter automaticamente
+          const requiresBackside = documentNeedsBackside(formData.document_type);
           
-          toast({
-            title: 'Documento enviado',
-            message: 'Preencha todos os campos para salvar a verificação',
-            variant: 'warning'
-          });
+          if (type === 'front' && requiresBackside) {
+            toast({
+              title: 'Frente do documento carregada',
+              message: 'Agora envie o verso do documento para continuar',
+              variant: 'warning'
+            });
+          } else if (type === 'back' || !requiresBackside) {
+            toast({
+              title: 'Documento carregado',
+              message: 'Clique em "Enviar para Verificação" para finalizar',
+              variant: 'success'
+            });
+          }
         }
       } catch (error: any) {
         console.error('❌ Erro ao salvar documento no banco:', error);
