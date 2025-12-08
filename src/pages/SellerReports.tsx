@@ -16,6 +16,13 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
+interface OrderBumpData {
+  bump_product_id?: string;
+  bump_product_name?: string;
+  bump_product_price?: string;
+  discounted_price?: number;
+}
+
 interface Sale {
   id: string;
   created_at: string;
@@ -25,6 +32,7 @@ interface Sale {
   payment_method?: string;
   currency?: string;
   seller_commission?: number;
+  order_bump_data?: OrderBumpData | null;
 }
 
 // Helper function to calculate net revenue (after platform fee) with currency conversion
@@ -106,7 +114,7 @@ export default function SellerReports() {
       while (hasMore) {
         let query = supabase
           .from('orders')
-          .select('id, created_at, status, amount, product_id, payment_method, currency, seller_commission')
+          .select('id, created_at, status, amount, product_id, payment_method, currency, seller_commission, order_bump_data')
           .in('product_id', userProductIds)
           .order('created_at', { ascending: false })
           .range(page * pageSize, (page + 1) * pageSize - 1);
@@ -120,7 +128,11 @@ export default function SellerReports() {
         if (error) throw error;
 
         if (orders && orders.length > 0) {
-          allSales = [...allSales, ...orders];
+          const typedOrders = orders.map(order => ({
+            ...order,
+            order_bump_data: order.order_bump_data as OrderBumpData | null
+          })) as Sale[];
+          allSales = [...allSales, ...typedOrders];
           hasMore = orders.length === pageSize;
           page++;
         } else {
@@ -205,9 +217,10 @@ export default function SellerReports() {
 
   const productPerformance = useMemo(() => {
     const completed = filteredSales.filter(s => s.status === 'completed');
-    const byProduct: Record<string, { name: string; vendas: number; receita: number }> = {};
+    const byProduct: Record<string, { name: string; vendas: number; receita: number; isOrderBump?: boolean }> = {};
     
     completed.forEach(sale => {
+      // Main product
       const product = products.find(p => p.id === sale.product_id);
       const name = product?.name || 'Produto';
       if (!byProduct[sale.product_id]) {
@@ -215,11 +228,25 @@ export default function SellerReports() {
       }
       byProduct[sale.product_id].vendas += 1;
       byProduct[sale.product_id].receita += calculateNetRevenue(sale);
+      
+      // Order bump product (if exists)
+      if (sale.order_bump_data && sale.order_bump_data.bump_product_name) {
+        const bumpId = sale.order_bump_data.bump_product_id || `bump_${sale.order_bump_data.bump_product_name}`;
+        const bumpName = sale.order_bump_data.bump_product_name;
+        const bumpPrice = parseFloat(sale.order_bump_data.bump_product_price || '0');
+        const bumpRevenue = bumpPrice * 0.92; // 8% platform fee
+        
+        if (!byProduct[bumpId]) {
+          byProduct[bumpId] = { name: `${bumpName} (Order Bump)`, vendas: 0, receita: 0, isOrderBump: true };
+        }
+        byProduct[bumpId].vendas += 1;
+        byProduct[bumpId].receita += bumpRevenue;
+      }
     });
     
     return Object.values(byProduct)
       .sort((a, b) => b.vendas - a.vendas)
-      .slice(0, 5);
+      .slice(0, 10);
   }, [filteredSales, products]);
 
   const paymentMethodsData = useMemo(() => {
