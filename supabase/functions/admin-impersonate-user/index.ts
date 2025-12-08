@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.54.0'
+import * as jose from 'https://esm.sh/jose@5.2.0'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -7,6 +8,26 @@ const corsHeaders = {
 
 // Tempo máximo de impersonation: 30 minutos
 const IMPERSONATION_DURATION_MINUTES = 30
+
+// Verificar JWT do admin
+async function verifyAdminJWT(token: string): Promise<{ email: string } | null> {
+  const JWT_SECRET = Deno.env.get('ADMIN_JWT_SECRET')
+  if (!JWT_SECRET) {
+    console.error('❌ ADMIN_JWT_SECRET não configurado')
+    return null
+  }
+  
+  try {
+    const secret = new TextEncoder().encode(JWT_SECRET)
+    const { payload } = await jose.jwtVerify(token, secret)
+    if (payload.email && payload.role === 'admin') {
+      return { email: payload.email as string }
+    }
+    return null
+  } catch {
+    return null
+  }
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -25,15 +46,39 @@ Deno.serve(async (req) => {
       }
     )
 
-    const { targetUserId, adminEmail } = await req.json()
+    // ========== AUTENTICAÇÃO VIA JWT ==========
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.error('❌ Token de autenticação ausente')
+      return new Response(
+        JSON.stringify({ success: false, error: 'Token de autenticação necessário' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
 
-    if (!targetUserId || !adminEmail) {
-      throw new Error('targetUserId and adminEmail são obrigatórios')
+    const token = authHeader.replace('Bearer ', '')
+    const adminPayload = await verifyAdminJWT(token)
+    
+    if (!adminPayload) {
+      console.error('❌ Token JWT inválido ou expirado')
+      return new Response(
+        JSON.stringify({ success: false, error: 'Token inválido ou expirado' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const adminEmail = adminPayload.email
+    // ========== FIM DA AUTENTICAÇÃO ==========
+
+    const { targetUserId } = await req.json()
+
+    if (!targetUserId) {
+      throw new Error('targetUserId é obrigatório')
     }
 
     console.log(`🎭 Admin ${adminEmail} tentando impersonar usuário: ${targetUserId}`)
 
-    // 1. Verificar se quem está fazendo a requisição é admin
+    // 1. Verificar se o admin existe e está ativo no banco
     const { data: adminUser, error: adminError } = await supabaseAdmin
       .from('admin_users')
       .select('id, email, is_active')
@@ -46,7 +91,7 @@ Deno.serve(async (req) => {
       throw new Error('Acesso negado: Privilégios de admin necessários')
     }
 
-    console.log('✅ Admin verificado, prosseguindo com impersonation')
+    console.log('✅ Admin verificado via JWT, prosseguindo com impersonation')
 
     // 2. Buscar dados do usuário alvo
     const { data: targetUser, error: userError } = await supabaseAdmin.auth.admin.getUserById(targetUserId)
@@ -59,7 +104,6 @@ Deno.serve(async (req) => {
     console.log(`✅ Usuário encontrado: ${targetUser.user.email}`)
 
     // 3. Gerar sessão administrativa para o usuário alvo
-    // Isso cria um access token válido para o usuário sem precisar da senha
     const { data: magicLinkData, error: magicLinkError } = await supabaseAdmin.auth.admin.generateLink({
       type: 'magiclink',
       email: targetUser.user.email!,
@@ -86,7 +130,7 @@ Deno.serve(async (req) => {
         expires_at: expiresAt.toISOString(),
         ip_address: ipAddress,
         user_agent: userAgent,
-        read_only_mode: true, // Modo somente leitura por padrão
+        read_only_mode: true,
         is_active: true
       })
       .select()
@@ -112,7 +156,6 @@ Deno.serve(async (req) => {
       })
     } catch (logError) {
       console.error('⚠️ Erro ao registrar log:', logError)
-      // Não falhar a operação por causa do log
     }
 
     // 5. Retornar dados necessários para o frontend fazer login

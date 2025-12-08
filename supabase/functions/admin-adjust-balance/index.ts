@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import * as jose from 'https://esm.sh/jose@5.2.0'
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,6 +13,26 @@ interface AdjustBalanceRequest {
   reason?: string;
 }
 
+// Verificar JWT do admin
+async function verifyAdminJWT(token: string): Promise<{ email: string } | null> {
+  const JWT_SECRET = Deno.env.get('ADMIN_JWT_SECRET')
+  if (!JWT_SECRET) {
+    console.error('❌ ADMIN_JWT_SECRET não configurado')
+    return null
+  }
+  
+  try {
+    const secret = new TextEncoder().encode(JWT_SECRET)
+    const { payload } = await jose.jwtVerify(token, secret)
+    if (payload.email && payload.role === 'admin') {
+      return { email: payload.email as string }
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -22,9 +43,49 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // ========== AUTENTICAÇÃO DE ADMIN ==========
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.error('❌ Token de autenticação ausente')
+      return new Response(
+        JSON.stringify({ error: 'Token de autenticação necessário' }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      )
+    }
+
+    const token = authHeader.replace('Bearer ', '')
+    const adminPayload = await verifyAdminJWT(token)
+    
+    if (!adminPayload) {
+      console.error('❌ Token JWT inválido ou expirado')
+      return new Response(
+        JSON.stringify({ error: 'Token inválido ou expirado' }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      )
+    }
+
+    // Verificar se o admin existe e está ativo
+    const { data: adminUser, error: adminError } = await supabase
+      .from('admin_users')
+      .select('id, email, is_active')
+      .eq('email', adminPayload.email)
+      .eq('is_active', true)
+      .single()
+
+    if (adminError || !adminUser) {
+      console.error('❌ Admin não autorizado:', adminPayload.email)
+      return new Response(
+        JSON.stringify({ error: 'Acesso negado: privilégios de admin necessários' }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      )
+    }
+
+    console.log(`✅ Admin autenticado: ${adminUser.email}`)
+    // ========== FIM DA AUTENTICAÇÃO ==========
+
     const { userId, targetAvailableBalance, reason }: AdjustBalanceRequest = await req.json();
 
-    console.log(`[ADMIN-ADJUST] Adjusting balance for user ${userId} to ${targetAvailableBalance} KZ available`);
+    console.log(`[ADMIN-ADJUST] Admin ${adminUser.email} adjusting balance for user ${userId} to ${targetAvailableBalance} KZ available`);
 
     // Get current balance and retention
     const { data: balanceData, error: balanceError } = await supabase
@@ -53,10 +114,6 @@ const handler = async (req: Request): Promise<Response> => {
     console.log(`[ADMIN-ADJUST] Current state: balance=${currentBalance}, retention=${retentionPercentage}%`);
 
     // Calculate required total balance
-    // If retention is 50%, then available = total - (total * 0.5)
-    // So: available = total * 0.5
-    // Therefore: total = available / 0.5
-    // Special case: if targetAvailableBalance = 0, we want total = retained (not zero)
     let requiredTotalBalance: number;
     let newRetainedFixed: number;
 
@@ -64,7 +121,6 @@ const handler = async (req: Request): Promise<Response> => {
       const retentionDecimal = retentionPercentage / 100;
       
       if (targetAvailableBalance === 0) {
-        // Special case: when zeroing available balance, keep retained amount
         const currentRetainedFixed = profileData?.retained_fixed_amount || 0;
         requiredTotalBalance = currentRetainedFixed;
         newRetainedFixed = currentRetainedFixed;
@@ -94,7 +150,7 @@ const handler = async (req: Request): Promise<Response> => {
           type: balanceDifference > 0 ? 'credit' : 'debit',
           amount: balanceDifference,
           currency: 'KZ',
-          description: reason || `Ajuste manual de saldo por Admin - Disponível: ${targetAvailableBalance} KZ`,
+          description: reason || `Ajuste manual de saldo por Admin (${adminUser.email}) - Disponível: ${targetAvailableBalance} KZ`,
           email: profileData.email
         });
 
@@ -117,7 +173,21 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error(`Failed to update profile: ${updateError.message}`);
     }
 
-    console.log(`[ADMIN-ADJUST] ✅ Balance adjusted successfully`);
+    // Log da ação de admin
+    await supabase.from('admin_logs').insert({
+      admin_id: adminUser.id,
+      action: 'adjust_balance',
+      target_type: 'user',
+      target_id: userId,
+      details: {
+        previous_balance: currentBalance,
+        new_balance: requiredTotalBalance,
+        adjustment: balanceDifference,
+        reason: reason || 'Ajuste manual'
+      }
+    })
+
+    console.log(`[ADMIN-ADJUST] ✅ Balance adjusted successfully by ${adminUser.email}`);
 
     return new Response(
       JSON.stringify({
@@ -127,7 +197,8 @@ const handler = async (req: Request): Promise<Response> => {
         newTotalBalance: requiredTotalBalance,
         retainedFixed: newRetainedFixed,
         availableBalance: targetAvailableBalance,
-        adjustment: balanceDifference
+        adjustment: balanceDifference,
+        adjustedBy: adminUser.email
       }),
       {
         status: 200,

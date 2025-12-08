@@ -7,10 +7,17 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Chave secreta para assinar JWT (em produção, usar variável de ambiente)
-const JWT_SECRET = Deno.env.get('ADMIN_JWT_SECRET') || 'kambafy-admin-secret-2025'
+// Chave secreta para assinar JWT - DEVE estar configurada no ambiente
+const JWT_SECRET = Deno.env.get('ADMIN_JWT_SECRET')
+
+if (!JWT_SECRET) {
+  console.error('❌ ADMIN_JWT_SECRET não configurado - função desabilitada')
+}
 
 async function generateJWT(email: string): Promise<string> {
+  if (!JWT_SECRET) {
+    throw new Error('ADMIN_JWT_SECRET não configurado')
+  }
   const secret = new TextEncoder().encode(JWT_SECRET)
   
   const jwt = await new jose.SignJWT({ 
@@ -26,6 +33,9 @@ async function generateJWT(email: string): Promise<string> {
 }
 
 async function verifyJWT(token: string): Promise<any> {
+  if (!JWT_SECRET) {
+    return null
+  }
   const secret = new TextEncoder().encode(JWT_SECRET)
 
   try {
