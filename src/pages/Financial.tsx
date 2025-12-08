@@ -337,7 +337,7 @@ export default function Financial() {
         </div>
 
         {/* Informações Bancárias */}
-        <BankingInfo />
+        <BankingInfo isVerified={isVerified} />
 
         {/* Histórico de Saques */}
         <Card>
