@@ -37,7 +37,7 @@ const menuItems = [
   { key: "menu.sales", href: "/vendedor/vendas", icon: TrendingUp },
   { key: "menu.financial", href: "/vendedor/financeiro", icon: DollarSign },
   { key: "menu.memberAreas", href: "/vendedor/membros", icon: Users },
-  { key: "menu.modulePayments", href: "/vendedor/membros/pagamentos", icon: Coins },
+  { key: "menu.modulePayments", href: "/vendedor/modulos-pagamentos", icon: Coins },
   { key: "menu.marketplace", href: "/vendedor/marketplace", icon: Store },
   { key: "menu.affiliates", href: "/vendedor/afiliados", icon: UserCheck },
   { key: "menu.subscriptions", href: "/vendedor/assinaturas", icon: CreditCard },

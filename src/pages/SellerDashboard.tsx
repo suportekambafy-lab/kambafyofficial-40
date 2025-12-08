@@ -124,7 +124,7 @@ function SellerDashboardContent() {
                 <Route path="/documentacao" element={<SellerDocumentation />} />
                 <Route path="/configuracoes" element={<UserSettings />} />
                 <Route path="/membros" element={<Members />} />
-                <Route path="/membros/pagamentos" element={<SellerMemberModulePayments />} />
+                <Route path="/modulos-pagamentos" element={<SellerMemberModulePayments />} />
                 <Route path="/marketplace" element={<KambaExtra />} />
                 <Route path="/afiliados" element={<MeusAfiliados />} />
                 <Route path="/assinaturas" element={<SellerSubscriptions />} />
