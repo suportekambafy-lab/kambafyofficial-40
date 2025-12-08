@@ -13,7 +13,7 @@ import { ProductFilter } from '@/components/ProductFilter';
 import { useToast } from '@/hooks/use-toast';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, Legend } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface Sale {
@@ -401,42 +401,42 @@ export default function SellerReports() {
           <TabsContent value="overview" className="space-y-4 mt-4">
             {/* Gráfico de Receita */}
             <Card>
-              <CardHeader className="p-3 pb-0">
+              <CardHeader className="p-3 pb-2">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4" />
+                  <TrendingUp className="h-4 w-4 text-primary" />
                   Receita no Período
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-3">
-                <div className="h-48 md:h-56">
+              <CardContent className="p-3 pt-0">
+                <div className="h-52 md:h-64">
                   <ChartContainer config={chartConfig}>
                     <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={revenueOverTime}>
+                      <AreaChart data={revenueOverTime} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                         <defs>
                           <linearGradient id="colorReceita" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.3}/>
-                            <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0}/>
+                            <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4}/>
+                            <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.05}/>
                           </linearGradient>
                         </defs>
                         <XAxis 
                           dataKey="displayDate" 
-                          tick={{ fontSize: 10 }}
+                          tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
                           axisLine={false}
                           tickLine={false}
                           interval="preserveStartEnd"
                         />
                         <YAxis 
-                          tick={{ fontSize: 10 }}
+                          tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
                           axisLine={false}
                           tickLine={false}
                           tickFormatter={(value) => `${(value / 1000).toFixed(0)}K`}
-                          width={35}
+                          width={40}
                         />
                         <ChartTooltip content={<ChartTooltipContent />} />
                         <Area 
                           type="monotone" 
                           dataKey="receita" 
-                          stroke="hsl(var(--chart-1))" 
+                          stroke="hsl(var(--primary))" 
                           fillOpacity={1} 
                           fill="url(#colorReceita)" 
                           strokeWidth={2}
@@ -448,70 +448,88 @@ export default function SellerReports() {
               </CardContent>
             </Card>
 
-            {/* Gráficos de Pizza */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card>
-                <CardHeader className="p-3 pb-0">
-                  <CardTitle className="text-sm font-medium">Status</CardTitle>
-                </CardHeader>
-                <CardContent className="p-3">
-                  <div className="h-40">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={statusData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={30}
-                          outerRadius={55}
-                          paddingAngle={2}
-                          dataKey="value"
-                        >
-                          {statusData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Legend 
-                          wrapperStyle={{ fontSize: '11px' }}
-                          formatter={(value) => <span className="text-xs">{value}</span>}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
+            {/* Status das Vendas - Lista simples */}
+            <Card>
+              <CardHeader className="p-3 pb-2">
+                <CardTitle className="text-sm font-medium">Status das Vendas</CardTitle>
+              </CardHeader>
+              <CardContent className="p-3 pt-0">
+                <div className="space-y-3">
+                  {statusData.map((item, index) => {
+                    const total = statusData.reduce((acc, curr) => acc + curr.value, 0);
+                    const percentage = total > 0 ? ((item.value / total) * 100).toFixed(0) : 0;
+                    return (
+                      <div key={index} className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div 
+                              className="w-3 h-3 rounded-full" 
+                              style={{ backgroundColor: item.color }}
+                            />
+                            <span className="text-sm font-medium">{item.name}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-muted-foreground">{item.value}</span>
+                            <span className="text-sm font-semibold" style={{ color: item.color }}>{percentage}%</span>
+                          </div>
+                        </div>
+                        <div className="h-2 bg-muted rounded-full overflow-hidden">
+                          <div 
+                            className="h-full rounded-full transition-all duration-500"
+                            style={{ 
+                              width: `${percentage}%`,
+                              backgroundColor: item.color
+                            }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
 
-              <Card>
-                <CardHeader className="p-3 pb-0">
-                  <CardTitle className="text-sm font-medium">Pagamentos</CardTitle>
-                </CardHeader>
-                <CardContent className="p-3">
-                  <div className="h-40">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={paymentMethodsData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={30}
-                          outerRadius={55}
-                          paddingAngle={2}
-                          dataKey="value"
-                        >
-                          {paymentMethodsData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Legend 
-                          wrapperStyle={{ fontSize: '10px' }}
-                          formatter={(value) => <span className="text-xs truncate max-w-[60px]">{value}</span>}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            {/* Métodos de Pagamento - Lista simples */}
+            <Card>
+              <CardHeader className="p-3 pb-2">
+                <CardTitle className="text-sm font-medium">Métodos de Pagamento</CardTitle>
+              </CardHeader>
+              <CardContent className="p-3 pt-0">
+                <div className="space-y-3">
+                  {paymentMethodsData.map((item, index) => {
+                    const total = paymentMethodsData.reduce((acc, curr) => acc + curr.value, 0);
+                    const percentage = total > 0 ? ((item.value / total) * 100).toFixed(0) : 0;
+                    const color = COLORS[index % COLORS.length];
+                    return (
+                      <div key={index} className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div 
+                              className="w-3 h-3 rounded-full" 
+                              style={{ backgroundColor: color }}
+                            />
+                            <span className="text-sm font-medium">{item.name}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-muted-foreground">{item.value}</span>
+                            <span className="text-sm font-semibold" style={{ color }}>{percentage}%</span>
+                          </div>
+                        </div>
+                        <div className="h-2 bg-muted rounded-full overflow-hidden">
+                          <div 
+                            className="h-full rounded-full transition-all duration-500"
+                            style={{ 
+                              width: `${percentage}%`,
+                              backgroundColor: color
+                            }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="time" className="mt-4">
