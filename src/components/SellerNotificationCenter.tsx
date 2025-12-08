@@ -93,16 +93,20 @@ export function SellerNotificationCenter() {
       if (verification?.status === 'aprovado') {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('withdrawal_methods')
+          .select('withdrawal_methods, iban, account_holder')
           .eq('user_id', user.id)
           .maybeSingle();
         
         const withdrawalMethods = profile?.withdrawal_methods as any[] | null;
-        // Verificar se tem métodos válidos (não nulos, não vazios)
-        const hasValidMethods = Array.isArray(withdrawalMethods) && 
+        // Verificar se tem métodos novos válidos
+        const hasNewMethods = Array.isArray(withdrawalMethods) && 
           withdrawalMethods.some(method => method && typeof method === 'object' && Object.keys(method).length > 0);
         
-        if (!hasValidMethods) {
+        // Verificar se tem IBAN antigo configurado
+        const hasLegacyIban = !!(profile?.iban && profile.iban.trim() !== '');
+        
+        // Só mostrar alerta se não tem nenhum método configurado
+        if (!hasNewMethods && !hasLegacyIban) {
           alerts.push({
             id: 'banking',
             type: 'banking',
