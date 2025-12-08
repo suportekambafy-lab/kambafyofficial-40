@@ -62,47 +62,50 @@ export const FacebookPixelTracker = ({ productId, productUserId }: FacebookPixel
   }, [productId]);
 
   // Injetar script base do Facebook Pixel
-  const injectFacebookPixelScript = useCallback(() => {
-    // Verifica se já foi injetado
-    if (window.fbq && typeof window.fbq === 'function') {
+  const injectFacebookPixelScript = useCallback((pixelIds: string[]) => {
+    // Verifica se o script já existe no DOM
+    const existingScript = document.querySelector('script[src*="fbevents.js"]');
+    if (existingScript) {
+      console.log('ℹ️ [FB PIXEL] Script already exists in DOM');
       return Promise.resolve();
     }
 
-    return new Promise<void>((resolve) => {
-      // Inicializa fbq como array antes do script carregar
-      const n = window.fbq = function(...args: any[]) {
-        if (n.callMethod) {
-          n.callMethod.apply(n, args);
-        } else {
-          n.queue.push(args);
-        }
-      } as any;
-      
-      if (!window._fbq) window._fbq = n;
-      n.push = n;
-      n.loaded = true;
-      n.version = '2.0';
-      n.queue = [];
+    console.log('🔧 [FB PIXEL] Injecting Facebook SDK script...');
 
-      // Injeta o script
-      const script = document.createElement('script');
-      script.async = true;
-      script.src = 'https://connect.facebook.net/en_US/fbevents.js';
-      script.onload = () => {
-        console.log('✅ [FB PIXEL] Facebook SDK loaded');
-        resolve();
-      };
-      script.onerror = () => {
-        console.error('❌ [FB PIXEL] Failed to load Facebook SDK');
-        resolve();
-      };
-      
-      const firstScript = document.getElementsByTagName('script')[0];
-      if (firstScript && firstScript.parentNode) {
-        firstScript.parentNode.insertBefore(script, firstScript);
-      } else {
-        document.head.appendChild(script);
-      }
+    return new Promise<void>((resolve) => {
+      // Código base do Facebook Pixel (exatamente como o Facebook fornece)
+      (function(f: any, b: Document, e: string, v: string, n?: any, t?: HTMLScriptElement, s?: Element) {
+        if (f.fbq) { 
+          console.log('ℹ️ [FB PIXEL] fbq already exists');
+          resolve();
+          return; 
+        }
+        n = f.fbq = function() {
+          n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
+        };
+        if (!f._fbq) f._fbq = n;
+        n.push = n;
+        n.loaded = !0;
+        n.version = '2.0';
+        n.queue = [];
+        t = b.createElement(e) as HTMLScriptElement;
+        t.async = true;
+        t.src = v;
+        t.onload = () => {
+          console.log('✅ [FB PIXEL] Facebook SDK loaded successfully');
+          resolve();
+        };
+        t.onerror = () => {
+          console.error('❌ [FB PIXEL] Failed to load Facebook SDK');
+          resolve();
+        };
+        s = b.getElementsByTagName(e)[0];
+        if (s && s.parentNode) {
+          s.parentNode.insertBefore(t, s);
+        } else {
+          b.head.appendChild(t);
+        }
+      })(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
     });
   }, []);
 
@@ -146,7 +149,7 @@ export const FacebookPixelTracker = ({ productId, productUserId }: FacebookPixel
         console.log(`✅ [FB PIXEL] ${pixelIds.length} pixel(s) found:`, pixelIds);
 
         // Injetar e aguardar o script do Facebook Pixel
-        await injectFacebookPixelScript();
+        await injectFacebookPixelScript(pixelIds);
 
         // Aguardar fbq estar completamente disponível
         await new Promise<void>((resolve) => {
