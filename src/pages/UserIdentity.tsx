@@ -129,8 +129,10 @@ export default function UserIdentity() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useCustomToast();
-  const { uploadFile: cloudflareUpload, uploading } = useCloudflareUpload();
+  const { uploadFile: cloudflareUpload } = useCloudflareUpload();
   const [loading, setLoading] = useState(false);
+  const [uploadingFront, setUploadingFront] = useState(false);
+  const [uploadingBack, setUploadingBack] = useState(false);
   const [verification, setVerification] = useState<IdentityVerification | null>(null);
   const [formData, setFormData] = useState({
     country: '' as CountryCode | '',
@@ -237,8 +239,25 @@ export default function UserIdentity() {
       return;
     }
 
+    // Usar estados de upload separados para frente e verso
+    if (type === 'front') {
+      setUploadingFront(true);
+    } else {
+      setUploadingBack(true);
+    }
+
     console.log('🔄 Fazendo upload via Cloudflare R2...');
     const url = await cloudflareUpload(file);
+    
+    // Reset o input para permitir re-upload do mesmo arquivo
+    event.target.value = '';
+    
+    // Resetar estado de upload
+    if (type === 'front') {
+      setUploadingFront(false);
+    } else {
+      setUploadingBack(false);
+    }
     
     console.log('📥 URL retornada do Cloudflare:', url);
     
@@ -743,13 +762,13 @@ export default function UserIdentity() {
                       onChange={(e) => handleFileUpload(e, 'front')}
                       className="hidden"
                       id="front-upload"
-                      disabled={isReadOnly || uploading}
+                      disabled={isReadOnly || uploadingFront}
                     />
                     <label
                       htmlFor="front-upload"
                       className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 disabled:cursor-not-allowed"
                     >
-                      {uploading ? (
+                      {uploadingFront ? (
                         <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
                       ) : (
                         <>
@@ -794,13 +813,13 @@ export default function UserIdentity() {
                         onChange={(e) => handleFileUpload(e, 'back')}
                         className="hidden"
                         id="back-upload"
-                        disabled={isReadOnly || uploading}
+                        disabled={isReadOnly || uploadingBack}
                       />
                       <label
                         htmlFor="back-upload"
                         className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50"
                       >
-                        {uploading ? (
+                        {uploadingBack ? (
                           <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
                         ) : (
                           <>
@@ -824,7 +843,7 @@ export default function UserIdentity() {
           <div className="flex justify-end">
             <Button
               onClick={handleSubmit}
-              disabled={loading || uploading || verification?.status === 'pendente'}
+              disabled={loading || uploadingFront || uploadingBack || verification?.status === 'pendente'}
               size="lg"
             >
               {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
