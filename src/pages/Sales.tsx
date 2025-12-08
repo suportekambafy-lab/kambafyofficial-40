@@ -21,6 +21,7 @@ import { getAllPaymentMethods, getPaymentMethodName, getAngolaPaymentMethods, ge
 import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { useCurrencyToCountry } from "@/hooks/useCurrencyToCountry";
 import { ProductFilter } from '@/components/ProductFilter';
+import { SalesTimeAnalytics } from '@/components/SalesTimeAnalytics';
 
 interface Sale {
   id: string;
@@ -478,6 +479,9 @@ export default function Sales() {
         </div>
       </div>
 
+      {/* Analytics de Tempo */}
+      <SalesTimeAnalytics sales={sales} />
+
       {/* Filters */}
       <Card>
         <CardContent className="p-4 md:p-6">
@@ -626,7 +630,9 @@ export default function Sales() {
                           <div className="flex flex-wrap items-center gap-1">
                             <div className="flex items-center gap-1 text-xs text-muted-foreground">
                               <Calendar className="h-3 w-3" />
-                              <span>{new Date(sale.created_at).toLocaleDateString('pt-BR')}</span>
+                              <span>
+                                {new Date(sale.created_at).toLocaleDateString('pt-BR')} às {new Date(sale.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                              </span>
                             </div>
                           </div>
                           
