@@ -13,7 +13,7 @@ import { ProductFilter } from '@/components/ProductFilter';
 import { useToast } from '@/hooks/use-toast';
 import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface Sale {
@@ -400,51 +400,63 @@ export default function SellerReports() {
 
           <TabsContent value="overview" className="space-y-4 mt-4">
             {/* Gráfico de Receita */}
-            <Card className="overflow-hidden">
-              <CardHeader className="p-3 pb-2">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <Card className="rounded-xl shadow-sm border border-border/40 bg-card">
+              <CardHeader className="pb-1 px-4 pt-3">
+                <div className="flex items-center gap-2 text-muted-foreground">
                   <TrendingUp className="h-4 w-4 text-primary" />
-                  Receita no Período
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-3 pt-0 pb-4">
-                <div className="h-60 md:h-72 w-full">
-                  <ChartContainer config={chartConfig}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={revenueOverTime} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
-                        <defs>
-                          <linearGradient id="colorReceita" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4}/>
-                            <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.05}/>
-                          </linearGradient>
-                        </defs>
-                        <XAxis 
-                          dataKey="displayDate" 
-                          tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
-                          axisLine={false}
-                          tickLine={false}
-                          interval="preserveStartEnd"
-                        />
-                        <YAxis 
-                          tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
-                          axisLine={false}
-                          tickLine={false}
-                          tickFormatter={(value) => `${(value / 1000).toFixed(0)}K`}
-                          width={40}
-                        />
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                        <Area 
-                          type="monotone" 
-                          dataKey="receita" 
-                          stroke="hsl(var(--primary))" 
-                          fillOpacity={1} 
-                          fill="url(#colorReceita)" 
-                          strokeWidth={2}
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </ChartContainer>
+                  <span className="text-sm font-medium">Receita no Período</span>
                 </div>
+              </CardHeader>
+              <CardContent className="px-4 pb-4">
+                <ChartContainer config={chartConfig} className="h-[200px] w-full">
+                  <AreaChart data={revenueOverTime} margin={{ top: 5, right: 5, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorVendasGradientReports" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#22c55e" stopOpacity={0.4} />
+                        <stop offset="50%" stopColor="#22c55e" stopOpacity={0.15} />
+                        <stop offset="100%" stopColor="#22c55e" stopOpacity={0} />
+                      </linearGradient>
+                      <linearGradient id="strokeGradientReports" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stopColor="#16a34a" />
+                        <stop offset="50%" stopColor="#22c55e" />
+                        <stop offset="100%" stopColor="#4ade80" />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.3} />
+                    <XAxis 
+                      dataKey="displayDate" 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} 
+                      dy={5} 
+                      interval="preserveStartEnd" 
+                    />
+                    <YAxis 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} 
+                      tickFormatter={(value) => {
+                        if (value === 0) return '0';
+                        if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
+                        if (value >= 1000) return `${(value / 1000).toFixed(0)}K`;
+                        return value.toString();
+                      }} 
+                      width={45} 
+                      domain={[0, 'auto']} 
+                    />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Area 
+                      type="monotone" 
+                      dataKey="receita" 
+                      stroke="url(#strokeGradientReports)" 
+                      strokeWidth={2.5} 
+                      fillOpacity={1} 
+                      fill="url(#colorVendasGradientReports)" 
+                      dot={false}
+                      activeDot={{ fill: '#22c55e', stroke: 'white', strokeWidth: 3, r: 6 }}
+                    />
+                  </AreaChart>
+                </ChartContainer>
               </CardContent>
             </Card>
 
