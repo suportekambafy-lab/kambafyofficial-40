@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, RefreshCw, Download, TrendingUp, TrendingDown, DollarSign, ShoppingCart, Users, Package, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { FileText, RefreshCw, Download, TrendingUp, Package, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { SEO } from '@/components/SEO';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -53,7 +53,6 @@ export default function SellerReports() {
     try {
       setLoading(true);
 
-      // Buscar produtos do usuário
       const { data: userProducts, error: productsError } = await supabase
         .from('products')
         .select('id, name')
@@ -69,7 +68,6 @@ export default function SellerReports() {
         return;
       }
 
-      // Calcular data de início
       let startDate: Date | undefined;
       if (periodFilter !== "all") {
         const days = parseInt(periodFilter);
@@ -77,7 +75,6 @@ export default function SellerReports() {
         startDate.setDate(startDate.getDate() - days);
       }
 
-      // Buscar TODAS as vendas com paginação
       let allSales: Sale[] = [];
       let page = 0;
       const pageSize = 1000;
@@ -116,13 +113,11 @@ export default function SellerReports() {
     }
   };
 
-  // Filtrar por produto se selecionado
   const filteredSales = useMemo(() => {
     if (selectedProduct === "todos") return sales;
     return sales.filter(sale => sale.product_id === selectedProduct);
   }, [sales, selectedProduct]);
 
-  // Estatísticas gerais
   const stats = useMemo(() => {
     const completed = filteredSales.filter(s => s.status === 'completed');
     const pending = filteredSales.filter(s => s.status === 'pending');
@@ -131,7 +126,6 @@ export default function SellerReports() {
     const totalRevenue = completed.reduce((sum, s) => sum + (parseFloat(s.amount) || 0), 0);
     const avgTicket = completed.length > 0 ? totalRevenue / completed.length : 0;
 
-    // Calcular período anterior para comparação
     const days = periodFilter === "all" ? 365 : parseInt(periodFilter);
     const midPoint = new Date();
     midPoint.setDate(midPoint.getDate() - days / 2);
@@ -165,7 +159,6 @@ export default function SellerReports() {
     };
   }, [filteredSales, periodFilter]);
 
-  // Dados para gráfico de receita ao longo do tempo
   const revenueOverTime = useMemo(() => {
     const completed = filteredSales.filter(s => s.status === 'completed');
     const dataByDate: Record<string, { date: string; receita: number; vendas: number }> = {};
@@ -187,7 +180,6 @@ export default function SellerReports() {
       }));
   }, [filteredSales]);
 
-  // Dados para gráfico de produtos mais vendidos
   const productPerformance = useMemo(() => {
     const completed = filteredSales.filter(s => s.status === 'completed');
     const byProduct: Record<string, { name: string; vendas: number; receita: number }> = {};
@@ -207,7 +199,6 @@ export default function SellerReports() {
       .slice(0, 5);
   }, [filteredSales, products]);
 
-  // Dados para gráfico de métodos de pagamento
   const paymentMethodsData = useMemo(() => {
     const completed = filteredSales.filter(s => s.status === 'completed');
     const byMethod: Record<string, number> = {};
@@ -219,22 +210,23 @@ export default function SellerReports() {
     
     const methodNames: Record<string, string> = {
       'multicaixa_express': 'Multicaixa Express',
-      'multicaixa_reference': 'Referência Multicaixa',
+      'multicaixa_reference': 'Ref. Multicaixa',
       'bank_transfer': 'Transferência',
       'transfer': 'Transferência',
-      'stripe': 'Cartão (Stripe)',
+      'stripe': 'Cartão',
       'paypal': 'PayPal',
       'mbway': 'MB WAY',
       'multibanco': 'Multibanco'
     };
     
-    return Object.entries(byMethod).map(([method, count]) => ({
-      name: methodNames[method] || method,
-      value: count
-    }));
+    return Object.entries(byMethod)
+      .map(([method, count]) => ({
+        name: methodNames[method] || method,
+        value: count
+      }))
+      .slice(0, 6);
   }, [filteredSales]);
 
-  // Dados para gráfico de status
   const statusData = useMemo(() => {
     return [
       { name: 'Aprovadas', value: stats.completed, color: '#22c55e' },
@@ -243,11 +235,8 @@ export default function SellerReports() {
     ].filter(d => d.value > 0);
   }, [stats]);
 
-  // Exportar relatório
   const exportReport = () => {
-    const completed = filteredSales.filter(s => s.status === 'completed');
-    
-    const headers = ['Data', 'Hora', 'Produto', 'Valor', 'Moeda', 'Status', 'Método de Pagamento'];
+    const headers = ['Data', 'Hora', 'Produto', 'Valor', 'Moeda', 'Status', 'Método'];
     const rows = filteredSales.map(sale => {
       const product = products.find(p => p.id === sale.product_id);
       const date = new Date(sale.created_at);
@@ -262,7 +251,6 @@ export default function SellerReports() {
       ];
     });
 
-    // Adicionar resumo no final
     rows.push([]);
     rows.push(['=== RESUMO ===']);
     rows.push(['Total de Vendas', stats.total.toString()]);
@@ -281,7 +269,7 @@ export default function SellerReports() {
 
     toast({
       title: "Relatório exportado",
-      description: `${filteredSales.length} registros exportados com sucesso`
+      description: `${filteredSales.length} registros exportados`
     });
   };
 
@@ -297,30 +285,30 @@ export default function SellerReports() {
   }
 
   return (
-    <div className="container mx-auto p-4 md:p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-4 md:space-y-6 max-w-full overflow-x-hidden">
       <SEO 
         title={`${t('reports.title')} - Kambafy`}
         description={t('reports.subtitle')}
       />
       
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col gap-4">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
-            <FileText className="h-6 w-6" />
+          <h1 className="text-lg md:text-xl font-bold text-foreground flex items-center gap-2">
+            <FileText className="h-5 w-5" />
             {t('reports.title')}
           </h1>
-          <p className="text-sm text-muted-foreground">
-            Análise completa de vendas e desempenho
+          <p className="text-xs md:text-sm text-muted-foreground">
+            Análise completa de vendas
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={exportReport} disabled={filteredSales.length === 0}>
-            <Download className="h-4 w-4 mr-2" />
-            Exportar CSV
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" size="sm" onClick={exportReport} disabled={filteredSales.length === 0} className="text-xs">
+            <Download className="h-3 w-3 mr-1" />
+            Exportar
           </Button>
-          <Button variant="outline" size="sm" onClick={loadSalesData}>
-            <RefreshCw className="h-4 w-4 mr-2" />
+          <Button variant="outline" size="sm" onClick={loadSalesData} className="text-xs">
+            <RefreshCw className="h-3 w-3 mr-1" />
             Atualizar
           </Button>
         </div>
@@ -328,23 +316,23 @@ export default function SellerReports() {
 
       {/* Filtros */}
       <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4">
+        <CardContent className="p-3 md:p-4">
+          <div className="flex flex-col sm:flex-row gap-3">
             <Select value={periodFilter} onValueChange={setPeriodFilter}>
-              <SelectTrigger className="w-full sm:w-48">
+              <SelectTrigger className="w-full sm:w-40 text-sm">
                 <SelectValue placeholder="Período" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="7">Últimos 7 dias</SelectItem>
-                <SelectItem value="30">Últimos 30 dias</SelectItem>
-                <SelectItem value="90">Últimos 90 dias</SelectItem>
-                <SelectItem value="180">Últimos 6 meses</SelectItem>
-                <SelectItem value="365">Último ano</SelectItem>
-                <SelectItem value="all">Todo o período</SelectItem>
+                <SelectItem value="7">7 dias</SelectItem>
+                <SelectItem value="30">30 dias</SelectItem>
+                <SelectItem value="90">90 dias</SelectItem>
+                <SelectItem value="180">6 meses</SelectItem>
+                <SelectItem value="365">1 ano</SelectItem>
+                <SelectItem value="all">Todo período</SelectItem>
               </SelectContent>
             </Select>
             
-            <div className="w-full sm:w-48">
+            <div className="w-full sm:w-40">
               <ProductFilter 
                 value={selectedProduct} 
                 onValueChange={setSelectedProduct}
@@ -355,52 +343,48 @@ export default function SellerReports() {
       </Card>
 
       {/* KPIs Principais */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-3">
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-muted-foreground">Receita Total</p>
-                <p className="text-xl md:text-2xl font-bold text-green-600">
-                  {formatPriceForSeller(stats.totalRevenue, 'KZ')}
-                </p>
-              </div>
+          <CardContent className="p-3">
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">Receita Total</p>
+              <p className="text-base md:text-lg font-bold text-green-600 truncate">
+                {formatPriceForSeller(stats.totalRevenue, 'KZ')}
+              </p>
               <div className={`flex items-center text-xs ${stats.revenueTrend >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {stats.revenueTrend >= 0 ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownRight className="h-4 w-4" />}
-                {Math.abs(stats.revenueTrend)}%
+                {stats.revenueTrend >= 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+                <span>{Math.abs(stats.revenueTrend)}%</span>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-muted-foreground">Vendas Aprovadas</p>
-                <p className="text-xl md:text-2xl font-bold">{stats.completed}</p>
-              </div>
+          <CardContent className="p-3">
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">Vendas Aprovadas</p>
+              <p className="text-base md:text-lg font-bold">{stats.completed}</p>
               <div className={`flex items-center text-xs ${stats.salesTrend >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {stats.salesTrend >= 0 ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownRight className="h-4 w-4" />}
-                {Math.abs(stats.salesTrend)}%
+                {stats.salesTrend >= 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+                <span>{Math.abs(stats.salesTrend)}%</span>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-3">
             <p className="text-xs text-muted-foreground">Ticket Médio</p>
-            <p className="text-xl md:text-2xl font-bold text-primary">
+            <p className="text-base md:text-lg font-bold text-primary truncate">
               {formatPriceForSeller(stats.avgTicket, 'KZ')}
             </p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">Taxa de Conversão</p>
-            <p className="text-xl md:text-2xl font-bold text-primary">{stats.conversionRate}%</p>
+          <CardContent className="p-3">
+            <p className="text-xs text-muted-foreground">Conversão</p>
+            <p className="text-base md:text-lg font-bold text-primary">{stats.conversionRate}%</p>
             <p className="text-xs text-muted-foreground">{stats.pending} pendentes</p>
           </CardContent>
         </Card>
@@ -408,23 +392,23 @@ export default function SellerReports() {
 
       {filteredSales.length > 0 ? (
         <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-            <TabsTrigger value="time">Análise Temporal</TabsTrigger>
-            <TabsTrigger value="products">Produtos</TabsTrigger>
+          <TabsList className="w-full grid grid-cols-3 h-auto">
+            <TabsTrigger value="overview" className="text-xs py-2">Geral</TabsTrigger>
+            <TabsTrigger value="time" className="text-xs py-2">Horários</TabsTrigger>
+            <TabsTrigger value="products" className="text-xs py-2">Produtos</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="space-y-4">
+          <TabsContent value="overview" className="space-y-4 mt-4">
             {/* Gráfico de Receita */}
             <Card>
-              <CardHeader>
+              <CardHeader className="p-3 pb-0">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
                   <TrendingUp className="h-4 w-4" />
-                  Receita ao Longo do Tempo
+                  Receita no Período
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="h-64">
+              <CardContent className="p-3">
+                <div className="h-48 md:h-56">
                   <ChartContainer config={chartConfig}>
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={revenueOverTime}>
@@ -436,15 +420,17 @@ export default function SellerReports() {
                         </defs>
                         <XAxis 
                           dataKey="displayDate" 
-                          tick={{ fontSize: 11 }}
+                          tick={{ fontSize: 10 }}
                           axisLine={false}
                           tickLine={false}
+                          interval="preserveStartEnd"
                         />
                         <YAxis 
-                          tick={{ fontSize: 11 }}
+                          tick={{ fontSize: 10 }}
                           axisLine={false}
                           tickLine={false}
                           tickFormatter={(value) => `${(value / 1000).toFixed(0)}K`}
+                          width={35}
                         />
                         <ChartTooltip content={<ChartTooltipContent />} />
                         <Area 
@@ -464,61 +450,62 @@ export default function SellerReports() {
 
             {/* Gráficos de Pizza */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Status das Vendas */}
               <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm font-medium">Status das Vendas</CardTitle>
+                <CardHeader className="p-3 pb-0">
+                  <CardTitle className="text-sm font-medium">Status</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="h-48">
+                <CardContent className="p-3">
+                  <div className="h-40">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
                           data={statusData}
                           cx="50%"
                           cy="50%"
-                          innerRadius={40}
-                          outerRadius={70}
+                          innerRadius={30}
+                          outerRadius={55}
                           paddingAngle={2}
                           dataKey="value"
-                          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                          labelLine={false}
                         >
                           {statusData.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={entry.color} />
                           ))}
                         </Pie>
+                        <Legend 
+                          wrapperStyle={{ fontSize: '11px' }}
+                          formatter={(value) => <span className="text-xs">{value}</span>}
+                        />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Métodos de Pagamento */}
               <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm font-medium">Métodos de Pagamento</CardTitle>
+                <CardHeader className="p-3 pb-0">
+                  <CardTitle className="text-sm font-medium">Pagamentos</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="h-48">
+                <CardContent className="p-3">
+                  <div className="h-40">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
                           data={paymentMethodsData}
                           cx="50%"
                           cy="50%"
-                          innerRadius={40}
-                          outerRadius={70}
+                          innerRadius={30}
+                          outerRadius={55}
                           paddingAngle={2}
                           dataKey="value"
-                          label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
-                          labelLine={false}
                         >
                           {paymentMethodsData.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                           ))}
                         </Pie>
-                        <Legend />
+                        <Legend 
+                          wrapperStyle={{ fontSize: '10px' }}
+                          formatter={(value) => <span className="text-xs truncate max-w-[60px]">{value}</span>}
+                        />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
@@ -527,33 +514,34 @@ export default function SellerReports() {
             </div>
           </TabsContent>
 
-          <TabsContent value="time">
+          <TabsContent value="time" className="mt-4">
             <SalesTimeAnalytics sales={filteredSales} />
           </TabsContent>
 
-          <TabsContent value="products" className="space-y-4">
+          <TabsContent value="products" className="space-y-4 mt-4">
             {/* Top Produtos */}
             <Card>
-              <CardHeader>
+              <CardHeader className="p-3 pb-0">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
                   <Package className="h-4 w-4" />
-                  Produtos Mais Vendidos
+                  Mais Vendidos
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-3">
                 {productPerformance.length > 0 ? (
-                  <div className="h-64">
+                  <div className="h-48">
                     <ChartContainer config={chartConfig}>
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={productPerformance} layout="vertical">
-                          <XAxis type="number" axisLine={false} tickLine={false} />
+                          <XAxis type="number" axisLine={false} tickLine={false} tick={{ fontSize: 10 }} />
                           <YAxis 
                             type="category" 
                             dataKey="name" 
-                            width={150}
-                            tick={{ fontSize: 11 }}
+                            width={100}
+                            tick={{ fontSize: 10 }}
                             axisLine={false}
                             tickLine={false}
+                            tickFormatter={(value) => value.length > 15 ? value.slice(0, 15) + '...' : value}
                           />
                           <ChartTooltip content={<ChartTooltipContent />} />
                           <Bar dataKey="vendas" fill="hsl(var(--chart-1))" radius={[0, 4, 4, 0]} />
@@ -562,34 +550,32 @@ export default function SellerReports() {
                     </ChartContainer>
                   </div>
                 ) : (
-                  <p className="text-center text-muted-foreground py-8">Sem dados de produtos</p>
+                  <p className="text-center text-muted-foreground py-8 text-sm">Sem dados</p>
                 )}
               </CardContent>
             </Card>
 
             {/* Tabela de Performance */}
             <Card>
-              <CardHeader>
-                <CardTitle className="text-sm font-medium">Detalhes por Produto</CardTitle>
+              <CardHeader className="p-3 pb-0">
+                <CardTitle className="text-sm font-medium">Detalhes</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
+              <CardContent className="p-3">
+                <div className="overflow-x-auto -mx-3">
+                  <table className="w-full text-xs min-w-[300px]">
                     <thead>
                       <tr className="border-b">
-                        <th className="text-left py-2 font-medium">Produto</th>
-                        <th className="text-right py-2 font-medium">Vendas</th>
-                        <th className="text-right py-2 font-medium">Receita</th>
-                        <th className="text-right py-2 font-medium">Ticket Médio</th>
+                        <th className="text-left py-2 px-3 font-medium">Produto</th>
+                        <th className="text-right py-2 px-2 font-medium">Vendas</th>
+                        <th className="text-right py-2 px-3 font-medium">Receita</th>
                       </tr>
                     </thead>
                     <tbody>
                       {productPerformance.map((product, index) => (
                         <tr key={index} className="border-b last:border-0">
-                          <td className="py-2 truncate max-w-[200px]">{product.name}</td>
-                          <td className="py-2 text-right">{product.vendas}</td>
-                          <td className="py-2 text-right text-green-600">{formatPriceForSeller(product.receita, 'KZ')}</td>
-                          <td className="py-2 text-right">{formatPriceForSeller(product.receita / product.vendas, 'KZ')}</td>
+                          <td className="py-2 px-3 truncate max-w-[120px]">{product.name}</td>
+                          <td className="py-2 px-2 text-right">{product.vendas}</td>
+                          <td className="py-2 px-3 text-right text-green-600">{formatPriceForSeller(product.receita, 'KZ')}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -602,10 +588,10 @@ export default function SellerReports() {
       ) : (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold">Sem dados para análise</h3>
-            <p className="text-sm text-muted-foreground text-center">
-              Não há vendas no período selecionado para gerar relatórios
+            <FileText className="h-10 w-10 text-muted-foreground mb-3" />
+            <h3 className="text-base font-semibold">Sem dados</h3>
+            <p className="text-xs text-muted-foreground text-center">
+              Não há vendas no período selecionado
             </p>
           </CardContent>
         </Card>
