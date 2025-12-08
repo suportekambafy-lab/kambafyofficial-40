@@ -759,14 +759,22 @@ export default function UserIdentity() {
                     <input
                       type="file"
                       accept="image/*,.pdf"
-                      onChange={(e) => handleFileUpload(e, 'front')}
+                      onChange={(e) => {
+                        console.log('📤 Frente input onChange triggered');
+                        handleFileUpload(e, 'front');
+                      }}
+                      onClick={(e) => {
+                        console.log('📤 Frente input onClick triggered');
+                        // Reset value to allow same file re-upload
+                        (e.target as HTMLInputElement).value = '';
+                      }}
                       className="hidden"
-                      id="front-upload"
+                      id="document-front-upload"
                       disabled={isReadOnly || uploadingFront}
                     />
                     <label
-                      htmlFor="front-upload"
-                      className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 disabled:cursor-not-allowed"
+                      htmlFor="document-front-upload"
+                      className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 ${uploadingFront ? 'opacity-50' : ''}`}
                     >
                       {uploadingFront ? (
                         <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
@@ -810,14 +818,22 @@ export default function UserIdentity() {
                       <input
                         type="file"
                         accept="image/*,.pdf"
-                        onChange={(e) => handleFileUpload(e, 'back')}
+                        onChange={(e) => {
+                          console.log('📤 Verso input onChange triggered');
+                          handleFileUpload(e, 'back');
+                        }}
+                        onClick={(e) => {
+                          console.log('📤 Verso input onClick triggered');
+                          // Reset value to allow same file re-upload
+                          (e.target as HTMLInputElement).value = '';
+                        }}
                         className="hidden"
-                        id="back-upload"
+                        id="document-back-upload"
                         disabled={isReadOnly || uploadingBack}
                       />
                       <label
-                        htmlFor="back-upload"
-                        className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50"
+                        htmlFor="document-back-upload"
+                        className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 ${uploadingBack ? 'opacity-50' : ''}`}
                       >
                         {uploadingBack ? (
                           <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
