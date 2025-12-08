@@ -23,6 +23,12 @@ interface Student {
   cohort_id?: string;
 }
 
+interface StudentStats {
+  total: number;
+  last7Days: number;
+  last30Days: number;
+}
+
 interface Cohort {
   id: string;
   name: string;
@@ -41,6 +47,7 @@ interface StudentsManagerProps {
 export default function StudentsManager({ memberAreaId, memberAreaName, externalDialogOpen, onExternalDialogChange }: StudentsManagerProps) {
   const { user } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
+  const [studentStats, setStudentStats] = useState<StudentStats>({ total: 0, last7Days: 0, last30Days: 0 });
   const [cohorts, setCohorts] = useState<Cohort[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -57,6 +64,38 @@ export default function StudentsManager({ memberAreaId, memberAreaName, external
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [newCohortId, setNewCohortId] = useState('');
 
+  // Função para buscar todos os estudantes com paginação (bypass limite de 1000)
+  const fetchAllStudents = async (memberAreaId: string): Promise<Student[]> => {
+    const allStudents: Student[] = [];
+    const pageSize = 1000;
+    let page = 0;
+    let hasMore = true;
+
+    while (hasMore) {
+      const { data, error } = await supabase
+        .from('member_area_students')
+        .select('*')
+        .eq('member_area_id', memberAreaId)
+        .order('created_at', { ascending: false })
+        .range(page * pageSize, (page + 1) * pageSize - 1);
+
+      if (error) {
+        console.error('Error fetching students page:', error);
+        break;
+      }
+
+      if (data && data.length > 0) {
+        allStudents.push(...data);
+        page++;
+        hasMore = data.length === pageSize;
+      } else {
+        hasMore = false;
+      }
+    }
+
+    return allStudents;
+  };
+
   // Carregar estudantes e turmas da área de membros
   useEffect(() => {
     const fetchData = async () => {
@@ -64,19 +103,44 @@ export default function StudentsManager({ memberAreaId, memberAreaName, external
       
       setLoading(true);
       try {
-        // Buscar estudantes
-        const { data: studentsData, error: studentsError } = await supabase
+        // Buscar total de estudantes usando count (preciso para estatísticas)
+        const { count: totalCount, error: countError } = await supabase
           .from('member_area_students')
-          .select('*')
+          .select('*', { count: 'exact', head: true })
           .eq('member_area_id', memberAreaId)
-          .order('created_at', { ascending: false });
+          .neq('student_email', 'validar@kambafy.com');
 
-        if (studentsError) {
-          console.error('Error fetching students:', studentsError);
-          toast.error("Erro ao carregar estudantes");
-        } else {
-          setStudents(studentsData || []);
+        if (countError) {
+          console.error('Error counting students:', countError);
         }
+
+        // Buscar contagem dos últimos 7 dias
+        const last7Days = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+        const { count: count7Days } = await supabase
+          .from('member_area_students')
+          .select('*', { count: 'exact', head: true })
+          .eq('member_area_id', memberAreaId)
+          .neq('student_email', 'validar@kambafy.com')
+          .gte('access_granted_at', last7Days);
+
+        // Buscar contagem dos últimos 30 dias
+        const last30Days = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+        const { count: count30Days } = await supabase
+          .from('member_area_students')
+          .select('*', { count: 'exact', head: true })
+          .eq('member_area_id', memberAreaId)
+          .neq('student_email', 'validar@kambafy.com')
+          .gte('access_granted_at', last30Days);
+
+        setStudentStats({
+          total: totalCount || 0,
+          last7Days: count7Days || 0,
+          last30Days: count30Days || 0
+        });
+
+        // Buscar todos os estudantes (com paginação para ultrapassar limite de 1000)
+        const studentsData = await fetchAllStudents(memberAreaId);
+        setStudents(studentsData);
 
         // Buscar turmas ativas
         const { data: cohortsData, error: cohortsError } = await supabase
@@ -596,7 +660,7 @@ export default function StudentsManager({ memberAreaId, memberAreaName, external
         <Card className="w-full max-w-full">
           <CardContent className="p-4">
             <div className="text-2xl font-bold">
-              {students.filter(s => s.student_email !== 'validar@kambafy.com').length}
+              {studentStats.total}
             </div>
             <p className="text-sm text-gray-600">Total de Estudantes</p>
           </CardContent>
@@ -604,10 +668,7 @@ export default function StudentsManager({ memberAreaId, memberAreaName, external
         <Card className="w-full max-w-full">
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-green-600">
-              {students.filter(s => 
-                s.student_email !== 'validar@kambafy.com' && 
-                new Date(s.access_granted_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-              ).length}
+              {studentStats.last7Days}
             </div>
             <p className="text-sm text-gray-600">Novos (7 dias)</p>
           </CardContent>
@@ -615,10 +676,7 @@ export default function StudentsManager({ memberAreaId, memberAreaName, external
         <Card className="w-full max-w-full">
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-blue-600">
-              {students.filter(s => 
-                s.student_email !== 'validar@kambafy.com' && 
-                new Date(s.access_granted_at) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-              ).length}
+              {studentStats.last30Days}
             </div>
             <p className="text-sm text-gray-600">Novos (30 dias)</p>
           </CardContent>
