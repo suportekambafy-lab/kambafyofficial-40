@@ -768,61 +768,6 @@ export default function SellerReports() {
                   </p>}
               </CardContent>
             </Card>
-
-            {/* Resumo por Moeda */}
-            <Card className="rounded-xl shadow-sm border border-border/40 bg-card">
-              <CardHeader className="px-4 pt-3 pb-2">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  💰 Vendas por Moeda
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="px-4 pb-4">
-                {(() => {
-              const completed = filteredSales.filter(s => s.status === 'completed');
-              const byCurrency: Record<string, {
-                vendas: number;
-                receita: number;
-              }> = {};
-              completed.forEach(sale => {
-                const currency = sale.currency || 'KZ';
-                if (!byCurrency[currency]) {
-                  byCurrency[currency] = {
-                    vendas: 0,
-                    receita: 0
-                  };
-                }
-                byCurrency[currency].vendas += 1;
-                byCurrency[currency].receita += parseFloat(sale.amount || '0');
-              });
-              const currencyData = Object.entries(byCurrency).map(([currency, data]) => ({
-                currency,
-                ...data
-              })).sort((a, b) => b.vendas - a.vendas);
-              const currencySymbols: Record<string, string> = {
-                'KZ': 'Kz',
-                'EUR': '€',
-                'MZN': 'MT',
-                'USD': '$'
-              };
-              return currencyData.length > 0 ? <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {currencyData.map((item, index) => <div key={index} className="p-3 bg-muted/50 rounded-lg">
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-lg font-bold">{currencySymbols[item.currency] || item.currency}</span>
-                            <span className="text-xs text-muted-foreground">{item.vendas} vendas</span>
-                          </div>
-                          <p className="text-sm font-semibold text-primary">
-                            {currencySymbols[item.currency] || ''} {item.receita.toLocaleString('pt-AO', {
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 0
-                    })}
-                          </p>
-                        </div>)}
-                    </div> : <p className="text-sm text-muted-foreground text-center py-4">
-                      Nenhum dado disponível
-                    </p>;
-            })()}
-              </CardContent>
-            </Card>
           </TabsContent>
 
           <TabsContent value="time" className="mt-4">
