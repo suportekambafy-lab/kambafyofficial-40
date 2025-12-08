@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Bell, X, Check } from 'lucide-react';
+import { Bell, X, Check, AlertTriangle, Wallet, UserCheck, MapPin } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface SellerNotification {
   id: string;
@@ -20,8 +22,22 @@ interface SellerNotification {
   created_at: string;
 }
 
+interface SmartAlert {
+  id: string;
+  type: 'identity' | 'banking' | 'address';
+  title: string;
+  message: string;
+  icon: React.ReactNode;
+  action: () => void;
+  actionLabel: string;
+  priority: number;
+}
+
 export function SellerNotificationCenter() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<SellerNotification[]>([]);
+  const [smartAlerts, setSmartAlerts] = useState<SmartAlert[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -44,6 +60,86 @@ export function SellerNotificationCenter() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Buscar alertas inteligentes (verificações pendentes)
+  const fetchSmartAlerts = async () => {
+    if (!user) return;
+    
+    try {
+      const alerts: SmartAlert[] = [];
+      
+      // Verificar identidade
+      const { data: verification } = await supabase
+        .from('identity_verification')
+        .select('status')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (!verification || verification.status !== 'aprovado') {
+        alerts.push({
+          id: 'identity',
+          type: 'identity',
+          title: 'Verificação de Identidade',
+          message: verification?.status === 'pendente' 
+            ? 'Sua verificação está em análise' 
+            : 'Complete sua verificação para solicitar saques',
+          icon: <UserCheck className="h-4 w-4 text-yellow-600" />,
+          action: () => { navigate('/identidade'); setIsOpen(false); },
+          actionLabel: verification?.status === 'pendente' ? 'Ver Status' : 'Verificar',
+          priority: 1
+        });
+      }
+      
+      // Verificar métodos de recebimento
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('withdrawal_methods')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      const withdrawalMethods = profile?.withdrawal_methods;
+      const hasWithdrawalMethods = Array.isArray(withdrawalMethods) && withdrawalMethods.length > 0;
+      
+      if (!hasWithdrawalMethods && verification?.status === 'aprovado') {
+        alerts.push({
+          id: 'banking',
+          type: 'banking',
+          title: 'Método de Recebimento',
+          message: 'Configure como deseja receber seus pagamentos',
+          icon: <Wallet className="h-4 w-4 text-orange-600" />,
+          action: () => { navigate('/vendedor/financeiro'); setIsOpen(false); },
+          actionLabel: 'Configurar',
+          priority: 2
+        });
+      }
+      
+      // Verificar endereço
+      const { data: verificationData } = await supabase
+        .from('identity_verification')
+        .select('address_street, address_city')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (verification?.status === 'aprovado' && (!verificationData?.address_street || !verificationData?.address_city)) {
+        alerts.push({
+          id: 'address',
+          type: 'address',
+          title: 'Endereço Incompleto',
+          message: 'Complete seu endereço para receber correspondências',
+          icon: <MapPin className="h-4 w-4 text-blue-600" />,
+          action: () => { navigate('/identidade'); setIsOpen(false); },
+          actionLabel: 'Completar',
+          priority: 3
+        });
+      }
+      
+      // Ordenar por prioridade
+      alerts.sort((a, b) => a.priority - b.priority);
+      setSmartAlerts(alerts);
+    } catch (error) {
+      console.error('❌ Erro ao buscar alertas inteligentes:', error);
+    }
+  };
+
   const fetchNotifications = async () => {
     try {
       setLoading(true);
@@ -56,7 +152,8 @@ export function SellerNotificationCenter() {
       if (error) throw error;
 
       setNotifications(data || []);
-      setUnreadCount(data?.filter(n => !n.read).length || 0);
+      const regularUnread = data?.filter(n => !n.read).length || 0;
+      setUnreadCount(regularUnread);
     } catch (error) {
       console.error('❌ Erro ao buscar notificações:', error);
     } finally {
@@ -109,6 +206,7 @@ export function SellerNotificationCenter() {
 
   useEffect(() => {
     fetchNotifications();
+    fetchSmartAlerts();
 
     // Real-time subscription
     const channel = supabase
@@ -140,7 +238,7 @@ export function SellerNotificationCenter() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [toast]);
+  }, [user, toast]);
 
   const formatAmount = (amount: number, currency: string) => {
     if (currency === 'EUR') {
@@ -175,19 +273,67 @@ export function SellerNotificationCenter() {
     return `${Math.floor(diffInMinutes / 1440)}d`;
   };
 
+  // Total de alertas (smart alerts + notificações não lidas)
+  const totalAlerts = smartAlerts.length + unreadCount;
+
   // Conteúdo das notificações (reutilizado no Card e no Drawer)
   const notificationContent = (
     <>
+      {/* Smart Alerts - Alertas Inteligentes */}
+      {smartAlerts.length > 0 && (
+        <div className="border-b border-border">
+          <div className="px-3 py-2 bg-yellow-50 dark:bg-yellow-950/20">
+            <p className="text-xs font-medium text-yellow-800 dark:text-yellow-200 flex items-center gap-1">
+              <AlertTriangle className="h-3 w-3" />
+              Ações Pendentes
+            </p>
+          </div>
+          {smartAlerts.map((alert) => (
+            <div
+              key={alert.id}
+              className="p-3 border-b border-border bg-yellow-50/50 dark:bg-yellow-950/10 hover:bg-yellow-100/50 dark:hover:bg-yellow-950/20 transition-colors"
+            >
+              <div className="flex items-start gap-3">
+                <span className="flex-shrink-0 mt-0.5">
+                  {alert.icon}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm">
+                    {alert.title}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {alert.message}
+                  </p>
+                  <Button
+                    variant="link"
+                    size="sm"
+                    className="h-auto p-0 mt-1 text-primary"
+                    onClick={alert.action}
+                  >
+                    {alert.actionLabel} →
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Notificações Regulares */}
       {loading ? (
         <div className="p-4 text-center text-muted-foreground">
           Carregando notificações...
         </div>
-      ) : notifications.length === 0 ? (
+      ) : notifications.length === 0 && smartAlerts.length === 0 ? (
         <div className="p-4 text-center text-muted-foreground">
           Nenhuma notificação
         </div>
+      ) : notifications.length === 0 ? (
+        <div className="p-4 text-center text-muted-foreground text-sm">
+          Nenhuma notificação de vendas ainda
+        </div>
       ) : (
-        <ScrollArea className="h-96">
+        <ScrollArea className="h-80">
           <div className="space-y-1">
             {notifications.map((notification) => (
               <div
@@ -242,12 +388,12 @@ export function SellerNotificationCenter() {
         className="relative"
       >
         <Bell className="h-5 w-5 text-foreground dark:text-white" />
-        {unreadCount > 0 && (
+        {totalAlerts > 0 && (
           <Badge 
             variant="destructive" 
             className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
           >
-            {unreadCount > 99 ? '99+' : unreadCount}
+            {totalAlerts > 99 ? '99+' : totalAlerts}
           </Badge>
         )}
       </Button>
