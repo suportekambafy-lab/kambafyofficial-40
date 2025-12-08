@@ -19,6 +19,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useTranslation } from "@/hooks/useTranslation";
 import { IdentityCard } from "@/components/settings/IdentityCard";
 import { AddressCard } from "@/components/settings/AddressCard";
+import { TimezoneSettings } from "@/components/settings/TimezoneSettings";
 
 export default function UserSettings() {
   const { user } = useAuth();
@@ -524,6 +525,9 @@ export default function UserSettings() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Timezone Settings */}
+            <TimezoneSettings />
           </TabsContent>
 
 

@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, Cell } from "recharts";
 import { Clock, TrendingUp, Calendar } from "lucide-react";
+import { useUserTimezone } from "@/hooks/useUserTimezone";
 
 interface Sale {
   id: string;
@@ -16,7 +17,9 @@ interface SalesTimeAnalyticsProps {
 }
 
 export function SalesTimeAnalytics({ sales }: SalesTimeAnalyticsProps) {
-  // Análise por hora do dia
+  const { getHourInTimezone, getDayInTimezone, timezone } = useUserTimezone();
+
+  // Análise por hora do dia (usando fuso horário do vendedor)
   const hourlyData = useMemo(() => {
     const hourCounts: Record<number, { count: number; revenue: number }> = {};
     
@@ -25,11 +28,11 @@ export function SalesTimeAnalytics({ sales }: SalesTimeAnalyticsProps) {
       hourCounts[i] = { count: 0, revenue: 0 };
     }
     
-    // Contar vendas completadas por hora
+    // Contar vendas completadas por hora (no fuso horário do vendedor)
     sales
       .filter(sale => sale.status === 'completed')
       .forEach(sale => {
-        const hour = new Date(sale.created_at).getHours();
+        const hour = getHourInTimezone(sale.created_at);
         hourCounts[hour].count += 1;
         hourCounts[hour].revenue += parseFloat(sale.amount) || 0;
       });
@@ -40,9 +43,9 @@ export function SalesTimeAnalytics({ sales }: SalesTimeAnalyticsProps) {
       vendas: data.count,
       receita: data.revenue
     }));
-  }, [sales]);
+  }, [sales, getHourInTimezone]);
 
-  // Análise por dia da semana
+  // Análise por dia da semana (usando fuso horário do vendedor)
   const weekdayData = useMemo(() => {
     const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
     const dayCounts: Record<number, { count: number; revenue: number }> = {};
@@ -54,7 +57,7 @@ export function SalesTimeAnalytics({ sales }: SalesTimeAnalyticsProps) {
     sales
       .filter(sale => sale.status === 'completed')
       .forEach(sale => {
-        const day = new Date(sale.created_at).getDay();
+        const day = getDayInTimezone(sale.created_at);
         dayCounts[day].count += 1;
         dayCounts[day].revenue += parseFloat(sale.amount) || 0;
       });
@@ -65,7 +68,7 @@ export function SalesTimeAnalytics({ sales }: SalesTimeAnalyticsProps) {
       vendas: data.count,
       receita: data.revenue
     }));
-  }, [sales]);
+  }, [sales, getDayInTimezone]);
 
   // Encontrar melhor hora e dia
   const bestHour = useMemo(() => {
