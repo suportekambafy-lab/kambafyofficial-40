@@ -154,37 +154,69 @@ export const useGeoLocation = () => {
 
   const detectCountryByIP = async () => {
     try {
-      // Usar múltiplas APIs em paralelo para maior velocidade e redundância
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 3000);
+      const timeout = setTimeout(() => controller.abort(), 5000);
       
-      const response = await fetch('https://ipapi.co/json/', {
-        signal: controller.signal
-      });
+      // Tentar múltiplas APIs em sequência
+      const apis = [
+        'https://ipapi.co/json/',
+        'https://ip-api.com/json/?fields=countryCode',
+        'https://ipwho.is/'
+      ];
+      
+      let countryCode: string | null = null;
+      
+      for (const api of apis) {
+        try {
+          const response = await fetch(api, {
+            signal: controller.signal
+          });
+          
+          if (!response.ok) continue;
+          
+          const data = await response.json();
+          
+          // Diferentes APIs retornam o país em diferentes campos
+          countryCode = data.country_code || data.countryCode || data.country;
+          
+          if (countryCode) {
+            console.log(`✅ País detectado via ${api}:`, countryCode);
+            break;
+          }
+        } catch (apiError) {
+          console.log(`⚠️ API ${api} falhou, tentando próxima...`);
+          continue;
+        }
+      }
       
       clearTimeout(timeout);
       
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-      
-      const data = await response.json();
-      const countryCode = data.country_code;
-      const detectedCountry = supportedCountries[countryCode];
-      
-      if (detectedCountry) {
-        setUserCountry(detectedCountry);
-        localStorage.setItem('userCountry', countryCode);
-        const language = COUNTRY_LANGUAGES[countryCode] || 'pt';
-        setDetectedLanguage(language);
-        applyLanguage(language);
+      if (countryCode) {
+        const detectedCountry = supportedCountries[countryCode];
+        
+        if (detectedCountry) {
+          setUserCountry(detectedCountry);
+          localStorage.setItem('userCountry', countryCode);
+          const language = COUNTRY_LANGUAGES[countryCode] || 'pt';
+          setDetectedLanguage(language);
+          applyLanguage(language);
+        } else {
+          // País não suportado, usar Angola como padrão
+          setUserCountry(supportedCountries.AO);
+          localStorage.setItem('userCountry', 'AO');
+          setDetectedLanguage('pt');
+          applyLanguage('pt');
+        }
       } else {
-        setUserCountry(supportedCountries.AO);
-        localStorage.setItem('userCountry', 'AO');
-        setDetectedLanguage('pt');
-        applyLanguage('pt');
+        // Nenhuma API funcionou, manter país atual (do cache ou Angola)
+        if (!localStorage.getItem('userCountry')) {
+          setUserCountry(supportedCountries.AO);
+          setDetectedLanguage('pt');
+          applyLanguage('pt');
+        }
       }
     } catch (err) {
+      console.error('Erro ao detectar país por IP:', err);
       // Em caso de erro, manter país atual (do cache ou Angola)
       if (!localStorage.getItem('userCountry')) {
         setUserCountry(supportedCountries.AO);

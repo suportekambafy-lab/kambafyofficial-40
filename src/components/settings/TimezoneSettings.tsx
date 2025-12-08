@@ -108,7 +108,7 @@ export function TimezoneSettings() {
                 Detectar automaticamente
               </Label>
               <p className="text-xs text-muted-foreground">
-                Usa o fuso horário do seu país ({detectedTimezone})
+                Usa o fuso horário do seu navegador ({detectedTimezone})
               </p>
             </div>
           </div>
@@ -124,40 +124,51 @@ export function TimezoneSettings() {
           />
         </div>
 
-        {/* Seletor de fuso horário */}
-        {!useAutomatic && (
-          <div className="space-y-2">
-            <Label className="text-sm">Selecionar fuso horário</Label>
-            <Select
-              value={selectedTimezone}
-              onValueChange={setSelectedTimezone}
-              disabled={loading}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione um fuso horário">
-                  {selectedTzInfo && (
-                    <span className="flex items-center gap-2">
-                      <span>{selectedTzInfo.flag}</span>
-                      <span>{selectedTzInfo.label}</span>
-                      <span className="text-muted-foreground text-xs">({selectedTzInfo.offset})</span>
-                    </span>
-                  )}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {AVAILABLE_TIMEZONES.map((tz) => (
-                  <SelectItem key={tz.value} value={tz.value}>
-                    <span className="flex items-center gap-2">
-                      <span>{tz.flag}</span>
-                      <span>{tz.label}</span>
-                      <span className="text-muted-foreground text-xs">({tz.offset})</span>
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+        {/* Seletor de fuso horário - Sempre visível para permitir mudança manual */}
+        <div className="space-y-2">
+          <Label className="text-sm">
+            {useAutomatic ? 'Fuso horário detectado' : 'Selecionar fuso horário'}
+          </Label>
+          <Select
+            value={selectedTimezone}
+            onValueChange={(value) => {
+              setSelectedTimezone(value);
+              // Se mudar manualmente, desativar automático
+              if (useAutomatic) {
+                setUseAutomatic(false);
+              }
+            }}
+            disabled={loading}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione um fuso horário">
+                {selectedTzInfo && (
+                  <span className="flex items-center gap-2">
+                    <span>{selectedTzInfo.flag}</span>
+                    <span>{selectedTzInfo.label}</span>
+                    <span className="text-muted-foreground text-xs">({selectedTzInfo.offset})</span>
+                  </span>
+                )}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {AVAILABLE_TIMEZONES.map((tz) => (
+                <SelectItem key={tz.value} value={tz.value}>
+                  <span className="flex items-center gap-2">
+                    <span>{tz.flag}</span>
+                    <span>{tz.label}</span>
+                    <span className="text-muted-foreground text-xs">({tz.offset})</span>
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {useAutomatic && (
+            <p className="text-xs text-muted-foreground">
+              Selecione outro fuso para desativar a detecção automática
+            </p>
+          )}
+        </div>
 
         {/* Botão salvar */}
         <Button 
