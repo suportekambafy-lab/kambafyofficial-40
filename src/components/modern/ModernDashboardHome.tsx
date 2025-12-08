@@ -6,7 +6,6 @@ import { Capacitor } from '@capacitor/core';
 import { ModernSalesChart } from './ModernSalesChart';
 import { ModernRecentSales } from './ModernRecentSales';
 import { ModernKambaAchievements } from './ModernKambaAchievements';
-import { ModernAdvancedKPIs } from './ModernAdvancedKPIs';
 import { AppDownloadBanner } from './AppDownloadBanner';
 import { ProductFilter } from '@/components/ProductFilter';
 import { CustomPeriodSelector, type DateRange } from '@/components/ui/custom-period-selector';
@@ -511,12 +510,6 @@ export function ModernDashboardHome() {
           </div>
         </div>
 
-        {/* Advanced KPIs Section */}
-        <ModernAdvancedKPIs 
-          timeFilter={timeFilter} 
-          customDateRange={customDateRange}
-          selectedProduct={selectedProduct}
-        />
 
         {/* Chart Section - Full Width */}
         <div className="w-full">
