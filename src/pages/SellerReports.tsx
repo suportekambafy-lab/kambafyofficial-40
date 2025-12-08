@@ -38,6 +38,7 @@ interface Sale {
   currency?: string;
   seller_commission?: number;
   order_bump_data?: OrderBumpData | null;
+  customer_country?: string;
 }
 
 // Helper function to calculate net revenue (after platform fee) with currency conversion
@@ -137,7 +138,7 @@ export default function SellerReports() {
       while (hasMore) {
         let query = supabase
           .from('orders')
-          .select('id, created_at, status, amount, product_id, payment_method, currency, seller_commission, order_bump_data')
+          .select('id, created_at, status, amount, product_id, payment_method, currency, seller_commission, order_bump_data, customer_country')
           .in('product_id', userProductIds)
           .order('created_at', { ascending: false })
           .range(page * pageSize, (page + 1) * pageSize - 1);
@@ -319,6 +320,53 @@ export default function SellerReports() {
       { name: 'Canceladas', value: stats.cancelled, color: '#ef4444' }
     ].filter(d => d.value > 0);
   }, [stats]);
+
+  // Country flags emoji mapping
+  const countryFlags: Record<string, string> = {
+    'AO': '🇦🇴', 'Angola': '🇦🇴',
+    'PT': '🇵🇹', 'Portugal': '🇵🇹',
+    'BR': '🇧🇷', 'Brazil': '🇧🇷', 'Brasil': '🇧🇷',
+    'MZ': '🇲🇿', 'Mozambique': '🇲🇿', 'Moçambique': '🇲🇿',
+    'CV': '🇨🇻', 'Cape Verde': '🇨🇻', 'Cabo Verde': '🇨🇻',
+    'GW': '🇬🇼', 'Guinea-Bissau': '🇬🇼', 'Guiné-Bissau': '🇬🇼',
+    'ST': '🇸🇹', 'Sao Tome and Principe': '🇸🇹', 'São Tomé e Príncipe': '🇸🇹',
+    'TL': '🇹🇱', 'Timor-Leste': '🇹🇱',
+    'US': '🇺🇸', 'United States': '🇺🇸', 'Estados Unidos': '🇺🇸',
+    'UK': '🇬🇧', 'United Kingdom': '🇬🇧', 'Reino Unido': '🇬🇧',
+    'ES': '🇪🇸', 'Spain': '🇪🇸', 'Espanha': '🇪🇸',
+    'FR': '🇫🇷', 'France': '🇫🇷', 'França': '🇫🇷',
+    'DE': '🇩🇪', 'Germany': '🇩🇪', 'Alemanha': '🇩🇪',
+    'ZA': '🇿🇦', 'South Africa': '🇿🇦', 'África do Sul': '🇿🇦',
+    'NA': '🇳🇦', 'Namibia': '🇳🇦', 'Namíbia': '🇳🇦',
+    'CD': '🇨🇩', 'Congo': '🇨🇩',
+  };
+
+  const countryData = useMemo(() => {
+    const completed = filteredSales.filter(s => s.status === 'completed');
+    const byCountry: Record<string, { vendas: number; receita: number }> = {};
+    
+    completed.forEach(sale => {
+      const country = sale.customer_country || 'Desconhecido';
+      if (!byCountry[country]) {
+        byCountry[country] = { vendas: 0, receita: 0 };
+      }
+      byCountry[country].vendas += 1;
+      byCountry[country].receita += calculateNetRevenue(sale);
+    });
+    
+    const total = completed.length;
+    
+    return Object.entries(byCountry)
+      .map(([country, data]) => ({
+        country,
+        flag: countryFlags[country] || '🌍',
+        vendas: data.vendas,
+        receita: data.receita,
+        percentage: total > 0 ? ((data.vendas / total) * 100).toFixed(1) : '0'
+      }))
+      .sort((a, b) => b.vendas - a.vendas)
+      .slice(0, 8);
+  }, [filteredSales]);
 
   const exportReport = () => {
     const headers = ['Data', 'Hora', 'Produto', 'Valor', 'Moeda', 'Status', 'Método'];
@@ -551,8 +599,9 @@ export default function SellerReports() {
 
       {filteredSales.length > 0 ? (
         <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList className="w-full grid grid-cols-3 h-auto">
+          <TabsList className="w-full grid grid-cols-4 h-auto">
             <TabsTrigger value="overview" className="text-xs py-2">Geral</TabsTrigger>
+            <TabsTrigger value="countries" className="text-xs py-2">Países</TabsTrigger>
             <TabsTrigger value="time" className="text-xs py-2">Horários</TabsTrigger>
             <TabsTrigger value="products" className="text-xs py-2">Produtos</TabsTrigger>
           </TabsList>
@@ -699,6 +748,109 @@ export default function SellerReports() {
                     );
                   })}
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="countries" className="space-y-4 mt-4">
+            {/* Vendas por País */}
+            <Card className="rounded-xl shadow-sm border border-border/40 bg-card">
+              <CardHeader className="px-4 pt-3 pb-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  🌍 Vendas por País
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="px-4 pb-4">
+                {countryData.length > 0 ? (
+                  <div className="space-y-3">
+                    {countryData.map((item, index) => {
+                      const maxVendas = countryData[0]?.vendas || 1;
+                      const barWidth = (item.vendas / maxVendas) * 100;
+                      return (
+                        <div key={index} className="space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">{item.flag}</span>
+                              <span className="text-sm font-medium">{item.country}</span>
+                            </div>
+                            <div className="flex items-center gap-3 text-sm">
+                              <span className="text-muted-foreground">{item.vendas} vendas</span>
+                              <span className="font-semibold text-primary">{item.percentage}%</span>
+                            </div>
+                          </div>
+                          <div className="h-2 bg-muted rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-primary rounded-full transition-all duration-500"
+                              style={{ width: `${barWidth}%` }}
+                            />
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Receita: {formatPriceForSeller(item.receita, 'KZ')}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Nenhum dado de país disponível
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Resumo por Moeda */}
+            <Card className="rounded-xl shadow-sm border border-border/40 bg-card">
+              <CardHeader className="px-4 pt-3 pb-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  💰 Vendas por Moeda
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="px-4 pb-4">
+                {(() => {
+                  const completed = filteredSales.filter(s => s.status === 'completed');
+                  const byCurrency: Record<string, { vendas: number; receita: number }> = {};
+                  
+                  completed.forEach(sale => {
+                    const currency = sale.currency || 'KZ';
+                    if (!byCurrency[currency]) {
+                      byCurrency[currency] = { vendas: 0, receita: 0 };
+                    }
+                    byCurrency[currency].vendas += 1;
+                    byCurrency[currency].receita += parseFloat(sale.amount || '0');
+                  });
+                  
+                  const currencyData = Object.entries(byCurrency)
+                    .map(([currency, data]) => ({ currency, ...data }))
+                    .sort((a, b) => b.vendas - a.vendas);
+                  
+                  const currencySymbols: Record<string, string> = {
+                    'KZ': 'Kz',
+                    'EUR': '€',
+                    'MZN': 'MT',
+                    'USD': '$'
+                  };
+                  
+                  return currencyData.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {currencyData.map((item, index) => (
+                        <div key={index} className="p-3 bg-muted/50 rounded-lg">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-lg font-bold">{currencySymbols[item.currency] || item.currency}</span>
+                            <span className="text-xs text-muted-foreground">{item.vendas} vendas</span>
+                          </div>
+                          <p className="text-sm font-semibold text-primary">
+                            {currencySymbols[item.currency] || ''} {item.receita.toLocaleString('pt-AO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      Nenhum dado disponível
+                    </p>
+                  );
+                })()}
               </CardContent>
             </Card>
           </TabsContent>
