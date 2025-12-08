@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, RefreshCw, Download, TrendingUp, Package, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { FileText, RefreshCw, Download, TrendingUp, Package, ArrowUpRight, ArrowDownRight, CalendarIcon } from 'lucide-react';
 import { SEO } from '@/components/SEO';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,11 @@ import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { format } from 'date-fns';
+import { pt } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 interface OrderBumpData {
   bump_product_id?: string;
@@ -71,12 +76,14 @@ export default function SellerReports() {
   const [loading, setLoading] = useState(true);
   const [periodFilter, setPeriodFilter] = useState("90");
   const [selectedProduct, setSelectedProduct] = useState("todos");
+  const [customStartDate, setCustomStartDate] = useState<Date | undefined>();
+  const [customEndDate, setCustomEndDate] = useState<Date | undefined>();
 
   useEffect(() => {
     if (user) {
       loadSalesData();
     }
-  }, [user, periodFilter]);
+  }, [user, periodFilter, customStartDate, customEndDate]);
 
   const loadSalesData = async () => {
     if (!user) return;
@@ -99,11 +106,17 @@ export default function SellerReports() {
         return;
       }
 
-      let startDate: Date | undefined;
-      if (periodFilter !== "all") {
+      let filterStartDate: Date | undefined;
+      let filterEndDate: Date | undefined;
+      
+      if (periodFilter === "custom" && customStartDate && customEndDate) {
+        filterStartDate = customStartDate;
+        filterEndDate = new Date(customEndDate);
+        filterEndDate.setHours(23, 59, 59, 999);
+      } else if (periodFilter !== "all" && periodFilter !== "custom") {
         const days = parseInt(periodFilter);
-        startDate = new Date();
-        startDate.setDate(startDate.getDate() - days);
+        filterStartDate = new Date();
+        filterStartDate.setDate(filterStartDate.getDate() - days);
       }
 
       let allSales: Sale[] = [];
@@ -119,8 +132,11 @@ export default function SellerReports() {
           .order('created_at', { ascending: false })
           .range(page * pageSize, (page + 1) * pageSize - 1);
 
-        if (startDate) {
-          query = query.gte('created_at', startDate.toISOString());
+        if (filterStartDate) {
+          query = query.gte('created_at', filterStartDate.toISOString());
+        }
+        if (filterEndDate) {
+          query = query.lte('created_at', filterEndDate.toISOString());
         }
 
         const { data: orders, error } = await query;
@@ -161,9 +177,18 @@ export default function SellerReports() {
     const totalRevenue = completed.reduce((sum, s) => sum + calculateNetRevenue(s), 0);
     const avgTicket = completed.length > 0 ? totalRevenue / completed.length : 0;
 
-    const days = periodFilter === "all" ? 365 : parseInt(periodFilter);
-    const midPoint = new Date();
-    midPoint.setDate(midPoint.getDate() - days / 2);
+    let days: number;
+    let midPoint: Date;
+    
+    if (periodFilter === "custom" && customStartDate && customEndDate) {
+      const diffTime = Math.abs(customEndDate.getTime() - customStartDate.getTime());
+      days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      midPoint = new Date(customStartDate.getTime() + diffTime / 2);
+    } else {
+      days = periodFilter === "all" ? 365 : parseInt(periodFilter);
+      midPoint = new Date();
+      midPoint.setDate(midPoint.getDate() - days / 2);
+    }
     
     const recentSales = completed.filter(s => new Date(s.created_at) >= midPoint);
     const olderSales = completed.filter(s => new Date(s.created_at) < midPoint);
@@ -192,7 +217,7 @@ export default function SellerReports() {
       revenueTrend: parseFloat(revenueTrend),
       salesTrend: parseFloat(salesTrend)
     };
-  }, [filteredSales, periodFilter]);
+  }, [filteredSales, periodFilter, customStartDate, customEndDate]);
 
   const revenueOverTime = useMemo(() => {
     const completed = filteredSales.filter(s => s.status === 'completed');
@@ -367,27 +392,101 @@ export default function SellerReports() {
       {/* Filtros */}
       <Card>
         <CardContent className="p-3 md:p-4">
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Select value={periodFilter} onValueChange={setPeriodFilter}>
-              <SelectTrigger className="w-full sm:w-40 text-sm">
-                <SelectValue placeholder="Período" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="7">7 dias</SelectItem>
-                <SelectItem value="30">30 dias</SelectItem>
-                <SelectItem value="90">90 dias</SelectItem>
-                <SelectItem value="180">6 meses</SelectItem>
-                <SelectItem value="365">1 ano</SelectItem>
-                <SelectItem value="all">Todo período</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <div className="w-full sm:w-40">
-              <ProductFilter 
-                value={selectedProduct} 
-                onValueChange={setSelectedProduct}
-              />
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Select value={periodFilter} onValueChange={(value) => {
+                setPeriodFilter(value);
+                if (value !== "custom") {
+                  setCustomStartDate(undefined);
+                  setCustomEndDate(undefined);
+                }
+              }}>
+                <SelectTrigger className="w-full sm:w-40 text-sm">
+                  <SelectValue placeholder="Período" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="7">7 dias</SelectItem>
+                  <SelectItem value="30">30 dias</SelectItem>
+                  <SelectItem value="90">90 dias</SelectItem>
+                  <SelectItem value="180">6 meses</SelectItem>
+                  <SelectItem value="365">1 ano</SelectItem>
+                  <SelectItem value="all">Todo período</SelectItem>
+                  <SelectItem value="custom">Personalizado</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <div className="w-full sm:w-40">
+                <ProductFilter 
+                  value={selectedProduct} 
+                  onValueChange={setSelectedProduct}
+                />
+              </div>
             </div>
+
+            {/* Custom Date Pickers */}
+            {periodFilter === "custom" && (
+              <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
+                <span className="text-xs text-muted-foreground">De:</span>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={cn(
+                        "w-full sm:w-36 justify-start text-left font-normal text-xs",
+                        !customStartDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-3 w-3" />
+                      {customStartDate ? format(customStartDate, "dd/MM/yyyy", { locale: pt }) : "Data inicial"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={customStartDate}
+                      onSelect={setCustomStartDate}
+                      disabled={(date) => date > new Date() || (customEndDate ? date > customEndDate : false)}
+                      initialFocus
+                      locale={pt}
+                    />
+                  </PopoverContent>
+                </Popover>
+
+                <span className="text-xs text-muted-foreground">Até:</span>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={cn(
+                        "w-full sm:w-36 justify-start text-left font-normal text-xs",
+                        !customEndDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-3 w-3" />
+                      {customEndDate ? format(customEndDate, "dd/MM/yyyy", { locale: pt }) : "Data final"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={customEndDate}
+                      onSelect={setCustomEndDate}
+                      disabled={(date) => date > new Date() || (customStartDate ? date < customStartDate : false)}
+                      initialFocus
+                      locale={pt}
+                    />
+                  </PopoverContent>
+                </Popover>
+
+                {customStartDate && customEndDate && (
+                  <span className="text-xs text-muted-foreground ml-2">
+                    ({Math.ceil((customEndDate.getTime() - customStartDate.getTime()) / (1000 * 60 * 60 * 24)) + 1} dias)
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
