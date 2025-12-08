@@ -834,6 +834,7 @@ serve(async (req) => {
                     currency: paymentIntent.currency,
                     customer_email: order.customer_email,
                     customer_name: order.customer_name,
+                    customer_phone: order.customer_phone,
                     product_id: order.product_id,
                     product_name: product?.name,
                     payment_method: paymentIntent.payment_method_types[0],
@@ -858,6 +859,7 @@ serve(async (req) => {
                     product_name: product?.name,
                     customer_email: order.customer_email,
                     customer_name: order.customer_name,
+                    customer_phone: order.customer_phone,
                     // CORREÇÃO: Usar valor original do metadata
                     price: paymentIntent.metadata.original_amount || (paymentIntent.amount / 100).toString(),
                     currency: paymentIntent.metadata.original_currency || paymentIntent.currency.toUpperCase(),
