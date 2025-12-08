@@ -164,3 +164,6 @@ verify_jwt = false
 
 [functions.recover-stripe-payments]
 verify_jwt = false
+
+[functions.send-facebook-conversion]
+verify_jwt = false

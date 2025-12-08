@@ -1087,6 +1087,45 @@ export type Database = {
           },
         ]
       }
+      facebook_events_log: {
+        Row: {
+          created_at: string | null
+          event_id: string
+          event_name: string
+          id: string
+          payload: Json | null
+          product_id: string
+          response: Json | null
+          status: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          event_id: string
+          event_name: string
+          id?: string
+          payload?: Json | null
+          product_id: string
+          response?: Json | null
+          status?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          event_id?: string
+          event_name?: string
+          id?: string
+          payload?: Json | null
+          product_id?: string
+          response?: Json | null
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       facebook_pixel_settings: {
         Row: {
           created_at: string | null
