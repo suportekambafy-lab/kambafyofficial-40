@@ -75,14 +75,14 @@ export const FacebookPixelTracker = ({ productId, productUserId }: FacebookPixel
       if (!productInfo) return;
 
       const { userId, productUUID } = productInfo;
+      userIdRef.current = userId;
 
       try {
-        // Buscar pixels ativos APENAS para este produto específico
+        // Buscar pixels ativos APENAS para este produto específico (sem filtrar por user_id para evitar problemas de RLS)
         const { data: pixels, error } = await supabase
           .from('facebook_pixel_settings')
           .select('pixel_id')
-          .eq('user_id', userId)
-          .eq('product_id', productUUID)  // Usar o UUID real do produto
+          .eq('product_id', productUUID)
           .eq('enabled', true);
 
         if (error) {
