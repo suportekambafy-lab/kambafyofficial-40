@@ -407,11 +407,11 @@ export default function SellerReports() {
                   Receita no Período
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-3 pt-0 overflow-hidden">
-                <div className="h-52 md:h-64 w-full overflow-hidden">
+              <CardContent className="p-3 pt-0 pb-4">
+                <div className="h-60 md:h-72 w-full">
                   <ChartContainer config={chartConfig}>
                     <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={revenueOverTime} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                      <AreaChart data={revenueOverTime} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
                         <defs>
                           <linearGradient id="colorReceita" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4}/>
