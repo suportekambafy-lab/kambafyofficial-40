@@ -456,7 +456,7 @@ export default function UserIdentity() {
   };
 
   const needsBackside = formData.document_type !== 'Passaporte' && formData.document_type !== '';
-  const isReadOnly = verification?.status === 'aprovado' || verification?.status === 'pendente';
+  const isReadOnly = verification?.status === 'aprovado';
   
   const getButtonText = () => {
     if (!verification) {
