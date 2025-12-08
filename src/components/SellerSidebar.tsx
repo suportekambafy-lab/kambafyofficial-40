@@ -445,6 +445,21 @@ export function TopBar() {
         notifications.push('Configure seu perfil');
       }
 
+      // Verificar se precisa verificar identidade
+      const { data: identityData } = await supabase
+        .from('identity_verification')
+        .select('id, status')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (!identityData) {
+        notifications.push('Verifique sua identidade para receber pagamentos');
+      } else if (identityData.status === 'pendente') {
+        notifications.push('Sua verificação de identidade está em análise');
+      } else if (identityData.status === 'rejeitado') {
+        notifications.push('Sua verificação foi rejeitada. Atualize seus dados');
+      }
+
       setNotifications(notifications);
     } catch (error) {
       console.error('Error checking notifications:', error);

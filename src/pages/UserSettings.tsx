@@ -17,6 +17,7 @@ import { TwoFactorSettings } from "@/components/TwoFactorSettings";
 import { PasswordChange } from "@/components/PasswordChange";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useTranslation } from "@/hooks/useTranslation";
+import { IdentityCard } from "@/components/settings/IdentityCard";
 
 export default function UserSettings() {
   const { user } = useAuth();
@@ -515,6 +516,9 @@ export default function UserSettings() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Identity Card */}
+            <IdentityCard />
           </TabsContent>
 
 
