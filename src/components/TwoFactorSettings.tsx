@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Shield, Mail, AlertTriangle } from "lucide-react";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { Skeleton } from "@/components/ui/skeleton";
 import { use2FA } from "@/hooks/use2FA";
 import { useAuth } from "@/contexts/AuthContext";
 import TwoFactorVerification from "./TwoFactorVerification";
@@ -58,18 +58,31 @@ export function TwoFactorSettings() {
     setCurrentStep('settings');
   };
 
-  // Mostrar loading enquanto carrega as configurações pela primeira vez
-  if (!initialLoadDone || loading) {
+  // Mostrar skeleton enquanto carrega as configurações pela primeira vez
+  if (!initialLoadDone) {
     return (
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-            <Shield className="h-5 w-5 sm:h-6 sm:w-6" />
-            Autenticação de Dois Fatores (2FA)
+            <Skeleton className="h-5 w-5 sm:h-6 sm:w-6 rounded" />
+            <Skeleton className="h-5 w-64" />
           </CardTitle>
         </CardHeader>
-        <CardContent className="flex justify-center items-center py-8">
-          <LoadingSpinner size="lg" />
+        <CardContent className="space-y-4 sm:space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="space-y-2 flex-1">
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-5 w-16 rounded-full" />
+              </div>
+              <Skeleton className="h-4 w-72" />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Skeleton className="h-6 w-11 rounded-full" />
+              <Skeleton className="h-4 w-16" />
+            </div>
+          </div>
+          <Skeleton className="h-20 w-full rounded-lg" />
         </CardContent>
       </Card>
     );
