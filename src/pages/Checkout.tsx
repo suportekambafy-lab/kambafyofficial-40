@@ -586,31 +586,17 @@ const Checkout = () => {
       const isUUID = uuidRegex.test(productId);
       
       try {
-        // Carregar produto e settings simultaneamente
-        const [productResult, settingsResult] = await Promise.all([
-          supabase.from('products').select(`
-            *,
-            member_areas (
-              id,
-              name,
-              url
-            ),
-            profiles!products_user_id_fkey (
-              full_name
-            )
-          `).eq(isUUID ? 'id' : 'slug', productId).maybeSingle(),
-          
-          // Carregar settings em paralelo
-          (async () => {
-            let actualProductId = productId;
-            if (!isUUID) {
-              const { data } = await supabase.from('products').select('id').eq('slug', productId).maybeSingle();
-              if (data) actualProductId = data.id;
-            }
-            return supabase.from('checkout_customizations').select('*').eq('product_id', actualProductId).maybeSingle();
-          })()
-        ]);
-
+        // Primeiro, buscar o produto (sem join de profiles por segurança)
+        const productQuery = supabase.from('products').select(`
+          *,
+          member_areas (
+            id,
+            name,
+            url
+          )
+        `).eq(isUUID ? 'id' : 'slug', productId).maybeSingle();
+        
+        const productResult = await productQuery;
         const { data: productData, error: productError } = productResult;
         
         // Processar produto
@@ -619,42 +605,58 @@ const Checkout = () => {
           setError(`Erro ao carregar produto: ${productError.message}`);
           setProduct(null);
           setTimeout(() => setProductNotFound(true), 2000);
+          return;
         } else if (!productData) {
           setTimeout(() => {
             setError("Produto não encontrado");
             setProductNotFound(true);
           }, 2000);
           setProduct(null);
+          return;
         } else if (productData?.status === 'Rascunho') {
           setTimeout(() => {
             setError("Este produto ainda está em desenvolvimento e não está disponível para compra");
             setProductNotFound(true);
           }, 2000);
           setProduct(null);
+          return;
         } else if (productData?.status === 'Pendente') {
           setTimeout(() => {
             setError("Este produto está em revisão e não está disponível para compra no momento");
             setProductNotFound(true);
           }, 2000);
           setProduct(null);
-        } else if (productData?.status === 'Inativo') {
-          setProduct(productData);
-          setError("");
+          return;
         } else if (productData?.status === 'Banido') {
           setProduct(productData);
           setError("");
-        } else {
+        } else if (productData?.status === 'Inativo') {
           setProduct(productData);
           setError("");
+        } else {
+          // Carregar info do vendedor via RPC segura e settings em paralelo
+          const [sellerResult, settingsResult] = await Promise.all([
+            supabase.rpc('get_seller_public_info', { p_product_id: productData.id }),
+            supabase.from('checkout_customizations').select('*').eq('product_id', productData.id).maybeSingle()
+          ]);
+          
+          // Adicionar info do vendedor ao produto como propriedade dinâmica
+          const productWithSeller = {
+            ...productData,
+            profiles: sellerResult.data && sellerResult.data.length > 0 ? sellerResult.data[0] : null
+          };
+          
+          setProduct(productWithSeller);
+          setError("");
           setProductSEO(productData);
-        }
-
-        // Processar settings
-        const { data: settingsData, error: settingsError } = settingsResult;
-        if (settingsError) {
-          logger.error('Error loading checkout settings', { component: 'Checkout', data: settingsError });
-        } else if (settingsData?.settings) {
-          setCheckoutSettings(settingsData.settings);
+          
+          // Processar settings
+          const { data: settingsData, error: settingsError } = settingsResult;
+          if (settingsError) {
+            logger.error('Error loading checkout settings', { component: 'Checkout', data: settingsError });
+          } else if (settingsData?.settings) {
+            setCheckoutSettings(settingsData.settings);
+          }
         }
       } catch (error) {
         logger.error('Unexpected error loading checkout data', { component: 'Checkout', data: error });
