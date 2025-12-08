@@ -459,14 +459,16 @@ export default function UserIdentity() {
   const isReadOnly = verification?.status === 'aprovado';
   
   const getButtonText = () => {
-    if (!verification) {
+    // Se não existe registro no banco (sem id), é um novo envio
+    if (!verification?.id) {
       return 'Enviar para Verificação';
     }
+    // Se existe registro pendente no banco, já foi enviado
     if (verification.status === 'pendente') {
-      return 'Enviada para Verificação';
+      return 'Aguardando Verificação';
     }
     if (verification.status === 'rejeitado') {
-      return 'Atualizar Verificação';
+      return 'Reenviar para Verificação';
     }
     return 'Atualizar Verificação';
   };
