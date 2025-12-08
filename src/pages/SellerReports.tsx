@@ -320,6 +320,9 @@ export default function SellerReports() {
           <h1 className="text-lg md:text-xl font-bold text-foreground flex items-center gap-2">
             <FileText className="h-5 w-5" />
             {t('reports.title')}
+            <span className="text-[10px] font-semibold bg-primary text-primary-foreground px-1.5 py-0.5 rounded-full uppercase">
+              Novo
+            </span>
           </h1>
           <p className="text-xs md:text-sm text-muted-foreground">
             Análise completa de vendas
