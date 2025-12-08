@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { MapPin, Save, Loader2 } from "lucide-react";
+import { MapPin, Save, Loader2, Pencil } from "lucide-react";
 
 interface AddressData {
   country: string;
@@ -38,6 +38,7 @@ export function AddressCard() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [hasIdentity, setHasIdentity] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [address, setAddress] = useState<AddressData>({
     country: "",
     address_street: "",
@@ -61,7 +62,6 @@ export function AddressCard() {
     try {
       setLoading(true);
       
-      // Primeiro verificar se tem dados de identity_verification
       const { data: identityData } = await supabase
         .from('identity_verification')
         .select('country, address_street, address_number, address_complement, address_neighborhood, address_city, address_state, address_postal_code')
@@ -94,7 +94,6 @@ export function AddressCard() {
     try {
       setSaving(true);
 
-      // Se já tem identity_verification, atualizar lá
       if (hasIdentity) {
         const { error } = await supabase
           .from('identity_verification')
@@ -112,7 +111,6 @@ export function AddressCard() {
 
         if (error) throw error;
       } else {
-        // Se não tem, criar um registro básico
         const { error } = await supabase
           .from('identity_verification')
           .insert({
@@ -136,6 +134,7 @@ export function AddressCard() {
         setHasIdentity(true);
       }
 
+      setIsEditing(false);
       toast({
         title: "Endereço atualizado",
         description: "Seus dados de endereço foram salvos com sucesso."
@@ -157,6 +156,29 @@ export function AddressCard() {
   };
 
   const hasAddressData = address.address_street || address.address_city || address.country;
+  const countryName = COUNTRIES.find(c => c.code === address.country)?.name || address.country;
+
+  // Formatar endereço completo para exibição
+  const formatAddress = () => {
+    const parts = [];
+    
+    if (address.address_street) {
+      let street = address.address_street;
+      if (address.address_number) street += `, ${address.address_number}`;
+      if (address.address_complement) street += ` - ${address.address_complement}`;
+      parts.push(street);
+    }
+    
+    if (address.address_neighborhood) parts.push(address.address_neighborhood);
+    
+    const cityState = [address.address_city, address.address_state].filter(Boolean).join(', ');
+    if (cityState) parts.push(cityState);
+    
+    if (address.address_postal_code) parts.push(address.address_postal_code);
+    if (countryName) parts.push(countryName);
+    
+    return parts.join(' • ');
+  };
 
   if (loading) {
     return (
@@ -177,18 +199,61 @@ export function AddressCard() {
     );
   }
 
+  // Visualização compacta quando tem endereço e não está editando
+  if (hasAddressData && !isEditing) {
+    return (
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+                <MapPin className="h-4 w-4 md:h-5 md:w-5" />
+                Endereço
+              </CardTitle>
+              <CardDescription>Seus dados de endereço</CardDescription>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setIsEditing(true)}
+              className="shrink-0"
+            >
+              <Pencil className="h-4 w-4 mr-2" />
+              Editar
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">{formatAddress()}</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Formulário de edição
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
-          <MapPin className="h-4 w-4 md:h-5 md:w-5" />
-          Endereço
-        </CardTitle>
-        <CardDescription>
-          {hasAddressData 
-            ? "Seus dados de endereço" 
-            : "Adicione seu endereço para completar seu perfil"}
-        </CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+              <MapPin className="h-4 w-4 md:h-5 md:w-5" />
+              Endereço
+            </CardTitle>
+            <CardDescription>
+              {hasAddressData ? "Edite seus dados de endereço" : "Adicione seu endereço para completar seu perfil"}
+            </CardDescription>
+          </div>
+          {hasAddressData && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setIsEditing(false)}
+            >
+              Cancelar
+            </Button>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* País */}
