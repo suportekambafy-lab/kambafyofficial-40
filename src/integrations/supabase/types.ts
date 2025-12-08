@@ -4123,8 +4123,6 @@ export type Database = {
           status: string
           subscription_config: Json
           suggested_price: string
-          support_email: string
-          support_whatsapp: string
           type: string
         }[]
       }
@@ -4154,8 +4152,6 @@ export type Database = {
           status: string
           subscription_config: Json
           suggested_price: string
-          support_email: string
-          support_whatsapp: string
           type: string
         }[]
       }
