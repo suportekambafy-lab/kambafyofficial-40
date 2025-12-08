@@ -4104,29 +4104,28 @@ export type Database = {
           access_duration_type: string
           access_duration_value: number
           allow_custom_price: boolean
-          category: string
+          compare_at_price: string
+          cover: string
           custom_prices: Json
           description: string
+          fantasy_name: string
           id: string
-          image: string
           image_alt: string
           member_area_id: string
-          min_custom_price: string
+          minimum_price: string
           name: string
           payment_methods: Json
           price: string
           seo_description: string
-          seo_keywords: string[]
+          seo_keywords: string
           seo_title: string
           slug: string
           status: string
-          subscription_interval: string
-          subscription_interval_count: number
+          subscription_config: Json
+          suggested_price: string
           support_email: string
           support_whatsapp: string
-          tags: string[]
           type: string
-          video_url: string
         }[]
       }
       get_product_for_checkout_by_slug: {
@@ -4136,29 +4135,28 @@ export type Database = {
           access_duration_type: string
           access_duration_value: number
           allow_custom_price: boolean
-          category: string
+          compare_at_price: string
+          cover: string
           custom_prices: Json
           description: string
+          fantasy_name: string
           id: string
-          image: string
           image_alt: string
           member_area_id: string
-          min_custom_price: string
+          minimum_price: string
           name: string
           payment_methods: Json
           price: string
           seo_description: string
-          seo_keywords: string[]
+          seo_keywords: string
           seo_title: string
           slug: string
           status: string
-          subscription_interval: string
-          subscription_interval_count: number
+          subscription_config: Json
+          suggested_price: string
           support_email: string
           support_whatsapp: string
-          tags: string[]
           type: string
-          video_url: string
         }[]
       }
       get_seller_public_info: {
