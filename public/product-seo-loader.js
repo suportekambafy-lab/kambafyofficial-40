@@ -96,6 +96,65 @@
       console.log('✅ SEO aplicado para produto:', product.name);
     };
     
+    // Função para inicializar Facebook Pixel
+    const initFacebookPixel = async () => {
+      try {
+        // Buscar pixel settings do produto
+        const response = await fetch(`https://hcbkqygdtzpxvctfdqbd.supabase.co/rest/v1/facebook_pixel_settings?product_id=eq.${productId}&enabled=eq.true&select=pixel_id`, {
+          headers: {
+            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjYmtxeWdkdHpweHZjdGZkcWJkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1MDExODEsImV4cCI6MjA2NzA3NzE4MX0.RBg9ZnGehO-UWjtlLRdlGB0ELML9DH_ltChu2w9h62A',
+            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjYmtxeWdkdHpweHZjdGZkcWJkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1MDExODEsImV4cCI6MjA2NzA3NzE4MX0.RBg9ZnGehO-UWjtlLRdlGB0ELML9DH_ltChu2w9h62A'
+          }
+        });
+        
+        const pixelSettings = await response.json();
+        
+        if (pixelSettings && pixelSettings.length > 0) {
+          // Aguardar fbq estar disponível
+          const waitForFbq = () => {
+            return new Promise((resolve) => {
+              if (typeof window.fbq === 'function') {
+                resolve();
+              } else {
+                const checkInterval = setInterval(() => {
+                  if (typeof window.fbq === 'function') {
+                    clearInterval(checkInterval);
+                    resolve();
+                  }
+                }, 50);
+                // Timeout após 5 segundos
+                setTimeout(() => {
+                  clearInterval(checkInterval);
+                  resolve();
+                }, 5000);
+              }
+            });
+          };
+          
+          await waitForFbq();
+          
+          if (typeof window.fbq === 'function') {
+            window._fbPixelsInitialized = window._fbPixelsInitialized || {};
+            
+            pixelSettings.forEach(setting => {
+              const pixelId = setting.pixel_id;
+              if (pixelId && !window._fbPixelsInitialized[pixelId]) {
+                window.fbq('init', pixelId);
+                window._fbPixelsInitialized[pixelId] = true;
+                console.log('[FB PIXEL HTML] Initialized:', pixelId);
+              }
+            });
+            
+            // Enviar PageView
+            window.fbq('track', 'PageView');
+            console.log('[FB PIXEL HTML] PageView tracked');
+          }
+        }
+      } catch (error) {
+        console.error('[FB PIXEL] Error loading pixel settings:', error);
+      }
+    };
+    
     // Buscar dados do produto via Supabase
     const loadProductSEO = async () => {
       try {
@@ -116,7 +175,8 @@
       }
     };
     
-    // Executar imediatamente
+    // Executar imediatamente - SEO e Pixel em paralelo
     loadProductSEO();
+    initFacebookPixel();
   }
 })();
