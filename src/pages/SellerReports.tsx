@@ -27,7 +27,7 @@ interface Sale {
   seller_commission?: number;
 }
 
-// Helper function to calculate net revenue (after platform fee)
+// Helper function to calculate net revenue (after platform fee) with currency conversion
 const calculateNetRevenue = (sale: Sale): number => {
   // Use seller_commission if available, otherwise calculate 92% of gross
   let amount = parseFloat(sale.seller_commission?.toString() || '0');
@@ -35,6 +35,17 @@ const calculateNetRevenue = (sale: Sale): number => {
     const grossAmount = parseFloat(sale.amount || '0');
     amount = grossAmount * 0.92; // 8% platform fee
   }
+  
+  // Convert to KZ if different currency
+  if (sale.currency && sale.currency !== 'KZ') {
+    const exchangeRates: Record<string, number> = {
+      'EUR': 1053,
+      'MZN': 14.3
+    };
+    const rate = exchangeRates[sale.currency.toUpperCase()] || 1;
+    amount = Math.round(amount * rate);
+  }
+  
   return amount;
 };
 
