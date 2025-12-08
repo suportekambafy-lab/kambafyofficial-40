@@ -62,22 +62,38 @@ export default function SellerReports() {
         startDate.setDate(startDate.getDate() - days);
       }
 
-      // Buscar vendas
-      let query = supabase
-        .from('orders')
-        .select('id, created_at, status, amount, product_id')
-        .in('product_id', userProductIds)
-        .order('created_at', { ascending: false });
+      // Buscar TODAS as vendas com paginação para evitar limite de 1000
+      let allSales: Sale[] = [];
+      let page = 0;
+      const pageSize = 1000;
+      let hasMore = true;
 
-      if (startDate) {
-        query = query.gte('created_at', startDate.toISOString());
+      while (hasMore) {
+        let query = supabase
+          .from('orders')
+          .select('id, created_at, status, amount, product_id')
+          .in('product_id', userProductIds)
+          .order('created_at', { ascending: false })
+          .range(page * pageSize, (page + 1) * pageSize - 1);
+
+        if (startDate) {
+          query = query.gte('created_at', startDate.toISOString());
+        }
+
+        const { data: orders, error } = await query;
+
+        if (error) throw error;
+
+        if (orders && orders.length > 0) {
+          allSales = [...allSales, ...orders];
+          hasMore = orders.length === pageSize;
+          page++;
+        } else {
+          hasMore = false;
+        }
       }
 
-      const { data: orders, error } = await query;
-
-      if (error) throw error;
-
-      setSales(orders || []);
+      setSales(allSales);
     } catch (error) {
       console.error('Error loading sales data:', error);
     } finally {
