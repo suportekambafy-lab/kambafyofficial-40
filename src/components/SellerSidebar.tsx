@@ -445,10 +445,10 @@ export function TopBar() {
         notifications.push('Configure seu perfil');
       }
 
-      // Verificar se precisa verificar identidade
+      // Verificar se precisa verificar identidade ou adicionar endereço
       const { data: identityData } = await supabase
         .from('identity_verification')
-        .select('id, status')
+        .select('id, status, address_street, address_city, country')
         .eq('user_id', user.id)
         .maybeSingle();
 
@@ -458,6 +458,11 @@ export function TopBar() {
         notifications.push('Sua verificação de identidade está em análise');
       } else if (identityData.status === 'rejeitado') {
         notifications.push('Sua verificação foi rejeitada. Atualize seus dados');
+      } else if (identityData.status === 'verificado') {
+        // Usuário verificado mas sem endereço completo
+        if (!identityData.address_street && !identityData.address_city) {
+          notifications.push('Adicione seu endereço nas configurações da conta');
+        }
       }
 
       setNotifications(notifications);
