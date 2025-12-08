@@ -2662,6 +2662,7 @@ export type Database = {
           retained_fixed_amount: number | null
           retention_reason: string | null
           retention_release_date: string | null
+          timezone: string | null
           updated_at: string
           user_id: string
           withdrawal_methods: Json | null
@@ -2687,6 +2688,7 @@ export type Database = {
           retained_fixed_amount?: number | null
           retention_reason?: string | null
           retention_release_date?: string | null
+          timezone?: string | null
           updated_at?: string
           user_id: string
           withdrawal_methods?: Json | null
@@ -2712,6 +2714,7 @@ export type Database = {
           retained_fixed_amount?: number | null
           retention_reason?: string | null
           retention_release_date?: string | null
+          timezone?: string | null
           updated_at?: string
           user_id?: string
           withdrawal_methods?: Json | null
