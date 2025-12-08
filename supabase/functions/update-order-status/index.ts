@@ -281,6 +281,7 @@ serve(async (req) => {
             currency: orderData.currency,
             customer_email: orderData.customer_email,
             customer_name: orderData.customer_name,
+            customer_phone: orderData.customer_phone,
             product_id: orderData.product_id,
             product_name: product.name,
             payment_method: orderData.payment_method,
@@ -305,6 +306,7 @@ serve(async (req) => {
             product_name: product.name,
             customer_email: orderData.customer_email,
             customer_name: orderData.customer_name,
+            customer_phone: orderData.customer_phone,
             price: orderData.amount,
             currency: orderData.currency,
             status: 'completed', // ✅ Adicionar status explícito

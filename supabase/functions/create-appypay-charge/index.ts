@@ -549,6 +549,7 @@ Deno.serve(async (req) => {
             order_id: orderId,
             email: customerData.email,
             name: customerData.name,
+            phone: phoneNumber || customerData.phone,
             amount: orderDataToSave.amount,
             currency: orderDataToSave.currency,
             payment_method: paymentMethod,
