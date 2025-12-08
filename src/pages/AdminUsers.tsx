@@ -282,10 +282,8 @@ export default function AdminUsers() {
       
       const { data, error } = await supabase.functions.invoke('admin-impersonate-user', {
         body: {
-          targetUserId: user.user_id
-        },
-        headers: {
-          'Authorization': `Bearer ${adminJwt}`
+          targetUserId: user.user_id,
+          adminJwt: adminJwt
         }
       });
 
