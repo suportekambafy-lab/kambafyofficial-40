@@ -34,8 +34,16 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "@/contexts/TranslationContext";
 
+interface MenuItem {
+  label: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  showCount?: boolean;
+  isNew?: boolean;
+}
+
 // Função para obter itens do menu com traduções
-const getMenuItems = (t: (key: string) => string) => [
+const getMenuItems = (t: (key: string) => string): MenuItem[] => [
   {
     label: t('menu.dashboard'),
     href: "/vendedor",
