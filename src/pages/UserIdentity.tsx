@@ -859,7 +859,7 @@ export default function UserIdentity() {
           <div className="flex justify-end">
             <Button
               onClick={handleSubmit}
-              disabled={loading || uploadingFront || uploadingBack || verification?.status === 'pendente'}
+              disabled={loading || uploadingFront || uploadingBack || (verification?.id && verification?.status === 'pendente')}
               size="lg"
             >
               {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
