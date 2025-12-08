@@ -47,8 +47,18 @@ Deno.serve(async (req) => {
     )
 
     // ========== AUTENTICAÇÃO VIA JWT ==========
-    const authHeader = req.headers.get('Authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    const { targetUserId, adminJwt } = await req.json()
+    
+    // Primeiro tentar JWT do body, depois do header
+    let token = adminJwt
+    if (!token) {
+      const authHeader = req.headers.get('Authorization')
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.replace('Bearer ', '')
+      }
+    }
+    
+    if (!token) {
       console.error('❌ Token de autenticação ausente')
       return new Response(
         JSON.stringify({ success: false, error: 'Token de autenticação necessário' }),
@@ -56,7 +66,6 @@ Deno.serve(async (req) => {
       )
     }
 
-    const token = authHeader.replace('Bearer ', '')
     const adminPayload = await verifyAdminJWT(token)
     
     if (!adminPayload) {
@@ -69,8 +78,6 @@ Deno.serve(async (req) => {
 
     const adminEmail = adminPayload.email
     // ========== FIM DA AUTENTICAÇÃO ==========
-
-    const { targetUserId } = await req.json()
 
     if (!targetUserId) {
       throw new Error('targetUserId é obrigatório')
