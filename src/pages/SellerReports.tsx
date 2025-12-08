@@ -354,6 +354,27 @@ export default function SellerReports() {
     'CD': '🇨🇩',
     'Congo': '🇨🇩'
   };
+
+  // Métodos de pagamento por país
+  const appyPayMethods = ['express', 'reference', 'transfer']; // Angola
+  const mozambiqueMethods = ['mpesa', 'emola']; // Moçambique
+  const portugalMethods = ['mbway', 'multibanco']; // Portugal
+
+  const inferCountryFromPayment = (sale: Sale): string => {
+    // Se já tem país definido, usar
+    if (sale.customer_country) return sale.customer_country;
+    
+    const method = sale.payment_method?.toLowerCase() || '';
+    
+    // Inferir por método de pagamento
+    if (appyPayMethods.includes(method)) return 'Angola';
+    if (mozambiqueMethods.includes(method)) return 'Moçambique';
+    if (portugalMethods.includes(method)) return 'Portugal';
+    if (method === 'card' || method === 'stripe') return 'Internacional';
+    
+    return 'Desconhecido';
+  };
+
   const countryData = useMemo(() => {
     const completed = filteredSales.filter(s => s.status === 'completed');
     const byCountry: Record<string, {
@@ -361,7 +382,7 @@ export default function SellerReports() {
       receita: number;
     }> = {};
     completed.forEach(sale => {
-      const country = sale.customer_country || 'Desconhecido';
+      const country = inferCountryFromPayment(sale);
       if (!byCountry[country]) {
         byCountry[country] = {
           vendas: 0,
