@@ -354,7 +354,12 @@ export default function SellerReports() {
     'Namibia': '🇳🇦',
     'Namíbia': '🇳🇦',
     'CD': '🇨🇩',
-    'Congo': '🇨🇩'
+    'Congo': '🇨🇩',
+    'NL': '🇳🇱',
+    'Netherlands': '🇳🇱',
+    'The Netherlands': '🇳🇱',
+    'Países Baixos': '🇳🇱',
+    'Holanda': '🇳🇱'
   };
   const inferCountryFromPayment = (sale: Sale): string => {
     // Se já tem país definido, usar
