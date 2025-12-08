@@ -4,12 +4,22 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, AlertCircle } from 'lucide-react';
 import { useFacebookPixelList } from '@/hooks/useFacebookPixelList';
+import { toast } from 'sonner';
+
 interface FacebookPixelListProps {
   productId: string;
   onSaveSuccess: () => void;
 }
+
+// Validar se o Pixel ID é válido (apenas números, 15-16 dígitos)
+const isValidPixelId = (pixelId: string): boolean => {
+  const cleanId = pixelId.trim();
+  // Facebook Pixel IDs são números de 15-16 dígitos
+  return /^\d{15,16}$/.test(cleanId);
+};
+
 export function FacebookPixelList({
   productId,
   onSaveSuccess
@@ -23,16 +33,41 @@ export function FacebookPixelList({
   } = useFacebookPixelList(productId);
   const [newPixelId, setNewPixelId] = useState('');
   const [isAdding, setIsAdding] = useState(false);
+  const [pixelError, setPixelError] = useState('');
+
+  const handlePixelIdChange = (value: string) => {
+    // Permitir apenas números
+    const numericValue = value.replace(/\D/g, '');
+    setNewPixelId(numericValue);
+    
+    // Limpar erro ao digitar
+    if (pixelError) setPixelError('');
+  };
+
   const handleAddPixel = async () => {
-    if (!newPixelId.trim()) return;
+    if (!newPixelId.trim()) {
+      setPixelError('Digite o ID do Pixel');
+      return;
+    }
+    
+    if (!isValidPixelId(newPixelId)) {
+      setPixelError('O Pixel ID deve ter 15-16 dígitos numéricos');
+      toast.error('Pixel ID inválido', {
+        description: 'O ID do Facebook Pixel deve conter apenas números (15-16 dígitos). Encontre-o no Gerenciador de Eventos do Facebook.'
+      });
+      return;
+    }
+    
     const success = await addPixel({
-      pixelId: newPixelId,
+      pixelId: newPixelId.trim(),
       enabled: true
     });
     if (success) {
       setNewPixelId('');
       setIsAdding(false);
+      setPixelError('');
       onSaveSuccess();
+      toast.success('Pixel adicionado com sucesso!');
     }
   };
   const handleTogglePixel = async (pixelId: string, enabled: boolean, pixelIdValue: string) => {
@@ -79,19 +114,35 @@ export function FacebookPixelList({
               <CardContent className="pt-6 space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="new-pixel">ID do Novo Pixel</Label>
-                  <Input id="new-pixel" placeholder="Digite o ID do Facebook Pixel" value={newPixelId} onChange={e => setNewPixelId(e.target.value)} autoComplete="off" />
-                  <p className="text-xs text-muted-foreground">
-                    Encontre o Pixel ID no Gerenciador de Eventos do Facebook
-                  </p>
+                  <Input 
+                    id="new-pixel" 
+                    placeholder="Ex: 123456789012345" 
+                    value={newPixelId} 
+                    onChange={e => handlePixelIdChange(e.target.value)} 
+                    autoComplete="off"
+                    maxLength={16}
+                    className={pixelError ? 'border-destructive' : ''}
+                  />
+                  {pixelError ? (
+                    <p className="text-xs text-destructive flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" />
+                      {pixelError}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      O Pixel ID é um número de 15-16 dígitos. Encontre-o em: Facebook Events Manager → Data Sources → Seu Pixel
+                    </p>
+                  )}
                 </div>
 
                 <div className="flex gap-2">
-                  <Button onClick={handleAddPixel} className="flex-1">
+                  <Button onClick={handleAddPixel} className="flex-1" disabled={!newPixelId || newPixelId.length < 15}>
                     Adicionar
                   </Button>
                   <Button variant="outline" onClick={() => {
                 setIsAdding(false);
                 setNewPixelId('');
+                setPixelError('');
               }} className="flex-1">
                     Cancelar
                   </Button>
