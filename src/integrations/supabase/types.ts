@@ -4097,6 +4097,15 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_seller_public_info: {
+        Args: { p_product_id: string }
+        Returns: {
+          avatar_url: string
+          business_name: string
+          country: string
+          full_name: string
+        }[]
+      }
       get_seller_stats: { Args: { seller_id: string }; Returns: Json }
       get_top_sellers_of_month: {
         Args: never
