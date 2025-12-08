@@ -265,6 +265,16 @@ export default function AdminUsers() {
       return;
     }
 
+    const adminJwt = localStorage.getItem('admin_jwt');
+    if (!adminJwt) {
+      toast({
+        title: 'Erro',
+        description: 'Sessão admin expirada. Faça login novamente.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     setProcessingId(user.id);
     
     try {
@@ -272,8 +282,10 @@ export default function AdminUsers() {
       
       const { data, error } = await supabase.functions.invoke('admin-impersonate-user', {
         body: {
-          targetUserId: user.user_id,
-          adminEmail: admin.email
+          targetUserId: user.user_id
+        },
+        headers: {
+          'Authorization': `Bearer ${adminJwt}`
         }
       });
 
