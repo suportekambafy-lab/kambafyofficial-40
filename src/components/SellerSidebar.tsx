@@ -282,8 +282,8 @@ export function SellerSidebar() {
             >
               <item.icon className="h-5 w-5 flex-shrink-0" />
               <span className="flex-1">{item.label}</span>
-              {item.isNew && (
-                <span className="bg-yellow-400 text-slate-900 text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase">
+              {item.isNew === true && (
+                <span className="ml-auto bg-gradient-to-r from-yellow-400 to-orange-400 text-slate-900 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase shadow-sm animate-pulse">
                   Novo
                 </span>
               )}
