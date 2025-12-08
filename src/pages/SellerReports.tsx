@@ -18,6 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
+import { getCountryByPaymentMethod } from '@/utils/paymentMethods';
 import { pt } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 interface OrderBumpData {
@@ -356,41 +357,19 @@ export default function SellerReports() {
     'Congo': '🇨🇩'
   };
 
-  // Métodos de pagamento por país
-  const appyPayMethods = ['express', 'reference', 'transfer']; // Angola
-  const mozambiqueMethods = ['mpesa', 'emola']; // Moçambique
-  const portugalMethods = ['mbway', 'multibanco']; // Portugal
-
   const inferCountryFromPayment = (sale: Sale): string => {
     // Se já tem país definido, usar
     if (sale.customer_country) return sale.customer_country;
     
     const method = sale.payment_method?.toLowerCase() || '';
-    const currency = sale.currency?.toUpperCase() || '';
-    const email = sale.customer_email?.toLowerCase() || '';
     
-    // Inferir por método de pagamento
-    if (portugalMethods.includes(method)) return 'Portugal';
-    if (mozambiqueMethods.includes(method)) return 'Moçambique';
-    
-    // Inferir por domínio do email
-    if (email.endsWith('.pt') || email.includes('@sapo.pt') || email.includes('@gmail.pt')) return 'Portugal';
-    if (email.endsWith('.mz')) return 'Moçambique';
-    if (email.endsWith('.br') || email.includes('@gmail.com.br')) return 'Brasil';
-    
-    // AppyPay methods são Angola
-    if (appyPayMethods.includes(method)) return 'Angola';
-    
-    // Inferir por moeda
-    if (currency === 'KZ' || currency === 'AOA') return 'Angola';
-    if (currency === 'MZN') return 'Moçambique';
-    if (currency === 'EUR') return 'Portugal';
-    if (currency === 'USD') return 'Estados Unidos';
-    if (currency === 'GBP') return 'Reino Unido';
-    if (currency === 'BRL') return 'Brasil';
-    
-    // Card/Stripe sem moeda específica
-    if (method === 'card' || method === 'stripe') return 'Outro';
+    // Usar o mapeamento centralizado de métodos de pagamento
+    if (method) {
+      const countryInfo = getCountryByPaymentMethod(method);
+      if (countryInfo && countryInfo.name) {
+        return countryInfo.name;
+      }
+    }
     
     return 'Desconhecido';
   };
