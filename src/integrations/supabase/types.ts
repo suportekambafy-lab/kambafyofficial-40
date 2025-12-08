@@ -4112,17 +4112,17 @@ export type Database = {
           id: string
           image_alt: string
           member_area_id: string
-          minimum_price: string
+          minimum_price: number
           name: string
           payment_methods: Json
           price: string
           seo_description: string
-          seo_keywords: string
+          seo_keywords: string[]
           seo_title: string
           slug: string
           status: string
           subscription_config: Json
-          suggested_price: string
+          suggested_price: number
           type: string
         }[]
       }
@@ -4141,17 +4141,17 @@ export type Database = {
           id: string
           image_alt: string
           member_area_id: string
-          minimum_price: string
+          minimum_price: number
           name: string
           payment_methods: Json
           price: string
           seo_description: string
-          seo_keywords: string
+          seo_keywords: string[]
           seo_title: string
           slug: string
           status: string
           subscription_config: Json
-          suggested_price: string
+          suggested_price: number
           type: string
         }[]
       }
