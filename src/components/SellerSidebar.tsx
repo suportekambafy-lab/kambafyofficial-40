@@ -458,9 +458,10 @@ export function TopBar() {
         notifications.push('Sua verificação de identidade está em análise');
       } else if (identityData.status === 'rejeitado') {
         notifications.push('Sua verificação foi rejeitada. Atualize seus dados');
-      } else if (identityData.status === 'verificado') {
-        // Usuário verificado mas sem endereço completo
-        if (!identityData.address_street && !identityData.address_city) {
+      } else if (identityData.status === 'verificado' || identityData.status === 'aprovado') {
+        // Usuário verificado mas sem endereço - só mostra se não tiver NENHUM campo de endereço preenchido
+        const hasAddress = identityData.address_street || identityData.address_city || identityData.country;
+        if (!hasAddress) {
           notifications.push('Adicione seu endereço nas configurações da conta');
         }
       }
