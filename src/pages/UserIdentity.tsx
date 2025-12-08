@@ -408,7 +408,8 @@ export default function UserIdentity() {
         status: 'pendente'
       };
 
-      if (verification) {
+      // Verificar se existe um registro REAL no banco (com id válido)
+      if (verification?.id) {
         const { user_id, ...updateData } = verificationData;
         
         const { error } = await supabase
@@ -419,6 +420,7 @@ export default function UserIdentity() {
 
         if (error) throw error;
       } else {
+        // Criar novo registro
         const { error } = await supabase
           .from('identity_verification')
           .insert([verificationData]);
