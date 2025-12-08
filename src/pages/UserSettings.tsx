@@ -302,8 +302,8 @@ export default function UserSettings() {
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="profile">{t('settings.tab.profile')}</TabsTrigger>
             <TabsTrigger value="account">{t('settings.tab.account')}</TabsTrigger>
-            <TabsTrigger value="language">Idioma</TabsTrigger>
             <TabsTrigger value="security">{t('settings.tab.security')}</TabsTrigger>
+            <TabsTrigger value="language">Idioma</TabsTrigger>
           </TabsList>
           
           <TabsContent value="profile" className="space-y-4 md:space-y-6">
