@@ -131,7 +131,11 @@ const WITHDRAWAL_METHOD_TYPES = [
   },
 ];
 
-export function BankingInfo() {
+interface BankingInfoProps {
+  isVerified?: boolean;
+}
+
+export function BankingInfo({ isVerified = false }: BankingInfoProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const { settings, requires2FA, logSecurityEvent } = use2FA();
@@ -538,6 +542,8 @@ export function BankingInfo() {
             size="sm" 
             onClick={handleAddClick}
             className="gap-1"
+            disabled={!isVerified}
+            title={!isVerified ? "Verifique sua identidade para adicionar métodos de recebimento" : ""}
           >
             <Plus className="h-4 w-4" />
             <span className="hidden sm:inline">Adicionar</span>
@@ -608,9 +614,15 @@ export function BankingInfo() {
           <div className="text-center py-6">
             <Wallet className="h-10 w-10 mx-auto text-muted-foreground/50 mb-3" />
             <p className="text-sm text-muted-foreground mb-4">
-              Nenhum método de recebimento configurado
+              {!isVerified 
+                ? "Verifique sua identidade para adicionar métodos de recebimento"
+                : "Nenhum método de recebimento configurado"}
             </p>
-            <Button variant="outline" onClick={handleAddClick}>
+            <Button 
+              variant="outline" 
+              onClick={handleAddClick}
+              disabled={!isVerified}
+            >
               <Plus className="h-4 w-4 mr-2" />
               Adicionar Método
             </Button>
