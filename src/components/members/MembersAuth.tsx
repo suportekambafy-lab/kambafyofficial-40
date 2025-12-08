@@ -100,58 +100,17 @@ export function MembersAuthProvider({ children }: MembersAuthProviderProps) {
     try {
       setIsLoading(true);
 
-      // Verificar se é o email de validação especial
-      if (email.toLowerCase().trim() === 'validar@kambafy.com') {
-        // Email de validação tem acesso a todas as áreas
-        // Criar sessão via função
-        const { data: sessionData, error } = await supabase.functions.invoke('member-area-login', {
-          body: {
-            memberAreaId,
-            studentEmail: email,
-            studentName: 'Validação Kambafy'
-          }
-        });
+      // Normalizar email
+      const normalizedEmail = email.toLowerCase().trim();
+      const studentName = normalizedEmail === 'validar@kambafy.com' ? 'Validação Kambafy' : name;
 
-        if (error) {
-          console.error('Erro ao fazer login:', error);
-          return false;
-        }
-
-        const newSession: MemberSession = {
-          id: sessionData.sessionId || crypto.randomUUID(),
-          memberAreaId,
-          studentEmail: email,
-          studentName: 'Validação Kambafy',
-          sessionToken: sessionData.sessionToken,
-          expiresAt: sessionData.expiresAt
-        };
-
-      setSession(newSession);
-      localStorage.setItem('membersSession', JSON.stringify(newSession));
-      
-      await loadMemberArea(memberAreaId);
-      return true;
-      }
-
-      // Para outros emails, verificar se o estudante tem acesso
-      const { data: student } = await supabase
-        .from('member_area_students')
-        .select('*')
-        .eq('member_area_id', memberAreaId)
-        .eq('student_email', email)
-        .maybeSingle();
-
-      if (!student) {
-        console.error('Acesso negado para este email');
-        return false;
-      }
-
-      // Criar sessão via função
+      // Chamar edge function que faz toda a verificação de acesso
+      // A edge function verifica: member_area_students, orders com produto vinculado, e se é criador
       const { data: sessionData, error } = await supabase.functions.invoke('member-area-login', {
         body: {
           memberAreaId,
-          studentEmail: email,
-          studentName: name
+          studentEmail: normalizedEmail,
+          studentName
         }
       });
 
@@ -160,13 +119,18 @@ export function MembersAuthProvider({ children }: MembersAuthProviderProps) {
         return false;
       }
 
+      if (!sessionData?.success) {
+        console.error('Login falhou:', sessionData?.error);
+        return false;
+      }
+
       const newSession: MemberSession = {
-        id: sessionData.sessionId,
+        id: sessionData.data?.sessionToken || crypto.randomUUID(),
         memberAreaId,
-        studentEmail: email,
-        studentName: name,
-        sessionToken: sessionData.sessionToken,
-        expiresAt: sessionData.expiresAt
+        studentEmail: normalizedEmail,
+        studentName,
+        sessionToken: sessionData.data?.sessionToken,
+        expiresAt: sessionData.data?.expiresAt
       };
 
       setSession(newSession);
