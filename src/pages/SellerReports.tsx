@@ -365,12 +365,23 @@ export default function SellerReports() {
     if (sale.customer_country) return sale.customer_country;
     
     const method = sale.payment_method?.toLowerCase() || '';
+    const currency = sale.currency?.toUpperCase() || '';
     
     // Inferir por método de pagamento
     if (appyPayMethods.includes(method)) return 'Angola';
     if (mozambiqueMethods.includes(method)) return 'Moçambique';
     if (portugalMethods.includes(method)) return 'Portugal';
-    if (method === 'card' || method === 'stripe') return 'Internacional';
+    
+    // Inferir por moeda
+    if (currency === 'KZ' || currency === 'AOA') return 'Angola';
+    if (currency === 'MZN') return 'Moçambique';
+    if (currency === 'EUR') return 'Europa';
+    if (currency === 'USD') return 'Estados Unidos';
+    if (currency === 'GBP') return 'Reino Unido';
+    if (currency === 'BRL') return 'Brasil';
+    
+    // Card/Stripe sem moeda específica
+    if (method === 'card' || method === 'stripe') return 'Outro';
     
     return 'Desconhecido';
   };
