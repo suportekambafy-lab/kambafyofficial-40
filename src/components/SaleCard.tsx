@@ -146,7 +146,9 @@ export const SaleCard = memo(({ sale }: SaleCardProps) => {
           
           <div className="flex items-center gap-2">
             <Calendar className="w-4 h-4 text-gray-400 flex-shrink-0" />
-            <span>{new Date(sale.created_at).toLocaleDateString('pt-BR')}</span>
+            <span>
+              {new Date(sale.created_at).toLocaleDateString('pt-BR')} às {new Date(sale.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+            </span>
           </div>
           
           <div className="flex items-center gap-2">
