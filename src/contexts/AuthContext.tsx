@@ -183,25 +183,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(session.user);
         
         // Verificar se é uma nova conta criada via Google OAuth
+        // Ignorar verificação se for admin (tem is_admin no metadata)
         if (event === 'SIGNED_IN' && session?.user) {
-          const userCreatedAt = new Date(session.user.created_at);
-          const now = new Date();
-          const secondsSinceCreation = (now.getTime() - userCreatedAt.getTime()) / 1000;
+          const isAdmin = session.user.user_metadata?.is_admin === true;
           
-          // Se a conta foi criada há menos de 10 segundos, é um novo registro via Google
-          if (secondsSinceCreation < 10) {
-            console.log('❌ Nova conta detectada via Google OAuth - bloqueando');
-            toast({
-              title: "Cadastro não permitido",
-              description: "Google é apenas para login. Cadastre-se primeiro com email e senha.",
-              variant: "destructive"
-            });
+          if (!isAdmin) {
+            const userCreatedAt = new Date(session.user.created_at);
+            const now = new Date();
+            const secondsSinceCreation = (now.getTime() - userCreatedAt.getTime()) / 1000;
             
-            // Deslogar o usuário
-            await supabase.auth.signOut();
-            clearAuth();
-            setLoading(false);
-            return;
+            // Se a conta foi criada há menos de 10 segundos, é um novo registro via Google
+            if (secondsSinceCreation < 10) {
+              console.log('❌ Nova conta detectada via Google OAuth - bloqueando');
+              toast({
+                title: "Cadastro não permitido",
+                description: "Google é apenas para login. Cadastre-se primeiro com email e senha.",
+                variant: "destructive"
+              });
+              
+              // Deslogar o usuário
+              await supabase.auth.signOut();
+              clearAuth();
+              setLoading(false);
+              return;
+            }
+          } else {
+            console.log('✅ Login de admin detectado - ignorando verificação de Google OAuth');
           }
         }
         
