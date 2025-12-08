@@ -4213,6 +4213,7 @@ export type Database = {
           total_revenue: number
         }[]
       }
+      is_admin: { Args: never; Returns: boolean }
       is_admin_session: { Args: never; Returns: boolean }
       is_admin_user: { Args: { check_email: string }; Returns: boolean }
       is_current_user_admin: { Args: never; Returns: boolean }
