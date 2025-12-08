@@ -264,11 +264,11 @@ export default function UserIdentity() {
     if (url && user) {
       console.log('✅ Upload bem-sucedido, atualizando estado local');
       
-      const newVerification = verification ? {
+      const newVerification: IdentityVerification = verification ? {
         ...verification,
         [`document_${type}_url`]: url
       } : {
-        id: '',
+        id: undefined as unknown as string, // Marcado como undefined para não confundir com ID existente
         full_name: formData.full_name,
         birth_date: formData.birth_date,
         document_type: formData.document_type,
