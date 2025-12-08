@@ -36,17 +36,15 @@ export const FacebookPixelTracker = ({ productId, productUserId }: FacebookPixel
     return uuidv4();
   }, []);
 
-  // Buscar user_id do produto se não fornecido
-  const fetchProductUserId = useCallback(async () => {
-    if (userIdRef.current) return userIdRef.current;
-
+  // Buscar user_id e product UUID do produto se não fornecido
+  const fetchProductInfo = useCallback(async () => {
     try {
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
       const isUUID = uuidRegex.test(productId);
       
       const { data: product, error } = await supabase
         .from('products')
-        .select('user_id')
+        .select('id, user_id')
         .eq(isUUID ? 'id' : 'slug', productId)
         .single();
 
@@ -56,7 +54,7 @@ export const FacebookPixelTracker = ({ productId, productUserId }: FacebookPixel
       }
 
       userIdRef.current = product.user_id;
-      return product.user_id;
+      return { userId: product.user_id, productUUID: product.id };
     } catch (error) {
       console.error('❌ [FB PIXEL] Error fetching product:', error);
       return null;
@@ -73,16 +71,18 @@ export const FacebookPixelTracker = ({ productId, productUserId }: FacebookPixel
 
       console.log('🔍 [FB PIXEL] Fetching settings for product:', productId);
 
-      const userId = await fetchProductUserId();
-      if (!userId) return;
+      const productInfo = await fetchProductInfo();
+      if (!productInfo) return;
+
+      const { userId, productUUID } = productInfo;
 
       try {
-        // Buscar TODOS os pixels ativos para o produto
+        // Buscar pixels ativos APENAS para este produto específico
         const { data: pixels, error } = await supabase
           .from('facebook_pixel_settings')
           .select('pixel_id')
           .eq('user_id', userId)
-          .eq('product_id', productId)
+          .eq('product_id', productUUID)  // Usar o UUID real do produto
           .eq('enabled', true);
 
         if (error) {
@@ -174,7 +174,7 @@ export const FacebookPixelTracker = ({ productId, productUserId }: FacebookPixel
     };
 
     initializePixels();
-  }, [productId, fetchProductUserId, generateEventId]);
+  }, [productId, fetchProductInfo, generateEventId]);
 
   // Handler para evento de compra
   useEffect(() => {
@@ -211,7 +211,8 @@ export const FacebookPixelTracker = ({ productId, productUserId }: FacebookPixel
 
       // 2. Enviar evento server-side (Conversions API)
       try {
-        const userId = userIdRef.current || await fetchProductUserId();
+        const productInfo = await fetchProductInfo();
+        const userId = userIdRef.current || productInfo?.userId;
         
         if (!userId) {
           console.error('❌ [FB PIXEL] Cannot send server event: no userId');
@@ -250,7 +251,7 @@ export const FacebookPixelTracker = ({ productId, productUserId }: FacebookPixel
     return () => {
       window.removeEventListener('purchase-completed', handlePurchase as EventListener);
     };
-  }, [productId, generateEventId, fetchProductUserId]);
+  }, [productId, generateEventId, fetchProductInfo]);
 
   // Noscript fallback para SEO/accessibility
   if (pixelIdsRef.current.length > 0) {
