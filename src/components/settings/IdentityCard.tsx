@@ -162,7 +162,7 @@ export function IdentityCard() {
             Para receber pagamentos e ter acesso completo à plataforma, você precisa verificar sua identidade.
           </p>
           <Button asChild>
-            <Link to="/vendedor/identidade">
+            <Link to="/identidade">
               <FileText className="h-4 w-4 mr-2" />
               Verificar Identidade
             </Link>
@@ -239,7 +239,7 @@ export function IdentityCard() {
           </p>
           {(identity.status === 'pendente' || identity.status === 'rejeitado') && (
             <Button variant="outline" size="sm" asChild>
-              <Link to="/vendedor/identidade">
+              <Link to="/identidade">
                 <ExternalLink className="h-3 w-3 mr-1" />
                 Editar
               </Link>
