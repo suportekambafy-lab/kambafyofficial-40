@@ -4097,6 +4097,70 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_product_for_checkout: {
+        Args: { p_product_id: string }
+        Returns: {
+          access_duration_description: string
+          access_duration_type: string
+          access_duration_value: number
+          allow_custom_price: boolean
+          category: string
+          custom_prices: Json
+          description: string
+          id: string
+          image: string
+          image_alt: string
+          member_area_id: string
+          min_custom_price: string
+          name: string
+          payment_methods: Json
+          price: string
+          seo_description: string
+          seo_keywords: string[]
+          seo_title: string
+          slug: string
+          status: string
+          subscription_interval: string
+          subscription_interval_count: number
+          support_email: string
+          support_whatsapp: string
+          tags: string[]
+          type: string
+          video_url: string
+        }[]
+      }
+      get_product_for_checkout_by_slug: {
+        Args: { p_slug: string }
+        Returns: {
+          access_duration_description: string
+          access_duration_type: string
+          access_duration_value: number
+          allow_custom_price: boolean
+          category: string
+          custom_prices: Json
+          description: string
+          id: string
+          image: string
+          image_alt: string
+          member_area_id: string
+          min_custom_price: string
+          name: string
+          payment_methods: Json
+          price: string
+          seo_description: string
+          seo_keywords: string[]
+          seo_title: string
+          slug: string
+          status: string
+          subscription_interval: string
+          subscription_interval_count: number
+          support_email: string
+          support_whatsapp: string
+          tags: string[]
+          type: string
+          video_url: string
+        }[]
+      }
       get_seller_public_info: {
         Args: { p_product_id: string }
         Returns: {
