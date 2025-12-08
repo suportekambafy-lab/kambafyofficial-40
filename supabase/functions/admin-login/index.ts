@@ -25,7 +25,7 @@ async function generateJWT(email: string): Promise<string> {
     role: 'admin'
   })
     .setProtectedHeader({ alg: 'HS256' })
-    .setExpirationTime('1h')
+    .setExpirationTime('24h') // Aumentado para 24 horas
     .setIssuedAt()
     .sign(secret)
 
