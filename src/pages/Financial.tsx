@@ -267,26 +267,6 @@ export default function Financial() {
             </CardContent>
           </Card>}
 
-        {isVerified && !hasIban && <Card className="border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20">
-            <CardContent className="pt-6">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
-                <div>
-                  <h3 className="font-semibold text-yellow-900 dark:text-yellow-100">
-                    Adicione suas Informações Bancárias
-                  </h3>
-                  <p className="text-sm text-yellow-800 dark:text-yellow-200 mt-1">
-                    Configure seu IBAN para receber saques.
-                  </p>
-                  <Link to="/settings?tab=banking">
-                    <Button variant="outline" size="sm" className="mt-3">
-                      Adicionar IBAN
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            </CardContent>
-          </Card>}
 
         {/* Cards de Saldo */}
         <div className="grid gap-3 grid-cols-1 md:grid-cols-2">
