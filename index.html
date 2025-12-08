@@ -116,13 +116,17 @@
       n.callMethod.apply(n,arguments):n.queue.push(arguments)};
       if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
       n.queue=[];t=b.createElement(e);t.async=!0;
-      t.src=v;s=b.getElementsByTagName(e)[0];
+      t.src=v;
+      t.onerror=function(){console.error('[FB SDK] Failed to load fbevents.js');};
+      t.onload=function(){console.log('[FB SDK] fbevents.js loaded successfully');};
+      s=b.getElementsByTagName(e)[0];
       s.parentNode.insertBefore(t,s)}(window, document,'script',
       'https://connect.facebook.net/en_US/fbevents.js');
       
       // Flag para tracking de pixels inicializados
       window._fbPixelsInitialized = window._fbPixelsInitialized || {};
     </script>
+    <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=PIXEL_ID&ev=PageView&noscript=1"/></noscript>
     <!-- End Facebook Pixel Base Code -->
     
     <meta property="og:title" content="Kambafy - Transforme seu conhecimento em renda">
