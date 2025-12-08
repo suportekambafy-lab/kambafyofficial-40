@@ -4163,7 +4163,7 @@ export type Database = {
           access_duration_value: number
           allow_affiliates: boolean
           allow_custom_price: boolean
-          commission_rate: string
+          commission_rate: number
           compare_at_price: string
           cover: string
           custom_prices: Json
@@ -4177,7 +4177,7 @@ export type Database = {
           payment_methods: Json
           price: string
           seo_description: string
-          seo_keywords: string
+          seo_keywords: string[]
           seo_title: string
           slug: string
           status: string
