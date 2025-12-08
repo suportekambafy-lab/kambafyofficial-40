@@ -175,7 +175,7 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
           setError("Produto não encontrado");
           setProductNotFound(true);
         }, 2000);
-      } else if (productData?.status === 'Rascunho') {
+      } else if (productData?.status === 'Rascunho' || productData?.status === 'Draft') {
         setTimeout(() => {
           setError("Este produto ainda está em desenvolvimento e não está disponível para compra");
           setProductNotFound(true);
