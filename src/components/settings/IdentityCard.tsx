@@ -237,12 +237,14 @@ export function IdentityCard() {
               <> • Verificado em {new Date(identity.verified_at).toLocaleDateString('pt-BR')}</>
             )}
           </p>
-          <Button variant="outline" size="sm" asChild>
-            <Link to="/vendedor/identidade">
-              <ExternalLink className="h-3 w-3 mr-1" />
-              Editar
-            </Link>
-          </Button>
+          {(identity.status === 'pendente' || identity.status === 'rejeitado') && (
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/vendedor/identidade">
+                <ExternalLink className="h-3 w-3 mr-1" />
+                Editar
+              </Link>
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>
