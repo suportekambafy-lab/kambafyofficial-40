@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useCustomToast } from '@/hooks/useCustomToast';
 import { useCloudflareUpload } from '@/hooks/useCloudflareUpload';
 import { format } from 'date-fns';
-import { Loader2, Upload, X, Shield, CheckCircle, AlertCircle, Clock, ArrowLeft } from 'lucide-react';
+import { Loader2, Upload, X, Shield, CheckCircle, AlertCircle, Clock, ArrowLeft, MapPin } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 
@@ -26,16 +26,104 @@ interface IdentityVerification {
   rejection_reason?: string;
   created_at: string;
   updated_at: string;
+  country?: string;
+  address_street?: string;
+  address_number?: string;
+  address_complement?: string;
+  address_neighborhood?: string;
+  address_city?: string;
+  address_state?: string;
+  address_postal_code?: string;
 }
 
-const documentTypes = [
-  { value: 'BI', label: 'Bilhete de Identidade (BI)' },
-  { value: 'RG', label: 'RG (Registro Geral)' },
-  { value: 'Passaporte', label: 'Passaporte' },
-  { value: 'Cartao_Residencia', label: 'Cartão de Residência' },
-  { value: 'Carta_Conducao', label: 'Carta de Condução / Carteira de Motorista' },
-  { value: 'Outro', label: 'Outro' }
-];
+// Países suportados com seus tipos de documentos
+const countriesWithDocuments = {
+  AO: {
+    name: 'Angola',
+    flag: '🇦🇴',
+    documents: [
+      { value: 'BI', label: 'Bilhete de Identidade (BI)' },
+      { value: 'Passaporte', label: 'Passaporte' },
+      { value: 'Carta_Conducao', label: 'Carta de Condução' },
+      { value: 'Cartao_Residencia', label: 'Cartão de Residência' },
+    ]
+  },
+  BR: {
+    name: 'Brasil',
+    flag: '🇧🇷',
+    documents: [
+      { value: 'RG', label: 'RG (Registro Geral)' },
+      { value: 'CNH', label: 'CNH (Carteira Nacional de Habilitação)' },
+      { value: 'Passaporte', label: 'Passaporte' },
+      { value: 'RNE', label: 'RNE (Registro Nacional de Estrangeiros)' },
+    ]
+  },
+  PT: {
+    name: 'Portugal',
+    flag: '🇵🇹',
+    documents: [
+      { value: 'CC', label: 'Cartão de Cidadão (CC)' },
+      { value: 'BI', label: 'Bilhete de Identidade (BI)' },
+      { value: 'Passaporte', label: 'Passaporte' },
+      { value: 'Titulo_Residencia', label: 'Título de Residência' },
+      { value: 'Carta_Conducao', label: 'Carta de Condução' },
+    ]
+  },
+  MZ: {
+    name: 'Moçambique',
+    flag: '🇲🇿',
+    documents: [
+      { value: 'BI', label: 'Bilhete de Identidade (BI)' },
+      { value: 'Passaporte', label: 'Passaporte' },
+      { value: 'DIRE', label: 'DIRE (Documento de Identificação de Residente Estrangeiro)' },
+      { value: 'Carta_Conducao', label: 'Carta de Condução' },
+    ]
+  },
+  CV: {
+    name: 'Cabo Verde',
+    flag: '🇨🇻',
+    documents: [
+      { value: 'BI', label: 'Bilhete de Identidade (BI)' },
+      { value: 'Passaporte', label: 'Passaporte' },
+      { value: 'Carta_Conducao', label: 'Carta de Condução' },
+    ]
+  },
+  ST: {
+    name: 'São Tomé e Príncipe',
+    flag: '🇸🇹',
+    documents: [
+      { value: 'BI', label: 'Bilhete de Identidade (BI)' },
+      { value: 'Passaporte', label: 'Passaporte' },
+    ]
+  },
+  GW: {
+    name: 'Guiné-Bissau',
+    flag: '🇬🇼',
+    documents: [
+      { value: 'BI', label: 'Bilhete de Identidade (BI)' },
+      { value: 'Passaporte', label: 'Passaporte' },
+    ]
+  },
+  TL: {
+    name: 'Timor-Leste',
+    flag: '🇹🇱',
+    documents: [
+      { value: 'BI', label: 'Bilhete de Identidade (BI)' },
+      { value: 'Passaporte', label: 'Passaporte' },
+    ]
+  },
+  OTHER: {
+    name: 'Outro País',
+    flag: '🌍',
+    documents: [
+      { value: 'Passaporte', label: 'Passaporte' },
+      { value: 'Cartao_Residencia', label: 'Cartão/Título de Residência' },
+      { value: 'Outro', label: 'Outro Documento' },
+    ]
+  }
+};
+
+type CountryCode = keyof typeof countriesWithDocuments;
 
 export default function UserIdentity() {
   const { user } = useAuth();
@@ -45,10 +133,18 @@ export default function UserIdentity() {
   const [loading, setLoading] = useState(false);
   const [verification, setVerification] = useState<IdentityVerification | null>(null);
   const [formData, setFormData] = useState({
+    country: '' as CountryCode | '',
     full_name: '',
     birth_date: '',
     document_type: '',
-    document_number: ''
+    document_number: '',
+    address_street: '',
+    address_number: '',
+    address_complement: '',
+    address_neighborhood: '',
+    address_city: '',
+    address_state: '',
+    address_postal_code: ''
   });
 
   const loadVerification = async () => {
@@ -66,10 +162,18 @@ export default function UserIdentity() {
       if (data) {
         setVerification(data as IdentityVerification);
         setFormData({
+          country: (data.country as CountryCode) || '',
           full_name: data.full_name,
           birth_date: data.birth_date,
           document_type: data.document_type,
-          document_number: data.document_number
+          document_number: data.document_number,
+          address_street: data.address_street || '',
+          address_number: data.address_number || '',
+          address_complement: data.address_complement || '',
+          address_neighborhood: data.address_neighborhood || '',
+          address_city: data.address_city || '',
+          address_state: data.address_state || '',
+          address_postal_code: data.address_postal_code || ''
         });
       }
     } catch (error) {
@@ -87,13 +191,25 @@ export default function UserIdentity() {
   }, [user]);
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const newData = { ...prev, [field]: value };
+      // Limpar tipo de documento se o país mudar
+      if (field === 'country') {
+        newData.document_type = '';
+      }
+      return newData;
+    });
   };
 
   // Verificar se o tipo de documento precisa de verso
-  // Apenas Passaporte não precisa de verso, todos os outros precisam
   const documentNeedsBackside = (docType: string) => {
     return docType !== 'Passaporte' && docType !== '';
+  };
+
+  // Obter documentos disponíveis para o país selecionado
+  const getAvailableDocuments = () => {
+    if (!formData.country) return [];
+    return countriesWithDocuments[formData.country]?.documents || [];
   };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, type: 'front' | 'back') => {
@@ -128,10 +244,7 @@ export default function UserIdentity() {
     
     if (url && user) {
       console.log('✅ Upload bem-sucedido, atualizando estado local');
-      console.log('📋 Dados do formulário:', formData);
-      console.log('📋 Verificação existente:', verification);
       
-      // ✅ Atualizar estado local primeiro
       const newVerification = verification ? {
         ...verification,
         [`document_${type}_url`]: url
@@ -148,14 +261,9 @@ export default function UserIdentity() {
       } as IdentityVerification;
       
       setVerification(newVerification);
-      console.log('✅ Estado local atualizado');
 
-      // ✅ SALVAR NO BANCO DE DADOS - apenas se já existir verificação
-      // NÃO criar automaticamente - usuário precisa clicar no botão de enviar
       try {
         if (verification?.id) {
-          console.log('🔄 Atualizando verificação existente:', verification.id);
-          
           const { data, error } = await supabase
             .from('identity_verification')
             .update({ [`document_${type}_url`]: url })
@@ -163,12 +271,9 @@ export default function UserIdentity() {
             .eq('user_id', user.id)
             .select();
 
-          console.log('📤 Resultado do UPDATE:', { data, error });
-
           if (error) throw error;
           
           if (data && data[0]) {
-            console.log('✅ Verificação atualizada no banco:', data[0]);
             setVerification(data[0] as IdentityVerification);
           }
           
@@ -178,7 +283,6 @@ export default function UserIdentity() {
             variant: 'success'
           });
         } else {
-          // ✅ Apenas informar que o documento foi carregado, não submeter automaticamente
           const requiresBackside = documentNeedsBackside(formData.document_type);
           
           if (type === 'front' && requiresBackside) {
@@ -197,33 +301,21 @@ export default function UserIdentity() {
         }
       } catch (error: any) {
         console.error('❌ Erro ao salvar documento no banco:', error);
-        console.error('❌ Detalhes do erro:', {
-          message: error?.message,
-          details: error?.details,
-          hint: error?.hint,
-          code: error?.code
-        });
-        
         toast({
           title: 'Erro',
           message: error?.message || 'Erro ao salvar documento',
           variant: 'error'
         });
       }
-    } else {
-      console.log('❌ Upload falhou ou usuário não autenticado');
     }
   };
 
   const removeDocument = async (type: 'front' | 'back') => {
-    // Apenas remove do estado local e do banco
-    // Cloudflare R2 files não precisam ser deletados manualmente
     setVerification(prev => prev ? {
       ...prev,
       [`document_${type}_url`]: undefined
     } : null);
 
-    // Atualizar no banco se já existe verificação
     if (verification?.id && user) {
       try {
         await supabase
@@ -238,16 +330,25 @@ export default function UserIdentity() {
   };
 
   const handleSubmit = async () => {
-    if (!user || !formData.full_name || !formData.birth_date || !formData.document_type || !formData.document_number) {
+    if (!user || !formData.country || !formData.full_name || !formData.birth_date || !formData.document_type || !formData.document_number) {
       toast({
         title: 'Campos obrigatórios',
-        message: 'Preencha todos os campos obrigatórios',
+        message: 'Preencha todos os campos obrigatórios (País, Nome, Data de Nascimento, Tipo e Número do Documento)',
         variant: 'error'
       });
       return;
     }
 
-    // ✅ VALIDAÇÃO OBRIGATÓRIA: Verificar se os documentos foram anexados
+    // Validar morada obrigatória
+    if (!formData.address_street || !formData.address_city || !formData.address_state) {
+      toast({
+        title: 'Morada obrigatória',
+        message: 'Preencha pelo menos a rua, cidade e estado/província',
+        variant: 'error'
+      });
+      return;
+    }
+
     if (!verification?.document_front_url) {
       toast({
         title: 'Documento obrigatório',
@@ -257,7 +358,6 @@ export default function UserIdentity() {
       return;
     }
 
-    // Para BI e RG, o verso também é obrigatório
     if (needsBackside && !verification?.document_back_url) {
       toast({
         title: 'Documento obrigatório',
@@ -272,47 +372,39 @@ export default function UserIdentity() {
 
       const verificationData = {
         user_id: user.id,
+        country: formData.country,
         full_name: formData.full_name,
         birth_date: formData.birth_date,
         document_type: formData.document_type,
         document_number: formData.document_number,
         document_front_url: verification?.document_front_url,
         document_back_url: verification?.document_back_url || null,
+        address_street: formData.address_street,
+        address_number: formData.address_number,
+        address_complement: formData.address_complement,
+        address_neighborhood: formData.address_neighborhood,
+        address_city: formData.address_city,
+        address_state: formData.address_state,
+        address_postal_code: formData.address_postal_code,
         status: 'pendente'
       };
 
-      console.log('📝 Salvando verificação:', verificationData);
-
       if (verification) {
-        console.log('🔄 Atualizando verificação existente:', verification.id);
-        
-        // Remover user_id do update - não deve ser atualizado
         const { user_id, ...updateData } = verificationData;
         
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from('identity_verification')
           .update(updateData)
           .eq('id', verification.id)
-          .eq('user_id', user.id) // Garantir que só atualiza a própria verificação
-          .select();
+          .eq('user_id', user.id);
 
-        if (error) {
-          console.error('❌ Erro no UPDATE:', error);
-          throw error;
-        }
-        console.log('✅ Verificação atualizada:', data);
+        if (error) throw error;
       } else {
-        console.log('➕ Criando nova verificação');
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from('identity_verification')
-          .insert([verificationData])
-          .select();
+          .insert([verificationData]);
 
-        if (error) {
-          console.error('❌ Erro no INSERT:', error);
-          throw error;
-        }
-        console.log('✅ Verificação criada:', data);
+        if (error) throw error;
       }
 
       toast({
@@ -323,12 +415,6 @@ export default function UserIdentity() {
       await loadVerification();
     } catch (error: any) {
       console.error('❌ Erro ao salvar:', error);
-      console.error('❌ Detalhes do erro:', {
-        message: error?.message,
-        details: error?.details,
-        hint: error?.hint,
-        code: error?.code
-      });
       toast({
         title: 'Erro ao salvar',
         message: error?.message || 'Erro ao salvar dados de verificação',
@@ -353,7 +439,6 @@ export default function UserIdentity() {
   const needsBackside = formData.document_type !== 'Passaporte' && formData.document_type !== '';
   const isReadOnly = verification?.status === 'aprovado' || verification?.status === 'pendente';
   
-  // Determinar o texto do botão baseado no status
   const getButtonText = () => {
     if (!verification) {
       return 'Enviar para Verificação';
@@ -420,71 +505,205 @@ export default function UserIdentity() {
           </Card>
         )}
 
+        {/* País */}
         <Card>
           <CardHeader>
-            <CardTitle>Informações Pessoais</CardTitle>
+            <CardTitle>Selecione o País</CardTitle>
             <CardDescription>
-              Preencha suas informações pessoais conforme constam no seu documento
+              Escolha o país emissor do seu documento de identificação
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="full_name">Nome Completo *</Label>
-                <Input
-                  id="full_name"
-                  value={formData.full_name}
-                  onChange={(e) => handleInputChange('full_name', e.target.value)}
-                  placeholder="Digite seu nome completo"
-                  disabled={isReadOnly}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="birth_date">Data de Nascimento *</Label>
-                <Input
-                  id="birth_date"
-                  type="date"
-                  value={formData.birth_date}
-                  onChange={(e) => handleInputChange('birth_date', e.target.value)}
-                  disabled={isReadOnly}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="document_type">Tipo de Documento *</Label>
-                <Select
-                  value={formData.document_type}
-                  onValueChange={(value) => handleInputChange('document_type', value)}
-                  disabled={isReadOnly}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o tipo de documento" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {documentTypes.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="document_number">Número do Documento *</Label>
-                <Input
-                  id="document_number"
-                  value={formData.document_number}
-                  onChange={(e) => handleInputChange('document_number', e.target.value)}
-                  placeholder="Digite o número do documento"
-                  disabled={isReadOnly}
-                />
-              </div>
+          <CardContent>
+            <div>
+              <Label htmlFor="country">País *</Label>
+              <Select
+                value={formData.country}
+                onValueChange={(value) => handleInputChange('country', value)}
+                disabled={isReadOnly}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o país" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(countriesWithDocuments).map(([code, country]) => (
+                    <SelectItem key={code} value={code}>
+                      {country.flag} {country.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </CardContent>
         </Card>
 
+        {/* Informações Pessoais - só aparece após selecionar país */}
+        {formData.country && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Informações Pessoais</CardTitle>
+              <CardDescription>
+                Preencha suas informações pessoais conforme constam no seu documento
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="full_name">Nome Completo *</Label>
+                  <Input
+                    id="full_name"
+                    value={formData.full_name}
+                    onChange={(e) => handleInputChange('full_name', e.target.value)}
+                    placeholder="Digite seu nome completo"
+                    disabled={isReadOnly}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="birth_date">Data de Nascimento *</Label>
+                  <Input
+                    id="birth_date"
+                    type="date"
+                    value={formData.birth_date}
+                    onChange={(e) => handleInputChange('birth_date', e.target.value)}
+                    disabled={isReadOnly}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="document_type">Tipo de Documento *</Label>
+                  <Select
+                    value={formData.document_type}
+                    onValueChange={(value) => handleInputChange('document_type', value)}
+                    disabled={isReadOnly}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o tipo de documento" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getAvailableDocuments().map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {type.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="document_number">Número do Documento *</Label>
+                  <Input
+                    id="document_number"
+                    value={formData.document_number}
+                    onChange={(e) => handleInputChange('document_number', e.target.value)}
+                    placeholder="Digite o número do documento"
+                    disabled={isReadOnly}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Morada - só aparece após selecionar país */}
+        {formData.country && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-primary" />
+                <CardTitle>Morada</CardTitle>
+              </div>
+              <CardDescription>
+                Preencha seu endereço de residência atual
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-2">
+                  <Label htmlFor="address_street">Rua/Avenida *</Label>
+                  <Input
+                    id="address_street"
+                    value={formData.address_street}
+                    onChange={(e) => handleInputChange('address_street', e.target.value)}
+                    placeholder="Nome da rua ou avenida"
+                    disabled={isReadOnly}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="address_number">Número</Label>
+                  <Input
+                    id="address_number"
+                    value={formData.address_number}
+                    onChange={(e) => handleInputChange('address_number', e.target.value)}
+                    placeholder="Nº"
+                    disabled={isReadOnly}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="address_complement">Complemento</Label>
+                  <Input
+                    id="address_complement"
+                    value={formData.address_complement}
+                    onChange={(e) => handleInputChange('address_complement', e.target.value)}
+                    placeholder="Apartamento, bloco, etc."
+                    disabled={isReadOnly}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="address_neighborhood">Bairro</Label>
+                  <Input
+                    id="address_neighborhood"
+                    value={formData.address_neighborhood}
+                    onChange={(e) => handleInputChange('address_neighborhood', e.target.value)}
+                    placeholder="Nome do bairro"
+                    disabled={isReadOnly}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="address_city">Cidade *</Label>
+                  <Input
+                    id="address_city"
+                    value={formData.address_city}
+                    onChange={(e) => handleInputChange('address_city', e.target.value)}
+                    placeholder="Nome da cidade"
+                    disabled={isReadOnly}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="address_state">Estado/Província *</Label>
+                  <Input
+                    id="address_state"
+                    value={formData.address_state}
+                    onChange={(e) => handleInputChange('address_state', e.target.value)}
+                    placeholder="Estado ou província"
+                    disabled={isReadOnly}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="address_postal_code">Código Postal</Label>
+                  <Input
+                    id="address_postal_code"
+                    value={formData.address_postal_code}
+                    onChange={(e) => handleInputChange('address_postal_code', e.target.value)}
+                    placeholder="CEP / Código Postal"
+                    disabled={isReadOnly}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Upload de Documentos */}
         {formData.document_type && (
           <Card>
             <CardHeader>
@@ -546,7 +765,7 @@ export default function UserIdentity() {
                 )}
               </div>
 
-              {/* Verso do documento (apenas para BI) */}
+              {/* Verso do documento */}
               {needsBackside && (
                 <div>
                   <Label>Verso do Documento *</Label>

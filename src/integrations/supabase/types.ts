@@ -1166,7 +1166,15 @@ export type Database = {
       }
       identity_verification: {
         Row: {
+          address_city: string | null
+          address_complement: string | null
+          address_neighborhood: string | null
+          address_number: string | null
+          address_postal_code: string | null
+          address_state: string | null
+          address_street: string | null
           birth_date: string
+          country: string | null
           created_at: string
           document_back_url: string | null
           document_front_url: string | null
@@ -1182,7 +1190,15 @@ export type Database = {
           verified_by: string | null
         }
         Insert: {
+          address_city?: string | null
+          address_complement?: string | null
+          address_neighborhood?: string | null
+          address_number?: string | null
+          address_postal_code?: string | null
+          address_state?: string | null
+          address_street?: string | null
           birth_date: string
+          country?: string | null
           created_at?: string
           document_back_url?: string | null
           document_front_url?: string | null
@@ -1198,7 +1214,15 @@ export type Database = {
           verified_by?: string | null
         }
         Update: {
+          address_city?: string | null
+          address_complement?: string | null
+          address_neighborhood?: string | null
+          address_number?: string | null
+          address_postal_code?: string | null
+          address_state?: string | null
+          address_street?: string | null
           birth_date?: string
+          country?: string | null
           created_at?: string
           document_back_url?: string | null
           document_front_url?: string | null
