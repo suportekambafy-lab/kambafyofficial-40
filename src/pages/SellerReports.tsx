@@ -24,7 +24,19 @@ interface Sale {
   product_id: string;
   payment_method?: string;
   currency?: string;
+  seller_commission?: number;
 }
+
+// Helper function to calculate net revenue (after platform fee)
+const calculateNetRevenue = (sale: Sale): number => {
+  // Use seller_commission if available, otherwise calculate 92% of gross
+  let amount = parseFloat(sale.seller_commission?.toString() || '0');
+  if (amount === 0) {
+    const grossAmount = parseFloat(sale.amount || '0');
+    amount = grossAmount * 0.92; // 8% platform fee
+  }
+  return amount;
+};
 
 interface Product {
   id: string;
@@ -83,7 +95,7 @@ export default function SellerReports() {
       while (hasMore) {
         let query = supabase
           .from('orders')
-          .select('id, created_at, status, amount, product_id, payment_method, currency')
+          .select('id, created_at, status, amount, product_id, payment_method, currency, seller_commission')
           .in('product_id', userProductIds)
           .order('created_at', { ascending: false })
           .range(page * pageSize, (page + 1) * pageSize - 1);
@@ -123,7 +135,7 @@ export default function SellerReports() {
     const pending = filteredSales.filter(s => s.status === 'pending');
     const cancelled = filteredSales.filter(s => s.status === 'failed' || s.status === 'cancelled');
     
-    const totalRevenue = completed.reduce((sum, s) => sum + (parseFloat(s.amount) || 0), 0);
+    const totalRevenue = completed.reduce((sum, s) => sum + calculateNetRevenue(s), 0);
     const avgTicket = completed.length > 0 ? totalRevenue / completed.length : 0;
 
     const days = periodFilter === "all" ? 365 : parseInt(periodFilter);
@@ -133,8 +145,8 @@ export default function SellerReports() {
     const recentSales = completed.filter(s => new Date(s.created_at) >= midPoint);
     const olderSales = completed.filter(s => new Date(s.created_at) < midPoint);
     
-    const recentRevenue = recentSales.reduce((sum, s) => sum + (parseFloat(s.amount) || 0), 0);
-    const olderRevenue = olderSales.reduce((sum, s) => sum + (parseFloat(s.amount) || 0), 0);
+    const recentRevenue = recentSales.reduce((sum, s) => sum + calculateNetRevenue(s), 0);
+    const olderRevenue = olderSales.reduce((sum, s) => sum + calculateNetRevenue(s), 0);
     
     const revenueTrend = olderRevenue > 0 
       ? ((recentRevenue - olderRevenue) / olderRevenue * 100).toFixed(1)
@@ -168,7 +180,7 @@ export default function SellerReports() {
       if (!dataByDate[date]) {
         dataByDate[date] = { date, receita: 0, vendas: 0 };
       }
-      dataByDate[date].receita += parseFloat(sale.amount) || 0;
+      dataByDate[date].receita += calculateNetRevenue(sale);
       dataByDate[date].vendas += 1;
     });
     
@@ -191,7 +203,7 @@ export default function SellerReports() {
         byProduct[sale.product_id] = { name, vendas: 0, receita: 0 };
       }
       byProduct[sale.product_id].vendas += 1;
-      byProduct[sale.product_id].receita += parseFloat(sale.amount) || 0;
+      byProduct[sale.product_id].receita += calculateNetRevenue(sale);
     });
     
     return Object.values(byProduct)
