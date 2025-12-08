@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.54.0';
 import { Resend } from 'npm:resend@2.0.0';
+import * as jose from 'https://esm.sh/jose@5.2.0'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -8,7 +9,7 @@ const corsHeaders = {
 
 interface BulkAccessRequest {
   source_product_id: string;
-  target_product_ids: string[]; // Array para múltiplos produtos de destino
+  target_product_ids: string[];
 }
 
 interface ProcessResult {
@@ -18,12 +19,76 @@ interface ProcessResult {
   error?: string;
 }
 
+// Verificar JWT do admin
+async function verifyAdminJWT(token: string): Promise<{ email: string } | null> {
+  const JWT_SECRET = Deno.env.get('ADMIN_JWT_SECRET')
+  if (!JWT_SECRET) {
+    console.error('❌ ADMIN_JWT_SECRET não configurado')
+    return null
+  }
+  
+  try {
+    const secret = new TextEncoder().encode(JWT_SECRET)
+    const { payload } = await jose.jwtVerify(token, secret)
+    if (payload.email && payload.role === 'admin') {
+      return { email: payload.email as string }
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // ========== AUTENTICAÇÃO DE ADMIN ==========
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.error('❌ Token de autenticação ausente')
+      return new Response(
+        JSON.stringify({ error: 'Token de autenticação necessário' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const token = authHeader.replace('Bearer ', '')
+    const adminPayload = await verifyAdminJWT(token)
+    
+    if (!adminPayload) {
+      console.error('❌ Token JWT inválido ou expirado')
+      return new Response(
+        JSON.stringify({ error: 'Token inválido ou expirado' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Verificar se o admin existe e está ativo
+    const { data: adminUser, error: adminError } = await supabase
+      .from('admin_users')
+      .select('id, email, is_active')
+      .eq('email', adminPayload.email)
+      .eq('is_active', true)
+      .single()
+
+    if (adminError || !adminUser) {
+      console.error('❌ Admin não autorizado:', adminPayload.email)
+      return new Response(
+        JSON.stringify({ error: 'Acesso negado: privilégios de admin necessários' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    console.log(`✅ Admin autenticado: ${adminUser.email}`)
+    // ========== FIM DA AUTENTICAÇÃO ==========
+
     const { source_product_id, target_product_ids }: BulkAccessRequest = await req.json();
 
     if (!source_product_id || !target_product_ids || !Array.isArray(target_product_ids) || target_product_ids.length === 0) {
@@ -33,12 +98,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
     const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
 
-    console.log('🔍 Validating products...');
+    console.log(`🔍 Admin ${adminUser.email} validating products...`);
     
     // Validar que o produto de origem existe
     const { data: sourceProduct, error: sourceError } = await supabase
@@ -153,8 +215,6 @@ Deno.serve(async (req) => {
       console.log(`🎯 ${customersNeedingAccess.length} customers need NEW access to "${targetProduct.name}"`);
       console.log(`📊 ${existingEmails.size} customers already have access and will be added to member area`);
 
-      // Processar clientes que precisam de NOVO acesso ao produto
-
       // Calcular data de expiração baseada nas configurações do produto
       let accessExpiresAt = null;
       if (targetProduct.access_duration_type && targetProduct.access_duration_type !== 'lifetime') {
@@ -179,7 +239,6 @@ Deno.serve(async (req) => {
 
       for (const customer of customersNeedingAccess) {
         try {
-          // Usar upsert para evitar erro de duplicate key
           const { error: insertError } = await supabase
             .from('customer_access')
             .upsert({
@@ -203,91 +262,90 @@ Deno.serve(async (req) => {
               success: false,
               error: insertError.message
             });
-            continue; // Pular para o próximo cliente
+            continue;
           }
 
           console.log(`✅ Access granted to ${customer.customer_email} for "${targetProduct.name}"`);
 
-          // Adicionar à área de membros se existir (independente de já ter acesso)
+          // Adicionar à área de membros se existir
           if (memberArea) {
-              const studentData: any = {
-                member_area_id: memberArea.id,
-                student_email: customer.customer_email.toLowerCase().trim(),
-                student_name: customer.customer_name,
-                access_granted_at: new Date().toISOString()
-              };
+            const studentData: any = {
+              member_area_id: memberArea.id,
+              student_email: customer.customer_email.toLowerCase().trim(),
+              student_name: customer.customer_name,
+              access_granted_at: new Date().toISOString()
+            };
 
-              // Adicionar cohort_id se houver Turma A
-              if (defaultCohort) {
-                studentData.cohort_id = defaultCohort.id;
-              }
-
-              const { error: studentError } = await supabase
-                .from('member_area_students')
-                .upsert(studentData, {
-                  onConflict: 'member_area_id,student_email',
-                  ignoreDuplicates: false
-                });
-
-              if (studentError) {
-                console.error(`⚠️ Failed to add ${customer.customer_email} to member area:`, studentError);
-              } else {
-                console.log(`📚 Added ${customer.customer_email} to "${memberArea.name}"${defaultCohort ? ` (${defaultCohort.name})` : ''}`);
-              }
+            if (defaultCohort) {
+              studentData.cohort_id = defaultCohort.id;
             }
 
-            // Enviar email de confirmação
-            try {
-              const emailHtml = `
-                <!DOCTYPE html>
-                <html>
-                  <head>
-                    <meta charset="utf-8">
-                    <style>
-                      body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                      .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                      .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-                      .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
-                      .button { display: inline-block; background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
-                      .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
-                    </style>
-                  </head>
-                  <body>
-                    <div class="container">
-                      <div class="header">
-                        <h1>🎉 Novo Acesso Liberado!</h1>
-                      </div>
-                      <div class="content">
-                        <p>Olá, <strong>${customer.customer_name}</strong>!</p>
-                        <p>Temos uma ótima notícia! Você recebeu acesso ao produto:</p>
-                        <h2 style="color: #667eea; margin: 20px 0;">${targetProduct.name}</h2>
-                        <p>Este acesso foi liberado manualmente e já está disponível para você.</p>
-                        ${memberArea ? `
-                          <p>Acesse sua área de membros agora:</p>
-                          <a href="https://app.kambafy.com/area/${memberArea.url}" class="button">Acessar Área de Membros</a>
-                        ` : ''}
-                        <p>Aproveite todo o conteúdo disponível!</p>
-                      </div>
-                      <div class="footer">
-                        <p>Esta é uma mensagem automática da Kambafy</p>
-                        <p>© ${new Date().getFullYear()} Kambafy - Todos os direitos reservados</p>
-                      </div>
-                    </div>
-                  </body>
-                </html>
-              `;
-
-              await resend.emails.send({
-                from: 'Kambafy <noreply@kambafy.com>',
-                to: [customer.customer_email],
-                subject: `🎉 Novo acesso liberado: ${targetProduct.name}`,
-                html: emailHtml
+            const { error: studentError } = await supabase
+              .from('member_area_students')
+              .upsert(studentData, {
+                onConflict: 'member_area_id,student_email',
+                ignoreDuplicates: false
               });
 
-              console.log(`📧 Email sent to ${customer.customer_email}`);
-            } catch (emailError) {
-              console.error(`⚠️ Failed to send email to ${customer.customer_email}:`, emailError);
+            if (studentError) {
+              console.error(`⚠️ Failed to add ${customer.customer_email} to member area:`, studentError);
+            } else {
+              console.log(`📚 Added ${customer.customer_email} to "${memberArea.name}"${defaultCohort ? ` (${defaultCohort.name})` : ''}`);
             }
+          }
+
+          // Enviar email de confirmação
+          try {
+            const emailHtml = `
+              <!DOCTYPE html>
+              <html>
+                <head>
+                  <meta charset="utf-8">
+                  <style>
+                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+                    .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+                    .button { display: inline-block; background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+                    .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+                  </style>
+                </head>
+                <body>
+                  <div class="container">
+                    <div class="header">
+                      <h1>🎉 Novo Acesso Liberado!</h1>
+                    </div>
+                    <div class="content">
+                      <p>Olá, <strong>${customer.customer_name}</strong>!</p>
+                      <p>Temos uma ótima notícia! Você recebeu acesso ao produto:</p>
+                      <h2 style="color: #667eea; margin: 20px 0;">${targetProduct.name}</h2>
+                      <p>Este acesso foi liberado manualmente e já está disponível para você.</p>
+                      ${memberArea ? `
+                        <p>Acesse sua área de membros agora:</p>
+                        <a href="https://app.kambafy.com/area/${memberArea.url}" class="button">Acessar Área de Membros</a>
+                      ` : ''}
+                      <p>Aproveite todo o conteúdo disponível!</p>
+                    </div>
+                    <div class="footer">
+                      <p>Esta é uma mensagem automática da Kambafy</p>
+                      <p>© ${new Date().getFullYear()} Kambafy - Todos os direitos reservados</p>
+                    </div>
+                  </div>
+                </body>
+              </html>
+            `;
+
+            await resend.emails.send({
+              from: 'Kambafy <noreply@kambafy.com>',
+              to: [customer.customer_email],
+              subject: `🎉 Novo acesso liberado: ${targetProduct.name}`,
+              html: emailHtml
+            });
+
+            console.log(`📧 Email sent to ${customer.customer_email}`);
+          } catch (emailError) {
+            console.error(`⚠️ Failed to send email to ${customer.customer_email}:`, emailError);
+          }
 
           productResults.push({
             customer_email: customer.customer_email,
@@ -306,12 +364,11 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Agora adicionar à área de membros TODOS que já têm acesso (mas não foram processados acima)
+      // Adicionar à área de membros TODOS que já têm acesso
       console.log(`\n🔄 Adding existing customers to member area...`);
       let addedToArea = 0;
       
       for (const customer of sourceAccess) {
-        // Se já foi processado acima, pular
         if (!existingEmails.has(customer.customer_email.toLowerCase())) {
           continue;
         }
@@ -325,7 +382,6 @@ Deno.serve(async (req) => {
               access_granted_at: new Date().toISOString()
             };
 
-            // Adicionar cohort_id se houver Turma A
             if (defaultCohort) {
               studentData.cohort_id = defaultCohort.id;
             }
@@ -354,8 +410,8 @@ Deno.serve(async (req) => {
       const successCount = productResults.filter(r => r.success).length;
       const failureCount = productResults.filter(r => !r.success).length;
 
-      // Atualizar contador da turma com o número correto de alunos
-      if (defaultCohort) {
+      // Atualizar contador da turma
+      if (defaultCohort && memberArea) {
         const { count } = await supabase
           .from('member_area_students')
           .select('*', { count: 'exact', head: true })
@@ -388,7 +444,21 @@ Deno.serve(async (req) => {
     const totalSuccess = allResults.reduce((sum, r) => sum + r.granted_access, 0);
     const totalFailed = allResults.reduce((sum, r) => sum + r.failed, 0);
 
-    console.log(`\n✨ Bulk access grant completed for all products:
+    // Log da ação de admin
+    await supabase.from('admin_logs').insert({
+      admin_id: adminUser.id,
+      action: 'bulk_grant_access',
+      target_type: 'product',
+      target_id: source_product_id,
+      details: {
+        source_product: sourceProduct.name,
+        target_products: targetProducts.map(p => p.name),
+        total_granted: totalSuccess,
+        total_failed: totalFailed
+      }
+    })
+
+    console.log(`\n✨ Bulk access grant completed by ${adminUser.email} for all products:
       - Products processed: ${targetProducts.length}
       - Total success: ${totalSuccess}
       - Total failed: ${totalFailed}`);
@@ -411,7 +481,8 @@ Deno.serve(async (req) => {
           total_target_products: targetProducts.length,
           total_granted: totalSuccess,
           total_failed: totalFailed
-        }
+        },
+        executed_by: adminUser.email
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

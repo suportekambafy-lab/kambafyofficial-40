@@ -25,8 +25,14 @@ Deno.serve(async (req) => {
 
     const { email, password, secretKey } = await req.json()
 
-    // Verificação de segurança simples
-    if (secretKey !== 'kambafy-setup-2025') {
+    // Verificação de segurança usando secret do ambiente
+    const adminSetupSecret = Deno.env.get('ADMIN_SETUP_SECRET')
+    if (!adminSetupSecret) {
+      console.error('❌ ADMIN_SETUP_SECRET não configurado')
+      throw new Error('Configuração de segurança ausente')
+    }
+    
+    if (secretKey !== adminSetupSecret) {
       throw new Error('Chave de acesso inválida')
     }
 
