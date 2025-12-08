@@ -158,6 +158,46 @@ Deno.serve(async (req) => {
       console.log('✅ Código 2FA já foi verificado no frontend')
     }
 
+    // 4. Garantir que o admin existe no auth.users para RLS funcionar
+    console.log('🔄 Verificando/criando usuário no auth.users...')
+    
+    // Verificar se já existe
+    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers()
+    const existingUser = existingUsers?.users?.find(u => u.email === normalizedEmail)
+    
+    if (!existingUser) {
+      console.log('📝 Criando usuário no auth.users para admin...')
+      const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+        email: normalizedEmail,
+        password: password,
+        email_confirm: true,
+        user_metadata: {
+          full_name: adminUser.full_name,
+          is_admin: true
+        }
+      })
+      
+      if (createError) {
+        console.error('⚠️ Erro ao criar usuário auth (continuando):', createError.message)
+      } else {
+        console.log('✅ Usuário auth criado:', newUser?.user?.id)
+      }
+    } else {
+      console.log('✅ Usuário auth já existe:', existingUser.id)
+      
+      // Atualizar a senha para garantir sincronização
+      const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
+        existingUser.id,
+        { password: password }
+      )
+      
+      if (updateError) {
+        console.error('⚠️ Erro ao atualizar senha (continuando):', updateError.message)
+      } else {
+        console.log('✅ Senha sincronizada no auth.users')
+      }
+    }
+
     // 5. Gerar JWT de autenticação
     const jwt = await generateJWT(adminUser.email)
 
@@ -181,7 +221,8 @@ Deno.serve(async (req) => {
         admin: {
           id: adminUser.id,
           email: adminUser.email,
-          full_name: adminUser.full_name
+          full_name: adminUser.full_name,
+          role: adminUser.role
         }
       }),
       {
