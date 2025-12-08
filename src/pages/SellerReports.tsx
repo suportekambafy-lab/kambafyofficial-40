@@ -400,15 +400,15 @@ export default function SellerReports() {
 
           <TabsContent value="overview" className="space-y-4 mt-4">
             {/* Gráfico de Receita */}
-            <Card>
+            <Card className="overflow-hidden">
               <CardHeader className="p-3 pb-2">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
                   <TrendingUp className="h-4 w-4 text-primary" />
                   Receita no Período
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-3 pt-0">
-                <div className="h-52 md:h-64">
+              <CardContent className="p-3 pt-0 overflow-hidden">
+                <div className="h-52 md:h-64 w-full overflow-hidden">
                   <ChartContainer config={chartConfig}>
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={revenueOverTime} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
