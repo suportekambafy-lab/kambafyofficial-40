@@ -299,9 +299,10 @@ export default function UserSettings() {
         </div>
 
         <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="profile">{t('settings.tab.profile')}</TabsTrigger>
             <TabsTrigger value="account">{t('settings.tab.account')}</TabsTrigger>
+            <TabsTrigger value="language">Idioma</TabsTrigger>
             <TabsTrigger value="security">{t('settings.tab.security')}</TabsTrigger>
           </TabsList>
           
@@ -464,7 +465,14 @@ export default function UserSettings() {
               </CardContent>
             </Card>
 
-            {/* Language Selection Card */}
+            {/* Address Card */}
+            <AddressCard />
+
+            {/* Identity Card */}
+            <IdentityCard />
+          </TabsContent>
+
+          <TabsContent value="language" className="space-y-4 md:space-y-6">
             <Card>
               <CardHeader className="pb-4">
                 <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
@@ -486,11 +494,10 @@ export default function UserSettings() {
                       changeLanguage(value);
                       localStorage.setItem('detectedLanguage', value);
                       await updateProfile(updatedProfile);
-                      // Force re-render to update translations
                       forceUpdate({});
                     }}
                   >
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger className="w-full max-w-xs">
                       <SelectValue placeholder="Selecione o idioma" />
                     </SelectTrigger>
                     <SelectContent>
@@ -517,12 +524,6 @@ export default function UserSettings() {
                 </div>
               </CardContent>
             </Card>
-
-            {/* Address Card */}
-            <AddressCard />
-
-            {/* Identity Card */}
-            <IdentityCard />
           </TabsContent>
 
 
