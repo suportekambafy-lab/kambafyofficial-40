@@ -89,27 +89,31 @@ export function SellerNotificationCenter() {
         });
       }
       
-      // Verificar métodos de recebimento
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('withdrawal_methods')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      
-      const withdrawalMethods = profile?.withdrawal_methods;
-      const hasWithdrawalMethods = Array.isArray(withdrawalMethods) && withdrawalMethods.length > 0;
-      
-      if (!hasWithdrawalMethods && verification?.status === 'aprovado') {
-        alerts.push({
-          id: 'banking',
-          type: 'banking',
-          title: 'Método de Recebimento',
-          message: 'Configure como deseja receber seus pagamentos',
-          icon: <Wallet className="h-4 w-4 text-orange-600" />,
-          action: () => { navigate('/vendedor/financeiro'); setIsOpen(false); },
-          actionLabel: 'Configurar',
-          priority: 2
-        });
+      // Verificar métodos de recebimento (apenas se já está verificado)
+      if (verification?.status === 'aprovado') {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('withdrawal_methods')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        const withdrawalMethods = profile?.withdrawal_methods as any[] | null;
+        // Verificar se tem métodos válidos (não nulos, não vazios)
+        const hasValidMethods = Array.isArray(withdrawalMethods) && 
+          withdrawalMethods.some(method => method && typeof method === 'object' && Object.keys(method).length > 0);
+        
+        if (!hasValidMethods) {
+          alerts.push({
+            id: 'banking',
+            type: 'banking',
+            title: 'Método de Recebimento',
+            message: 'Configure como deseja receber seus pagamentos',
+            icon: <Wallet className="h-4 w-4 text-orange-600" />,
+            action: () => { navigate('/vendedor/financeiro'); setIsOpen(false); },
+            actionLabel: 'Configurar',
+            priority: 2
+          });
+        }
       }
       
       // Verificar endereço
