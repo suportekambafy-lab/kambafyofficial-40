@@ -79,20 +79,27 @@ export default function SellerReports() {
   const [customStartDate, setCustomStartDate] = useState<Date | undefined>();
   const [customEndDate, setCustomEndDate] = useState<Date | undefined>();
 
+  // Initial load only
   useEffect(() => {
     if (user) {
-      // Only load if not custom, or if custom with both dates set
+      loadSalesData(true);
+    }
+  }, [user]);
+
+  // Filter changes - silent update
+  useEffect(() => {
+    if (user && !loading) {
       if (periodFilter !== "custom" || (customStartDate && customEndDate)) {
-        loadSalesData();
+        loadSalesData(false);
       }
     }
-  }, [user, periodFilter, customStartDate, customEndDate]);
+  }, [periodFilter, customStartDate, customEndDate]);
 
-  const loadSalesData = async () => {
+  const loadSalesData = async (showLoading = true) => {
     if (!user) return;
 
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
 
       const { data: userProducts, error: productsError } = await supabase
         .from('products')
@@ -385,7 +392,7 @@ export default function SellerReports() {
             <Download className="h-3 w-3 mr-1" />
             Exportar
           </Button>
-          <Button variant="outline" size="sm" onClick={loadSalesData} className="text-xs">
+          <Button variant="outline" size="sm" onClick={() => loadSalesData(false)} className="text-xs">
             <RefreshCw className="h-3 w-3 mr-1" />
             Atualizar
           </Button>
