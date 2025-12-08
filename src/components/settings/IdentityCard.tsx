@@ -61,6 +61,12 @@ const STATUS_CONFIG = {
     icon: CheckCircle2,
     color: "text-green-600"
   },
+  aprovado: {
+    label: "Verificado",
+    variant: "default" as const,
+    icon: CheckCircle2,
+    color: "text-green-600"
+  },
   rejeitado: {
     label: "Rejeitado",
     variant: "destructive" as const,
@@ -184,7 +190,7 @@ export function IdentityCard() {
           </Badge>
         </div>
         <CardDescription>
-          Seus dados de identificação e morada
+          Seus dados de identificação
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -222,18 +228,6 @@ export function IdentityCard() {
           </div>
         </div>
 
-        {/* Morada */}
-        {address && (
-          <div className="space-y-3">
-            <h4 className="font-medium text-sm flex items-center gap-2">
-              <MapPin className="h-4 w-4" />
-              Morada
-            </h4>
-            <div className="pl-6">
-              <p className="text-sm">{address}</p>
-            </div>
-          </div>
-        )}
 
         {/* Ações */}
         <div className="pt-4 border-t flex items-center justify-between">
