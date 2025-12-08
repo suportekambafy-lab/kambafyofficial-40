@@ -21,7 +21,6 @@ import { getAllPaymentMethods, getPaymentMethodName, getAngolaPaymentMethods, ge
 import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { useCurrencyToCountry } from "@/hooks/useCurrencyToCountry";
 import { ProductFilter } from '@/components/ProductFilter';
-import { SalesTimeAnalytics } from '@/components/SalesTimeAnalytics';
 
 interface Sale {
   id: string;
@@ -478,9 +477,6 @@ export default function Sales() {
             </Card>)}
         </div>
       </div>
-
-      {/* Analytics de Tempo */}
-      <SalesTimeAnalytics sales={sales} />
 
       {/* Filters */}
       <Card>
