@@ -12,6 +12,69 @@ import { useTheme } from '@/hooks/useTheme';
 import TwoFactorVerification from '@/components/TwoFactorVerification';
 import kambafyLogo from '@/assets/kambafy-logo-gray.svg';
 
+// Gerar um ID único para o dispositivo/navegador
+const getDeviceId = (): string => {
+  const storedId = localStorage.getItem('member_area_device_id');
+  if (storedId) return storedId;
+  
+  const newId = crypto.randomUUID();
+  localStorage.setItem('member_area_device_id', newId);
+  return newId;
+};
+
+// Verificar se o dispositivo é confiável para um email específico
+const isDeviceTrusted = (email: string): boolean => {
+  const trustedDevices = localStorage.getItem('member_area_trusted_devices');
+  if (!trustedDevices) return false;
+  
+  try {
+    const devices = JSON.parse(trustedDevices);
+    const deviceId = getDeviceId();
+    const normalizedEmail = email.toLowerCase().trim();
+    
+    // Verificar se existe um registro para este email e dispositivo
+    const trusted = devices[normalizedEmail];
+    if (!trusted) return false;
+    
+    // Verificar se o deviceId corresponde e não expirou (30 dias)
+    if (trusted.deviceId === deviceId) {
+      const expiresAt = new Date(trusted.expiresAt);
+      if (expiresAt > new Date()) {
+        return true;
+      }
+    }
+    
+    return false;
+  } catch {
+    return false;
+  }
+};
+
+// Marcar dispositivo como confiável para um email
+const trustDevice = (email: string): void => {
+  const trustedDevices = localStorage.getItem('member_area_trusted_devices');
+  let devices: Record<string, { deviceId: string; expiresAt: string }> = {};
+  
+  try {
+    if (trustedDevices) {
+      devices = JSON.parse(trustedDevices);
+    }
+  } catch {
+    devices = {};
+  }
+  
+  const normalizedEmail = email.toLowerCase().trim();
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 30); // 30 dias de validade
+  
+  devices[normalizedEmail] = {
+    deviceId: getDeviceId(),
+    expiresAt: expiresAt.toISOString()
+  };
+  
+  localStorage.setItem('member_area_trusted_devices', JSON.stringify(devices));
+};
+
 export default function ModernMembersLogin() {
   const { id: memberAreaId } = useParams();
   const navigate = useNavigate();
@@ -24,6 +87,7 @@ export default function ModernMembersLogin() {
   const [ownerEmail, setOwnerEmail] = useState<string | null>(null);
   const [requires2FA, setRequires2FA] = useState(false);
   const [pendingEmail, setPendingEmail] = useState('');
+  const [is2FAForOwner, setIs2FAForOwner] = useState(false);
   const id = useId();
   
   useEffect(() => {
@@ -70,8 +134,13 @@ export default function ModernMembersLogin() {
     fetchOwnerEmail();
   }, [memberAreaId]);
   
-  // Função para completar login após 2FA
-  const completeLogin = (emailToUse: string) => {
+  // Função para completar login após 2FA (ou direto se dispositivo confiável)
+  const completeLogin = (emailToUse: string, shouldTrustDevice: boolean = true) => {
+    // Marcar dispositivo como confiável se necessário
+    if (shouldTrustDevice) {
+      trustDevice(emailToUse);
+    }
+    
     toast({
       title: "✅ Acesso autorizado!",
       message: "Bem-vindo à área de membros",
@@ -110,10 +179,11 @@ export default function ModernMembersLogin() {
           return;
         }
 
-        // Verificar se é o email do dono - exigir 2FA
+        // Verificar se é o email do dono - sempre exigir 2FA
         if (ownerEmail && normalizedEmail === ownerEmail) {
           console.log('🔐 Email do dono detectado - exigindo 2FA');
           setPendingEmail(normalizedEmail);
+          setIs2FAForOwner(true);
           setRequires2FA(true);
           setIsSubmitting(false);
           return;
@@ -136,7 +206,17 @@ export default function ModernMembersLogin() {
           return;
         }
 
-        completeLogin(normalizedEmail);
+        // Verificar se o dispositivo é confiável para este aluno
+        if (isDeviceTrusted(normalizedEmail)) {
+          console.log('✅ Dispositivo confiável detectado para:', normalizedEmail);
+          completeLogin(normalizedEmail, false);
+        } else {
+          // Dispositivo novo - exigir 2FA
+          console.log('🔐 Dispositivo novo detectado - exigindo 2FA para:', normalizedEmail);
+          setPendingEmail(normalizedEmail);
+          setIs2FAForOwner(false);
+          setRequires2FA(true);
+        }
         
       } catch (error: any) {
         console.error('Erro ao verificar acesso:', error);
@@ -229,7 +309,10 @@ export default function ModernMembersLogin() {
                   Verificação de Segurança
                 </h1>
                 <p className="text-sm text-zinc-400 mt-1">
-                  Como dono desta área, você precisa verificar sua identidade
+                  {is2FAForOwner 
+                    ? "Como dono desta área, você precisa verificar sua identidade"
+                    : "Detectamos um novo navegador. Por segurança, confirme sua identidade"
+                  }
                 </p>
               </div>
             </div>
@@ -239,11 +322,12 @@ export default function ModernMembersLogin() {
               context="member_area_login"
               onVerificationSuccess={() => {
                 setRequires2FA(false);
-                completeLogin(pendingEmail);
+                completeLogin(pendingEmail, true); // Marcar dispositivo como confiável
               }}
               onBack={() => {
                 setRequires2FA(false);
                 setPendingEmail('');
+                setIs2FAForOwner(false);
               }}
             />
           </div>

@@ -328,6 +328,8 @@ const TwoFactorVerification = ({
         return 'Verificação de Alteração de Senha'; 
       case 'disable_2fa':
         return 'Confirmação para Desativar 2FA';
+      case 'member_area_login':
+        return 'Verificação de Acesso';
       default:
         return 'Verificação de Segurança';
     }
