@@ -181,85 +181,89 @@ export function SalesTimeAnalytics({ sales }: SalesTimeAnalyticsProps) {
       {/* Gráficos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Vendas por Hora */}
-        <Card>
+        <Card className="overflow-hidden">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
               <Clock className="h-4 w-4" />
               Vendas por Horário
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-2 sm:p-4">
-            <ChartContainer config={chartConfig} className="h-40 sm:h-48 w-full">
-              <BarChart data={hourlyData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
-                <XAxis 
-                  dataKey="hour" 
-                  tick={{ fontSize: 8 }}
-                  interval={3}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis 
-                  tick={{ fontSize: 8 }}
-                  axisLine={false}
-                  tickLine={false}
-                  allowDecimals={false}
-                  width={25}
-                />
-                <ChartTooltip 
-                  content={<ChartTooltipContent />}
-                  cursor={{ fill: 'hsl(var(--muted))' }}
-                />
-                <Bar dataKey="vendas" radius={[2, 2, 0, 0]}>
-                  {hourlyData.map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
-                      fill={getBarColor(entry.vendas, maxHourlyValue)} 
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ChartContainer>
+          <CardContent className="p-2 sm:p-4 pb-4">
+            <div className="h-[180px] w-full">
+              <ChartContainer config={chartConfig} className="h-full w-full !aspect-auto">
+                <BarChart data={hourlyData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <XAxis 
+                    dataKey="hour" 
+                    tick={{ fontSize: 8 }}
+                    interval={3}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis 
+                    tick={{ fontSize: 8 }}
+                    axisLine={false}
+                    tickLine={false}
+                    allowDecimals={false}
+                    width={30}
+                  />
+                  <ChartTooltip 
+                    content={<ChartTooltipContent />}
+                    cursor={{ fill: 'hsl(var(--muted))' }}
+                  />
+                  <Bar dataKey="vendas" radius={[2, 2, 0, 0]}>
+                    {hourlyData.map((entry, index) => (
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={getBarColor(entry.vendas, maxHourlyValue)} 
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ChartContainer>
+            </div>
           </CardContent>
         </Card>
 
         {/* Vendas por Dia da Semana */}
-        <Card>
+        <Card className="overflow-hidden">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
               <Calendar className="h-4 w-4" />
               Vendas por Dia da Semana
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-2 sm:p-4">
-            <ChartContainer config={chartConfig} className="h-40 sm:h-48 w-full">
-              <BarChart data={weekdayData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
-                <XAxis 
-                  dataKey="day" 
-                  tick={{ fontSize: 9 }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis 
-                  tick={{ fontSize: 8 }}
-                  axisLine={false}
-                  tickLine={false}
-                  allowDecimals={false}
-                  width={25}
-                />
-                <ChartTooltip 
-                  content={<ChartTooltipContent />}
-                  cursor={{ fill: 'hsl(var(--muted))' }}
-                />
-                <Bar dataKey="vendas" radius={[4, 4, 0, 0]}>
-                  {weekdayData.map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
-                      fill={getBarColor(entry.vendas, maxWeekdayValue)} 
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ChartContainer>
+          <CardContent className="p-2 sm:p-4 pb-4">
+            <div className="h-[180px] w-full">
+              <ChartContainer config={chartConfig} className="h-full w-full !aspect-auto">
+                <BarChart data={weekdayData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <XAxis 
+                    dataKey="day" 
+                    tick={{ fontSize: 9 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis 
+                    tick={{ fontSize: 8 }}
+                    axisLine={false}
+                    tickLine={false}
+                    allowDecimals={false}
+                    width={30}
+                  />
+                  <ChartTooltip 
+                    content={<ChartTooltipContent />}
+                    cursor={{ fill: 'hsl(var(--muted))' }}
+                  />
+                  <Bar dataKey="vendas" radius={[4, 4, 0, 0]}>
+                    {weekdayData.map((entry, index) => (
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={getBarColor(entry.vendas, maxWeekdayValue)} 
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ChartContainer>
+            </div>
           </CardContent>
         </Card>
       </div>
