@@ -586,18 +586,16 @@ const Checkout = () => {
       const isUUID = uuidRegex.test(productId);
       
       try {
-        // Primeiro, buscar o produto (sem join de profiles por segurança)
-        const productQuery = supabase.from('products').select(`
-          *,
-          member_areas (
-            id,
-            name,
-            url
-          )
-        `).eq(isUUID ? 'id' : 'slug', productId).maybeSingle();
+        // Usar função RPC segura para buscar produto (não expõe user_id, commission, etc.)
+        let productResult;
+        if (isUUID) {
+          productResult = await supabase.rpc('get_product_for_checkout', { p_product_id: productId });
+        } else {
+          productResult = await supabase.rpc('get_product_for_checkout_by_slug', { p_slug: productId });
+        }
         
-        const productResult = await productQuery;
-        const { data: productData, error: productError } = productResult;
+        const { data: productArray, error: productError } = productResult;
+        const productData = productArray && productArray.length > 0 ? productArray[0] : null;
         
         // Processar produto
         if (productError) {
@@ -634,19 +632,23 @@ const Checkout = () => {
           setProduct(productData);
           setError("");
         } else {
-          // Carregar info do vendedor via RPC segura e settings em paralelo
-          const [sellerResult, settingsResult] = await Promise.all([
+          // Carregar info do vendedor via RPC segura, member_area e settings em paralelo
+          const [sellerResult, memberAreaResult, settingsResult] = await Promise.all([
             supabase.rpc('get_seller_public_info', { p_product_id: productData.id }),
+            productData.member_area_id 
+              ? supabase.from('member_areas').select('id, name, url').eq('id', productData.member_area_id).maybeSingle()
+              : Promise.resolve({ data: null, error: null }),
             supabase.from('checkout_customizations').select('*').eq('product_id', productData.id).maybeSingle()
           ]);
           
-          // Adicionar info do vendedor ao produto como propriedade dinâmica
-          const productWithSeller = {
+          // Adicionar info do vendedor e member_area ao produto
+          const productWithExtras = {
             ...productData,
-            profiles: sellerResult.data && sellerResult.data.length > 0 ? sellerResult.data[0] : null
+            profiles: sellerResult.data && sellerResult.data.length > 0 ? sellerResult.data[0] : null,
+            member_areas: memberAreaResult.data
           };
           
-          setProduct(productWithSeller);
+          setProduct(productWithExtras);
           setError("");
           setProductSEO(productData);
           
