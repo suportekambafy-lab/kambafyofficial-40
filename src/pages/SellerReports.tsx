@@ -81,7 +81,10 @@ export default function SellerReports() {
 
   useEffect(() => {
     if (user) {
-      loadSalesData();
+      // Only load if not custom, or if custom with both dates set
+      if (periodFilter !== "custom" || (customStartDate && customEndDate)) {
+        loadSalesData();
+      }
     }
   }, [user, periodFilter, customStartDate, customEndDate]);
 
