@@ -61,6 +61,51 @@ export const FacebookPixelTracker = ({ productId, productUserId }: FacebookPixel
     }
   }, [productId]);
 
+  // Injetar script base do Facebook Pixel
+  const injectFacebookPixelScript = useCallback(() => {
+    // Verifica se já foi injetado
+    if (window.fbq && typeof window.fbq === 'function') {
+      return Promise.resolve();
+    }
+
+    return new Promise<void>((resolve) => {
+      // Inicializa fbq como array antes do script carregar
+      const n = window.fbq = function(...args: any[]) {
+        if (n.callMethod) {
+          n.callMethod.apply(n, args);
+        } else {
+          n.queue.push(args);
+        }
+      } as any;
+      
+      if (!window._fbq) window._fbq = n;
+      n.push = n;
+      n.loaded = true;
+      n.version = '2.0';
+      n.queue = [];
+
+      // Injeta o script
+      const script = document.createElement('script');
+      script.async = true;
+      script.src = 'https://connect.facebook.net/en_US/fbevents.js';
+      script.onload = () => {
+        console.log('✅ [FB PIXEL] Facebook SDK loaded');
+        resolve();
+      };
+      script.onerror = () => {
+        console.error('❌ [FB PIXEL] Failed to load Facebook SDK');
+        resolve();
+      };
+      
+      const firstScript = document.getElementsByTagName('script')[0];
+      if (firstScript && firstScript.parentNode) {
+        firstScript.parentNode.insertBefore(script, firstScript);
+      } else {
+        document.head.appendChild(script);
+      }
+    });
+  }, []);
+
   // Buscar e inicializar pixels
   useEffect(() => {
     const initializePixels = async () => {
@@ -78,7 +123,7 @@ export const FacebookPixelTracker = ({ productId, productUserId }: FacebookPixel
       userIdRef.current = userId;
 
       try {
-        // Buscar pixels ativos APENAS para este produto específico (sem filtrar por user_id para evitar problemas de RLS)
+        // Buscar pixels ativos APENAS para este produto específico
         const { data: pixels, error } = await supabase
           .from('facebook_pixel_settings')
           .select('pixel_id')
@@ -100,27 +145,26 @@ export const FacebookPixelTracker = ({ productId, productUserId }: FacebookPixel
 
         console.log(`✅ [FB PIXEL] ${pixelIds.length} pixel(s) found:`, pixelIds);
 
-        // Aguardar fbq estar disponível
-        const waitForFbq = (): Promise<void> => {
-          return new Promise((resolve) => {
-            let attempts = 0;
-            const maxAttempts = 50;
-            
-            const check = setInterval(() => {
-              attempts++;
-              if (window.fbq && typeof window.fbq === 'function') {
-                clearInterval(check);
-                resolve();
-              } else if (attempts >= maxAttempts) {
-                clearInterval(check);
-                console.warn('⚠️ [FB PIXEL] fbq not available after timeout');
-                resolve();
-              }
-            }, 100);
-          });
-        };
+        // Injetar e aguardar o script do Facebook Pixel
+        await injectFacebookPixelScript();
 
-        await waitForFbq();
+        // Aguardar fbq estar completamente disponível
+        await new Promise<void>((resolve) => {
+          let attempts = 0;
+          const maxAttempts = 50;
+          
+          const check = setInterval(() => {
+            attempts++;
+            if (window.fbq && typeof window.fbq === 'function') {
+              clearInterval(check);
+              resolve();
+            } else if (attempts >= maxAttempts) {
+              clearInterval(check);
+              console.warn('⚠️ [FB PIXEL] fbq not available after timeout');
+              resolve();
+            }
+          }, 100);
+        });
 
         if (!window.fbq || typeof window.fbq !== 'function') {
           console.error('❌ [FB PIXEL] fbq function not available');
@@ -138,35 +182,35 @@ export const FacebookPixelTracker = ({ productId, productUserId }: FacebookPixel
             }
           });
           initializedRef.current = true;
+
+          // Gerar event_id único para PageView
+          const pageEventId = generateEventId();
+
+          // Track PageView IMEDIATAMENTE após init
+          window.fbq('track', 'PageView', {}, { eventID: pageEventId });
+          console.log('✅ [FB PIXEL] PageView tracked with eventID:', pageEventId);
+
+          // Track ViewContent após pequeno delay
+          setTimeout(() => {
+            const viewContentEventId = generateEventId();
+            window.fbq('track', 'ViewContent', {
+              content_ids: [productId],
+              content_type: 'product',
+              content_name: 'Product Page'
+            }, { eventID: viewContentEventId });
+            console.log('✅ [FB PIXEL] ViewContent tracked with eventID:', viewContentEventId);
+          }, 300);
+
+          // Track InitiateCheckout após delay maior
+          setTimeout(() => {
+            const initiateCheckoutEventId = generateEventId();
+            window.fbq('track', 'InitiateCheckout', {
+              content_ids: [productId],
+              content_type: 'product'
+            }, { eventID: initiateCheckoutEventId });
+            console.log('✅ [FB PIXEL] InitiateCheckout tracked with eventID:', initiateCheckoutEventId);
+          }, 1000);
         }
-
-        // Gerar event_id único para PageView + ViewContent
-        const pageEventId = generateEventId();
-
-        // Track PageView com event_id
-        window.fbq('track', 'PageView', {}, { eventID: pageEventId });
-        console.log('✅ [FB PIXEL] PageView tracked with eventID:', pageEventId);
-
-        // Track ViewContent após pequeno delay
-        setTimeout(() => {
-          const viewContentEventId = generateEventId();
-          window.fbq('track', 'ViewContent', {
-            content_ids: [productId],
-            content_type: 'product',
-            content_name: 'Product Page'
-          }, { eventID: viewContentEventId });
-          console.log('✅ [FB PIXEL] ViewContent tracked with eventID:', viewContentEventId);
-        }, 300);
-
-        // Track InitiateCheckout após delay maior
-        setTimeout(() => {
-          const initiateCheckoutEventId = generateEventId();
-          window.fbq('track', 'InitiateCheckout', {
-            content_ids: [productId],
-            content_type: 'product'
-          }, { eventID: initiateCheckoutEventId });
-          console.log('✅ [FB PIXEL] InitiateCheckout tracked with eventID:', initiateCheckoutEventId);
-        }, 1000);
 
       } catch (error) {
         console.error('❌ [FB PIXEL] Unexpected error:', error);
@@ -174,7 +218,7 @@ export const FacebookPixelTracker = ({ productId, productUserId }: FacebookPixel
     };
 
     initializePixels();
-  }, [productId, fetchProductInfo, generateEventId]);
+  }, [productId, fetchProductInfo, generateEventId, injectFacebookPixelScript]);
 
   // Handler para evento de compra
   useEffect(() => {
