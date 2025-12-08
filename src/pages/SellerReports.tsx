@@ -549,70 +549,45 @@ export default function SellerReports() {
           </TabsContent>
 
           <TabsContent value="products" className="space-y-4 mt-4">
-            {/* Top Produtos */}
-            <Card>
-              <CardHeader className="p-3 pb-0">
+            {/* Tabela de Performance - Primeiro */}
+            <Card className="rounded-xl shadow-sm border border-border/40 bg-card">
+              <CardHeader className="px-4 pt-3 pb-2">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <Package className="h-4 w-4" />
-                  Mais Vendidos
+                  <Package className="h-4 w-4 text-primary" />
+                  Performance por Produto
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-3">
+              <CardContent className="px-4 pb-4">
                 {productPerformance.length > 0 ? (
-                  <div className="h-48">
-                    <ChartContainer config={chartConfig}>
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={productPerformance} layout="vertical">
-                          <XAxis type="number" axisLine={false} tickLine={false} tick={{ fontSize: 10 }} />
-                          <YAxis 
-                            type="category" 
-                            dataKey="name" 
-                            width={100}
-                            tick={{ fontSize: 10 }}
-                            axisLine={false}
-                            tickLine={false}
-                            tickFormatter={(value) => value.length > 15 ? value.slice(0, 15) + '...' : value}
-                          />
-                          <ChartTooltip content={<ChartTooltipContent />} />
-                          <Bar dataKey="vendas" fill="hsl(var(--chart-1))" radius={[0, 4, 4, 0]} />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </ChartContainer>
+                  <div className="space-y-3">
+                    {productPerformance.map((product, index) => {
+                      const maxVendas = Math.max(...productPerformance.map(p => p.vendas));
+                      const percentage = maxVendas > 0 ? (product.vendas / maxVendas) * 100 : 0;
+                      return (
+                        <div key={index} className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium truncate max-w-[150px]">{product.name}</span>
+                            <div className="flex items-center gap-3">
+                              <span className="text-sm text-muted-foreground">{product.vendas} vendas</span>
+                              <span className="text-sm font-semibold text-green-600">{formatPriceForSeller(product.receita, 'KZ')}</span>
+                            </div>
+                          </div>
+                          <div className="h-2 bg-muted rounded-full overflow-hidden">
+                            <div 
+                              className="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-green-600 to-green-400"
+                              style={{ width: `${percentage}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 ) : (
-                  <p className="text-center text-muted-foreground py-8 text-sm">Sem dados</p>
+                  <p className="text-center text-muted-foreground py-8 text-sm">Sem dados de produtos</p>
                 )}
               </CardContent>
             </Card>
 
-            {/* Tabela de Performance */}
-            <Card>
-              <CardHeader className="p-3 pb-0">
-                <CardTitle className="text-sm font-medium">Detalhes</CardTitle>
-              </CardHeader>
-              <CardContent className="p-3">
-                <div className="overflow-x-auto -mx-3">
-                  <table className="w-full text-xs min-w-[300px]">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left py-2 px-3 font-medium">Produto</th>
-                        <th className="text-right py-2 px-2 font-medium">Vendas</th>
-                        <th className="text-right py-2 px-3 font-medium">Receita</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {productPerformance.map((product, index) => (
-                        <tr key={index} className="border-b last:border-0">
-                          <td className="py-2 px-3 truncate max-w-[120px]">{product.name}</td>
-                          <td className="py-2 px-2 text-right">{product.vendas}</td>
-                          <td className="py-2 px-3 text-right text-green-600">{formatPriceForSeller(product.receita, 'KZ')}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
           </TabsContent>
         </Tabs>
       ) : (
