@@ -127,48 +127,56 @@ export const FacebookPixelTracker = ({ productId, productUserId }: FacebookPixel
           window._fbPixelsInitialized = {};
         }
 
-        // Inicializar e trackear para cada pixel
+        // Inicializar cada pixel
         pixelIds.forEach(pixelId => {
           try {
             if (!window._fbPixelsInitialized[pixelId]) {
               window._fbPixelsInitialized[pixelId] = true;
               window.fbq('init', pixelId);
-              console.log('✅ [FB PIXEL] init() for:', pixelId);
+              console.log('✅ [FB PIXEL] init() called for:', pixelId);
             }
-
-            // Usar trackSingle para garantir que o evento vai para o pixel específico
-            const pageEventId = generateEventId();
-            window.fbq('trackSingle', pixelId, 'PageView', {}, { eventID: pageEventId });
-            console.log('✅ [FB PIXEL] PageView tracked for pixel:', pixelId);
           } catch (e) {
-            console.error('❌ [FB PIXEL] Error:', e);
+            console.error('❌ [FB PIXEL] Init error:', e);
           }
         });
+
+        // Enviar PageView (vai para todos os pixels inicializados)
+        try {
+          const pageEventId = generateEventId();
+          window.fbq('track', 'PageView', {}, { eventID: pageEventId });
+          console.log('✅ [FB PIXEL] PageView tracked');
+        } catch (e) {
+          console.error('❌ [FB PIXEL] PageView error:', e);
+        }
 
         // ViewContent com delay
         setTimeout(() => {
           if (typeof window.fbq !== 'function') return;
-          pixelIds.forEach(pixelId => {
+          try {
             const eventId = generateEventId();
-            window.fbq('trackSingle', pixelId, 'ViewContent', {
+            window.fbq('track', 'ViewContent', {
               content_ids: [productId],
               content_type: 'product'
             }, { eventID: eventId });
-          });
-          console.log('✅ [FB PIXEL] ViewContent tracked');
+            console.log('✅ [FB PIXEL] ViewContent tracked');
+          } catch (e) {
+            console.error('❌ [FB PIXEL] ViewContent error:', e);
+          }
         }, 500);
 
         // InitiateCheckout com delay maior
         setTimeout(() => {
           if (typeof window.fbq !== 'function') return;
-          pixelIds.forEach(pixelId => {
+          try {
             const eventId = generateEventId();
-            window.fbq('trackSingle', pixelId, 'InitiateCheckout', {
+            window.fbq('track', 'InitiateCheckout', {
               content_ids: [productId],
               content_type: 'product'
             }, { eventID: eventId });
-          });
-          console.log('✅ [FB PIXEL] InitiateCheckout tracked');
+            console.log('✅ [FB PIXEL] InitiateCheckout tracked');
+          } catch (e) {
+            console.error('❌ [FB PIXEL] InitiateCheckout error:', e);
+          }
         }, 1500);
 
       } catch (error) {
@@ -187,15 +195,17 @@ export const FacebookPixelTracker = ({ productId, productUserId }: FacebookPixel
       console.log('🛒 [FB PIXEL] Purchase event:', { amount, currency, orderId });
 
       if (typeof window.fbq === 'function' && pixelIdsRef.current.length > 0) {
-        pixelIdsRef.current.forEach(pixelId => {
-          window.fbq('trackSingle', pixelId, 'Purchase', {
+        try {
+          window.fbq('track', 'Purchase', {
             content_ids: [productId],
             content_type: 'product',
             value: amount || 0,
             currency: currency || 'KZ'
           }, { eventID: purchaseEventId });
-        });
-        console.log('✅ [FB PIXEL] Purchase tracked');
+          console.log('✅ [FB PIXEL] Purchase tracked');
+        } catch (e) {
+          console.error('❌ [FB PIXEL] Purchase error:', e);
+        }
       }
 
       try {
