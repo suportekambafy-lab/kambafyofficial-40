@@ -4155,6 +4155,38 @@ export type Database = {
           type: string
         }[]
       }
+      get_public_product_data: {
+        Args: { p_product_id: string }
+        Returns: {
+          access_duration_description: string
+          access_duration_type: string
+          access_duration_value: number
+          allow_affiliates: boolean
+          allow_custom_price: boolean
+          commission_rate: string
+          compare_at_price: string
+          cover: string
+          custom_prices: Json
+          description: string
+          fantasy_name: string
+          id: string
+          image_alt: string
+          member_area_id: string
+          minimum_price: string
+          name: string
+          payment_methods: Json
+          price: string
+          seo_description: string
+          seo_keywords: string
+          seo_title: string
+          slug: string
+          status: string
+          subscription_config: Json
+          suggested_price: string
+          type: string
+          user_id: string
+        }[]
+      }
       get_seller_public_info: {
         Args: { p_product_id: string }
         Returns: {
