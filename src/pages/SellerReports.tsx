@@ -356,13 +356,11 @@ export default function SellerReports() {
     'CD': '🇨🇩',
     'Congo': '🇨🇩'
   };
-
   const inferCountryFromPayment = (sale: Sale): string => {
     // Se já tem país definido, usar
     if (sale.customer_country) return sale.customer_country;
-    
     const method = sale.payment_method?.toLowerCase() || '';
-    
+
     // Usar o mapeamento centralizado de métodos de pagamento
     if (method) {
       const countryInfo = getCountryByPaymentMethod(method);
@@ -370,10 +368,8 @@ export default function SellerReports() {
         return countryInfo.name;
       }
     }
-    
     return 'Desconhecido';
   };
-
   const countryData = useMemo(() => {
     const completed = filteredSales.filter(s => s.status === 'completed');
     const byCountry: Record<string, {
@@ -733,7 +729,7 @@ export default function SellerReports() {
             <Card className="rounded-xl shadow-sm border border-border/40 bg-card">
               <CardHeader className="px-4 pt-3 pb-2">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  🌍 Vendas por País
+                  Vendas por País
                 </CardTitle>
               </CardHeader>
               <CardContent className="px-4 pb-4">
