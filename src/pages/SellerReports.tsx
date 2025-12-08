@@ -39,6 +39,8 @@ interface Sale {
   order_bump_data?: OrderBumpData | null;
   customer_country?: string;
   customer_email?: string;
+  affiliate_code?: string | null;
+  affiliate_commission?: number | null;
 }
 
 // Helper function to calculate net revenue (after platform fee) with currency conversion
@@ -129,7 +131,7 @@ export default function SellerReports() {
       const pageSize = 1000;
       let hasMore = true;
       while (hasMore) {
-        let query = supabase.from('orders').select('id, created_at, status, amount, product_id, payment_method, currency, seller_commission, order_bump_data, customer_country, customer_email').in('product_id', userProductIds).order('created_at', {
+        let query = supabase.from('orders').select('id, created_at, status, amount, product_id, payment_method, currency, seller_commission, order_bump_data, customer_country, customer_email, affiliate_code, affiliate_commission').in('product_id', userProductIds).order('created_at', {
           ascending: false
         }).range(page * pageSize, (page + 1) * pageSize - 1);
         if (filterStartDate) {
@@ -401,6 +403,61 @@ export default function SellerReports() {
       percentage: total > 0 ? (data.vendas / total * 100).toFixed(1) : '0'
     })).sort((a, b) => b.vendas - a.vendas).slice(0, 8);
   }, [filteredSales]);
+
+  // Affiliate statistics
+  const affiliateStats = useMemo(() => {
+    const completed = filteredSales.filter(s => s.status === 'completed');
+    
+    // Separate direct vs affiliate sales
+    const affiliateSales = completed.filter(s => s.affiliate_code);
+    const directSales = completed.filter(s => !s.affiliate_code);
+    
+    // Calculate revenues
+    const directRevenue = directSales.reduce((sum, s) => sum + calculateNetRevenue(s), 0);
+    const affiliateRevenue = affiliateSales.reduce((sum, s) => sum + calculateNetRevenue(s), 0);
+    
+    // Total commissions paid to affiliates
+    const totalCommissions = affiliateSales.reduce((sum, s) => sum + (s.affiliate_commission || 0), 0);
+    
+    // Group by affiliate code to get top affiliates
+    const byAffiliate: Record<string, { vendas: number; receita: number; comissao: number }> = {};
+    affiliateSales.forEach(sale => {
+      const code = sale.affiliate_code || 'unknown';
+      if (!byAffiliate[code]) {
+        byAffiliate[code] = { vendas: 0, receita: 0, comissao: 0 };
+      }
+      byAffiliate[code].vendas += 1;
+      byAffiliate[code].receita += calculateNetRevenue(sale);
+      byAffiliate[code].comissao += sale.affiliate_commission || 0;
+    });
+    
+    const topAffiliates = Object.entries(byAffiliate)
+      .map(([code, data]) => ({
+        code,
+        ...data
+      }))
+      .sort((a, b) => b.vendas - a.vendas)
+      .slice(0, 5);
+    
+    // Comparative chart data
+    const chartData = [
+      { name: 'Diretas', vendas: directSales.length, receita: directRevenue },
+      { name: 'Afiliados', vendas: affiliateSales.length, receita: affiliateRevenue }
+    ];
+    
+    return {
+      directSales: directSales.length,
+      affiliateSales: affiliateSales.length,
+      directRevenue,
+      affiliateRevenue,
+      totalCommissions,
+      topAffiliates,
+      chartData,
+      affiliatePercentage: completed.length > 0 
+        ? ((affiliateSales.length / completed.length) * 100).toFixed(1) 
+        : '0'
+    };
+  }, [filteredSales]);
   const exportReport = () => {
     const headers = ['Data', 'Hora', 'Produto', 'Valor', 'Moeda', 'Status', 'Método'];
     const rows = filteredSales.map(sale => {
@@ -591,8 +648,9 @@ export default function SellerReports() {
       </div>
 
       {filteredSales.length > 0 ? <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList className="w-full grid grid-cols-4 h-auto">
+          <TabsList className="w-full grid grid-cols-5 h-auto">
             <TabsTrigger value="overview" className="text-xs py-2">Geral</TabsTrigger>
+            <TabsTrigger value="affiliates" className="text-xs py-2">Afiliados</TabsTrigger>
             <TabsTrigger value="countries" className="text-xs py-2">Países</TabsTrigger>
             <TabsTrigger value="time" className="text-xs py-2">Horários</TabsTrigger>
             <TabsTrigger value="products" className="text-xs py-2">Produtos</TabsTrigger>
@@ -725,6 +783,115 @@ export default function SellerReports() {
                       </div>;
               })}
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="affiliates" className="space-y-4 mt-4">
+            {/* KPIs Afiliados */}
+            <div className="grid grid-cols-2 gap-3">
+              <Card>
+                <CardContent className="p-3">
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">Vendas Diretas</p>
+                    <p className="text-base md:text-lg font-bold text-blue-600">{affiliateStats.directSales}</p>
+                    <p className="text-xs text-green-600">{formatPriceForSeller(affiliateStats.directRevenue, 'KZ')}</p>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-3">
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">Via Afiliados</p>
+                    <p className="text-base md:text-lg font-bold text-purple-600">{affiliateStats.affiliateSales}</p>
+                    <p className="text-xs text-green-600">{formatPriceForSeller(affiliateStats.affiliateRevenue, 'KZ')}</p>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-3">
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">Comissões Pagas</p>
+                    <p className="text-base md:text-lg font-bold text-orange-600">{formatPriceForSeller(affiliateStats.totalCommissions, 'KZ')}</p>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-3">
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">% Afiliados</p>
+                    <p className="text-base md:text-lg font-bold text-purple-600">{affiliateStats.affiliatePercentage}%</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Gráfico Comparativo */}
+            <Card className="rounded-xl shadow-sm border border-border/40 bg-card">
+              <CardHeader className="px-4 pt-3 pb-2">
+                <CardTitle className="text-sm font-medium">Diretas vs Afiliados</CardTitle>
+              </CardHeader>
+              <CardContent className="px-4 pb-4">
+                <ChartContainer config={chartConfig} className="h-[200px] w-full">
+                  <BarChart data={affiliateStats.chartData} margin={{ top: 5, right: 5, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.3} />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} width={45} />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Bar dataKey="vendas" name="Vendas" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ChartContainer>
+              </CardContent>
+            </Card>
+
+            {/* Top 5 Afiliados */}
+            <Card className="rounded-xl shadow-sm border border-border/40 bg-card">
+              <CardHeader className="px-4 pt-3 pb-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  🏆 Top 5 Afiliados
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="px-4 pb-4">
+                {affiliateStats.topAffiliates.length > 0 ? (
+                  <div className="space-y-3">
+                    {affiliateStats.topAffiliates.map((affiliate, index) => {
+                      const maxVendas = affiliateStats.topAffiliates[0]?.vendas || 1;
+                      const barWidth = (affiliate.vendas / maxVendas) * 100;
+                      const medals = ['🥇', '🥈', '🥉', '4º', '5º'];
+                      return (
+                        <div key={index} className="space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm">{medals[index]}</span>
+                              <span className="text-sm font-medium font-mono">{affiliate.code}</span>
+                            </div>
+                            <div className="flex items-center gap-3 text-sm">
+                              <span className="text-muted-foreground">{affiliate.vendas} vendas</span>
+                              <span className="font-semibold text-green-600">{formatPriceForSeller(affiliate.receita, 'KZ')}</span>
+                            </div>
+                          </div>
+                          <div className="h-2 bg-muted rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-gradient-to-r from-purple-600 to-purple-400 rounded-full transition-all duration-500" 
+                              style={{ width: `${barWidth}%` }} 
+                            />
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Comissão: {formatPriceForSeller(affiliate.comissao, 'KZ')}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-sm text-muted-foreground">Nenhuma venda via afiliado no período</p>
+                    <p className="text-xs text-muted-foreground mt-1">Todas as vendas são diretas</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
