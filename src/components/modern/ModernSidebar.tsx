@@ -42,7 +42,7 @@ const menuItems = [
   { key: "menu.affiliates", href: "/vendedor/afiliados", icon: UserCheck },
   { key: "menu.subscriptions", href: "/vendedor/assinaturas", icon: CreditCard },
   { key: "menu.refunds", href: "/vendedor/reembolsos", icon: AlertCircle },
-  { key: "menu.reports", href: "/vendedor/relatorios", icon: FileText },
+  { key: "menu.reports", href: "/vendedor/relatorios", icon: FileText, isNew: true },
   { key: "menu.collaborators", href: "/vendedor/colaboradores", icon: UserPlus },
   { key: "menu.apps", href: "/vendedor/apps", icon: Grid3X3 },
 ];
@@ -244,7 +244,12 @@ export function ModernSidebar({
                   }
                 >
                   <item.icon className="w-[18px] h-[18px] flex-shrink-0" />
-                  <span>{t(item.key)}</span>
+                  <span className="flex-1">{t(item.key)}</span>
+                  {item.isNew && (
+                    <span className="bg-gradient-to-r from-yellow-400 to-orange-400 text-slate-900 text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase shadow-sm">
+                      Novo
+                    </span>
+                  )}
                 </NavLink>
               ))}
             </nav>
@@ -377,12 +382,17 @@ export function ModernSidebar({
                         animate={{ opacity: 1, width: "auto" }}
                         exit={{ opacity: 0, width: 0 }}
                         transition={{ duration: 0.15 }}
-                        className="whitespace-nowrap overflow-hidden"
+                        className="whitespace-nowrap overflow-hidden flex-1"
                       >
                         {t(item.key)}
                       </motion.span>
                     )}
                   </AnimatePresence>
+                  {item.isNew && !collapsed && (
+                    <span className="bg-gradient-to-r from-yellow-400 to-orange-400 text-slate-900 text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase shadow-sm">
+                      Novo
+                    </span>
+                  )}
                 </>
               )}
             </NavLink>
