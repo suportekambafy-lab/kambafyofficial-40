@@ -50,12 +50,13 @@ interface UseUserTimezoneReturn {
 
 export const useUserTimezone = (): UseUserTimezoneReturn => {
   const { user } = useAuth();
-  const { userCountry } = useGeoLocation();
+  const { userCountry, detectCountryByIP } = useGeoLocation();
   const [profileTimezone, setProfileTimezone] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Fuso horário detectado pelo país
-  const detectedTimezone = COUNTRY_TIMEZONES[userCountry?.code || 'AO'] || 'Africa/Luanda';
+  // Fuso horário detectado pelo país (com fallback para browser timezone)
+  const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const detectedTimezone = COUNTRY_TIMEZONES[userCountry?.code || ''] || browserTimezone || 'Africa/Luanda';
 
   // Fuso horário efetivo (perfil > detectado)
   const timezone = profileTimezone || detectedTimezone;
