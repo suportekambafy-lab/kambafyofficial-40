@@ -6,6 +6,7 @@ declare global {
   interface Window {
     fbq: any;
     _fbq: any;
+    _fbPixelsInitialized?: Record<string, boolean>;
   }
 }
 
@@ -135,15 +136,25 @@ export const FacebookPixelTracker = ({ productId, productUserId }: FacebookPixel
           return;
         }
 
-        // Inicializar cada pixel (apenas uma vez)
+        // Inicializar cada pixel (apenas uma vez, verificando se já foi inicializado no HTML)
         if (!initializedRef.current) {
           initializedRef.current = true;
           
+          // Garantir que o objeto existe
+          if (!window._fbPixelsInitialized) {
+            window._fbPixelsInitialized = {};
+          }
+          
           pixelIds.forEach(pixelId => {
             try {
-              // fbq('init', pixelId) é necessário para o Pixel Helper detectar
-              window.fbq('init', pixelId);
-              console.log('✅ [FB PIXEL] init() called for:', pixelId);
+              // Só inicializar se não foi inicializado pelo HTML
+              if (!window._fbPixelsInitialized[pixelId]) {
+                window._fbPixelsInitialized[pixelId] = true;
+                window.fbq('init', pixelId);
+                console.log('✅ [FB PIXEL] init() called for:', pixelId);
+              } else {
+                console.log('ℹ️ [FB PIXEL] Already initialized by HTML:', pixelId);
+              }
             } catch (e) {
               console.error('❌ [FB PIXEL] Error initializing pixel:', pixelId, e);
             }

@@ -120,6 +120,9 @@
       s.parentNode.insertBefore(t,s)}(window, document,'script',
       'https://connect.facebook.net/en_US/fbevents.js');
       
+      // Armazenar pixels inicializados para evitar duplicação
+      window._fbPixelsInitialized = {};
+      
       // Auto-inicializar pixel para páginas de checkout
       (async function() {
         const path = window.location.pathname;
@@ -135,7 +138,8 @@
             const pixels = await response.json();
             if (pixels && pixels.length > 0) {
               pixels.forEach(function(p) {
-                if (p.pixel_id) {
+                if (p.pixel_id && !window._fbPixelsInitialized[p.pixel_id]) {
+                  window._fbPixelsInitialized[p.pixel_id] = true;
                   fbq('init', p.pixel_id);
                   console.log('[FB PIXEL HTML] Initialized:', p.pixel_id);
                 }
