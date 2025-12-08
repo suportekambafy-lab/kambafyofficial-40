@@ -76,6 +76,7 @@ const getMenuItems = (t: (key: string) => string) => [
     label: t('menu.reports'),
     href: "/vendedor/relatorios",
     icon: FileText,
+    isNew: true,
   },
   {
     label: t('menu.apps'),
@@ -273,6 +274,11 @@ export function SellerSidebar() {
             >
               <item.icon className="h-5 w-5 flex-shrink-0" />
               <span className="flex-1">{item.label}</span>
+              {item.isNew && (
+                <span className="bg-yellow-400 text-slate-900 text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase">
+                  Novo
+                </span>
+              )}
               {item.showCount && totalSales > 0 && (
                 <span className="bg-checkout-green text-white text-xs font-medium px-2 py-0.5 rounded-full min-w-[20px] text-center">
                   {totalSales}
