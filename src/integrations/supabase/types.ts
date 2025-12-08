@@ -4163,7 +4163,7 @@ export type Database = {
           access_duration_value: number
           allow_affiliates: boolean
           allow_custom_price: boolean
-          commission_rate: number
+          commission: string
           compare_at_price: string
           cover: string
           custom_prices: Json
@@ -4172,7 +4172,7 @@ export type Database = {
           id: string
           image_alt: string
           member_area_id: string
-          minimum_price: string
+          minimum_price: number
           name: string
           payment_methods: Json
           price: string
@@ -4182,7 +4182,7 @@ export type Database = {
           slug: string
           status: string
           subscription_config: Json
-          suggested_price: string
+          suggested_price: number
           type: string
           user_id: string
         }[]
