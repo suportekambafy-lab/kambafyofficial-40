@@ -639,6 +639,45 @@ serve(async (req) => {
               } catch (emailError) {
                 console.error('❌ Error in email sending process:', emailError);
               }
+              
+              // 📧 ENVIAR EMAIL DE NOTIFICAÇÃO PARA O VENDEDOR
+              try {
+                console.log('📧 Sending seller notification email for Stripe payment...');
+                
+                // Buscar dados do vendedor
+                const { data: sellerProfile } = await supabase
+                  .from('profiles')
+                  .select('email, full_name')
+                  .eq('user_id', product?.user_id)
+                  .single();
+                
+                if (sellerProfile?.email) {
+                  const sellerNotificationPayload = {
+                    sellerEmail: sellerProfile.email,
+                    sellerName: sellerProfile.full_name || sellerProfile.email,
+                    productName: product?.name || 'Produto',
+                    orderNumber: orderId,
+                    amount: paymentIntent.metadata.original_amount || (paymentIntent.amount / 100).toString(),
+                    currency: paymentIntent.metadata.original_currency || paymentIntent.currency.toUpperCase(),
+                    customerName: order.customer_name,
+                    customerEmail: order.customer_email
+                  };
+                  
+                  const { error: sellerEmailError } = await supabase.functions.invoke('send-seller-notification-email', {
+                    body: sellerNotificationPayload
+                  });
+                  
+                  if (sellerEmailError) {
+                    console.error('❌ Error sending seller notification email:', sellerEmailError);
+                  } else {
+                    console.log('✅ Seller notification email sent successfully');
+                  }
+                } else {
+                  console.log('⚠️ Seller email not found, skipping seller notification');
+                }
+              } catch (sellerEmailError) {
+                console.error('❌ Error in seller email sending process:', sellerEmailError);
+              }
 
               // Enviar email de acesso à área de membros para o produto principal
               try {

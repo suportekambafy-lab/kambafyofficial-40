@@ -545,10 +545,10 @@ const handler = async (req: Request): Promise<Response> => {
           try {
             console.log('[APPYPAY-WEBHOOK] 📱 Preparando notificação OneSignal...');
             
-            // Buscar email do vendedor para usar como external_id
+            // Buscar email e nome do vendedor para notificações
             const { data: sellerProfile } = await supabase
               .from('profiles')
-              .select('email')
+              .select('email, full_name')
               .eq('user_id', product?.user_id)
               .single();
             
@@ -596,6 +596,27 @@ const handler = async (req: Request): Promise<Response> => {
                 console.error('[APPYPAY-WEBHOOK] ❌ Erro ao enviar notificação OneSignal:', notificationError);
               } else {
                 console.log('[APPYPAY-WEBHOOK] ✅ Notificação OneSignal enviada com sucesso');
+              }
+              
+              // 📧 ENVIAR EMAIL DE NOTIFICAÇÃO PARA O VENDEDOR
+              console.log('[APPYPAY-WEBHOOK] 📧 Enviando email de venda para vendedor:', sellerProfile.email);
+              const { error: sellerEmailError } = await supabase.functions.invoke('send-seller-notification-email', {
+                body: {
+                  sellerEmail: sellerProfile.email,
+                  sellerName: sellerProfile.full_name || sellerProfile.email,
+                  productName: product?.name || 'Produto',
+                  orderNumber: order.order_id,
+                  amount: order.amount,
+                  currency: order.currency || 'KZ',
+                  customerName: order.customer_name,
+                  customerEmail: order.customer_email
+                }
+              });
+              
+              if (sellerEmailError) {
+                console.error('[APPYPAY-WEBHOOK] ❌ Erro ao enviar email para vendedor:', sellerEmailError);
+              } else {
+                console.log('[APPYPAY-WEBHOOK] ✅ Email de venda enviado para vendedor com sucesso');
               }
             } else {
               console.log('[APPYPAY-WEBHOOK] ⚠️ Email do vendedor não encontrado');
