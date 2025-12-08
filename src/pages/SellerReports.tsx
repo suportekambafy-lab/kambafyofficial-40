@@ -37,6 +37,7 @@ interface Sale {
   seller_commission?: number;
   order_bump_data?: OrderBumpData | null;
   customer_country?: string;
+  customer_email?: string;
 }
 
 // Helper function to calculate net revenue (after platform fee) with currency conversion
@@ -127,7 +128,7 @@ export default function SellerReports() {
       const pageSize = 1000;
       let hasMore = true;
       while (hasMore) {
-        let query = supabase.from('orders').select('id, created_at, status, amount, product_id, payment_method, currency, seller_commission, order_bump_data, customer_country').in('product_id', userProductIds).order('created_at', {
+        let query = supabase.from('orders').select('id, created_at, status, amount, product_id, payment_method, currency, seller_commission, order_bump_data, customer_country, customer_email').in('product_id', userProductIds).order('created_at', {
           ascending: false
         }).range(page * pageSize, (page + 1) * pageSize - 1);
         if (filterStartDate) {
@@ -366,16 +367,24 @@ export default function SellerReports() {
     
     const method = sale.payment_method?.toLowerCase() || '';
     const currency = sale.currency?.toUpperCase() || '';
+    const email = sale.customer_email?.toLowerCase() || '';
     
     // Inferir por método de pagamento
-    if (appyPayMethods.includes(method)) return 'Angola';
-    if (mozambiqueMethods.includes(method)) return 'Moçambique';
     if (portugalMethods.includes(method)) return 'Portugal';
+    if (mozambiqueMethods.includes(method)) return 'Moçambique';
+    
+    // Inferir por domínio do email
+    if (email.endsWith('.pt') || email.includes('@sapo.pt') || email.includes('@gmail.pt')) return 'Portugal';
+    if (email.endsWith('.mz')) return 'Moçambique';
+    if (email.endsWith('.br') || email.includes('@gmail.com.br')) return 'Brasil';
+    
+    // AppyPay methods são Angola
+    if (appyPayMethods.includes(method)) return 'Angola';
     
     // Inferir por moeda
     if (currency === 'KZ' || currency === 'AOA') return 'Angola';
     if (currency === 'MZN') return 'Moçambique';
-    if (currency === 'EUR') return 'Europa';
+    if (currency === 'EUR') return 'Portugal';
     if (currency === 'USD') return 'Estados Unidos';
     if (currency === 'GBP') return 'Reino Unido';
     if (currency === 'BRL') return 'Brasil';
