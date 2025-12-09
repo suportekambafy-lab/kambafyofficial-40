@@ -206,6 +206,23 @@ export default function AdminWithdrawals() {
                 <Square className="h-4 w-4" />
                 <span className="text-xs sm:text-sm">Limpar</span>
               </Button>
+
+              <Button
+                onClick={() => {
+                  if (window.confirm(`Tem certeza que deseja REJEITAR TODOS os ${pendingRequests.length} saques pendentes?`)) {
+                    selectAll(pendingRequests.map(r => r.id));
+                    setTimeout(() => {
+                      processBulkRequests(pendingRequests.map(r => r.id), 'rejeitado', admin?.id, 'Rejeição em massa');
+                    }, 100);
+                  }
+                }}
+                disabled={bulkProcessing || pendingRequests.length === 0}
+                size="sm"
+                className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 border-0 shadow-sm flex items-center gap-2"
+              >
+                <XCircle className="h-4 w-4" />
+                <span className="text-xs sm:text-sm">Rejeitar Todos ({pendingRequests.length})</span>
+              </Button>
               
               <span className="text-xs sm:text-sm text-gray-600">
                 {selectedIds.size} de {pendingRequests.length}
