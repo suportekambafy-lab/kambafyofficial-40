@@ -35,16 +35,15 @@ export default function Financial() {
     toast
   } = useCustomToast();
   const { t } = useTranslation();
-  const [loading, setLoading] = useState(true);
-  const [hasPending2FA, setHasPending2FA] = useState(() => {
-    // Verificar imediatamente se há 2FA pendente e não expirado
+  // Verificar imediatamente se há 2FA pendente e não expirado
+  const initialPending2FA = (() => {
     try {
       const pending = sessionStorage.getItem(WITHDRAWAL_2FA_KEY);
       if (pending) {
         const data = JSON.parse(pending);
         
         // Também verificar o timer do TwoFactorVerification
-        const userEmail = localStorage.getItem('user_email'); // Usar se disponível
+        const userEmail = localStorage.getItem('user_email');
         const timerKey = `2fa_timer_withdrawal_${userEmail || ''}`;
         const timerData = sessionStorage.getItem(timerKey);
         
@@ -71,36 +70,12 @@ export default function Financial() {
       }
     } catch {}
     return false;
-  });
-  const [withdrawalModalOpen, setWithdrawalModalOpen] = useState(() => {
-    // Abrir modal imediatamente se tiver 2FA pendente e não expirado
-    try {
-      const pending = sessionStorage.getItem(WITHDRAWAL_2FA_KEY);
-      if (pending) {
-        const data = JSON.parse(pending);
-        
-        const userEmail = localStorage.getItem('user_email');
-        const timerKey = `2fa_timer_withdrawal_${userEmail || ''}`;
-        const timerData = sessionStorage.getItem(timerKey);
-        
-        let isExpired = data.expiresAt <= Date.now();
-        
-        if (timerData && !isExpired) {
-          try {
-            const { timeLeft, timestamp } = JSON.parse(timerData);
-            const elapsed = Math.floor((Date.now() - timestamp) / 1000);
-            const remaining = timeLeft - elapsed;
-            if (remaining <= 0) {
-              isExpired = true;
-            }
-          } catch {}
-        }
-        
-        return !isExpired;
-      }
-    } catch {}
-    return false;
-  });
+  })();
+
+  // Se há 2FA pendente, não mostrar loading inicial
+  const [loading, setLoading] = useState(!initialPending2FA);
+  const [hasPending2FA, setHasPending2FA] = useState(initialPending2FA);
+  const [withdrawalModalOpen, setWithdrawalModalOpen] = useState(initialPending2FA);
   const [withdrawalRequests, setWithdrawalRequests] = useState<WithdrawalRequest[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [identityVerification, setIdentityVerification] = useState<IdentityVerification | null>(null);
