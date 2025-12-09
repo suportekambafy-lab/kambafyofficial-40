@@ -10,6 +10,14 @@ import { useCustomerBalance } from "@/hooks/useCustomerBalance";
 import { use2FA } from "@/hooks/use2FA";
 import TwoFactorVerification from "@/components/TwoFactorVerification";
 
+const WITHDRAWAL_2FA_KEY = 'withdrawal_2fa_pending';
+
+interface PendingWithdrawal {
+  amount: number;
+  roundedAmount: number;
+  expiresAt: number; // timestamp
+}
+
 interface WithdrawalModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -34,23 +42,38 @@ export function WithdrawalModal({
   
   // Estados para 2FA
   const [show2FAVerification, setShow2FAVerification] = useState(false);
-  const [pendingWithdrawal, setPendingWithdrawal] = useState<{
-    amount: number;
-    roundedAmount: number;
-  } | null>(null);
+  const [pendingWithdrawal, setPendingWithdrawal] = useState<PendingWithdrawal | null>(null);
 
-  // ✅ Saldo disponível já tem 8% descontado (seller_commission)
-  // O vendedor receberá exatamente este valor escolhido quando o saque for aprovado
-
-  // Limpar input quando o modal fechar
+  // ✅ Restaurar estado de 2FA pendente do sessionStorage quando o modal abre
   useEffect(() => {
-    if (!open) {
+    if (open && user) {
+      const stored = sessionStorage.getItem(WITHDRAWAL_2FA_KEY);
+      if (stored) {
+        try {
+          const data: PendingWithdrawal = JSON.parse(stored);
+          // Verificar se ainda não expirou (5 minutos = 300000ms)
+          if (data.expiresAt > Date.now()) {
+            setPendingWithdrawal(data);
+            setShow2FAVerification(true);
+            setWithdrawalAmount(data.roundedAmount.toFixed(2));
+          } else {
+            // Expirado, limpar
+            sessionStorage.removeItem(WITHDRAWAL_2FA_KEY);
+          }
+        } catch {
+          sessionStorage.removeItem(WITHDRAWAL_2FA_KEY);
+        }
+      }
+    }
+  }, [open, user]);
+
+  // Limpar estados quando o modal fechar (mas NÃO limpar sessionStorage se tiver 2FA pendente)
+  useEffect(() => {
+    if (!open && !show2FAVerification) {
       setWithdrawalAmount("");
       setError("");
-      setShow2FAVerification(false);
-      setPendingWithdrawal(null);
     }
-  }, [open]);
+  }, [open, show2FAVerification]);
 
   const validateAndPrepareWithdrawal = async (): Promise<{ amount: number; roundedAmount: number } | null> => {
     if (!user) {
@@ -115,13 +138,11 @@ export function WithdrawalModal({
       });
 
       // ✅ Criar solicitação de saque
-      // O saldo disponível já está com 8% descontado (seller_commission)
-      // O vendedor receberá exatamente este valor quando aprovado
       const { data: insertData, error: insertError } = await supabase
         .from('withdrawal_requests')
         .insert({
           user_id: user.id,
-          amount: roundedAmount, // Valor arredondado para evitar erros de precisão
+          amount: roundedAmount,
           status: 'pendente'
         })
         .select();
@@ -131,7 +152,6 @@ export function WithdrawalModal({
       if (insertError) {
         console.error('❌ Erro ao criar solicitação de saque:', insertError);
         
-        // Verificar se é erro de validação de saldo retido
         if (insertError.message?.includes('excede o saldo disponível') || 
             insertError.message?.includes('retido até')) {
           setError(insertError.message);
@@ -148,14 +168,21 @@ export function WithdrawalModal({
       // Registrar evento de segurança
       await logSecurityEvent('withdrawal', true);
 
+      // ✅ Limpar sessionStorage após sucesso
+      sessionStorage.removeItem(WITHDRAWAL_2FA_KEY);
+
       toast({
         title: "Saque solicitado com sucesso!",
         message: `Seu saque de ${roundedAmount.toFixed(2).replace('.', ',')} KZ será processado em até 3 dias úteis.`,
       });
 
+      // Limpar estados
+      setShow2FAVerification(false);
+      setPendingWithdrawal(null);
+      setWithdrawalAmount("");
+      
       onOpenChange(false);
       
-      // Chamar callback UMA VEZ para atualizar dados na página pai
       if (onWithdrawalSuccess) {
         onWithdrawalSuccess();
       }
@@ -184,8 +211,14 @@ export function WithdrawalModal({
       const needs2FA = await requires2FA('withdrawal');
       
       if (needs2FA) {
-        // Salvar dados do saque e mostrar tela de 2FA
-        setPendingWithdrawal(withdrawalData);
+        // Salvar dados do saque no sessionStorage com expiração de 5 minutos
+        const pendingData: PendingWithdrawal = {
+          ...withdrawalData,
+          expiresAt: Date.now() + (5 * 60 * 1000) // 5 minutos
+        };
+        
+        sessionStorage.setItem(WITHDRAWAL_2FA_KEY, JSON.stringify(pendingData));
+        setPendingWithdrawal(pendingData);
         setShow2FAVerification(true);
         setLoading(false);
       } else {
@@ -204,18 +237,27 @@ export function WithdrawalModal({
     
     setShow2FAVerification(false);
     await submitWithdrawal(pendingWithdrawal.roundedAmount);
-    setPendingWithdrawal(null);
   };
 
   const handle2FABack = () => {
+    // Limpar tudo ao cancelar
+    sessionStorage.removeItem(WITHDRAWAL_2FA_KEY);
     setShow2FAVerification(false);
     setPendingWithdrawal(null);
+    setWithdrawalAmount("");
+    setError("");
   };
 
   // Renderizar tela de verificação 2FA
-  if (show2FAVerification && user?.email) {
+  if (show2FAVerification && user?.email && pendingWithdrawal) {
     return (
-      <Drawer open={open} onOpenChange={onOpenChange}>
+      <Drawer open={open} onOpenChange={(isOpen) => {
+        // Permitir fechar o drawer, mas manter o estado no sessionStorage
+        if (!isOpen) {
+          // Não limpa o sessionStorage, assim o usuário pode voltar
+          onOpenChange(false);
+        }
+      }}>
         <DrawerContent className="sm:max-w-md mx-auto">
           <DrawerHeader>
             <DrawerTitle className="flex items-center gap-2">
@@ -235,7 +277,13 @@ export function WithdrawalModal({
             <div className="bg-primary/10 border border-primary/20 p-4 rounded-lg mb-4">
               <p className="text-sm text-muted-foreground mb-1">Valor do Saque</p>
               <p className="text-xl font-bold text-primary">
-                {pendingWithdrawal?.roundedAmount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} KZ
+                {pendingWithdrawal.roundedAmount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} KZ
+              </p>
+            </div>
+
+            <div className="bg-muted/50 border border-border rounded-lg p-3 mb-4">
+              <p className="text-xs text-muted-foreground">
+                💡 <strong>Dica:</strong> Você pode sair desta página para verificar seu email. O código permanecerá válido por 5 minutos.
               </p>
             </div>
             
@@ -244,6 +292,7 @@ export function WithdrawalModal({
               onVerificationSuccess={handle2FASuccess}
               onBack={handle2FABack}
               context="withdrawal"
+              skipInitialSend={!!sessionStorage.getItem(WITHDRAWAL_2FA_KEY)}
             />
           </div>
         </DrawerContent>
