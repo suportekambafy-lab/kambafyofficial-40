@@ -360,7 +360,7 @@ const Checkout = () => {
         return displayPrice;
       }
       // KZ ou outro
-      const displayPrice = `${parseFloat(priceInKZ.toString()).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} KZ`;
+      const displayPrice = `${parseFloat(priceInKZ.toString()).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KZ`;
       console.log(`🚨 getDisplayPrice - VALOR JÁ CONVERTIDO KZ: ${displayPrice}`);
       return displayPrice;
     }
@@ -368,7 +368,7 @@ const Checkout = () => {
     // Verificar se userCountry está disponível
     if (!userCountry) {
       console.log(`🚨 getDisplayPrice - GEO NOT READY: ${priceInKZ} KZ`);
-      return `${priceInKZ.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} KZ`;
+      return `${priceInKZ.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KZ`;
     }
 
     // SEMPRE usar preços personalizados se disponíveis para o país do usuário
@@ -384,7 +384,7 @@ const Checkout = () => {
       } else if (userCountry.currency === 'MZN') {
         displayPrice = `${customPrice.toFixed(2)} MZN`;
       } else {
-        displayPrice = `${customPrice.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} KZ`;
+        displayPrice = `${customPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KZ`;
       }
       console.log(`🚨 getDisplayPrice - USANDO PREÇO PERSONALIZADO: ${priceInKZ} KZ -> ${displayPrice}`);
       return displayPrice;
@@ -393,7 +393,7 @@ const Checkout = () => {
     // Verificar se formatPrice está disponível antes de usar
     if (!formatPrice || !userCountry) {
       console.log(`🚨 getDisplayPrice - FORMAT NOT READY: ${priceInKZ} KZ`);
-      return `${priceInKZ.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} KZ`;
+      return `${priceInKZ.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KZ`;
     }
     try {
       const displayPrice = formatPrice(priceInKZ, userCountry, product?.custom_prices);

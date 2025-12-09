@@ -291,7 +291,7 @@ export const useGeoLocation = () => {
             return `${customPrice.toFixed(2)} MZN`;
           case 'KZ':
           default:
-            return `${parseFloat(customPrice.toString()).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} KZ`;
+            return `${parseFloat(customPrice.toString()).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KZ`;
         }
       }
     }
@@ -310,7 +310,7 @@ export const useGeoLocation = () => {
         return `${convertedPrice.toFixed(2)} MZN`;
       case 'KZ':
       default:
-        return `${parseFloat(convertedPrice.toString()).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} KZ`;
+        return `${parseFloat(convertedPrice.toString()).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KZ`;
     }
   };
 
