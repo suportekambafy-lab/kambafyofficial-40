@@ -139,12 +139,23 @@ export default function Products() {
                 }
               }
               
-              // Usar bump_product_id diretamente - é a forma correta de identificar o produto
-              const bumpProductId = bumpData?.bump_product_id as string | undefined;
+              if (!bumpData) continue;
               
-              if (bumpProductId && allProductIds.includes(bumpProductId)) {
-                // Este order bump é de um produto do vendedor atual
-                orderBumpSalesMap[bumpProductId] = (orderBumpSalesMap[bumpProductId] || 0) + 1;
+              // Verificar se há um array de items (formato múltiplo)
+              if (Array.isArray(bumpData.items)) {
+                for (const item of bumpData.items) {
+                  const itemProductId = item?.bump_product_id as string | undefined;
+                  if (itemProductId && allProductIds.includes(itemProductId)) {
+                    orderBumpSalesMap[itemProductId] = (orderBumpSalesMap[itemProductId] || 0) + 1;
+                  }
+                }
+              }
+              // Formato legacy/single - bump_product_id direto
+              else {
+                const bumpProductId = bumpData?.bump_product_id as string | undefined;
+                if (bumpProductId && allProductIds.includes(bumpProductId)) {
+                  orderBumpSalesMap[bumpProductId] = (orderBumpSalesMap[bumpProductId] || 0) + 1;
+                }
               }
             } catch (e) {
               // Ignorar erros de parse
