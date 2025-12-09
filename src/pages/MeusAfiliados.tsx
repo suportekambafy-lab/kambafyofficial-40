@@ -212,11 +212,7 @@ export default function MeusAfiliados() {
     return new Date(dateString).toLocaleDateString('pt-BR');
   };
 
-  if (loading) {
-    return <PageSkeleton variant="affiliates" />;
-  }
-
-  // Calculate status counts
+  // Calculate status counts - must be before any conditional returns
   const statusCounts = useMemo(() => {
     return {
       ativos: affiliates.filter(a => a.status === 'ativo').length,
@@ -225,6 +221,10 @@ export default function MeusAfiliados() {
       total: affiliates.length
     };
   }, [affiliates]);
+
+  if (loading) {
+    return <PageSkeleton variant="affiliates" />;
+  }
 
   return (
     <ProtectedRoute>
