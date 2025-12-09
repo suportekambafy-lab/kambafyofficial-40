@@ -1,13 +1,11 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from '@/hooks/useTranslation';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Eye, Share, Package } from "lucide-react";
+import { Plus, Package, LayoutGrid, List } from "lucide-react";
 import { toast } from "@/hooks/useCustomToast";
-import ProductFormTabs from '@/components/ProductFormTabs';
 import StepperProductForm from '@/components/StepperProductForm';
 import ProductTypeSelector from '@/components/ProductTypeSelector';
 import ProductShareDialog from '@/components/ProductShareDialog';
@@ -15,7 +13,9 @@ import DeleteProductModal from '@/components/DeleteProductModal';
 import RequestRevisionModal from '@/components/RequestRevisionModal';
 import { useOptimizedQuery } from '@/hooks/useOptimizedQuery';
 import { ProductCard } from '@/components/ProductCard';
+import { ProductListItem } from '@/components/ProductListItem';
 import { PageSkeleton } from '@/components/ui/page-skeleton';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 interface Product {
   id: string;
@@ -49,6 +49,7 @@ export default function Products() {
   const [deleteProduct, setDeleteProduct] = useState<Product | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [revisionProduct, setRevisionProduct] = useState<Product | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   // Use optimized query with caching
   const { data: products = [], isLoading: loading, refetch } = useOptimizedQuery(
@@ -412,15 +413,26 @@ export default function Products() {
         />
       ) : (
         <>
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Meus Produtos</h1>
-              <p className="text-gray-600 dark:text-gray-400">Gerencie seus produtos e produtos para afiliação</p>
+              <h1 className="text-3xl font-bold text-foreground">Meus Produtos</h1>
+              <p className="text-muted-foreground">Gerencie seus produtos e produtos para afiliação</p>
             </div>
-            <Button onClick={handleNewProduct} className="flex items-center gap-2">
-              <Plus className="w-4 h-4" />
-              Novo Produto
-            </Button>
+            <div className="flex items-center gap-3">
+              <ToggleGroup type="single" value={viewMode} onValueChange={(value) => value && setViewMode(value as 'grid' | 'list')}>
+                <ToggleGroupItem value="grid" aria-label="Visualização em grade">
+                  <LayoutGrid className="w-4 h-4" />
+                </ToggleGroupItem>
+                <ToggleGroupItem value="list" aria-label="Visualização em lista">
+                  <List className="w-4 h-4" />
+                </ToggleGroupItem>
+              </ToggleGroup>
+              <Button onClick={handleNewProduct} className="flex items-center gap-2">
+                <Plus className="w-4 h-4" />
+                <span className="hidden sm:inline">Novo Produto</span>
+                <span className="sm:hidden">Novo</span>
+              </Button>
+            </div>
           </div>
 
           {products.length === 0 ? (
@@ -439,10 +451,24 @@ export default function Products() {
                 </Button>
               </CardContent>
             </Card>
-          ) : (
+          ) : viewMode === 'grid' ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
               {memoizedProducts.map((product) => (
                 <ProductCard
+                  key={product.id}
+                  product={product}
+                  onEdit={handleEditProduct}
+                  onShare={(prod) => setShareProduct(prod)}
+                  onDelete={(prod) => setDeleteProduct(prod)}
+                  onToggleStatus={handleToggleStatus}
+                  onRequestRevision={handleRequestRevision}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {memoizedProducts.map((product) => (
+                <ProductListItem
                   key={product.id}
                   product={product}
                   onEdit={handleEditProduct}
