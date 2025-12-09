@@ -3711,6 +3711,15 @@ export type Database = {
       }
     }
     Functions: {
+      admin_add_student_to_member_area: {
+        Args: {
+          p_cohort_id?: string
+          p_member_area_id: string
+          p_student_email: string
+          p_student_name: string
+        }
+        Returns: Json
+      }
       admin_approve_product: {
         Args: { admin_id?: string; p_admin_email?: string; product_id: string }
         Returns: undefined
