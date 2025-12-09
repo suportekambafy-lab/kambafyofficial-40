@@ -146,26 +146,10 @@ export default function Members() {
   const [addStudentDialogOpen, setAddStudentDialogOpen] = useState(false);
   useEffect(() => {
     if (!loading && user) {
-      // Limpar cache antigo para forçar reload (temporário para debug)
+      // SEMPRE limpar cache e recarregar dados frescos
       const cacheKey = `member-areas-${user.id}`;
-      const cached = sessionStorage.getItem(cacheKey);
-      
-      if (cached) {
-        const {
-          data,
-          timestamp
-        } = JSON.parse(cached);
-        
-        // Reduzir cache para 30 segundos para debugging
-        if (Date.now() - timestamp < 30 * 1000) {
-          console.log('Using cached member areas:', data);
-          setMemberAreas(data);
-          return;
-        } else {
-          console.log('Cache expired, clearing...');
-          sessionStorage.removeItem(cacheKey);
-        }
-      }
+      sessionStorage.removeItem(cacheKey);
+      console.log('Cache cleared, loading fresh data...');
       loadData();
     } else if (!loading && !user) {
       setLessons([]);
