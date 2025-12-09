@@ -4240,11 +4240,13 @@ export type Database = {
           total_revenue: number
         }[]
       }
+      is_active_admin_by_auth_id: { Args: never; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
       is_admin_session: { Args: never; Returns: boolean }
       is_admin_user: { Args: { check_email: string }; Returns: boolean }
       is_current_user_admin: { Args: never; Returns: boolean }
       is_super_admin: { Args: { user_email: string }; Returns: boolean }
+      is_super_admin_by_auth_id: { Args: never; Returns: boolean }
       is_suspicious_ip: {
         Args: { _ip_address: string; _user_id: string }
         Returns: boolean
