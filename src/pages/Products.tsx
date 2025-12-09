@@ -49,7 +49,17 @@ export default function Products() {
   const [deleteProduct, setDeleteProduct] = useState<Product | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [revisionProduct, setRevisionProduct] = useState<Product | null>(null);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
+    const saved = localStorage.getItem('products-view-mode');
+    return (saved === 'list' || saved === 'grid') ? saved : 'grid';
+  });
+
+  const handleViewModeChange = useCallback((value: string | undefined) => {
+    if (value === 'grid' || value === 'list') {
+      setViewMode(value);
+      localStorage.setItem('products-view-mode', value);
+    }
+  }, []);
 
   // Use optimized query with caching
   const { data: products = [], isLoading: loading, refetch } = useOptimizedQuery(
@@ -419,7 +429,7 @@ export default function Products() {
               <p className="text-muted-foreground">Gerencie seus produtos e produtos para afiliação</p>
             </div>
             <div className="flex items-center gap-3">
-              <ToggleGroup type="single" value={viewMode} onValueChange={(value) => value && setViewMode(value as 'grid' | 'list')}>
+              <ToggleGroup type="single" value={viewMode} onValueChange={handleViewModeChange}>
                 <ToggleGroupItem value="grid" aria-label="Visualização em grade">
                   <LayoutGrid className="w-4 h-4" />
                 </ToggleGroupItem>
