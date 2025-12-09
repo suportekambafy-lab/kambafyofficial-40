@@ -1,0 +1,1 @@
+UPDATE public.orders SET status = 'completed' WHERE order_id IN ('I5ITCSEHP', 'YTD7QKIYE', '6R2ZWHYY1')
