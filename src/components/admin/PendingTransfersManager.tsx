@@ -414,24 +414,21 @@ export function PendingTransfersManager() {
             console.log('✅ Acesso ao produto criado/verificado com sucesso');
           }
 
-          // 2. Adicionar estudante à área de membros (se aplicável) - tratar duplicação como sucesso
+          // 2. Adicionar estudante à área de membros (se aplicável) - usando RPC para bypass RLS
           if (orderData.product_member_area_id) {
             console.log('👨‍🎓 Adicionando estudante à área de membros...');
-            const { error: studentError } = await supabase
-              .from('member_area_students')
-              .insert({
-                member_area_id: orderData.product_member_area_id,
-                student_email: orderData.customer_email,
-                student_name: orderData.customer_name
-              })
-              .select()
-              .single();
+            const { data: studentResult, error: studentError } = await supabase.rpc('admin_add_student_to_member_area', {
+              p_member_area_id: orderData.product_member_area_id,
+              p_student_email: orderData.customer_email,
+              p_student_name: orderData.customer_name,
+              p_cohort_id: orderData.cohort_id || null
+            });
 
-            if (studentError && !studentError.message.includes('duplicate key') && !studentError.message.includes('already exists')) {
+            if (studentError) {
               console.error('❌ Erro ao adicionar estudante:', studentError);
               throw studentError;
             } else {
-              console.log('✅ Estudante adicionado/verificado à área de membros');
+              console.log('✅ Estudante adicionado/verificado à área de membros:', studentResult);
             }
           }
 
