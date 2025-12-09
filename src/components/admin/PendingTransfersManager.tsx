@@ -897,7 +897,25 @@ export function PendingTransfersManager() {
         <CardHeader>
           <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <span className="text-lg sm:text-xl">Aprovar Pagamentos - Transferências</span>
-            <Badge variant="secondary">{pendingTransfers.length} pendentes</Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary">{pendingTransfers.length} pendentes</Badge>
+              {pendingTransfers.length > 0 && (
+                <Button
+                  onClick={() => {
+                    if (window.confirm(`Tem certeza que deseja REJEITAR TODOS os ${pendingTransfers.length} pagamentos pendentes?`)) {
+                      handleBulkReject(pendingTransfers.map(t => t.id));
+                    }
+                  }}
+                  disabled={processingId !== null}
+                  size="sm"
+                  variant="destructive"
+                  className="flex items-center gap-2"
+                >
+                  <XCircle className="h-4 w-4" />
+                  <span className="text-xs sm:text-sm">Rejeitar Todos</span>
+                </Button>
+              )}
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
