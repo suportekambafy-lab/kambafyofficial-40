@@ -43,6 +43,7 @@ export function WithdrawalModal({
   // Estados para 2FA
   const [show2FAVerification, setShow2FAVerification] = useState(false);
   const [pendingWithdrawal, setPendingWithdrawal] = useState<PendingWithdrawal | null>(null);
+  const [isReturningUser, setIsReturningUser] = useState(false); // Usuário está voltando após sair da página
 
   // ✅ Restaurar estado de 2FA pendente do sessionStorage quando o modal abre
   useEffect(() => {
@@ -75,6 +76,7 @@ export function WithdrawalModal({
             setPendingWithdrawal(data);
             setShow2FAVerification(true);
             setWithdrawalAmount(data.roundedAmount.toFixed(2));
+            setIsReturningUser(true); // Marcar que está voltando - NÃO pular envio de código
           } else {
             // Expirado, limpar tudo
             sessionStorage.removeItem(WITHDRAWAL_2FA_KEY);
@@ -92,6 +94,7 @@ export function WithdrawalModal({
     if (!open && !show2FAVerification) {
       setWithdrawalAmount("");
       setError("");
+      setIsReturningUser(false);
     }
   }, [open, show2FAVerification]);
 
@@ -312,7 +315,7 @@ export function WithdrawalModal({
               onVerificationSuccess={handle2FASuccess}
               onBack={handle2FABack}
               context="withdrawal"
-              skipInitialSend={!!sessionStorage.getItem(WITHDRAWAL_2FA_KEY)}
+              skipInitialSend={false}
             />
           </div>
         </DrawerContent>
