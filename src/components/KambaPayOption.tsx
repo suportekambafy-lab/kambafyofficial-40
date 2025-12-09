@@ -19,7 +19,7 @@ export function KambaPayOption({ productPrice, onSelect, selected, disabled }: K
   const { balance, loading, fetchBalanceByEmail } = useKambaPayBalance(email);
 
   const formatPrice = (amount: number, currency: string = 'KZ') => {
-    return `${parseFloat(amount.toString()).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ${currency}`;
+    return `${parseFloat(amount.toString()).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`;
   };
 
   const isDisabled = disabled || loading;

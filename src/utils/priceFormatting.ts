@@ -8,13 +8,13 @@ export interface CountryInfo {
   exchangeRate: number;
 }
 
-// Helper para formatar número com máximo de 2 casas decimais
+// Helper para formatar número com exatamente 2 casas decimais
 const formatWithMaxTwoDecimals = (value: number): string => {
   // Arredonda para 2 casas decimais
   const rounded = Math.round(value * 100) / 100;
-  // Formata com separador de milhares e vírgula decimal (pt-BR)
+  // Formata com separador de milhares e vírgula decimal (pt-BR) - sempre 2 casas
   return rounded.toLocaleString('pt-BR', {
-    minimumFractionDigits: 0,
+    minimumFractionDigits: 2,
     maximumFractionDigits: 2
   });
 };
