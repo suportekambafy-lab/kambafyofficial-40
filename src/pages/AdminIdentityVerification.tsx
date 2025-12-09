@@ -28,7 +28,8 @@ import {
   ExternalLink,
   UserX,
   CheckCheck,
-  Loader2
+  Loader2,
+  Globe
 } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
 
@@ -41,6 +42,7 @@ interface IdentityVerification {
   document_number: string;
   document_front_url?: string;
   document_back_url?: string;
+  country?: string;
   status: 'pendente' | 'aprovado' | 'rejeitado';
   rejection_reason?: string;
   created_at: string;
@@ -50,6 +52,17 @@ interface IdentityVerification {
     email: string;
   };
 }
+
+const COUNTRY_NAMES: Record<string, string> = {
+  'AO': 'Angola',
+  'MZ': 'Moçambique',
+  'PT': 'Portugal',
+  'BR': 'Brasil',
+  'CV': 'Cabo Verde',
+  'GW': 'Guiné-Bissau',
+  'ST': 'São Tomé e Príncipe',
+  'TL': 'Timor-Leste'
+};
 
 export default function AdminIdentityVerification() {
   const { admin } = useAdminAuth();
@@ -534,7 +547,14 @@ export default function AdminIdentityVerification() {
                   </div>
                 </CardHeader>
                 <CardContent className="p-4 sm:p-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-4">
+                    <div className="flex items-center gap-2">
+                      <Globe className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 flex-shrink-0" />
+                      <span className="text-xs sm:text-sm text-gray-600">País:</span>
+                      <span className="text-xs sm:text-sm font-medium truncate">
+                        {verification.country ? (COUNTRY_NAMES[verification.country] || verification.country) : 'N/A'}
+                      </span>
+                    </div>
                     <div className="flex items-center gap-2">
                       <FileText className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 flex-shrink-0" />
                       <span className="text-xs sm:text-sm text-gray-600">Tipo:</span>
