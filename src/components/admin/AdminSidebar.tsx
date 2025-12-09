@@ -12,7 +12,7 @@ import {
   Calendar,
   Settings,
   ChevronDown,
-  Smartphone,
+  Shield,
   PanelLeftClose,
   PanelLeft,
   Wrench,
@@ -202,22 +202,22 @@ export function AdminSidebar({ collapsed = false, onToggle }: AdminSidebarProps)
         </ul>
       </nav>
 
-      {/* CTA Block */}
+      {/* Admin Info Block */}
       {!collapsed && (
         <div className="p-4">
-          <div className="bg-gradient-to-br from-cyan-500 to-blue-500 rounded-2xl p-5 text-white">
+          <div className="bg-gradient-to-br from-[hsl(var(--admin-primary))] to-[hsl(var(--admin-primary)/0.8)] rounded-2xl p-5 text-white">
             <div className="h-10 w-10 bg-white/20 rounded-xl flex items-center justify-center mb-4">
-              <Smartphone className="h-5 w-5" />
+              <Shield className="h-5 w-5" />
             </div>
             <h4 className="font-semibold text-sm mb-1">
-              Acompanhe o seu negócio em qualquer lugar
+              Painel Administrativo
             </h4>
             <p className="text-xs text-white/80 mb-4">
-              Torne tudo mais simples
+              Gerencie toda a plataforma Kambafy
             </p>
-            <button className="w-full bg-white text-[hsl(var(--admin-primary))] font-semibold text-sm py-2.5 px-4 rounded-xl hover:bg-white/90 transition-colors">
-              Descarregar Aplicação
-            </button>
+            <div className="text-xs text-white/70">
+              v2.0 • Admin System
+            </div>
           </div>
         </div>
       )}
