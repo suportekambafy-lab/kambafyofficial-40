@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Search, MoreVertical, Filter, CheckSquare, Calendar, User, Mail, Package, Percent } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Search, MoreVertical, Filter, Users, Clock, XCircle, CheckCircle, Calendar, Mail, Package, Percent } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -216,12 +216,73 @@ export default function MeusAfiliados() {
     return <PageSkeleton variant="affiliates" />;
   }
 
+  // Calculate status counts
+  const statusCounts = useMemo(() => {
+    return {
+      ativos: affiliates.filter(a => a.status === 'ativo').length,
+      pendentes: affiliates.filter(a => a.status === 'pendente').length,
+      rejeitados: affiliates.filter(a => ['recusado', 'bloqueado', 'cancelado'].includes(a.status)).length,
+      total: affiliates.length
+    };
+  }, [affiliates]);
+
   return (
     <ProtectedRoute>
       <div className="p-4 md:p-6 space-y-6">
         {/* Header */}
-      <div className="space-y-4">
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground">{t('affiliates.title')}</h1>
+        <div className="space-y-4">
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">{t('affiliates.title')}</h1>
+          
+          {/* Status Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <Card className="border-l-4 border-l-primary">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Total</p>
+                    <p className="text-2xl font-bold text-foreground">{statusCounts.total}</p>
+                  </div>
+                  <Users className="h-8 w-8 text-primary opacity-80" />
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="border-l-4 border-l-green-500">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Ativos</p>
+                    <p className="text-2xl font-bold text-green-600">{statusCounts.ativos}</p>
+                  </div>
+                  <CheckCircle className="h-8 w-8 text-green-500 opacity-80" />
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="border-l-4 border-l-yellow-500">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Pendentes</p>
+                    <p className="text-2xl font-bold text-yellow-600">{statusCounts.pendentes}</p>
+                  </div>
+                  <Clock className="h-8 w-8 text-yellow-500 opacity-80" />
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="border-l-4 border-l-red-500">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Rejeitados</p>
+                    <p className="text-2xl font-bold text-red-600">{statusCounts.rejeitados}</p>
+                  </div>
+                  <XCircle className="h-8 w-8 text-red-500 opacity-80" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         
         {/* Tabs */}
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
