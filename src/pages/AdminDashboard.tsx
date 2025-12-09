@@ -357,21 +357,43 @@ export default function AdminDashboard() {
         ordersQuery
       ]);
 
-      // Fetch revenue with date filter
-      let revenueQuery = supabase
-        .from('orders')
-        .select('amount')
-        .eq('status', 'completed')
-        .neq('payment_method', 'member_access');
-
-      if (startDate) {
-        revenueQuery = revenueQuery.gte('created_at', startDate.toISOString());
-        revenueQuery = revenueQuery.lte('created_at', endDate.toISOString());
-      }
-
-      const { data: ordersData } = await revenueQuery;
+      // Fetch revenue - use RPC for all time, manual query for filtered periods
+      let totalRevenue = 0;
       
-      const totalRevenue = ordersData?.reduce((sum, order) => sum + (parseFloat(order.amount) || 0), 0) || 0;
+      if (startDate) {
+        // For filtered periods, fetch with pagination to get all records
+        let allOrders: { amount: string }[] = [];
+        let page = 0;
+        const pageSize = 1000;
+        let hasMore = true;
+
+        while (hasMore) {
+          const { data: ordersPage } = await supabase
+            .from('orders')
+            .select('amount')
+            .eq('status', 'completed')
+            .neq('payment_method', 'member_access')
+            .gte('created_at', startDate.toISOString())
+            .lte('created_at', endDate.toISOString())
+            .range(page * pageSize, (page + 1) * pageSize - 1);
+
+          if (ordersPage && ordersPage.length > 0) {
+            allOrders = [...allOrders, ...ordersPage];
+            hasMore = ordersPage.length === pageSize;
+            page++;
+          } else {
+            hasMore = false;
+          }
+        }
+
+        totalRevenue = allOrders.reduce((sum, order) => sum + (parseFloat(order.amount) || 0), 0);
+      } else {
+        // For all time, use RPC to get total from database directly
+        const { data: revenueData } = await supabase
+          .rpc('get_total_revenue_stats' as any);
+        totalRevenue = (revenueData as any)?.[0]?.total_revenue || 0;
+      }
+      
       const companyCommission = totalRevenue * 0.08;
       const sellersEarnings = totalRevenue * 0.92;
 
