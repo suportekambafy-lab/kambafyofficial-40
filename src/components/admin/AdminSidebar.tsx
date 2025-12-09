@@ -205,7 +205,7 @@ export function AdminSidebar({ collapsed = false, onToggle }: AdminSidebarProps)
       {/* Admin Info Block */}
       {!collapsed && (
         <div className="p-4">
-          <div className="bg-gradient-to-br from-[hsl(var(--admin-primary))] to-[hsl(var(--admin-primary)/0.8)] rounded-2xl p-5 text-white">
+          <div className="bg-gradient-to-br from-[hsl(var(--checkout-green-dark))] to-[hsl(var(--checkout-green-dark)/0.85)] rounded-2xl p-5 text-white">
             <div className="h-10 w-10 bg-white/20 rounded-xl flex items-center justify-center mb-4">
               <Shield className="h-5 w-5" />
             </div>
