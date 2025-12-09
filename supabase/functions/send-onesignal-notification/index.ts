@@ -13,7 +13,6 @@ interface NotificationRequest {
   title: string;
   message: string;
   data?: Record<string, any>;
-  sound?: string; // Nome do som (default: notification_sound)
 }
 
 serve(async (req) => {
@@ -23,7 +22,7 @@ serve(async (req) => {
   }
 
   try {
-    const { userId, external_id, player_id, title, message, data = {}, sound = 'notification_sound' } = await req.json() as NotificationRequest;
+    const { userId, external_id, player_id, title, message, data = {} } = await req.json() as NotificationRequest;
 
     console.log('📱 Iniciando envio de notificação:', { userId, external_id, player_id });
 
@@ -101,9 +100,6 @@ serve(async (req) => {
       headings: { en: title },
       contents: { en: message },
       data: data,
-      // Som de moedas para notificações
-      ios_sound: `${sound}.caf`,
-      android_sound: sound,
     };
 
     let targetingMethod = '';
