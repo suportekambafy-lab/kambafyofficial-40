@@ -69,10 +69,23 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     // Formatar valor (valor já vem no formato correto, não dividir por 100)
-    const formattedAmount = new Intl.NumberFormat('pt-AO', {
-      style: 'currency',
-      currency: currency === 'KZ' ? 'AOA' : currency
-    }).format(parseFloat(amount));
+    let formattedAmount: string;
+    try {
+      const numericAmount = parseFloat(String(amount).replace(/[^\d.,]/g, '').replace(',', '.'));
+      if (isNaN(numericAmount)) {
+        formattedAmount = `${amount} ${currency}`;
+      } else {
+        formattedAmount = new Intl.NumberFormat('pt-AO', {
+          style: 'currency',
+          currency: currency === 'KZ' ? 'AOA' : (currency || 'AOA')
+        }).format(numericAmount);
+      }
+    } catch (formatError) {
+      console.log('⚠️ [EMAIL] Error formatting amount, using fallback:', formatError);
+      formattedAmount = `${amount} ${currency}`;
+    }
+    
+    console.log('💰 [EMAIL] Formatted amount:', formattedAmount);
 
     const emailResponse = await resend.emails.send({
       from: "Kambafy Vendas <vendas@kambafy.com>",

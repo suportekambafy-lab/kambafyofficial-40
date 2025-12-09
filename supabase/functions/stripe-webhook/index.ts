@@ -479,11 +479,24 @@ serve(async (req) => {
         console.log('🔄 Updating order status for order_id:', orderId);
         
         // Buscar dados do produto para calcular comissão correta
-        const productId = paymentIntent.metadata.productId || paymentIntent.metadata.product_id;
+        let productId = paymentIntent.metadata.productId || paymentIntent.metadata.product_id;
         
+        // Se não tiver productId nas metadata, tentar buscar da order existente
         if (!productId) {
-          console.error('❌ Product ID not found in metadata:', paymentIntent.metadata);
-          throw new Error('Product ID not found in payment metadata');
+          console.log('⚠️ Product ID not found in metadata, trying to fetch from existing order...');
+          const { data: existingOrderData } = await supabase
+            .from('orders')
+            .select('product_id')
+            .eq('order_id', orderId)
+            .maybeSingle();
+          
+          if (existingOrderData?.product_id) {
+            productId = existingOrderData.product_id;
+            console.log('✅ Found product_id from existing order:', productId);
+          } else {
+            console.error('❌ Product ID not found in metadata or existing order:', paymentIntent.metadata);
+            throw new Error('Product ID not found in payment metadata or existing order');
+          }
         }
         
         const { data: productData, error: productError } = await supabase
