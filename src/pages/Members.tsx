@@ -146,17 +146,24 @@ export default function Members() {
   const [addStudentDialogOpen, setAddStudentDialogOpen] = useState(false);
   useEffect(() => {
     if (!loading && user) {
-      // Cache check para member areas
-      const cached = sessionStorage.getItem(`member-areas-${user.id}`);
+      // Limpar cache antigo para forçar reload (temporário para debug)
+      const cacheKey = `member-areas-${user.id}`;
+      const cached = sessionStorage.getItem(cacheKey);
+      
       if (cached) {
         const {
           data,
           timestamp
         } = JSON.parse(cached);
-        if (Date.now() - timestamp < 3 * 60 * 1000) {
-          // 3 minutos
+        
+        // Reduzir cache para 30 segundos para debugging
+        if (Date.now() - timestamp < 30 * 1000) {
+          console.log('Using cached member areas:', data);
           setMemberAreas(data);
           return;
+        } else {
+          console.log('Cache expired, clearing...');
+          sessionStorage.removeItem(cacheKey);
         }
       }
       loadData();
@@ -353,15 +360,26 @@ export default function Members() {
       // Carregar contagem de estudantes para cada área
       const areasWithCounts = await Promise.all((areasData || []).map(async area => {
         const {
-          count
-        } = await supabase.from('member_area_students').select('*', {
-          count: 'exact'
+          count,
+          error: studentsError
+        } = await supabase.from('member_area_students').select('id', {
+          count: 'exact',
+          head: true
         }).eq('member_area_id', area.id);
+        
+        if (studentsError) {
+          console.error('Error counting students for area', area.id, ':', studentsError);
+        }
+        
         const {
           count: lessonsCount
-        } = await supabase.from('lessons').select('*', {
-          count: 'exact'
+        } = await supabase.from('lessons').select('id', {
+          count: 'exact',
+          head: true
         }).eq('member_area_id', area.id).eq('status', 'published');
+        
+        console.log(`Area ${area.name}: ${count} students, ${lessonsCount} lessons`);
+        
         return {
           ...area,
           students_count: count || 0,
