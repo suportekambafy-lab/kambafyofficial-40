@@ -1,31 +1,7 @@
 import { corsHeaders } from "../_shared/cors.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-console.log("🔄 HEIC Image Converter Function initialized");
-
-// Função para converter HEIC para JPEG
-async function convertHeicToJpeg(heicData: Uint8Array): Promise<Uint8Array> {
-  console.log('🔄 Iniciando conversão HEIC -> JPEG...');
-  console.log('📦 Tamanho do arquivo HEIC:', heicData.length, 'bytes');
-  
-  try {
-    const heicConvert = (await import("npm:heic-convert@2.1.0")).default;
-    
-    const jpegBuffer = await heicConvert({
-      buffer: heicData,
-      format: 'JPEG',
-      quality: 0.92
-    });
-    
-    console.log('✅ Conversão HEIC -> JPEG concluída!');
-    console.log('📦 Tamanho do arquivo JPEG:', jpegBuffer.length, 'bytes');
-    
-    return new Uint8Array(jpegBuffer);
-  } catch (error) {
-    console.error('❌ Erro na conversão HEIC:', error);
-    throw new Error(`Falha na conversão HEIC para JPEG: ${error.message}`);
-  }
-}
+console.log("🔄 HEIC Image Converter Function v2.0 initialized");
 
 // Helper para criar assinatura AWS V4
 async function createSignature(
@@ -131,19 +107,47 @@ async function uploadToR2(binaryData: Uint8Array, fileName: string): Promise<str
   return `https://pub-b5914a93ed33480dba157a5f46c57749.r2.dev/${uniqueFileName}`;
 }
 
+// Função para converter HEIC para JPEG com qualidade menor para ser mais rápido
+async function convertHeicToJpeg(heicData: Uint8Array): Promise<Uint8Array> {
+  console.log('🔄 Iniciando conversão HEIC -> JPEG...');
+  console.log('📦 Tamanho do arquivo HEIC:', heicData.length, 'bytes');
+  
+  try {
+    const heicConvert = (await import("npm:heic-convert@2.1.0")).default;
+    
+    // Usar qualidade menor (0.75) para ser mais rápido
+    const jpegBuffer = await heicConvert({
+      buffer: heicData,
+      format: 'JPEG',
+      quality: 0.75
+    });
+    
+    console.log('✅ Conversão HEIC -> JPEG concluída!');
+    console.log('📦 Tamanho do arquivo JPEG:', jpegBuffer.length, 'bytes');
+    
+    return new Uint8Array(jpegBuffer);
+  } catch (error) {
+    console.error('❌ Erro na conversão HEIC:', error);
+    throw new Error(`Falha na conversão HEIC para JPEG: ${error.message}`);
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { verificationId } = await req.json();
+    const { verificationId, documentType } = await req.json();
 
     if (!verificationId) {
       throw new Error("verificationId é obrigatório");
     }
 
-    console.log("🔍 Buscando verificação:", verificationId);
+    // documentType pode ser 'front', 'back' ou undefined (converter ambos - mas uma de cada vez)
+    const targetDocument = documentType || 'front'; // Default: começar pela frente
+
+    console.log("🔍 Buscando verificação:", verificationId, "documento:", targetDocument);
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -162,62 +166,79 @@ Deno.serve(async (req) => {
 
     console.log("📋 Verificação encontrada:", verification.full_name);
 
-    const updates: { document_front_url?: string; document_back_url?: string } = {};
-    let convertedCount = 0;
+    let converted = false;
+    let newUrl = '';
+    let nextDocument: string | null = null;
 
-    // Converter document_front_url se for HEIC
-    if (verification.document_front_url?.toLowerCase().endsWith('.heic') || 
-        verification.document_front_url?.toLowerCase().endsWith('.heif')) {
-      console.log("🔄 Convertendo documento frontal HEIC...");
-      
-      const response = await fetch(verification.document_front_url);
-      if (response.ok) {
-        const heicData = new Uint8Array(await response.arrayBuffer());
-        const jpegData = await convertHeicToJpeg(heicData);
-        const newUrl = await uploadToR2(jpegData, "doc-front-converted.jpg");
-        updates.document_front_url = newUrl;
-        convertedCount++;
-        console.log("✅ Documento frontal convertido:", newUrl);
+    // Converter apenas um documento por vez para evitar timeout
+    if (targetDocument === 'front' && verification.document_front_url) {
+      const frontUrl = verification.document_front_url.toLowerCase();
+      if (frontUrl.endsWith('.heic') || frontUrl.endsWith('.heif')) {
+        console.log("🔄 Convertendo documento frontal HEIC...");
+        
+        const response = await fetch(verification.document_front_url);
+        if (response.ok) {
+          const heicData = new Uint8Array(await response.arrayBuffer());
+          const jpegData = await convertHeicToJpeg(heicData);
+          newUrl = await uploadToR2(jpegData, "doc-front-converted.jpg");
+          
+          // Atualizar no banco
+          const { error: updateError } = await supabase
+            .from("identity_verification")
+            .update({ document_front_url: newUrl })
+            .eq("id", verificationId);
+
+          if (updateError) {
+            throw new Error(`Erro ao atualizar: ${updateError.message}`);
+          }
+          
+          converted = true;
+          console.log("✅ Documento frontal convertido:", newUrl);
+          
+          // Verificar se há documento traseiro para converter depois
+          const backUrl = verification.document_back_url?.toLowerCase() || '';
+          if (backUrl.endsWith('.heic') || backUrl.endsWith('.heif')) {
+            nextDocument = 'back';
+          }
+        }
+      }
+    } else if (targetDocument === 'back' && verification.document_back_url) {
+      const backUrl = verification.document_back_url.toLowerCase();
+      if (backUrl.endsWith('.heic') || backUrl.endsWith('.heif')) {
+        console.log("🔄 Convertendo documento traseiro HEIC...");
+        
+        const response = await fetch(verification.document_back_url);
+        if (response.ok) {
+          const heicData = new Uint8Array(await response.arrayBuffer());
+          const jpegData = await convertHeicToJpeg(heicData);
+          newUrl = await uploadToR2(jpegData, "doc-back-converted.jpg");
+          
+          // Atualizar no banco
+          const { error: updateError } = await supabase
+            .from("identity_verification")
+            .update({ document_back_url: newUrl })
+            .eq("id", verificationId);
+
+          if (updateError) {
+            throw new Error(`Erro ao atualizar: ${updateError.message}`);
+          }
+          
+          converted = true;
+          console.log("✅ Documento traseiro convertido:", newUrl);
+        }
       }
     }
 
-    // Converter document_back_url se for HEIC
-    if (verification.document_back_url?.toLowerCase().endsWith('.heic') || 
-        verification.document_back_url?.toLowerCase().endsWith('.heif')) {
-      console.log("🔄 Convertendo documento traseiro HEIC...");
-      
-      const response = await fetch(verification.document_back_url);
-      if (response.ok) {
-        const heicData = new Uint8Array(await response.arrayBuffer());
-        const jpegData = await convertHeicToJpeg(heicData);
-        const newUrl = await uploadToR2(jpegData, "doc-back-converted.jpg");
-        updates.document_back_url = newUrl;
-        convertedCount++;
-        console.log("✅ Documento traseiro convertido:", newUrl);
-      }
-    }
-
-    // Atualizar no banco se houve conversões
-    if (Object.keys(updates).length > 0) {
-      const { error: updateError } = await supabase
-        .from("identity_verification")
-        .update(updates)
-        .eq("id", verificationId);
-
-      if (updateError) {
-        throw new Error(`Erro ao atualizar: ${updateError.message}`);
-      }
-    }
-
-    console.log(`✅ Conversão concluída: ${convertedCount} imagens convertidas`);
+    console.log(`✅ Conversão concluída: converted=${converted}, nextDocument=${nextDocument}`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        convertedCount,
-        updates,
-        message: convertedCount > 0 
-          ? `${convertedCount} imagem(ns) HEIC convertida(s) para JPEG`
+        converted,
+        newUrl,
+        nextDocument,
+        message: converted 
+          ? `Documento ${targetDocument === 'front' ? 'frontal' : 'traseiro'} convertido para JPEG`
           : "Nenhuma imagem HEIC encontrada para converter"
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }

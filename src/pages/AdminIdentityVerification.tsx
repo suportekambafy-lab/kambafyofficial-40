@@ -86,38 +86,52 @@ export default function AdminIdentityVerification() {
   const [isApprovingAll, setIsApprovingAll] = useState(false);
   const [convertingHeic, setConvertingHeic] = useState<string | null>(null);
 
-  // Função para converter imagens HEIC existentes
-  const convertHeicImages = async (verificationId: string) => {
+  // Função para converter imagens HEIC existentes (uma por vez)
+  const convertHeicImages = async (verificationId: string, documentType: 'front' | 'back' = 'front') => {
     try {
       setConvertingHeic(verificationId);
-      console.log('🔄 Convertendo imagens HEIC para verificação:', verificationId);
+      console.log('🔄 Convertendo imagem HEIC:', { verificationId, documentType });
 
       const { data, error } = await supabase.functions.invoke('convert-heic-images', {
-        body: { verificationId }
+        body: { verificationId, documentType }
       });
 
       if (error) throw error;
 
-      if (data.convertedCount > 0) {
+      if (data.converted) {
         toast({
           title: 'Sucesso',
           message: data.message,
           variant: 'success'
         });
-        // Recarregar para mostrar novas imagens
-        await loadVerifications();
+
+        // Se há mais documento para converter, converter automaticamente
+        if (data.nextDocument) {
+          toast({
+            title: 'Processando',
+            message: 'Convertendo segundo documento...',
+            variant: 'default'
+          });
+          // Aguardar um pouco e converter o próximo
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          await convertHeicImages(verificationId, data.nextDocument);
+        } else {
+          // Recarregar para mostrar novas imagens
+          await loadVerifications();
+        }
       } else {
         toast({
           title: 'Info',
-          message: 'Nenhuma imagem HEIC encontrada para converter',
+          message: data.message || 'Nenhuma imagem HEIC encontrada',
           variant: 'warning'
         });
+        await loadVerifications();
       }
     } catch (error) {
       console.error('❌ Erro ao converter HEIC:', error);
       toast({
         title: 'Erro',
-        message: 'Erro ao converter imagens HEIC',
+        message: 'Erro ao converter imagem HEIC. Tente novamente.',
         variant: 'error'
       });
     } finally {
