@@ -110,12 +110,10 @@ export default function AdminLiveView() {
       const pendingOrders = allTodayOrders.filter(o => o.status === 'pending' || o.status === 'Pendente');
       const recentPending = (recentOrders || []).filter(o => o.status === 'pending' || o.status === 'Pendente');
 
-      // Calculate total sales value and Kambafy commission
+      // Calculate total sales value and Kambafy commission (8.99% fixo)
       let totalSalesValue = 0;
-      let kambafyCommissionValue = 0;
       paidOrders.forEach(order => {
         let amount = parseFloat(order.amount || '0');
-        let sellerCommission = parseFloat(order.seller_commission?.toString() || '0');
         
         if (order.currency && order.currency !== 'KZ') {
           const exchangeRates: Record<string, number> = {
@@ -124,11 +122,12 @@ export default function AdminLiveView() {
           };
           const rate = exchangeRates[order.currency.toUpperCase()] || 1;
           amount = Math.round(amount * rate);
-          sellerCommission = Math.round(sellerCommission * rate);
         }
         totalSalesValue += amount;
-        kambafyCommissionValue += (amount - sellerCommission);
       });
+      
+      // Comissão Kambafy = 8.99% fixo (igual ao Dashboard)
+      const kambafyCommissionValue = totalSalesValue * 0.0899;
 
       const recentCompleted = (recentOrders || []).filter(o => o.status === 'completed');
 
