@@ -479,10 +479,17 @@ serve(async (req) => {
         console.log('🔄 Updating order status for order_id:', orderId);
         
         // Buscar dados do produto para calcular comissão correta
+        const productId = paymentIntent.metadata.productId || paymentIntent.metadata.product_id;
+        
+        if (!productId) {
+          console.error('❌ Product ID not found in metadata:', paymentIntent.metadata);
+          throw new Error('Product ID not found in payment metadata');
+        }
+        
         const { data: productData, error: productError } = await supabase
           .from('products')
-          .select('price')
-          .eq('id', paymentIntent.metadata.product_id)
+          .select('price, user_id, name')
+          .eq('id', productId)
           .single();
 
         if (productError) {
@@ -580,24 +587,13 @@ serve(async (req) => {
           // Order NÃO existe - criar nova
           console.log('🆕 Order não encontrada, criando nova...');
           
-          // Buscar dados do produto para o user_id do vendedor
-          const { data: productInfo, error: productInfoError } = await supabase
-            .from('products')
-            .select('user_id, name')
-            .eq('id', paymentIntent.metadata.productId)
-            .single();
-          
-          if (productInfoError) {
-            console.error('❌ Error fetching product info:', productInfoError);
-            throw productInfoError;
-          }
-          
+          // Usar productData que já foi buscado acima
           const { data: newOrder, error: insertError } = await supabase
             .from('orders')
             .insert({
               order_id: orderId,
-              product_id: paymentIntent.metadata.productId,
-              user_id: productInfo.user_id,
+              product_id: productId,
+              user_id: productData.user_id,
               customer_name: paymentIntent.metadata.customerName,
               customer_email: paymentIntent.metadata.customerEmail,
               customer_phone: paymentIntent.metadata.customerPhone || null,
