@@ -284,23 +284,45 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
             });
             // Don't redirect, wait for confirmation
             return;
-          } else if (status === 'canceled' || status === 'requires_payment_method') {
-            // Payment was rejected/canceled
+          } else if (status === 'canceled' || status === 'requires_payment_method' || status === 'failed') {
+            // Payment was rejected/canceled/failed
+            console.log('❌ MB Way payment rejected with status:', status);
             toast({
               title: "Pagamento recusado",
-              description: "O pagamento foi recusado ou cancelado. Por favor, tente novamente.",
+              description: "O pagamento MB Way foi recusado ou expirou. Por favor, tente novamente.",
               variant: "destructive"
             });
             setProcessing(false);
             return;
           }
+        } else if (confirmResult?.error) {
+          // Handle error from confirmPayment
+          console.error('❌ MB Way payment error:', confirmResult.error);
+          toast({
+            title: "Pagamento recusado",
+            description: confirmResult.error.message || "O pagamento foi recusado. Por favor, tente novamente.",
+            variant: "destructive"
+          });
+          setCardError(confirmResult.error.message || 'Erro ao processar pagamento');
+          setProcessing(false);
+          return;
         }
       }
 
       if (confirmResult?.error) {
         console.error('Payment confirmation error:', confirmResult.error);
-        setCardError(confirmResult.error.message || 'Erro ao processar pagamento');
-        onError(confirmResult.error.message || 'Erro ao processar pagamento');
+        const errorMessage = confirmResult.error.message || 'Erro ao processar pagamento';
+        setCardError(errorMessage);
+        onError(errorMessage);
+        
+        // Show toast for payment rejection (especially for MB Way)
+        toast({
+          title: "Pagamento recusado",
+          description: errorMessage,
+          variant: "destructive"
+        });
+        setProcessing(false);
+        return;
       } else if (confirmResult?.paymentIntent) {
         console.log('Payment intent confirmed:', confirmResult.paymentIntent);
         
