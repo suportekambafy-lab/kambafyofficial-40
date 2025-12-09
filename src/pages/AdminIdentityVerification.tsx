@@ -29,7 +29,8 @@ import {
   UserX,
   CheckCheck,
   Loader2,
-  Globe
+  Globe,
+  RefreshCw
 } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
 
@@ -83,6 +84,54 @@ export default function AdminIdentityVerification() {
   const [selectedUserForBan, setSelectedUserForBan] = useState<{ id: string; name: string; email: string } | null>(null);
   const [isBanning, setIsBanning] = useState(false);
   const [isApprovingAll, setIsApprovingAll] = useState(false);
+  const [convertingHeic, setConvertingHeic] = useState<string | null>(null);
+
+  // Função para converter imagens HEIC existentes
+  const convertHeicImages = async (verificationId: string) => {
+    try {
+      setConvertingHeic(verificationId);
+      console.log('🔄 Convertendo imagens HEIC para verificação:', verificationId);
+
+      const { data, error } = await supabase.functions.invoke('convert-heic-images', {
+        body: { verificationId }
+      });
+
+      if (error) throw error;
+
+      if (data.convertedCount > 0) {
+        toast({
+          title: 'Sucesso',
+          message: data.message,
+          variant: 'success'
+        });
+        // Recarregar para mostrar novas imagens
+        await loadVerifications();
+      } else {
+        toast({
+          title: 'Info',
+          message: 'Nenhuma imagem HEIC encontrada para converter',
+          variant: 'warning'
+        });
+      }
+    } catch (error) {
+      console.error('❌ Erro ao converter HEIC:', error);
+      toast({
+        title: 'Erro',
+        message: 'Erro ao converter imagens HEIC',
+        variant: 'error'
+      });
+    } finally {
+      setConvertingHeic(null);
+    }
+  };
+
+  // Verificar se verificação tem imagens HEIC
+  const hasHeicImages = (verification: IdentityVerification): boolean => {
+    const frontUrl = verification.document_front_url?.toLowerCase() || '';
+    const backUrl = verification.document_back_url?.toLowerCase() || '';
+    return frontUrl.endsWith('.heic') || frontUrl.endsWith('.heif') ||
+           backUrl.endsWith('.heic') || backUrl.endsWith('.heif');
+  };
 
   const loadVerifications = async () => {
     try {
@@ -612,6 +661,22 @@ export default function AdminIdentityVerification() {
                         <Eye className="h-3 w-3" />
                         <span className="text-xs">Verso</span>
                         <ExternalLink className="h-3 w-3" />
+                      </Button>
+                    )}
+                    {hasHeicImages(verification) && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => convertHeicImages(verification.id)}
+                        disabled={convertingHeic === verification.id}
+                        className="flex items-center gap-1 border-orange-500 text-orange-600 hover:bg-orange-50"
+                      >
+                        {convertingHeic === verification.id ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <RefreshCw className="h-3 w-3" />
+                        )}
+                        <span className="text-xs">Converter HEIC</span>
                       </Button>
                     )}
                   </div>
