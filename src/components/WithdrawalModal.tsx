@@ -10,7 +10,7 @@ import { useCustomerBalance } from "@/hooks/useCustomerBalance";
 import { use2FA } from "@/hooks/use2FA";
 import TwoFactorVerification from "@/components/TwoFactorVerification";
 
-const WITHDRAWAL_2FA_KEY = 'withdrawal_2fa_pending';
+export const WITHDRAWAL_2FA_KEY = 'withdrawal_2fa_pending';
 
 interface PendingWithdrawal {
   amount: number;

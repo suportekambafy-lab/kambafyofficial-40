@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DollarSign, RefreshCw, Download, PiggyBank, Shield, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useLayoutEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -12,7 +12,7 @@ import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { OptimizedPageWrapper } from "@/components/ui/optimized-page-wrapper";
 import { BankingInfo } from "@/components/BankingInfo";
 import { useCustomToast } from '@/hooks/useCustomToast';
-import { WithdrawalModal } from "@/components/WithdrawalModal";
+import { WithdrawalModal, WITHDRAWAL_2FA_KEY } from "@/components/WithdrawalModal";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 interface WithdrawalRequest {
   id: string;
@@ -141,6 +141,21 @@ export default function Financial() {
       setLoading(false);
     }
   }, [user, toast]);
+  // ✅ Auto-abrir modal se tiver verificação 2FA pendente
+  useLayoutEffect(() => {
+    const pending = sessionStorage.getItem(WITHDRAWAL_2FA_KEY);
+    if (pending) {
+      try {
+        const data = JSON.parse(pending);
+        if (data.expiresAt > Date.now()) {
+          setWithdrawalModalOpen(true);
+        }
+      } catch {
+        // ignore
+      }
+    }
+  }, []);
+
   useEffect(() => {
     if (user) {
       loadUserData();
