@@ -20,6 +20,8 @@ import {
   RefreshCw
 } from 'lucide-react';
 import kambabyLogo from '@/assets/kambafy-logo.png';
+import { useAdminPendingCounts } from '@/hooks/useAdminPendingCounts';
+import { Badge } from '@/components/ui/badge';
 
 interface AdminSidebarProps {
   collapsed?: boolean;
@@ -57,16 +59,19 @@ const menuItems = [
     href: '/admin/products',
     label: 'Produtos',
     icon: Package,
+    badgeKey: 'products' as const
   },
   {
     href: '/admin/withdrawals',
     label: 'Saques',
     icon: CreditCard,
+    badgeKey: 'withdrawals' as const
   },
   {
     href: '/admin/identity',
     label: 'Verificação KYC',
     icon: UserCheck,
+    badgeKey: 'kyc' as const
   },
   {
     href: '/admin/seller-reports',
@@ -77,6 +82,7 @@ const menuItems = [
     href: '/admin/payment-approvals',
     label: 'Aprovar Pagamentos',
     icon: CreditCard,
+    badgeKey: 'payments' as const
   },
   {
     href: '/admin/refunds',
@@ -98,6 +104,12 @@ const menuItems = [
 
 export function AdminSidebar({ collapsed = false, onToggle }: AdminSidebarProps) {
   const location = useLocation();
+  const { counts } = useAdminPendingCounts();
+
+  const getBadgeCount = (badgeKey?: 'kyc' | 'payments' | 'withdrawals' | 'products') => {
+    if (!badgeKey) return 0;
+    return counts[badgeKey];
+  };
 
   return (
     <aside className={cn(
@@ -142,6 +154,7 @@ export function AdminSidebar({ collapsed = false, onToggle }: AdminSidebarProps)
             const isActive = item.end 
               ? location.pathname === item.href 
               : location.pathname.startsWith(item.href);
+            const badgeCount = getBadgeCount(item.badgeKey);
 
             return (
               <li key={item.href}>
@@ -155,13 +168,28 @@ export function AdminSidebar({ collapsed = false, onToggle }: AdminSidebarProps)
                       : "text-[hsl(var(--admin-text-secondary))] hover:bg-[hsl(var(--admin-bg))] hover:text-[hsl(var(--admin-text))]"
                   )}
                 >
-                  <Icon className={cn(
-                    "h-5 w-5 shrink-0",
-                    isActive ? "text-[hsl(var(--admin-primary))]" : ""
-                  )} />
+                  <div className="relative">
+                    <Icon className={cn(
+                      "h-5 w-5 shrink-0",
+                      isActive ? "text-[hsl(var(--admin-primary))]" : ""
+                    )} />
+                    {collapsed && badgeCount > 0 && (
+                      <span className="absolute -top-1.5 -right-1.5 h-4 w-4 flex items-center justify-center bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full">
+                        {badgeCount > 9 ? '9+' : badgeCount}
+                      </span>
+                    )}
+                  </div>
                   {!collapsed && (
                     <>
                       <span className="flex-1">{item.label}</span>
+                      {badgeCount > 0 && (
+                        <Badge 
+                          variant="destructive" 
+                          className="h-5 min-w-[20px] px-1.5 text-[11px] font-bold"
+                        >
+                          {badgeCount > 99 ? '99+' : badgeCount}
+                        </Badge>
+                      )}
                       {item.hasSubmenu && (
                         <ChevronDown className="h-4 w-4" />
                       )}
