@@ -4019,6 +4019,7 @@ export type Database = {
         Args: never
         Returns: {
           birth_date: string
+          country: string
           created_at: string
           document_back_url: string
           document_front_url: string
