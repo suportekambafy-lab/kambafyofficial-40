@@ -51,14 +51,34 @@ export function WithdrawalModal({
       if (stored) {
         try {
           const data: PendingWithdrawal = JSON.parse(stored);
-          // Verificar se ainda não expirou (5 minutos = 300000ms)
-          if (data.expiresAt > Date.now()) {
+          
+          // Verificar se ainda não expirou
+          // Também verificar o timer do TwoFactorVerification
+          const timerKey = `2fa_timer_withdrawal_${user.email}`;
+          const timerData = sessionStorage.getItem(timerKey);
+          
+          let isExpired = data.expiresAt <= Date.now();
+          
+          // Se o timer do 2FA também expirou, considerar expirado
+          if (timerData) {
+            try {
+              const { timeLeft, timestamp } = JSON.parse(timerData);
+              const elapsed = Math.floor((Date.now() - timestamp) / 1000);
+              const remaining = timeLeft - elapsed;
+              if (remaining <= 0) {
+                isExpired = true;
+              }
+            } catch {}
+          }
+          
+          if (!isExpired) {
             setPendingWithdrawal(data);
             setShow2FAVerification(true);
             setWithdrawalAmount(data.roundedAmount.toFixed(2));
           } else {
-            // Expirado, limpar
+            // Expirado, limpar tudo
             sessionStorage.removeItem(WITHDRAWAL_2FA_KEY);
+            sessionStorage.removeItem(timerKey);
           }
         } catch {
           sessionStorage.removeItem(WITHDRAWAL_2FA_KEY);
