@@ -12,7 +12,9 @@ import {
   Clock,
   CheckCircle,
   MoreHorizontal,
-  Loader2
+  Loader2,
+  CalendarIcon,
+  Filter
 } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -20,9 +22,13 @@ import { SEO } from '@/components/SEO';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { AdminPageSkeleton } from '@/components/admin/AdminPageSkeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { format, subDays, startOfMonth, startOfYear, parseISO } from 'date-fns';
+import { format, subDays, startOfMonth, startOfYear, parseISO, startOfDay, endOfDay, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import type { DateRange } from 'react-day-picker';
 
 // Metric Card Component - Style like reference
 interface MetricCardProps {
@@ -124,6 +130,63 @@ export default function AdminDashboard() {
   const [volumeData, setVolumeData] = useState<{ date: string; volume: number; count: number }[]>([]);
   const [volumeLoading, setVolumeLoading] = useState(false);
   const [statusLoading, setStatusLoading] = useState(false);
+  
+  // Global time filter for main stats
+  const [globalTimeFilter, setGlobalTimeFilter] = useState('all');
+  const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>();
+  const [statsLoading, setStatsLoading] = useState(false);
+
+  const getGlobalDateRange = useCallback(() => {
+    const now = new Date();
+    let startDate: Date | null = null;
+    let endDate: Date = endOfDay(now);
+
+    switch (globalTimeFilter) {
+      case 'today':
+        startDate = startOfDay(now);
+        break;
+      case 'yesterday':
+        startDate = startOfDay(subDays(now, 1));
+        endDate = endOfDay(subDays(now, 1));
+        break;
+      case '7days':
+        startDate = startOfDay(subDays(now, 7));
+        break;
+      case '30days':
+        startDate = startOfDay(subDays(now, 30));
+        break;
+      case 'custom':
+        if (customDateRange?.from) {
+          startDate = startOfDay(customDateRange.from);
+          endDate = customDateRange.to ? endOfDay(customDateRange.to) : endOfDay(customDateRange.from);
+        }
+        break;
+      case 'all':
+      default:
+        startDate = null;
+        break;
+    }
+
+    return { startDate, endDate };
+  }, [globalTimeFilter, customDateRange]);
+
+  const getFilterLabel = () => {
+    switch (globalTimeFilter) {
+      case 'today': return 'Hoje';
+      case 'yesterday': return 'Ontem';
+      case '7days': return 'Últimos 7 dias';
+      case '30days': return 'Últimos 30 dias';
+      case 'custom': 
+        if (customDateRange?.from) {
+          const from = format(customDateRange.from, 'dd/MM', { locale: ptBR });
+          const to = customDateRange.to ? format(customDateRange.to, 'dd/MM', { locale: ptBR }) : from;
+          return `${from} - ${to}`;
+        }
+        return 'Personalizado';
+      case 'all':
+      default: return 'Todo o período';
+    }
+  };
 
   const loadVolumeData = useCallback(async () => {
     setVolumeLoading(true);
@@ -262,26 +325,12 @@ export default function AdminDashboard() {
     }
   }, [statusFilter]);
 
-  useEffect(() => {
-    if (admin) {
-      loadStats();
-    }
-  }, [admin]);
 
-  useEffect(() => {
-    if (admin) {
-      loadVolumeData();
-    }
-  }, [admin, volumeFilter, loadVolumeData]);
-
-  useEffect(() => {
-    if (admin) {
-      loadStatusData();
-    }
-  }, [admin, statusFilter, loadStatusData]);
-
-  const loadStats = async () => {
+  const loadStats = useCallback(async () => {
+    setStatsLoading(true);
     try {
+      const { startDate, endDate } = getGlobalDateRange();
+      
       const { data: allWithdrawals } = await supabase
         .rpc('get_all_withdrawal_requests_for_admin');
 
@@ -290,20 +339,39 @@ export default function AdminDashboard() {
         ?.filter(w => w.status === 'aprovado')
         .reduce((sum, w) => sum + Number(w.amount), 0) || 0;
 
+      // Build queries with date filter
+      let ordersQuery = supabase
+        .from('orders')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'completed')
+        .neq('payment_method', 'member_access');
+
+      if (startDate) {
+        ordersQuery = ordersQuery.gte('created_at', startDate.toISOString());
+        ordersQuery = ordersQuery.lte('created_at', endDate.toISOString());
+      }
+
       const [usersRes, productsRes, ordersRes] = await Promise.all([
         supabase.from('profiles').select('*', { count: 'exact', head: true }),
         supabase.from('products').select('*', { count: 'exact', head: true }),
-        supabase.from('orders').select('*', { count: 'exact', head: true })
-          .eq('status', 'completed')
-          .neq('payment_method', 'member_access')
+        ordersQuery
       ]);
 
+      // Fetch revenue with date filter
+      let revenueQuery = supabase
+        .from('orders')
+        .select('amount')
+        .eq('status', 'completed')
+        .neq('payment_method', 'member_access');
 
-      // Buscar soma total diretamente no banco para evitar limite de paginação
-      const { data: revenueData } = await supabase
-        .rpc('get_total_revenue_stats' as any);
+      if (startDate) {
+        revenueQuery = revenueQuery.gte('created_at', startDate.toISOString());
+        revenueQuery = revenueQuery.lte('created_at', endDate.toISOString());
+      }
 
-      const totalRevenue = (revenueData as any)?.[0]?.total_revenue || 0;
+      const { data: ordersData } = await revenueQuery;
+      
+      const totalRevenue = ordersData?.reduce((sum, order) => sum + (parseFloat(order.amount) || 0), 0) || 0;
       const companyCommission = totalRevenue * 0.08;
       const sellersEarnings = totalRevenue * 0.92;
 
@@ -327,8 +395,28 @@ export default function AdminDashboard() {
       });
     } finally {
       setLoading(false);
+      setStatsLoading(false);
     }
-  };
+  }, [getGlobalDateRange]);
+
+  // Effects after all callbacks are defined
+  useEffect(() => {
+    if (admin) {
+      loadStats();
+    }
+  }, [admin, loadStats]);
+
+  useEffect(() => {
+    if (admin) {
+      loadVolumeData();
+    }
+  }, [admin, volumeFilter, loadVolumeData]);
+
+  useEffect(() => {
+    if (admin) {
+      loadStatusData();
+    }
+  }, [admin, statusFilter, loadStatusData]);
 
   if (!admin) {
     return <Navigate to="/admin/login" replace />;
@@ -366,12 +454,78 @@ export default function AdminDashboard() {
       />
 
 
+      {/* Global Time Filter */}
+      <div className="flex flex-wrap items-center gap-3 mb-6">
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-[hsl(var(--admin-text-secondary))]" />
+          <span className="text-sm font-medium text-[hsl(var(--admin-text))]">Filtrar por período:</span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {[
+            { value: 'all', label: 'Todo o período' },
+            { value: 'today', label: 'Hoje' },
+            { value: 'yesterday', label: 'Ontem' },
+            { value: '7days', label: '7 dias' },
+            { value: '30days', label: '30 dias' },
+          ].map((filter) => (
+            <Button
+              key={filter.value}
+              variant={globalTimeFilter === filter.value ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setGlobalTimeFilter(filter.value)}
+              className={cn(
+                "transition-all duration-200",
+                globalTimeFilter === filter.value && "shadow-md"
+              )}
+            >
+              {filter.label}
+            </Button>
+          ))}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={globalTimeFilter === 'custom' ? 'default' : 'outline'}
+                size="sm"
+                className={cn(
+                  "transition-all duration-200",
+                  globalTimeFilter === 'custom' && "shadow-md"
+                )}
+              >
+                <CalendarIcon className="h-4 w-4 mr-2" />
+                {globalTimeFilter === 'custom' && customDateRange?.from 
+                  ? `${format(customDateRange.from, 'dd/MM', { locale: ptBR })}${customDateRange.to ? ` - ${format(customDateRange.to, 'dd/MM', { locale: ptBR })}` : ''}`
+                  : 'Personalizado'
+                }
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="range"
+                selected={customDateRange}
+                onSelect={(range) => {
+                  setCustomDateRange(range);
+                  if (range?.from) {
+                    setGlobalTimeFilter('custom');
+                  }
+                }}
+                numberOfMonths={2}
+                locale={ptBR}
+                className="pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+        {statsLoading && (
+          <Loader2 className="h-4 w-4 animate-spin text-[hsl(var(--admin-primary))]" />
+        )}
+      </div>
+
       {/* Main Metric Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <MetricCard
           title="Total de Transações"
           value={stats?.total_transactions?.toLocaleString('pt-BR') || '0'}
-          subtitle={`Total processado até ${new Date().toLocaleDateString('pt-BR', { month: '2-digit', year: 'numeric' })}`}
+          subtitle={getFilterLabel()}
           variant="primary"
           icon={<ArrowUpRight className="h-4 w-4 text-white" />}
         />
@@ -383,7 +537,7 @@ export default function AdminDashboard() {
             notation: 'compact',
             maximumFractionDigits: 2
           }) || '0 AOA'}
-          subtitle={`Montante cobrado até ${new Date().toLocaleDateString('pt-BR', { month: '2-digit', year: 'numeric' })}`}
+          subtitle={getFilterLabel()}
           icon={<DollarSign className="h-4 w-4 text-[hsl(var(--admin-warning))]" />}
         />
         <MetricCard
@@ -557,7 +711,7 @@ export default function AdminDashboard() {
             </div>
             <div>
               <h3 className="font-semibold text-[hsl(var(--admin-text))]">Receita Total</h3>
-              <p className="text-xs text-[hsl(var(--admin-text-secondary))]">Volume processado</p>
+              <p className="text-xs text-[hsl(var(--admin-text-secondary))]">{getFilterLabel()}</p>
             </div>
           </div>
           <p className="text-2xl font-bold text-[hsl(var(--admin-text))]">
@@ -572,7 +726,7 @@ export default function AdminDashboard() {
             </div>
             <div>
               <h3 className="font-semibold text-[hsl(var(--admin-text))]">Comissão Plataforma</h3>
-              <p className="text-xs text-[hsl(var(--admin-text-secondary))]">8,99% sobre vendas</p>
+              <p className="text-xs text-[hsl(var(--admin-text-secondary))]">8,99% sobre vendas • {getFilterLabel()}</p>
             </div>
           </div>
           <p className="text-2xl font-bold text-[hsl(var(--admin-text))]">
@@ -587,7 +741,7 @@ export default function AdminDashboard() {
             </div>
             <div>
               <h3 className="font-semibold text-[hsl(var(--admin-text))]">Ganhos Vendedores</h3>
-              <p className="text-xs text-[hsl(var(--admin-text-secondary))]">92% repassado</p>
+              <p className="text-xs text-[hsl(var(--admin-text-secondary))]">92% repassado • {getFilterLabel()}</p>
             </div>
           </div>
           <p className="text-2xl font-bold text-[hsl(var(--admin-text))]">
