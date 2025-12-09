@@ -8,6 +8,17 @@ export interface CountryInfo {
   exchangeRate: number;
 }
 
+// Helper para formatar número com máximo de 2 casas decimais
+const formatWithMaxTwoDecimals = (value: number): string => {
+  // Arredonda para 2 casas decimais
+  const rounded = Math.round(value * 100) / 100;
+  // Formata com separador de milhares e vírgula decimal (pt-BR)
+  return rounded.toLocaleString('pt-BR', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2
+  });
+};
+
 export const formatPrice = (
   priceInKZ: number, 
   targetCountry?: CountryInfo,
@@ -20,34 +31,26 @@ export const formatPrice = (
     if (!isNaN(customPrice)) {
       switch (targetCountry.currency) {
         case 'EUR':
-          return `€${customPrice.toFixed(2)}`;
+          return `€${formatWithMaxTwoDecimals(customPrice)}`;
         case 'GBP':
-          return `£${customPrice.toFixed(2)}`;
+          return `£${formatWithMaxTwoDecimals(customPrice)}`;
         case 'USD':
-          return `$${customPrice.toFixed(2)}`;
+          return `$${formatWithMaxTwoDecimals(customPrice)}`;
         case 'MZN':
-          return `${customPrice.toFixed(2)} MZN`;
+          return `${formatWithMaxTwoDecimals(customPrice)} MZN`;
         case 'KZ':
         default:
-          if (useToLocaleString) {
-            return `${parseFloat(customPrice.toString()).toLocaleString('pt-BR')} KZ`;
-          }
-          return `${customPrice.toLocaleString()} KZ`;
+          return `${formatWithMaxTwoDecimals(customPrice)} KZ`;
       }
     }
   }
 
   // Se não há país específico, usar formatação padrão KZ
   if (!targetCountry || targetCountry.currency === 'KZ') {
-    // Usar o mesmo formato do ProductCard - parseFloat().toLocaleString('pt-BR')
-    if (useToLocaleString) {
-      return `${parseFloat(priceInKZ.toString()).toLocaleString('pt-BR')} KZ`;
-    }
-    return `${priceInKZ.toLocaleString()} KZ`;
+    return `${formatWithMaxTwoDecimals(priceInKZ)} KZ`;
   }
 
   // Converter preço para a moeda do país (fallback automático)
-  // Usar multiplicação (exchangeRate = quantos da moeda estrangeira por 1 KZ)
   let convertedPrice = priceInKZ * targetCountry.exchangeRate;
   
   // Garantir mínimo de 1 para GBP, EUR e USD
@@ -57,19 +60,16 @@ export const formatPrice = (
   
   switch (targetCountry.currency) {
     case 'EUR':
-      return `€${convertedPrice.toFixed(2)}`;
+      return `€${formatWithMaxTwoDecimals(convertedPrice)}`;
     case 'GBP':
-      return `£${convertedPrice.toFixed(2)}`;
+      return `£${formatWithMaxTwoDecimals(convertedPrice)}`;
     case 'USD':
-      return `$${convertedPrice.toFixed(2)}`;
+      return `$${formatWithMaxTwoDecimals(convertedPrice)}`;
     case 'MZN':
-      return `${convertedPrice.toFixed(2)} MZN`;
+      return `${formatWithMaxTwoDecimals(convertedPrice)} MZN`;
     case 'KZ':
     default:
-      if (useToLocaleString) {
-        return `${parseFloat(priceInKZ.toString()).toLocaleString('pt-BR')} KZ`;
-      }
-      return `${priceInKZ.toLocaleString()} KZ`;
+      return `${formatWithMaxTwoDecimals(priceInKZ)} KZ`;
   }
 };
 
@@ -105,9 +105,7 @@ export const formatPriceForSeller = (
     amountInKZ = Math.round(amount * rate);
   }
   
-  return useToLocaleString 
-    ? `${parseFloat(amountInKZ.toString()).toLocaleString('pt-BR')} KZ`
-    : `${amountInKZ.toLocaleString()} KZ`;
+  return `${formatWithMaxTwoDecimals(amountInKZ)} KZ`;
 };
 
 // Função específica para admin - mostra valor completo (com taxa) em KZ
@@ -130,9 +128,7 @@ export const formatPriceForAdmin = (
     amountInKZ = Math.round(amount * rate);
   }
   
-  return useToLocaleString 
-    ? `${parseFloat(amountInKZ.toString()).toLocaleString('pt-BR')} KZ`
-    : `${amountInKZ.toLocaleString()} KZ`;
+  return `${formatWithMaxTwoDecimals(amountInKZ)} KZ`;
 };
 
 // Helper para obter o texto do intervalo de assinatura
@@ -151,3 +147,6 @@ export const getSubscriptionIntervalText = (interval: string, intervalCount: num
   }
   return `${intervalCount} ${intervalInfo.plural}`;
 };
+
+// Exportar helper para uso em outros lugares que formatam valores diretamente
+export { formatWithMaxTwoDecimals };
