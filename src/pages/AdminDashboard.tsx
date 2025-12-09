@@ -346,14 +346,28 @@ export default function AdminDashboard() {
         .eq('status', 'completed')
         .neq('payment_method', 'member_access');
 
+      let usersQuery = supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
+
+      let productsQuery = supabase
+        .from('products')
+        .select('*', { count: 'exact', head: true });
+
       if (startDate) {
         ordersQuery = ordersQuery.gte('created_at', startDate.toISOString());
         ordersQuery = ordersQuery.lte('created_at', endDate.toISOString());
+        
+        usersQuery = usersQuery.gte('created_at', startDate.toISOString());
+        usersQuery = usersQuery.lte('created_at', endDate.toISOString());
+        
+        productsQuery = productsQuery.gte('created_at', startDate.toISOString());
+        productsQuery = productsQuery.lte('created_at', endDate.toISOString());
       }
 
       const [usersRes, productsRes, ordersRes] = await Promise.all([
-        supabase.from('profiles').select('*', { count: 'exact', head: true }),
-        supabase.from('products').select('*', { count: 'exact', head: true }),
+        usersQuery,
+        productsQuery,
         ordersQuery
       ]);
 
@@ -565,13 +579,13 @@ export default function AdminDashboard() {
         <MetricCard
           title="Total de Usuários"
           value={stats?.total_users?.toLocaleString('pt-BR') || '0'}
-          subtitle="Usuários ativos na plataforma"
+          subtitle={globalTimeFilter === 'all' ? 'Usuários na plataforma' : `Novos usuários • ${getFilterLabel()}`}
           icon={<Users className="h-4 w-4 text-[hsl(var(--admin-primary))]" />}
         />
         <MetricCard
           title="Produtos Cadastrados"
           value={stats?.total_products?.toLocaleString('pt-BR') || '0'}
-          subtitle="Total de produtos na plataforma"
+          subtitle={globalTimeFilter === 'all' ? 'Produtos na plataforma' : `Novos produtos • ${getFilterLabel()}`}
           icon={<Package className="h-4 w-4 text-purple-500" />}
         />
       </div>
