@@ -639,7 +639,7 @@ serve(async (req) => {
                 .from('balance_transactions')
                 .select('id')
                 .eq('order_id', order.id)
-                .eq('type', 'sale')
+                .eq('type', 'sale_revenue')
                 .maybeSingle();
               
               if (!existingTransaction && !checkTxError) {
@@ -649,7 +649,7 @@ serve(async (req) => {
                   .from('balance_transactions')
                   .insert({
                     user_id: productForBalance.user_id,
-                    type: 'sale',
+                    type: 'sale_revenue',
                     amount: sellerAmount,
                     currency: 'KZ',
                     description: `Venda - ${productForBalance.name}`,
