@@ -234,7 +234,7 @@ export default function AdminSellerReports() {
 
         const totalWithdrawals = withdrawalsByUser.get(profile.user_id) || 0;
         const availableBalance = balanceByUser.get(profile.user_id) || 0;
-        const totalFees = totalRevenue * 0.08;
+        const totalFees = totalRevenue * 0.0899;
 
         return {
           user_id: profile.user_id,

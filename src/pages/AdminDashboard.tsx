@@ -408,8 +408,8 @@ export default function AdminDashboard() {
         totalRevenue = (revenueData as any)?.[0]?.total_revenue || 0;
       }
       
-      const companyCommission = totalRevenue * 0.08;
-      const sellersEarnings = totalRevenue * 0.92;
+      const companyCommission = totalRevenue * 0.0899;
+      const sellersEarnings = totalRevenue * 0.9101;
 
       setCompanyFinancials({ totalRevenue, companyCommission, sellersEarnings });
 
