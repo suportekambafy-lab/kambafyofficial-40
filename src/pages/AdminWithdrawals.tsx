@@ -56,9 +56,10 @@ export default function AdminWithdrawals() {
   const [endDate, setEndDate] = useState<string>('');
   const [minAmount, setMinAmount] = useState<string>('');
   const [maxAmount, setMaxAmount] = useState<string>('');
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
 
   const filteredRequests = useMemo(() => {
-    return requests.filter((r) => {
+    const filtered = requests.filter((r) => {
       const matchesStatus = statusFilter === 'todos' ? true : r.status === statusFilter;
       const matchesSearch = searchTerm
         ? (
@@ -75,7 +76,14 @@ export default function AdminWithdrawals() {
       const matchesMax = maxAmount ? amount <= Number(maxAmount) : true;
       return matchesStatus && matchesSearch && matchesStart && matchesEnd && matchesMin && matchesMax;
     });
-  }, [requests, statusFilter, searchTerm, startDate, endDate, minAmount, maxAmount]);
+    
+    // Ordenar por data
+    return filtered.sort((a, b) => {
+      const dateA = new Date(a.created_at).getTime();
+      const dateB = new Date(b.created_at).getTime();
+      return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
+    });
+  }, [requests, statusFilter, searchTerm, startDate, endDate, minAmount, maxAmount, sortOrder]);
 
   // Filtrar apenas solicitações pendentes para numeração (apenas do conjunto filtrado)
   const pendingRequests = filteredRequests.filter(request => request.status === 'pendente');
@@ -135,6 +143,17 @@ export default function AdminWithdrawals() {
               </select>
             </div>
             <div>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Ordenar por</label>
+              <select
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value as 'newest' | 'oldest')}
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+              >
+                <option value="newest">Mais recente</option>
+                <option value="oldest">Mais antigo</option>
+              </select>
+            </div>
+            <div>
               <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Data inicial</label>
               <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" />
             </div>
@@ -156,7 +175,7 @@ export default function AdminWithdrawals() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-4 text-xs sm:text-sm text-gray-600">
             <span>{filteredRequests.length} resultado(s)</span>
             <button
-              onClick={() => { setStatusFilter('todos'); setSearchTerm(''); setStartDate(''); setEndDate(''); setMinAmount(''); setMaxAmount(''); }}
+              onClick={() => { setStatusFilter('todos'); setSearchTerm(''); setStartDate(''); setEndDate(''); setMinAmount(''); setMaxAmount(''); setSortOrder('newest'); }}
               className="text-blue-600 hover:underline text-left sm:text-right"
             >
               Limpar filtros
