@@ -122,7 +122,8 @@ async function recoverPayment(
   overrideProductId: string | null
 ): Promise<any> {
   const orderId = paymentIntent.metadata?.order_id;
-  const productId = overrideProductId || paymentIntent.metadata?.product_id;
+  // Suportar ambos os formatos: productId (usado pelo checkout) e product_id
+  const productId = overrideProductId || paymentIntent.metadata?.productId || paymentIntent.metadata?.product_id;
   
   console.log('🔄 Processing payment:', {
     pi_id: paymentIntent.id,
@@ -211,13 +212,25 @@ async function recoverPayment(
   }
 
   // Buscar informações do produto
+  console.log('🔍 Searching for product:', productId);
   const { data: product, error: productError } = await supabase
     .from('products')
-    .select('id, name, user_id, price, currency')
+    .select('id, name, user_id, price')
     .eq('id', productId)
-    .single();
+    .maybeSingle();
 
-  if (productError || !product) {
+  console.log('📦 Product query result:', { product, error: productError?.message });
+
+  if (productError) {
+    console.log('❌ Product query error:', productError);
+    return {
+      success: false,
+      payment_intent_id: paymentIntent.id,
+      error: `Product query error: ${productError.message}`
+    };
+  }
+
+  if (!product) {
     console.log('❌ Product not found:', productId);
     return {
       success: false,
@@ -226,9 +239,10 @@ async function recoverPayment(
     };
   }
 
-  // Extrair informações do cliente do Stripe
-  let customerEmail = paymentIntent.metadata?.customer_email || paymentIntent.receipt_email;
-  let customerName = paymentIntent.metadata?.customer_name || 'Cliente Stripe';
+  // Extrair informações do cliente do Stripe (suportar ambos os formatos)
+  let customerEmail = paymentIntent.metadata?.customerEmail || paymentIntent.metadata?.customer_email || paymentIntent.receipt_email;
+  let customerName = paymentIntent.metadata?.customerName || paymentIntent.metadata?.customer_name || 'Cliente Stripe';
+  
 
   // Se tiver customer_id, buscar mais informações
   if (paymentIntent.customer && !customerEmail) {

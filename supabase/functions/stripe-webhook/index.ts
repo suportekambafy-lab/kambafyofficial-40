@@ -544,37 +544,130 @@ serve(async (req) => {
           currency: 'KZ'
         });
         
-        const { data: orderData, error: updateError } = await supabase
+        // Primeiro verificar se a order já existe
+        const { data: existingOrder, error: checkError } = await supabase
           .from('orders')
-          .update({ 
-            status: 'completed',
-            updated_at: new Date().toISOString(),
-            // SEMPRE salvar em KZ para vendedores angolanos com 8.99% de taxa descontado
-            seller_commission: sellerCommissionInKZ * 0.9101, // 8.99% platform fee
-            amount: amountInKZ.toString(), // Valor convertido para KZ
-            currency: 'KZ' // Sempre KZ no banco
-          })
+          .select('id, product_id, user_id, customer_email, customer_name, amount, currency')
           .eq('order_id', orderId)
-          .select('*')
-          .single();
+          .maybeSingle();
+        
+        let order: any;
+        
+        if (existingOrder) {
+          // Order existe - atualizar
+          console.log('📝 Order encontrada, atualizando...');
+          const { data: orderData, error: updateError } = await supabase
+            .from('orders')
+            .update({ 
+              status: 'completed',
+              updated_at: new Date().toISOString(),
+              stripe_payment_intent_id: paymentIntent.id,
+              seller_commission: sellerCommissionInKZ * 0.9101,
+              amount: amountInKZ.toString(),
+              currency: 'KZ'
+            })
+            .eq('order_id', orderId)
+            .select('*')
+            .single();
 
-        if (updateError) {
-          console.error('❌ Error updating order:', updateError);
-          throw updateError;
+          if (updateError) {
+            console.error('❌ Error updating order:', updateError);
+            throw updateError;
+          }
+          order = orderData;
+          console.log('✅ Order atualizada com sucesso:', orderData);
         } else {
-          console.log('✅ Order status updated successfully:', orderData);
+          // Order NÃO existe - criar nova
+          console.log('🆕 Order não encontrada, criando nova...');
+          
+          // Buscar dados do produto para o user_id do vendedor
+          const { data: productInfo, error: productInfoError } = await supabase
+            .from('products')
+            .select('user_id, name')
+            .eq('id', paymentIntent.metadata.productId)
+            .single();
+          
+          if (productInfoError) {
+            console.error('❌ Error fetching product info:', productInfoError);
+            throw productInfoError;
+          }
+          
+          const { data: newOrder, error: insertError } = await supabase
+            .from('orders')
+            .insert({
+              order_id: orderId,
+              product_id: paymentIntent.metadata.productId,
+              user_id: productInfo.user_id,
+              customer_name: paymentIntent.metadata.customerName,
+              customer_email: paymentIntent.metadata.customerEmail,
+              customer_phone: paymentIntent.metadata.customerPhone || null,
+              amount: amountInKZ.toString(),
+              currency: 'KZ',
+              status: 'completed',
+              payment_method: paymentIntent.metadata.paymentMethod || 'card',
+              stripe_payment_intent_id: paymentIntent.id,
+              seller_commission: sellerCommissionInKZ * 0.9101
+            })
+            .select('*')
+            .single();
+          
+          if (insertError) {
+            console.error('❌ Error creating order:', insertError);
+            throw insertError;
+          }
+          order = newOrder;
+          console.log('✅ Nova order criada com sucesso:', newOrder);
         }
-
-        // Buscar dados do produto para atualizar vendas
-        const { data: order, error: orderFetchError } = await supabase
-          .from('orders')
-          .select('product_id, user_id, customer_email, customer_name, amount, currency')
-          .eq('order_id', orderId)
-          .single();
-
-        if (orderFetchError) {
-          console.error('❌ Error fetching order details:', orderFetchError);
-          throw orderFetchError;
+        
+        // Processar saldo do vendedor se a order foi completada
+        if (order) {
+          try {
+            console.log('💰 Processando saldo do vendedor...');
+            
+            // Buscar dados do produto
+            const { data: productForBalance, error: productBalanceError } = await supabase
+              .from('products')
+              .select('user_id, name')
+              .eq('id', order.product_id)
+              .single();
+            
+            if (productBalanceError) {
+              console.error('❌ Error fetching product for balance:', productBalanceError);
+            } else if (productForBalance?.user_id) {
+              // Verificar se já existe transação para este order_id
+              const { data: existingTransaction, error: checkTxError } = await supabase
+                .from('balance_transactions')
+                .select('id')
+                .eq('order_id', order.id)
+                .eq('type', 'sale')
+                .maybeSingle();
+              
+              if (!existingTransaction && !checkTxError) {
+                const sellerAmount = sellerCommissionInKZ * 0.9101;
+                
+                const { error: balanceError } = await supabase
+                  .from('balance_transactions')
+                  .insert({
+                    user_id: productForBalance.user_id,
+                    type: 'sale',
+                    amount: sellerAmount,
+                    currency: 'KZ',
+                    description: `Venda - ${productForBalance.name}`,
+                    order_id: order.id
+                  });
+                
+                if (balanceError) {
+                  console.error('❌ Error creating balance transaction:', balanceError);
+                } else {
+                  console.log('✅ Balance transaction created:', sellerAmount);
+                }
+              } else if (existingTransaction) {
+                console.log('⚠️ Balance transaction already exists, skipping');
+              }
+            }
+          } catch (balanceProcessError) {
+            console.error('❌ Error processing seller balance:', balanceProcessError);
+          }
         }
 
         if (order?.product_id) {
