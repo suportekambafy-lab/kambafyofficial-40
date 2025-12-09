@@ -21,30 +21,30 @@ export function useAdminPendingCounts() {
     try {
       // Buscar contagens em paralelo
       const [kycResult, paymentsResult, withdrawalsResult, productsResult] = await Promise.all([
-        // KYC pendentes
+        // KYC pendentes (status em português: 'pendente')
         supabase
           .from('identity_verification')
           .select('id', { count: 'exact', head: true })
-          .eq('status', 'pending'),
+          .eq('status', 'pendente'),
         
-        // Pagamentos pendentes (transferências bancárias)
+        // Pagamentos por transferência pendentes (payment_method: 'transfer')
         supabase
           .from('orders')
           .select('id', { count: 'exact', head: true })
-          .eq('payment_method', 'bank_transfer')
+          .eq('payment_method', 'transfer')
           .eq('status', 'pending'),
         
-        // Saques pendentes
+        // Saques pendentes (status em português: 'pendente')
         supabase
           .from('withdrawal_requests')
           .select('id', { count: 'exact', head: true })
-          .eq('status', 'pending'),
+          .eq('status', 'pendente'),
         
-        // Produtos pendentes de aprovação
+        // Produtos pendentes de aprovação (status em português: 'Pendente')
         supabase
           .from('products')
           .select('id', { count: 'exact', head: true })
-          .eq('status', 'pending')
+          .eq('status', 'Pendente')
       ]);
 
       setCounts({
