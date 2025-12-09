@@ -100,7 +100,7 @@ export const OptimizedMetricsGrid = memo(({ metrics, loading }: MetricsGridProps
     },
     {
       title: 'Receita Total',
-      value: `${metrics.totalRevenue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} KZ`,
+      value: `${metrics.totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} KZ`,
       icon: <DollarSign className="h-4 w-4" />,
       change: 8.2
     },

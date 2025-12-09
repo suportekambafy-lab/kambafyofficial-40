@@ -621,7 +621,7 @@ export function PendingTransfersManager() {
             try {
               console.log('📱 Enviando notificação OneSignal push...');
               
-              const formattedPrice = `${parseFloat(sellerCommission.toString()).toLocaleString('pt-BR')} ${orderData.currency || 'KZ'}`;
+              const formattedPrice = `${parseFloat(sellerCommission.toString()).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ${orderData.currency || 'KZ'}`;
               
               const { error: pushError } = await supabase.functions.invoke('send-onesignal-notification', {
                 body: {

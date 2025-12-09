@@ -751,7 +751,7 @@ export default function AdminDashboard() {
             </div>
           </div>
           <p className="text-2xl font-bold text-[hsl(var(--admin-text))]">
-            {companyFinancials?.totalRevenue?.toLocaleString('pt-BR', { style: 'currency', currency: 'AOA' }) || 'KZ 0'}
+            {companyFinancials?.totalRevenue?.toLocaleString('pt-BR', { style: 'currency', currency: 'AOA', minimumFractionDigits: 2, maximumFractionDigits: 2 }) || 'KZ 0'}
           </p>
         </div>
 
@@ -766,7 +766,7 @@ export default function AdminDashboard() {
             </div>
           </div>
           <p className="text-2xl font-bold text-[hsl(var(--admin-text))]">
-            {companyFinancials?.companyCommission?.toLocaleString('pt-BR', { style: 'currency', currency: 'AOA' }) || 'KZ 0'}
+            {companyFinancials?.companyCommission?.toLocaleString('pt-BR', { style: 'currency', currency: 'AOA', minimumFractionDigits: 2, maximumFractionDigits: 2 }) || 'KZ 0'}
           </p>
         </div>
 
@@ -781,7 +781,7 @@ export default function AdminDashboard() {
             </div>
           </div>
           <p className="text-2xl font-bold text-[hsl(var(--admin-text))]">
-            {companyFinancials?.sellersEarnings?.toLocaleString('pt-BR', { style: 'currency', currency: 'AOA' }) || 'KZ 0'}
+            {companyFinancials?.sellersEarnings?.toLocaleString('pt-BR', { style: 'currency', currency: 'AOA', minimumFractionDigits: 2, maximumFractionDigits: 2 }) || 'KZ 0'}
           </p>
         </div>
       </div>
