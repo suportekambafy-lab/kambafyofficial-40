@@ -315,7 +315,7 @@ export function WithdrawalModal({
               onVerificationSuccess={handle2FASuccess}
               onBack={handle2FABack}
               context="withdrawal"
-              skipInitialSend={false}
+              skipInitialSend={isReturningUser}
             />
           </div>
         </DrawerContent>
