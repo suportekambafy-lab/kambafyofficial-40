@@ -181,8 +181,10 @@ Deno.serve(async (req) => {
       amount: amount,
       currency: currency,
       customer: customerId,
+      description: product.name, // Nome do produto visível no Stripe Dashboard
       metadata: {
         productId,
+        productName: product.name, // Nome do produto no metadata
         customerName: customerData.name,
         customerEmail: customerData.email,
         customerPhone: customerData.phone,
