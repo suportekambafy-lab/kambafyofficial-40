@@ -1,7 +1,7 @@
 import { corsHeaders } from "../_shared/cors.ts";
 
-// Version 2.0 - Native implementation without AWS SDK
-console.log("🚀 Cloudflare R2 Upload Function v2.0 (Native Implementation) initialized");
+// Version 3.0 - Native implementation with HEIC to JPEG conversion
+console.log("🚀 Cloudflare R2 Upload Function v3.0 (HEIC Support) initialized");
 
 // Helper para criar assinatura AWS V4
 async function createSignature(
@@ -104,6 +104,45 @@ async function sha256Hash(data: string | Uint8Array): Promise<string> {
     .join('');
 }
 
+// Função para detectar se é arquivo HEIC/HEIF
+function isHeicFile(fileType: string, fileName: string): boolean {
+  const heicMimeTypes = ['image/heic', 'image/heif', 'image/heic-sequence', 'image/heif-sequence'];
+  const heicExtensions = ['.heic', '.heif'];
+  
+  const lowerFileType = fileType.toLowerCase();
+  const lowerFileName = fileName.toLowerCase();
+  
+  const isHeicMime = heicMimeTypes.some(mime => lowerFileType.includes(mime.replace('image/', '')));
+  const isHeicExt = heicExtensions.some(ext => lowerFileName.endsWith(ext));
+  
+  return isHeicMime || isHeicExt;
+}
+
+// Função para converter HEIC para JPEG
+async function convertHeicToJpeg(heicData: Uint8Array): Promise<Uint8Array> {
+  console.log('🔄 Iniciando conversão HEIC -> JPEG...');
+  console.log('📦 Tamanho do arquivo HEIC:', heicData.length, 'bytes');
+  
+  try {
+    // Importar heic-convert dinamicamente via npm
+    const heicConvert = (await import("npm:heic-convert@2.1.0")).default;
+    
+    const jpegBuffer = await heicConvert({
+      buffer: heicData,
+      format: 'JPEG',
+      quality: 0.92
+    });
+    
+    console.log('✅ Conversão HEIC -> JPEG concluída!');
+    console.log('📦 Tamanho do arquivo JPEG:', jpegBuffer.length, 'bytes');
+    
+    return new Uint8Array(jpegBuffer);
+  } catch (error) {
+    console.error('❌ Erro na conversão HEIC:', error);
+    throw new Error(`Falha na conversão HEIC para JPEG: ${error.message}`);
+  }
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
@@ -151,7 +190,29 @@ Deno.serve(async (req) => {
     });
 
     // Convert base64 to binary
-    const binaryData = Uint8Array.from(atob(fileData), (c) => c.charCodeAt(0));
+    let binaryData = Uint8Array.from(atob(fileData), (c) => c.charCodeAt(0));
+    let finalFileName = fileName;
+    let finalFileType = fileType;
+    let wasConverted = false;
+
+    // Verificar se é HEIC e converter para JPEG
+    if (isHeicFile(fileType, fileName)) {
+      console.log('🔍 Arquivo HEIC/HEIF detectado, iniciando conversão automática...');
+      
+      try {
+        binaryData = await convertHeicToJpeg(binaryData);
+        
+        // Atualizar nome e tipo do arquivo
+        finalFileName = fileName.replace(/\.(heic|heif)$/i, '.jpg');
+        finalFileType = 'image/jpeg';
+        wasConverted = true;
+        
+        console.log('✅ Arquivo HEIC convertido para JPEG:', finalFileName);
+      } catch (conversionError) {
+        console.error('❌ Falha na conversão HEIC:', conversionError);
+        throw new Error('Não foi possível converter o arquivo HEIC. Por favor, converta para JPEG ou PNG antes de enviar.');
+      }
+    }
     
     console.log("🔐 Computing payload hash...", {
       binaryDataLength: binaryData.length,
@@ -169,7 +230,7 @@ Deno.serve(async (req) => {
     // Generate unique filename - sanitize to avoid signature issues
     const timestamp = Date.now();
     // Remove ALL special characters, keep only alphanumeric, dots, and hyphens
-    const sanitizedFileName = fileName
+    const sanitizedFileName = finalFileName
       .toLowerCase()
       .replace(/[^a-z0-9.-]/g, '-') // Replace ANY non-alphanumeric (except . and -) with hyphen
       .replace(/-+/g, '-') // Replace multiple hyphens with single
@@ -264,7 +325,7 @@ Deno.serve(async (req) => {
         'Authorization': authorizationHeader,
         'x-amz-date': amzDate,
         'x-amz-content-sha256': payloadHash,
-        'Content-Type': fileType,
+        'Content-Type': finalFileType,
       },
       body: binaryData,
     });
@@ -284,12 +345,17 @@ Deno.serve(async (req) => {
     const publicUrl = `https://pub-b5914a93ed33480dba157a5f46c57749.r2.dev/${uniqueFileName}`;
 
     console.log("✅ Upload successful:", publicUrl);
+    if (wasConverted) {
+      console.log("📸 Arquivo foi convertido de HEIC para JPEG automaticamente");
+    }
 
     return new Response(
       JSON.stringify({
         success: true,
         url: publicUrl,
         fileName: uniqueFileName,
+        originalFileName: fileName,
+        convertedFromHeic: wasConverted,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
