@@ -777,7 +777,7 @@ export default function AdminDashboard() {
             </div>
             <div>
               <h3 className="font-semibold text-[hsl(var(--admin-text))]">Ganhos Vendedores</h3>
-              <p className="text-xs text-[hsl(var(--admin-text-secondary))]">92% repassado • {getFilterLabel()}</p>
+              <p className="text-xs text-[hsl(var(--admin-text-secondary))]">91,01% repassado • {getFilterLabel()}</p>
             </div>
           </div>
           <p className="text-2xl font-bold text-[hsl(var(--admin-text))]">
