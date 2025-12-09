@@ -88,7 +88,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('💰 [EMAIL] Formatted amount:', formattedAmount);
 
     const emailResponse = await resend.emails.send({
-      from: "Kambafy Vendas <vendas@kambafy.com>",
+      from: "Kambafy <noreply@kambafy.com>",
       to: [sellerEmail],
       subject: `🎉 Nova Venda Aprovada - ${productName}`,
       html: `
