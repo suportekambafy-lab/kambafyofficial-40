@@ -283,14 +283,12 @@ export default function Financial() {
   };
   // Se tiver 2FA pendente, não mostrar skeleton - mostrar página com modal aberto
   if (loading && !hasPending2FA) {
-    return <OptimizedPageWrapper>
-        <PageSkeleton variant="financial" />
-      </OptimizedPageWrapper>;
+    return <PageSkeleton variant="financial" />;
   }
   const isVerified = identityVerification?.status === 'aprovado';
   const hasIban = !!userProfile?.iban;
   const canWithdraw = isVerified && hasIban && financialData.availableBalance > 0;
-  return <OptimizedPageWrapper>
+  return <>
       <div className="space-y-6 p-4 md:p-6 lg:p-8 max-w-full overflow-x-hidden">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div>
@@ -456,5 +454,5 @@ export default function Financial() {
         variant: "success"
       });
     }} />
-    </OptimizedPageWrapper>;
+    </>;
 }
