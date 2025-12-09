@@ -96,7 +96,7 @@ export default function Sales() {
   const [statusFilter, setStatusFilter] = useState("todos");
   const [paymentFilter, setPaymentFilter] = useState("todos");
   const [selectedProduct, setSelectedProduct] = useState("todos");
-  const [periodFilter, setPeriodFilter] = useState("all"); // ✅ Padrão: Todo período
+  const [periodFilter, setPeriodFilter] = useState("30"); // ✅ Padrão: 30 dias
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(200); // Mostrar todas as vendas
   const [showAllPaymentMethods, setShowAllPaymentMethods] = useState(false);
