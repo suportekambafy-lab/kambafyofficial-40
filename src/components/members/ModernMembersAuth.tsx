@@ -223,14 +223,19 @@ export function ModernMembersAuthProvider({ children, memberAreaId }: ModernMemb
         return true; // Email de validação tem acesso a todas as áreas
       }
       
-      const { data: student } = await supabase
-        .from('member_area_students')
-        .select('*')
-        .eq('member_area_id', memberAreaId)
-        .ilike('student_email', normalizedEmail)
-        .maybeSingle();
+      // Usar função RPC segura para verificar acesso (não expõe lista de estudantes)
+      const { data: accessResult, error } = await supabase
+        .rpc('check_student_access', {
+          p_member_area_id: memberAreaId,
+          p_student_email: normalizedEmail
+        });
 
-      const hasAccess = !!student;
+      if (error) {
+        console.error('❌ ModernAuth: Erro ao verificar acesso via RPC:', error);
+        return false;
+      }
+
+      const hasAccess = accessResult && accessResult.length > 0 && accessResult[0]?.has_access === true;
       console.log('🔑 ModernAuth: Verificação de acesso:', { 
         memberAreaId, 
         email: user.email, 

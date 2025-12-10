@@ -3889,6 +3889,14 @@ export type Database = {
         Args: { p_customer_email: string; p_product_id: string }
         Returns: boolean
       }
+      check_student_access: {
+        Args: { p_member_area_id: string; p_student_email: string }
+        Returns: {
+          cohort_id: string
+          has_access: boolean
+          student_name: string
+        }[]
+      }
       cleanup_duplicate_transactions_and_create_index: {
         Args: never
         Returns: Json
@@ -4242,6 +4250,17 @@ export type Database = {
         }[]
       }
       get_seller_stats: { Args: { seller_id: string }; Returns: Json }
+      get_student_by_email_for_session: {
+        Args: { p_member_area_id: string; p_student_email: string }
+        Returns: {
+          access_granted_at: string
+          cohort_id: string
+          id: string
+          member_area_id: string
+          student_email: string
+          student_name: string
+        }[]
+      }
       get_top_sellers_of_month: {
         Args: never
         Returns: {
