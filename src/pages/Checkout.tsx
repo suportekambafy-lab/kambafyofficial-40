@@ -25,6 +25,7 @@ import { getSubscriptionIntervalText } from "@/utils/priceFormatting";
 import { useCheckoutPresence } from "@/hooks/useCheckoutPresence";
 
 import { BankTransferForm } from "@/components/checkout/BankTransferForm";
+import { MozambiquePaymentForm } from "@/components/checkout/MozambiquePaymentForm";
 import { useOptimizedCheckout } from "@/hooks/useOptimizedCheckout";
 import { TermsModal } from "@/components/checkout/TermsModal";
 import { PrivacyModal } from "@/components/checkout/PrivacyModal";
@@ -2614,7 +2615,37 @@ const Checkout = () => {
               }} disabled={processing} />
                 </div>}
 
-              {!['card', 'klarna', 'multibanco', 'mbway', 'card_uk', 'klarna_uk', 'card_us', 'transfer'].includes(selectedPayment) && availablePaymentMethods.length > 0 && !referenceData && <Button onClick={handlePurchase} disabled={!formData.fullName || !formData.email || !(selectedPayment === 'express' ? expressPhone : formData.phone) || !selectedPayment || processing} className={`w-full h-12 font-semibold relative transition-all ${!formData.fullName || !formData.email || !(selectedPayment === 'express' ? expressPhone : formData.phone) || !selectedPayment || processing ? 'bg-green-600/50 cursor-not-allowed text-white/70' : 'bg-green-600 hover:bg-green-700 text-white'}`}>
+              {/* Mozambique Payment Form (e-Mola / M-Pesa) */}
+              {['emola', 'mpesa'].includes(selectedPayment) && (
+                <div className="mt-6">
+                  <MozambiquePaymentForm
+                    product={product}
+                    customerInfo={{
+                      name: formData.fullName,
+                      email: formData.email,
+                      phone: formData.phone
+                    }}
+                    amount={totalPrice}
+                    currency="MZN"
+                    formatPrice={getDisplayPrice}
+                    onPaymentComplete={(orderId) => {
+                      console.log('🇲🇿 Mozambique payment reference generated:', orderId);
+                      toast({
+                        title: "Referência gerada!",
+                        message: "Complete o pagamento no app do seu operador mobile",
+                        variant: "success"
+                      });
+                    }}
+                    orderBumpData={orderBump ? Array.from(selectedOrderBumps.values()).map(({ data }) => data) : null}
+                    affiliateCode={affiliateCode}
+                    affiliateCommission={hasAffiliate ? (totalPrice * 0.1) : null}
+                    cohortId={cohortId}
+                    t={(key: string) => key}
+                  />
+                </div>
+              )}
+
+              {!['card', 'klarna', 'multibanco', 'mbway', 'card_uk', 'klarna_uk', 'card_us', 'transfer', 'emola', 'mpesa'].includes(selectedPayment) && availablePaymentMethods.length > 0 && !referenceData && <Button onClick={handlePurchase} disabled={!formData.fullName || !formData.email || !(selectedPayment === 'express' ? expressPhone : formData.phone) || !selectedPayment || processing} className={`w-full h-12 font-semibold relative transition-all ${!formData.fullName || !formData.email || !(selectedPayment === 'express' ? expressPhone : formData.phone) || !selectedPayment || processing ? 'bg-green-600/50 cursor-not-allowed text-white/70' : 'bg-green-600 hover:bg-green-700 text-white'}`}>
                   {processing ? <div className="flex items-center justify-center">
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2">
                       </div>

@@ -7,7 +7,7 @@ export const PAYMENT_METHOD_IMAGES = {
   
   // Moçambique - Imagens reais dos métodos de pagamento
   emola: "/lovable-uploads/70243346-a1ea-47dc-8ef7-abbd4a3d66a4.png",
-  epesa: "/lovable-uploads/eb1d9ab5-b83b-4c85-9028-61693547d5c0.png",
+  mpesa: "/lovable-uploads/eb1d9ab5-b83b-4c85-9028-61693547d5c0.png",
   
   // Portugal - Imagens reais dos métodos de pagamento
   card: "/lovable-uploads/3253c01d-89da-4a32-846f-4861dd03645c.png",

@@ -167,3 +167,12 @@ verify_jwt = false
 
 [functions.send-facebook-conversion]
 verify_jwt = false
+
+[functions.create-sislog-payment]
+verify_jwt = false
+
+[functions.sislog-webhook]
+verify_jwt = false
+
+[functions.create-multibanco-order]
+verify_jwt = false
