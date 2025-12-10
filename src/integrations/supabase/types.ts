@@ -4224,6 +4224,14 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_seller_basic_info: {
+        Args: { p_user_id: string }
+        Returns: {
+          avatar_url: string
+          business_name: string
+          full_name: string
+        }[]
+      }
       get_seller_public_info: {
         Args: { p_product_id: string }
         Returns: {
