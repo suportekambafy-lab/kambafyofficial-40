@@ -114,10 +114,12 @@ serve(async (req) => {
       );
     }
     
-    // Add country code
-    formattedPhone = '258' + formattedPhone;
+    // SISLOG may expect phone number without country code - try with just 9 digits first
+    // If that fails, we might need to add 258 prefix
+    const phoneForSislog = formattedPhone; // Just the 9 digits without 258 prefix
 
-    console.log('📞 Formatted phone:', formattedPhone, '(length:', formattedPhone.length, ')');
+    console.log('📞 Phone for SISLOG:', phoneForSislog, '(length:', phoneForSislog.length, ')');
+    console.log('📞 Original phone received:', phoneNumber);
     console.log('💰 Amount in centavos:', amountInCentavos);
     console.log('🔑 Transaction ID:', transactionId);
 
@@ -150,7 +152,7 @@ serve(async (req) => {
       username: SISLOG_USERNAME,
       transactionId: transactionId,
       value: amountInCentavos.toString(), // String conforme documentação
-      cel: formattedPhone // Para enviar PUSH notification
+      cel: phoneForSislog // Send just 9 digits without country code
     };
 
     console.log('📤 SISLOG payload:', sislogPayload);
