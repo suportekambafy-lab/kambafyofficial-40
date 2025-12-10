@@ -798,7 +798,7 @@ const Checkout = () => {
     // Definir ordem dos métodos por país
     const paymentOrder: Record<string, string[]> = {
       'AO': ['express', 'reference', 'transfer'],
-      'MZ': ['emola', 'epesa'],
+      'MZ': ['emola', 'mpesa'],
       'PT': ['card', 'klarna', 'multibanco', 'mbway'],
       'GB': ['card_uk', 'klarna_uk'],
       'US': ['card_us']
@@ -811,7 +811,7 @@ const Checkout = () => {
         if (userCountry.code === 'AO') {
           return ['express', 'transfer', 'reference'].includes(method.id);
         } else if (userCountry.code === 'MZ') {
-          return ['emola', 'epesa'].includes(method.id);
+          return ['emola', 'mpesa'].includes(method.id);
         } else if (userCountry.code === 'PT') {
           return ['card', 'klarna', 'multibanco', 'mbway'].includes(method.id);
         } else if (userCountry.code === 'GB') {

@@ -104,7 +104,7 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
           return ['card', 'klarna', 'multibanco', 'mbway'].includes(method.id);
         } else if (userCountry.code === 'MZ') {
           // Moçambique usa métodos tradicionais
-          return ['emola', 'epesa'].includes(method.id);
+          return ['emola', 'mpesa'].includes(method.id);
         } else if (userCountry.code === 'GB') {
           // UK usa card e klarna
           return ['card_uk', 'klarna_uk'].includes(method.id);
