@@ -54,9 +54,9 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
     countryName: "Moçambique"
   },
   {
-    id: "epesa",
-    name: "e-Pesa",
-    image: getPaymentMethodImage("epesa"),
+    id: "mpesa",
+    name: "M-Pesa",
+    image: getPaymentMethodImage("mpesa"),
     enabled: true,
     isMozambique: true,
     countryFlag: "🇲🇿",
@@ -143,7 +143,7 @@ export const getCountryByPaymentMethod = (paymentMethod: string) => {
     
     // Moçambique
     'emola': { code: 'MZ', name: 'Moçambique', flag: '🇲🇿' },
-    'epesa': { code: 'MZ', name: 'Moçambique', flag: '🇲🇿' },
+    'mpesa': { code: 'MZ', name: 'Moçambique', flag: '🇲🇿' },
     
     // Reino Unido
     'card_uk': { code: 'GB', name: 'United Kingdom', flag: '🇬🇧' },
