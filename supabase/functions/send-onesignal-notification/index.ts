@@ -100,9 +100,12 @@ serve(async (req) => {
       headings: { en: title },
       contents: { en: message },
       data: data,
-      android_channel_id: 'canal_venda', // Canal Android para som de notificação (case sensitive)
-      ios_sound: 'venda.caf', // Som personalizado para iOS (obrigatório para tocar)
+      ios_sound: 'venda.caf', // Som personalizado para iOS
     };
+    
+    // Adicionar android_channel_id apenas se existir (precisa ser criado no OneSignal primeiro)
+    // Descomente a linha abaixo após criar o canal "canal_venda" no OneSignal Dashboard
+    // notificationPayload.android_channel_id = 'canal_venda';
 
     let targetingMethod = '';
     
