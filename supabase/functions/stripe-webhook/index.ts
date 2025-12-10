@@ -805,14 +805,16 @@ serve(async (req) => {
                     const { error: notificationError } = await supabase.functions.invoke('send-onesignal-notification', {
                       body: {
                         external_id: sellerProfile.email,
-                        title: '💰 Nova venda!',
-                        message: `Você recebeu ${formattedPrice} - ${product?.name || 'Produto'}`,
+                        title: 'Kambafy - Venda aprovada',
+                        message: `Sua comissão: ${formattedPrice}`,
                         data: {
-                          type: 'new_sale',
+                          type: 'sale',
                           order_id: orderId,
                           amount: originalAmount.toString(),
+                          seller_commission: formattedPrice,
                           currency: originalCurrency,
-                          product_name: product?.name
+                          product_name: product?.name || '',
+                          url: 'https://mobile.kambafy.com/app'
                         }
                       }
                     });
