@@ -31,7 +31,7 @@ const Features = () => {
     {
       icon: <DollarSign className="w-8 h-8 text-checkout-green" />,
       title: "Pagamentos em Multimoedas",
-      description: "Aceite pagamentos em Angola (Multicaixa Express, Referência, Transferência), Portugal (Cartão, Multibanco, Apple Pay, Klarna) e Moçambique (e-Mola, e-Pesa)."
+      description: "Aceite pagamentos em Angola (Multicaixa Express, Referência, Transferência), Portugal (Cartão, Multibanco, Apple Pay, Klarna) e Moçambique (e-Mola, M-Pesa)."
     },
     {
       icon: <ShoppingCart className="w-8 h-8 text-checkout-green" />,
