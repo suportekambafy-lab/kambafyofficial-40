@@ -137,11 +137,23 @@ serve(async (req) => {
     const sislogData = await sislogResponse.json();
     console.log('📥 SISLOG response:', sislogData);
 
-    if (!sislogResponse.ok || sislogData.entity === '00000') {
+    // Check for errors - SISLOG returns "Invalid" status or entity "00000" on failure
+    if (!sislogResponse.ok || sislogData.status === 'Invalid' || sislogData.entity === '00000') {
       console.error('❌ SISLOG error:', sislogData);
+      
+      // Get error message from SISLOG response
+      let errorMessage = 'Failed to create payment reference';
+      if (sislogData.errorMessage) {
+        errorMessage = sislogData.errorMessage;
+      } else if (sislogData.errormessage) {
+        errorMessage = sislogData.errormessage;
+      } else if (sislogData.message) {
+        errorMessage = sislogData.message;
+      }
+      
       return new Response(
         JSON.stringify({ 
-          error: sislogData.errormessage || 'Failed to create payment reference',
+          error: errorMessage,
           sislogError: sislogData
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
