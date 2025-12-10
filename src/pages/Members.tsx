@@ -341,15 +341,11 @@ export default function Members() {
         throw areasError;
       }
 
-      // Carregar contagem de estudantes para cada área
+      // Carregar contagem de estudantes para cada área usando RPC seguro
       const areasWithCounts = await Promise.all((areasData || []).map(async area => {
-        const {
-          count,
-          error: studentsError
-        } = await supabase.from('member_area_students').select('id', {
-          count: 'exact',
-          head: true
-        }).eq('member_area_id', area.id);
+        // Usar função RPC para contar estudantes (bypass RLS de forma segura)
+        const { data: studentCount, error: studentsError } = await supabase
+          .rpc('count_member_area_students', { p_member_area_id: area.id });
         
         if (studentsError) {
           console.error('Error counting students for area', area.id, ':', studentsError);
@@ -362,11 +358,11 @@ export default function Members() {
           head: true
         }).eq('member_area_id', area.id).eq('status', 'published');
         
-        console.log(`Area ${area.name}: ${count} students, ${lessonsCount} lessons`);
+        console.log(`Area ${area.name}: ${studentCount} students, ${lessonsCount} lessons`);
         
         return {
           ...area,
-          students_count: count || 0,
+          students_count: studentCount || 0,
           lessons_count: lessonsCount || 0
         };
       }));

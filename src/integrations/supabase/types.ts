@@ -3909,6 +3909,10 @@ export type Database = {
       cleanup_passwordless_users: { Args: never; Returns: undefined }
       complete_refund: { Args: { p_refund_id: string }; Returns: undefined }
       count_duplicate_withdrawals: { Args: never; Returns: number }
+      count_member_area_students: {
+        Args: { p_member_area_id: string }
+        Returns: number
+      }
       create_admin_user:
         | {
             Args: {
