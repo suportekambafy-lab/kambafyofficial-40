@@ -28,7 +28,8 @@ serve(async (req) => {
   try {
     const SISLOG_API_KEY = Deno.env.get('SISLOG_API_KEY');
     const SISLOG_USERNAME = Deno.env.get('SISLOG_USERNAME');
-    const SISLOG_API_URL = Deno.env.get('SISLOG_API_URL') || 'https://api.sislog.com'; // Placeholder
+    // SISLOG_API_URL deve ser a URL base (ex: https://lin4.sislog.com)
+    const SISLOG_API_URL = Deno.env.get('SISLOG_API_URL') || 'https://lin4.sislog.com';
 
     if (!SISLOG_API_KEY || !SISLOG_USERNAME) {
       console.error('❌ SISLOG credentials not configured');
