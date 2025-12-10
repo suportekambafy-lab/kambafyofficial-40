@@ -100,6 +100,7 @@ serve(async (req) => {
       headings: { en: title },
       contents: { en: message },
       data: data,
+      android_channel_id: 'canal_venda', // Canal Android para som de notificação (case sensitive)
     };
 
     let targetingMethod = '';
