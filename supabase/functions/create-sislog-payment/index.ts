@@ -109,21 +109,26 @@ serve(async (req) => {
     
     console.log('📤 Calling SISLOG API:', sislogEndpoint);
     
+    // Payload conforme documentação SISLOG:
+    // - username: obrigatório
+    // - transactionId: máx 22 chars, único
+    // - value: string com valor em centavos (ex: "5000" = 50,00 MZN)
+    // - cel: opcional, para enviar PUSH ao cliente
     const sislogPayload = {
+      username: SISLOG_USERNAME,
       transactionId: transactionId,
-      value: amountInCentavos,
-      phoneNumber: formattedPhone,
-      provider: provider.toUpperCase() // EMOLA or MPESA
+      value: amountInCentavos.toString(), // String conforme documentação
+      cel: formattedPhone // Para enviar PUSH notification
     };
 
     console.log('📤 SISLOG payload:', sislogPayload);
 
+    // Headers conforme documentação: apikey (lowercase)
     const sislogResponse = await fetch(sislogEndpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-API-KEY': SISLOG_API_KEY,
-        'X-USERNAME': SISLOG_USERNAME
+        'apikey': SISLOG_API_KEY
       },
       body: JSON.stringify(sislogPayload)
     });
