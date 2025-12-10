@@ -296,20 +296,36 @@ export default function ModernMembersArea({ memberAreaId: propMemberAreaId, isEm
         }
 
         // Carregar lessons usando função que bypassa RLS de forma segura
+        // Usar email do session, da URL ou um email genérico para carregar as aulas
         const studentEmail = session?.user?.email || emailParam || '';
         console.log('📚 Buscando aulas para:', { studentEmail, memberAreaId });
         
-        // ✅ Validação: não chamar RPC sem email válido
-        if (!studentEmail || studentEmail.trim() === '') {
-          console.log('⚠️ Email vazio - aguardando sessão ser carregada');
-          return;
-        }
+        // ✅ Se não tem email ainda, usar query direta ao invés de RPC
+        // Isso permite carregar as aulas mesmo sem autenticação completa
+        let lessonsData = null;
+        let lessonsError = null;
         
-        const { data: lessonsData, error: lessonsError } = await supabase
-          .rpc('get_lessons_for_student', {
-            p_student_email: studentEmail.toLowerCase().trim(),
-            p_member_area_id: memberAreaId
-          });
+        if (studentEmail && studentEmail.trim() !== '') {
+          // Com email, usar RPC normal
+          const result = await supabase
+            .rpc('get_lessons_for_student', {
+              p_student_email: studentEmail.toLowerCase().trim(),
+              p_member_area_id: memberAreaId
+            });
+          lessonsData = result.data;
+          lessonsError = result.error;
+        } else {
+          // Sem email ainda, buscar aulas diretamente (vai funcionar se RLS permitir)
+          console.log('⚠️ Email vazio - tentando buscar aulas diretamente');
+          const result = await supabase
+            .from('lessons')
+            .select('*')
+            .eq('member_area_id', memberAreaId)
+            .eq('status', 'published')
+            .order('order_number');
+          lessonsData = result.data;
+          lessonsError = result.error;
+        }
           
         if (!lessonsError && lessonsData) {
           console.log('✅ ModernMembersArea: Lessons carregadas:', lessonsData.length);
