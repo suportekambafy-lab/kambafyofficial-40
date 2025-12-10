@@ -188,11 +188,27 @@ export const MozambiquePaymentForm = ({
 
       if (response.error) {
         console.error('❌ SISLOG error:', response.error);
-        toast({
-          title: "Erro ao gerar referência",
-          message: response.error.message || "Tente novamente mais tarde",
-          variant: "error"
-        });
+        
+        // Check if it's a network/timeout error
+        const errorMessage = response.error.message || "";
+        const isNetworkError = errorMessage.includes('Network') || 
+                               errorMessage.includes('timeout') || 
+                               errorMessage.includes('connection') ||
+                               errorMessage.includes('non-2xx');
+        
+        if (isNetworkError) {
+          toast({
+            title: "Erro de conexão",
+            message: "A conexão foi perdida. Por favor, verifique se a referência foi gerada e tente novamente.",
+            variant: "error"
+          });
+        } else {
+          toast({
+            title: "Erro ao gerar referência",
+            message: response.error.message || "Tente novamente mais tarde",
+            variant: "error"
+          });
+        }
         setIsProcessing(false);
         return;
       }
