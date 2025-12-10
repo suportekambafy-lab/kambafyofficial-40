@@ -798,7 +798,7 @@ const Checkout = () => {
     // Definir ordem dos métodos por país
     const paymentOrder: Record<string, string[]> = {
       'AO': ['express', 'reference', 'transfer'],
-      'MZ': ['emola', 'mpesa'],
+      'MZ': ['emola', 'mpesa', 'epesa'], // Aceita mpesa e epesa para compatibilidade
       'PT': ['card', 'klarna', 'multibanco', 'mbway'],
       'GB': ['card_uk', 'klarna_uk'],
       'US': ['card_us']
@@ -811,7 +811,7 @@ const Checkout = () => {
         if (userCountry.code === 'AO') {
           return ['express', 'transfer', 'reference'].includes(method.id);
         } else if (userCountry.code === 'MZ') {
-          return ['emola', 'mpesa'].includes(method.id);
+          return ['emola', 'mpesa', 'epesa'].includes(method.id); // Aceita ambos
         } else if (userCountry.code === 'PT') {
           return ['card', 'klarna', 'multibanco', 'mbway'].includes(method.id);
         } else if (userCountry.code === 'GB') {
@@ -2616,7 +2616,7 @@ const Checkout = () => {
                 </div>}
 
               {/* Mozambique Payment Form (e-Mola / M-Pesa) */}
-              {['emola', 'mpesa'].includes(selectedPayment) && (
+              {['emola', 'mpesa', 'epesa'].includes(selectedPayment) && (
                 <div className="mt-6">
                   <MozambiquePaymentForm
                     product={product}
@@ -2628,7 +2628,7 @@ const Checkout = () => {
                     amount={totalPrice}
                     currency="MZN"
                     formatPrice={getDisplayPrice}
-                    selectedProvider={selectedPayment as 'emola' | 'mpesa'}
+                    selectedProvider={selectedPayment === 'epesa' ? 'mpesa' : selectedPayment as 'emola' | 'mpesa'}
                     onPaymentComplete={(orderId) => {
                       console.log('🇲🇿 Mozambique payment reference generated:', orderId);
                       toast({
@@ -2646,7 +2646,7 @@ const Checkout = () => {
                 </div>
               )}
 
-              {!['card', 'klarna', 'multibanco', 'mbway', 'card_uk', 'klarna_uk', 'card_us', 'transfer', 'emola', 'mpesa'].includes(selectedPayment) && availablePaymentMethods.length > 0 && !referenceData && <Button onClick={handlePurchase} disabled={!formData.fullName || !formData.email || !(selectedPayment === 'express' ? expressPhone : formData.phone) || !selectedPayment || processing} className={`w-full h-12 font-semibold relative transition-all ${!formData.fullName || !formData.email || !(selectedPayment === 'express' ? expressPhone : formData.phone) || !selectedPayment || processing ? 'bg-green-600/50 cursor-not-allowed text-white/70' : 'bg-green-600 hover:bg-green-700 text-white'}`}>
+              {!['card', 'klarna', 'multibanco', 'mbway', 'card_uk', 'klarna_uk', 'card_us', 'transfer', 'emola', 'mpesa', 'epesa'].includes(selectedPayment) && availablePaymentMethods.length > 0 && !referenceData && <Button onClick={handlePurchase} disabled={!formData.fullName || !formData.email || !(selectedPayment === 'express' ? expressPhone : formData.phone) || !selectedPayment || processing} className={`w-full h-12 font-semibold relative transition-all ${!formData.fullName || !formData.email || !(selectedPayment === 'express' ? expressPhone : formData.phone) || !selectedPayment || processing ? 'bg-green-600/50 cursor-not-allowed text-white/70' : 'bg-green-600 hover:bg-green-700 text-white'}`}>
                   {processing ? <div className="flex items-center justify-center">
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2">
                       </div>

@@ -49,7 +49,7 @@ export const usePaymentMethods = (countryCode?: string, productPaymentMethods?: 
     // Definir ordem dos métodos por país
     const paymentOrder: Record<string, string[]> = {
       'AO': ['express', 'reference', 'transfer'],
-      'MZ': ['emola', 'mpesa'],
+      'MZ': ['emola', 'mpesa', 'epesa'], // Aceita ambos para compatibilidade
       'PT': ['card', 'mbway', 'multibanco', 'klarna']
     };
     
