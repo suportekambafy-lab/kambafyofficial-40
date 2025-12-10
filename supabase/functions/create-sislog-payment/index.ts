@@ -80,13 +80,44 @@ serve(async (req) => {
     // Convert amount to centavos (no decimal separators)
     const amountInCentavos = Math.round(amount * 100);
 
-    // Format phone number for SISLOG (should be 258XXXXXXXXX)
+    // Format phone number for SISLOG (must be exactly 258XXXXXXXXX - 12 digits total)
     let formattedPhone = phoneNumber.replace(/\D/g, '');
-    if (!formattedPhone.startsWith('258')) {
-      formattedPhone = '258' + formattedPhone;
+    
+    // Remove leading 258 if present to normalize
+    if (formattedPhone.startsWith('258')) {
+      formattedPhone = formattedPhone.substring(3);
     }
+    
+    // Ensure we have exactly 9 digits
+    if (formattedPhone.length !== 9) {
+      console.error('❌ Invalid phone number length:', formattedPhone.length, 'digits');
+      return new Response(
+        JSON.stringify({ error: `Número de telefone inválido. Deve ter 9 dígitos, recebeu ${formattedPhone.length}` }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    // Validate prefix based on provider
+    const prefix = formattedPhone.substring(0, 2);
+    if (provider === 'emola' && prefix !== '87') {
+      console.error('❌ Invalid prefix for e-Mola:', prefix);
+      return new Response(
+        JSON.stringify({ error: `Para e-Mola, use um número Movitel (87). Recebeu: ${prefix}` }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    if (provider === 'mpesa' && !['84', '85'].includes(prefix)) {
+      console.error('❌ Invalid prefix for M-Pesa:', prefix);
+      return new Response(
+        JSON.stringify({ error: `Para M-Pesa, use um número Vodacom (84 ou 85). Recebeu: ${prefix}` }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    // Add country code
+    formattedPhone = '258' + formattedPhone;
 
-    console.log('📞 Formatted phone:', formattedPhone);
+    console.log('📞 Formatted phone:', formattedPhone, '(length:', formattedPhone.length, ')');
     console.log('💰 Amount in centavos:', amountInCentavos);
     console.log('🔑 Transaction ID:', transactionId);
 
