@@ -114,11 +114,11 @@ serve(async (req) => {
       );
     }
     
-    // SISLOG may expect phone number without country code - try with just 9 digits first
-    // If that fails, we might need to add 258 prefix
-    const phoneForSislog = formattedPhone; // Just the 9 digits without 258 prefix
+    // Format for SISLOG: 258 + 9 digits (MSISDN format)
+    const phoneForSislog = '258' + formattedPhone;
 
     console.log('📞 Phone for SISLOG:', phoneForSislog, '(length:', phoneForSislog.length, ')');
+    console.log('📞 9-digit number:', formattedPhone);
     console.log('📞 Original phone received:', phoneNumber);
     console.log('💰 Amount in centavos:', amountInCentavos);
     console.log('🔑 Transaction ID:', transactionId);
