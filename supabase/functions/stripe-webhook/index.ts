@@ -774,6 +774,57 @@ serve(async (req) => {
                   } else {
                     console.log('✅ Seller notification email sent successfully');
                   }
+                  
+                  // 📱 ENVIAR PUSH NOTIFICATION VIA ONESIGNAL PARA O VENDEDOR
+                  try {
+                    console.log('📱 Sending OneSignal push notification for Stripe payment...');
+                    
+                    // Helper para formatar preço
+                    const formatPriceForNotification = (amount: number, currency: string = 'KZ'): string => {
+                      let amountInKZ = amount;
+                      
+                      if (currency.toUpperCase() !== 'KZ') {
+                        const rates: Record<string, number> = {
+                          'EUR': 1100,
+                          'MZN': 14.3,
+                          'USD': 825
+                        };
+                        const rate = rates[currency.toUpperCase()] || 1;
+                        amountInKZ = Math.round(amount * rate);
+                      }
+                      
+                      // Calcular comissão do vendedor (91.01%)
+                      const sellerAmount = amountInKZ * 0.9101;
+                      return `${sellerAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KZ`;
+                    };
+                    
+                    const originalAmount = parseFloat(paymentIntent.metadata.original_amount || (paymentIntent.amount / 100).toString());
+                    const originalCurrency = paymentIntent.metadata.original_currency || paymentIntent.currency.toUpperCase();
+                    const formattedPrice = formatPriceForNotification(originalAmount, originalCurrency);
+                    
+                    const { error: notificationError } = await supabase.functions.invoke('send-onesignal-notification', {
+                      body: {
+                        external_id: sellerProfile.email,
+                        title: '💰 Nova venda!',
+                        message: `Você recebeu ${formattedPrice} - ${product?.name || 'Produto'}`,
+                        data: {
+                          type: 'new_sale',
+                          order_id: orderId,
+                          amount: originalAmount.toString(),
+                          currency: originalCurrency,
+                          product_name: product?.name
+                        }
+                      }
+                    });
+                    
+                    if (notificationError) {
+                      console.error('❌ Error sending OneSignal notification:', notificationError);
+                    } else {
+                      console.log('✅ OneSignal push notification sent successfully');
+                    }
+                  } catch (pushError) {
+                    console.error('❌ Error in OneSignal push process:', pushError);
+                  }
                 } else {
                   console.log('⚠️ Seller email not found, skipping seller notification');
                 }
