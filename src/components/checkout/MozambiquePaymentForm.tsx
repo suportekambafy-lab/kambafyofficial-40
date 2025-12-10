@@ -237,8 +237,8 @@ export const MozambiquePaymentForm = ({
         });
 
         toast({
-          title: "Referência gerada!",
-          message: `Abra o app ${selectedProvider === 'emola' ? 'e-Mola' : 'M-Pesa'} para completar o pagamento`,
+          title: "Pedido enviado!",
+          message: `Confirme o pagamento no seu telefone`,
           variant: "success"
         });
 
@@ -261,70 +261,51 @@ export const MozambiquePaymentForm = ({
     }
   };
 
-  // Show reference data if already generated
+  // Show waiting for SMS confirmation screen
   if (referenceData) {
     return (
-      <Card className="border-2 border-green-500/20 bg-green-50/50">
+      <Card className="border-2 border-amber-500/20 bg-amber-50/50">
         <CardContent className="p-6 space-y-6">
           <div className="text-center">
-            <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-3" />
-            <h3 className="text-xl font-bold text-green-700">Referência Gerada!</h3>
+            <div className="relative mx-auto w-16 h-16 mb-4">
+              <Smartphone className="w-16 h-16 text-amber-500 mx-auto" />
+              <div className="absolute -top-1 -right-1 w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center animate-pulse">
+                <span className="text-white text-xs font-bold">!</span>
+              </div>
+            </div>
+            <h3 className="text-xl font-bold text-amber-700">Confirme no seu telefone!</h3>
             <p className="text-muted-foreground mt-1">
-              Use os dados abaixo no app {selectedProvider === 'emola' ? 'e-Mola' : 'M-Pesa'}
+              Enviamos um pedido de pagamento para o seu número
             </p>
           </div>
 
-          <div className="space-y-4 bg-white rounded-lg p-4 border">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-sm text-muted-foreground">Entidade</p>
-                <p className="text-2xl font-mono font-bold">{referenceData.entity}</p>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleCopy(referenceData.entity, 'entity')}
-              >
-                {copiedEntity ? <CheckCircle className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-              </Button>
-            </div>
-
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-sm text-muted-foreground">Referência</p>
-                <p className="text-2xl font-mono font-bold">{referenceData.reference}</p>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleCopy(referenceData.reference, 'reference')}
-              >
-                {copiedReference ? <CheckCircle className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-              </Button>
-            </div>
-
-            <div className="pt-2 border-t">
-              <p className="text-sm text-muted-foreground">Valor a pagar</p>
-              <p className="text-xl font-bold text-primary">{formatPrice(amount, true)}</p>
-            </div>
+          <div className="bg-white rounded-lg p-4 border text-center space-y-2">
+            <p className="text-sm text-muted-foreground">Número</p>
+            <p className="text-lg font-mono font-bold">+258 {phoneNumber}</p>
+            <p className="text-sm text-muted-foreground mt-2">Valor</p>
+            <p className="text-2xl font-bold text-primary">{formatPrice(amount, true)}</p>
           </div>
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2">
               <Smartphone className="w-4 h-4" />
-              Como pagar
+              O que fazer agora
             </h4>
-            <ol className="text-sm text-blue-700 space-y-1 list-decimal list-inside">
-              <li>Abra o app {selectedProvider === 'emola' ? 'e-Mola' : 'M-Pesa'}</li>
-              <li>Selecione "Pagamento por Referência"</li>
-              <li>Insira a entidade: <strong>{referenceData.entity}</strong></li>
-              <li>Insira a referência: <strong>{referenceData.reference}</strong></li>
-              <li>Confirme o valor e complete o pagamento</li>
+            <ol className="text-sm text-blue-700 space-y-2 list-decimal list-inside">
+              <li>Você receberá uma <strong>mensagem SMS</strong> ou notificação no app {selectedProvider === 'emola' ? 'e-Mola' : 'M-Pesa'}</li>
+              <li>Abra a mensagem e confirme o pagamento</li>
+              <li>Digite o seu <strong>PIN</strong> para autorizar</li>
+              <li>Pronto! Você receberá a confirmação por email</li>
             </ol>
           </div>
 
+          <div className="flex items-center justify-center gap-2 text-amber-600">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span className="text-sm">Aguardando confirmação do pagamento...</span>
+          </div>
+
           <p className="text-xs text-center text-muted-foreground">
-            Pedido: {referenceData.orderId} | Após o pagamento, você receberá a confirmação por email.
+            Pedido: {referenceData.orderId} | Não recebeu a mensagem? Verifique se o número está correto.
           </p>
         </CardContent>
       </Card>
@@ -390,15 +371,15 @@ export const MozambiquePaymentForm = ({
           className="w-full h-12 text-lg font-semibold"
           size="lg"
         >
-          {isProcessing ? (
+        {isProcessing ? (
             <>
               <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-              Gerando referência...
+              Enviando pedido...
             </>
           ) : (
             <>
               <Smartphone className="w-5 h-5 mr-2" />
-              Gerar Referência
+              Enviar Pedido de Pagamento
             </>
           )}
         </Button>
@@ -407,8 +388,8 @@ export const MozambiquePaymentForm = ({
         <div className="flex items-start gap-2 text-xs text-muted-foreground">
           <Shield className="w-4 h-4 mt-0.5 flex-shrink-0" />
           <p>
-            Pagamento seguro processado pela SISLOG. Você receberá uma notificação push no seu 
-            app {selectedProvider === 'emola' ? 'e-Mola' : 'M-Pesa'} para confirmar a transação.
+            Pagamento seguro. Após clicar, você receberá um SMS no seu telefone para confirmar 
+            o pagamento via {selectedProvider === 'emola' ? 'e-Mola' : 'M-Pesa'}.
           </p>
         </div>
       </CardContent>
