@@ -258,16 +258,22 @@ const ThankYou = () => {
         // Verificar se o usuário está autenticado e redirecionar se necessário
         const currentUser = user;
         if (currentUser && productData?.type === 'Curso' && productData?.member_areas?.id) {
+          // Usar função RPC segura para verificar acesso (não expõe lista de estudantes)
           const {
-            data: hasAccess,
+            data: accessResult,
             error: accessError
-          } = await supabase.from('member_area_students').select('*').eq('student_email', currentUser.email).eq('member_area_id', productData.member_areas.id);
+          } = await supabase.rpc('check_student_access', {
+            p_member_area_id: productData.member_areas.id,
+            p_student_email: currentUser.email?.toLowerCase().trim() || ''
+          });
           
           if (accessError) {
             console.error('❌ ThankYou: Erro ao verificar acesso:', accessError);
           }
           
-          if (!hasAccess || hasAccess.length === 0) {
+          const hasAccess = accessResult && accessResult.length > 0 && accessResult[0]?.has_access === true;
+          
+          if (!hasAccess) {
             console.log('🔒 ThankYou: Usuário sem acesso, registrando...');
             const {
               error: insertError
