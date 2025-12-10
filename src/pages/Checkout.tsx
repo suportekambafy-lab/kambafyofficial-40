@@ -2628,6 +2628,7 @@ const Checkout = () => {
                     amount={totalPrice}
                     currency="MZN"
                     formatPrice={getDisplayPrice}
+                    selectedProvider={selectedPayment as 'emola' | 'mpesa'}
                     onPaymentComplete={(orderId) => {
                       console.log('🇲🇿 Mozambique payment reference generated:', orderId);
                       toast({

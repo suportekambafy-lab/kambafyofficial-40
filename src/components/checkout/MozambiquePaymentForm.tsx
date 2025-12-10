@@ -3,8 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Loader2, Smartphone, Copy, CheckCircle, AlertCircle, Shield } from "lucide-react";
+import { Loader2, Smartphone, Copy, CheckCircle, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCustomToast } from "@/hooks/useCustomToast";
 import { getPaymentMethodImage } from "@/utils/paymentMethodImages";
@@ -25,6 +24,7 @@ interface MozambiquePaymentFormProps {
   affiliateCommission?: number | null;
   cohortId?: string | null;
   t: (key: string) => string;
+  selectedProvider: 'emola' | 'mpesa'; // Provider já selecionado na página principal
 }
 
 export const MozambiquePaymentForm = ({
@@ -38,10 +38,10 @@ export const MozambiquePaymentForm = ({
   affiliateCode,
   affiliateCommission,
   cohortId,
-  t
+  t,
+  selectedProvider
 }: MozambiquePaymentFormProps) => {
   const { toast } = useCustomToast();
-  const [selectedProvider, setSelectedProvider] = useState<'emola' | 'mpesa'>('emola');
   const [phoneNumber, setPhoneNumber] = useState(customerInfo.phone || '');
   const [isProcessing, setIsProcessing] = useState(false);
   const [referenceData, setReferenceData] = useState<{
@@ -267,56 +267,17 @@ export const MozambiquePaymentForm = ({
     <Card className="border-2">
       <CardContent className="p-6 space-y-6">
         <div className="text-center">
-          <h3 className="text-lg font-semibold">Pagamento Mobile Money</h3>
+          <div className="flex items-center justify-center gap-3 mb-2">
+            <img 
+              src={getPaymentMethodImage(selectedProvider)} 
+              alt={selectedProvider === 'emola' ? 'e-Mola' : 'M-Pesa'} 
+              className="h-10 w-auto object-contain"
+            />
+            <h3 className="text-lg font-semibold">
+              Pagamento {selectedProvider === 'emola' ? 'e-Mola' : 'M-Pesa'}
+            </h3>
+          </div>
           <p className="text-sm text-muted-foreground">Moçambique</p>
-        </div>
-
-        {/* Provider Selection */}
-        <div className="space-y-3">
-          <Label>Selecione o método de pagamento</Label>
-          <RadioGroup
-            value={selectedProvider}
-            onValueChange={(value) => setSelectedProvider(value as 'emola' | 'mpesa')}
-            className="grid grid-cols-2 gap-3"
-          >
-            <div>
-              <RadioGroupItem
-                value="emola"
-                id="emola"
-                className="peer sr-only"
-              />
-              <Label
-                htmlFor="emola"
-                className="flex flex-col items-center justify-center rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer transition-all"
-              >
-                <img 
-                  src={getPaymentMethodImage('emola')} 
-                  alt="e-Mola" 
-                  className="h-10 w-auto mb-2 object-contain"
-                />
-                <span className="font-medium">e-Mola</span>
-              </Label>
-            </div>
-            
-            <div>
-              <RadioGroupItem
-                value="mpesa"
-                id="mpesa"
-                className="peer sr-only"
-              />
-              <Label
-                htmlFor="mpesa"
-                className="flex flex-col items-center justify-center rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer transition-all"
-              >
-                <img 
-                  src={getPaymentMethodImage('mpesa')} 
-                  alt="M-Pesa" 
-                  className="h-10 w-auto mb-2 object-contain"
-                />
-                <span className="font-medium">M-Pesa</span>
-              </Label>
-            </div>
-          </RadioGroup>
         </div>
 
         {/* Phone Number */}
