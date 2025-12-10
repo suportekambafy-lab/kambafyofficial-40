@@ -53,14 +53,43 @@ export const MozambiquePaymentForm = ({
   const [copiedEntity, setCopiedEntity] = useState(false);
   const [copiedReference, setCopiedReference] = useState(false);
 
-  // Validate Mozambique phone number
-  const validateMZPhone = (phone: string): boolean => {
+  // Validate Mozambique phone number based on provider
+  const validateMZPhone = (phone: string): { valid: boolean; error?: string } => {
     const cleanPhone = phone.replace(/\D/g, '');
-    // Must be 9 digits starting with 84, 85, 86, or 87
-    const mzPhoneRegex = /^(84|85|86|87)\d{7}$/;
-    // Or with country code
-    const mzWithCodeRegex = /^258(84|85|86|87)\d{7}$/;
-    return mzPhoneRegex.test(cleanPhone) || mzWithCodeRegex.test(cleanPhone);
+    
+    // Get the local number (without country code)
+    let localNumber = cleanPhone;
+    if (cleanPhone.startsWith('258')) {
+      localNumber = cleanPhone.substring(3);
+    }
+    
+    // Must be 9 digits
+    if (localNumber.length !== 9) {
+      return { valid: false, error: "O número deve ter 9 dígitos" };
+    }
+    
+    const prefix = localNumber.substring(0, 2);
+    
+    // Validate prefix based on provider
+    if (selectedProvider === 'emola') {
+      // e-Mola uses 84 and 86
+      if (!['84', '86'].includes(prefix)) {
+        return { 
+          valid: false, 
+          error: `Para e-Mola, use um número 84 ou 86. O número ${prefix}X é M-Pesa.` 
+        };
+      }
+    } else if (selectedProvider === 'mpesa') {
+      // M-Pesa uses 84, 85, 86, 87
+      if (!['84', '85', '86', '87'].includes(prefix)) {
+        return { 
+          valid: false, 
+          error: "Para M-Pesa, use um número que comece com 84, 85, 86 ou 87" 
+        };
+      }
+    }
+    
+    return { valid: true };
   };
 
   const formatPhoneForDisplay = (phone: string): string => {
@@ -93,10 +122,21 @@ export const MozambiquePaymentForm = ({
 
   const handleGenerateReference = async () => {
     // Validate phone
-    if (!validateMZPhone(phoneNumber)) {
+    const validation = validateMZPhone(phoneNumber);
+    if (!validation.valid) {
       toast({
         title: "Número inválido",
-        message: "Por favor, insira um número de telefone válido de Moçambique (84/85/86/87 XXX XXXX)",
+        message: validation.error || "Por favor, insira um número válido",
+        variant: "error"
+      });
+      return;
+    }
+
+    // Validate customer info
+    if (!customerInfo.name || !customerInfo.email) {
+      toast({
+        title: "Dados incompletos",
+        message: "Por favor, preencha todos os dados do cliente",
         variant: "error"
       });
       return;
@@ -159,6 +199,18 @@ export const MozambiquePaymentForm = ({
 
       const data = response.data;
       console.log('✅ SISLOG response:', data);
+
+      // Check if SISLOG returned an error in the response body
+      if (data.error) {
+        console.error('❌ SISLOG API error:', data);
+        toast({
+          title: "Erro do provedor",
+          message: data.error,
+          variant: "error"
+        });
+        setIsProcessing(false);
+        return;
+      }
 
       if (data.success && data.sislog) {
         setReferenceData({
@@ -291,7 +343,7 @@ export const MozambiquePaymentForm = ({
             <Input
               id="mz-phone"
               type="tel"
-              placeholder="84 XXX XXXX"
+              placeholder={selectedProvider === 'emola' ? "84 ou 86 XXX XXXX" : "84/85/86/87 XXX XXXX"}
               value={phoneNumber.replace(/^(\+?258)?/, '')}
               onChange={(e) => {
                 const value = e.target.value.replace(/\D/g, '');
@@ -302,7 +354,10 @@ export const MozambiquePaymentForm = ({
             />
           </div>
           <p className="text-xs text-muted-foreground">
-            Número associado à sua conta {selectedProvider === 'emola' ? 'e-Mola' : 'M-Pesa'}
+            {selectedProvider === 'emola' 
+              ? "Use um número 84 ou 86 associado à sua conta e-Mola"
+              : "Número associado à sua conta M-Pesa"
+            }
           </p>
         </div>
 
