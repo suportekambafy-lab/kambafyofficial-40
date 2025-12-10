@@ -54,6 +54,9 @@ export const MozambiquePaymentForm = ({
   const [copiedReference, setCopiedReference] = useState(false);
 
   // Validate Mozambique phone number based on provider
+  // M-Pesa (Vodacom): 84, 85
+  // e-Mola (mCel): 86
+  // Movitel: 87 (not supported for mobile money)
   const validateMZPhone = (phone: string): { valid: boolean; error?: string } => {
     const cleanPhone = phone.replace(/\D/g, '');
     
@@ -72,19 +75,19 @@ export const MozambiquePaymentForm = ({
     
     // Validate prefix based on provider
     if (selectedProvider === 'emola') {
-      // e-Mola uses 84 and 86
-      if (!['84', '86'].includes(prefix)) {
+      // e-Mola uses 86 (mCel)
+      if (prefix !== '86') {
         return { 
           valid: false, 
-          error: `Para e-Mola, use um número 84 ou 86. O número ${prefix}X é M-Pesa.` 
+          error: `Para e-Mola, use um número 86 (mCel). Números ${prefix}X não são suportados.` 
         };
       }
     } else if (selectedProvider === 'mpesa') {
-      // M-Pesa uses 84, 85, 86, 87
-      if (!['84', '85', '86', '87'].includes(prefix)) {
+      // M-Pesa uses 84, 85 (Vodacom)
+      if (!['84', '85'].includes(prefix)) {
         return { 
           valid: false, 
-          error: "Para M-Pesa, use um número que comece com 84, 85, 86 ou 87" 
+          error: `Para M-Pesa, use um número 84 ou 85 (Vodacom). Números ${prefix}X não são suportados.` 
         };
       }
     }
@@ -340,7 +343,7 @@ export const MozambiquePaymentForm = ({
             <Input
               id="mz-phone"
               type="tel"
-              placeholder={selectedProvider === 'emola' ? "84 ou 86 XXX XXXX" : "84/85/86/87 XXX XXXX"}
+              placeholder={selectedProvider === 'emola' ? "86 XXX XXXX" : "84 ou 85 XXX XXXX"}
               value={phoneNumber.replace(/^(\+?258)?/, '')}
               onChange={(e) => {
                 const value = e.target.value.replace(/\D/g, '');
@@ -352,8 +355,8 @@ export const MozambiquePaymentForm = ({
           </div>
           <p className="text-xs text-muted-foreground">
             {selectedProvider === 'emola' 
-              ? "Use um número 84 ou 86 associado à sua conta e-Mola"
-              : "Número associado à sua conta M-Pesa"
+              ? "Use um número 86 (mCel) associado à sua conta e-Mola"
+              : "Use um número 84 ou 85 (Vodacom) associado à sua conta M-Pesa"
             }
           </p>
         </div>
