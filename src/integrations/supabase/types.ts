@@ -4281,6 +4281,18 @@ export type Database = {
           total_revenue: number
         }[]
       }
+      has_lesson_access: {
+        Args: { p_lesson_id: string; p_user_email?: string }
+        Returns: boolean
+      }
+      has_member_area_access: {
+        Args: { p_member_area_id: string; p_user_email?: string }
+        Returns: boolean
+      }
+      has_module_access: {
+        Args: { p_module_id: string; p_user_email?: string }
+        Returns: boolean
+      }
       is_active_admin_by_auth_id: { Args: never; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
       is_admin_session: { Args: never; Returns: boolean }
