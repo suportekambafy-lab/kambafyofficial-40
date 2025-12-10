@@ -17,7 +17,7 @@ import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { OptimizedPageWrapper } from "@/components/ui/optimized-page-wrapper";
 import professionalManImage from "@/assets/professional-man.jpg";
-import { getAllPaymentMethods, getPaymentMethodName, getAngolaPaymentMethods, getCountryByPaymentMethod } from "@/utils/paymentMethods";
+import { getAllPaymentMethods, getPaymentMethodName, getAngolaPaymentMethods, getCountryByPaymentMethod, getCountryFlag } from "@/utils/paymentMethods";
 import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { useCurrencyToCountry } from "@/hooks/useCurrencyToCountry";
 import { ProductFilter } from '@/components/ProductFilter';
@@ -40,6 +40,7 @@ interface Sale {
   affiliate_commission?: number;
   seller_commission?: number;
   sale_type?: 'own' | 'affiliate' | 'recovered' | 'module';
+  customer_country?: string;
   order_bump_data?: Array<{
     bump_product_name: string;
     bump_product_price: string;
@@ -658,7 +659,10 @@ export default function Sales() {
                                 Com Afiliado
                               </Badge> : null}
                             {(() => {
-                          const countryInfo = getCountryByPaymentMethod(sale.payment_method);
+                          // Usar customer_country se disponível, senão inferir pelo método de pagamento
+                          const countryInfo = sale.customer_country 
+                            ? getCountryFlag(sale.customer_country)
+                            : getCountryByPaymentMethod(sale.payment_method);
                           return <Badge variant="outline" className="text-xs">
                                   <span className="mr-1">{countryInfo.flag}</span>
                                   {countryInfo.name}
