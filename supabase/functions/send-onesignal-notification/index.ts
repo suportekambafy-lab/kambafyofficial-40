@@ -101,6 +101,7 @@ serve(async (req) => {
       contents: { en: message },
       data: data,
       android_channel_id: 'canal_venda', // Canal Android para som de notificação (case sensitive)
+      ios_sound: 'venda.caf', // Som personalizado para iOS (obrigatório para tocar)
     };
 
     let targetingMethod = '';
