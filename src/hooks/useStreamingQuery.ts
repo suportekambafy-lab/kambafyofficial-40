@@ -383,7 +383,8 @@ export const useStreamingQuery = () => {
               affiliate_code,
               affiliate_commission,
               seller_commission,
-              order_bump_data
+              order_bump_data,
+              customer_country
             `)
             .in('product_id', userProductIds)
             .order('created_at', { ascending: false });

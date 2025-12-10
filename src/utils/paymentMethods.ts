@@ -205,3 +205,50 @@ export const getPaymentMethodsByCountry = (countryCode: string): PaymentMethod[]
       return [];
   }
 };
+
+// Obter bandeira do país pelo código ISO ou nome
+export const getCountryFlag = (countryCode: string | null | undefined): { code: string; name: string; flag: string } => {
+  if (!countryCode) return { code: 'AO', name: 'Angola', flag: '🇦🇴' };
+  
+  const countryMap: Record<string, { code: string; name: string; flag: string }> = {
+    'AO': { code: 'AO', name: 'Angola', flag: '🇦🇴' },
+    'Angola': { code: 'AO', name: 'Angola', flag: '🇦🇴' },
+    'PT': { code: 'PT', name: 'Portugal', flag: '🇵🇹' },
+    'Portugal': { code: 'PT', name: 'Portugal', flag: '🇵🇹' },
+    'MZ': { code: 'MZ', name: 'Moçambique', flag: '🇲🇿' },
+    'Moçambique': { code: 'MZ', name: 'Moçambique', flag: '🇲🇿' },
+    'Mozambique': { code: 'MZ', name: 'Moçambique', flag: '🇲🇿' },
+    'BR': { code: 'BR', name: 'Brasil', flag: '🇧🇷' },
+    'Brasil': { code: 'BR', name: 'Brasil', flag: '🇧🇷' },
+    'Brazil': { code: 'BR', name: 'Brasil', flag: '🇧🇷' },
+    'GB': { code: 'GB', name: 'United Kingdom', flag: '🇬🇧' },
+    'UK': { code: 'GB', name: 'United Kingdom', flag: '🇬🇧' },
+    'United Kingdom': { code: 'GB', name: 'United Kingdom', flag: '🇬🇧' },
+    'US': { code: 'US', name: 'United States', flag: '🇺🇸' },
+    'USA': { code: 'US', name: 'United States', flag: '🇺🇸' },
+    'United States': { code: 'US', name: 'United States', flag: '🇺🇸' },
+    'ES': { code: 'ES', name: 'Espanha', flag: '🇪🇸' },
+    'Spain': { code: 'ES', name: 'Espanha', flag: '🇪🇸' },
+    'Espanha': { code: 'ES', name: 'Espanha', flag: '🇪🇸' },
+    'FR': { code: 'FR', name: 'França', flag: '🇫🇷' },
+    'France': { code: 'FR', name: 'França', flag: '🇫🇷' },
+    'França': { code: 'FR', name: 'França', flag: '🇫🇷' },
+    'DE': { code: 'DE', name: 'Alemanha', flag: '🇩🇪' },
+    'Germany': { code: 'DE', name: 'Alemanha', flag: '🇩🇪' },
+    'Alemanha': { code: 'DE', name: 'Alemanha', flag: '🇩🇪' },
+    'IT': { code: 'IT', name: 'Itália', flag: '🇮🇹' },
+    'Italy': { code: 'IT', name: 'Itália', flag: '🇮🇹' },
+    'Itália': { code: 'IT', name: 'Itália', flag: '🇮🇹' },
+    'NL': { code: 'NL', name: 'Holanda', flag: '🇳🇱' },
+    'Netherlands': { code: 'NL', name: 'Holanda', flag: '🇳🇱' },
+    'Holanda': { code: 'NL', name: 'Holanda', flag: '🇳🇱' },
+    'ZA': { code: 'ZA', name: 'África do Sul', flag: '🇿🇦' },
+    'South Africa': { code: 'ZA', name: 'África do Sul', flag: '🇿🇦' },
+    'África do Sul': { code: 'ZA', name: 'África do Sul', flag: '🇿🇦' },
+    'CV': { code: 'CV', name: 'Cabo Verde', flag: '🇨🇻' },
+    'Cabo Verde': { code: 'CV', name: 'Cabo Verde', flag: '🇨🇻' },
+    'Cape Verde': { code: 'CV', name: 'Cabo Verde', flag: '🇨🇻' },
+  };
+  
+  return countryMap[countryCode] || { code: countryCode, name: countryCode, flag: '🌍' };
+};
