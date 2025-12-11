@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Bell, User, ChevronDown, Menu, X, LogOut, Settings, BookOpen, Home, PlayCircle, Users, MessageCircle, Megaphone, Check, Moon, Sun } from 'lucide-react';
+import { Search, Bell, User, ChevronDown, Menu, X, LogOut, Settings, BookOpen, Home, PlayCircle, Users, MessageCircle, Megaphone, Check } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,7 +20,6 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import kambafyLogo from '@/assets/kambafy-logo-gray.png';
-import { useMembersTheme } from '@/hooks/useMembersTheme';
 
 interface MemberNotification {
   id: string;
@@ -58,7 +57,6 @@ export function NetflixHeader({
   onNotificationClick,
   activeTab = 'home',
 }: NetflixHeaderProps) {
-  const { theme, isDark, toggleTheme } = useMembersTheme();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -319,38 +317,18 @@ export function NetflixHeader({
           </nav>
         </div>
 
-        {/* Right: Search, Theme Toggle, Notifications, Profile */}
+        {/* Right: Search, Notifications, Profile */}
         <div className="flex items-center gap-3">
-          {/* Theme Toggle */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleTheme}
-            className="text-stone-300 hover:text-amber-100 hover:bg-amber-900/20 rounded-full w-10 h-10"
-          >
-            {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </Button>
-
-          {/* Search Bar - Netflix Style */}
+          {/* Search Bar */}
           <div className="hidden md:block relative">
-            <div className={cn(
-              "flex items-center backdrop-blur-xl rounded-full px-4 py-2.5 w-[200px] lg:w-[280px] border",
-              isDark 
-                ? "bg-stone-800/60 border-amber-900/20" 
-                : "bg-white/80 border-amber-200/50"
-            )}>
-              <Search className={cn("w-4 h-4 mr-3", isDark ? "text-amber-200/50" : "text-amber-600/60")} />
+            <div className="flex items-center bg-zinc-800/60 backdrop-blur-xl rounded-full px-4 py-2.5 w-[200px] lg:w-[280px] border border-zinc-700/50">
+              <Search className="w-4 h-4 text-zinc-400 mr-3" />
               <input
                 type="text"
                 placeholder="Pesquisar aulas..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className={cn(
-                  "bg-transparent border-none outline-none text-sm w-full",
-                  isDark 
-                    ? "text-amber-100 placeholder:text-stone-400" 
-                    : "text-stone-800 placeholder:text-stone-500"
-                )}
+                className="bg-transparent border-none outline-none text-white text-sm placeholder:text-zinc-500 w-full"
               />
             </div>
           </div>
