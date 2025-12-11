@@ -131,22 +131,33 @@ export function NetflixMembersHome({
 
   // Check if module is locked based on cohort configuration
   const isModuleLocked = (module: Module): boolean => {
-    // If student has individual access, module is not locked
+    // 1. If student has individual access, module is never locked
     if (modulesWithAccess?.has(module.id)) {
       return false;
     }
 
-    // Check if module is paid and student doesn't have access
-    if (module.is_paid && !modulesWithAccess?.has(module.id)) {
-      return true;
+    // 2. Check if module is PAID for this specific cohort
+    if (module.is_paid) {
+      const paidCohortIds = (module as any).paid_cohort_ids as string[] | null;
+      
+      // If paid_cohort_ids is null or empty = FREE for everyone (not paid)
+      if (!paidCohortIds || paidCohortIds.length === 0) {
+        // Not paid for anyone, continue to check coming_soon
+      } else if (!studentCohortId) {
+        // Student has no cohort = FREE (not in any paid cohort)
+      } else if (paidCohortIds.includes(studentCohortId)) {
+        // Student's cohort IS in paid_cohort_ids → LOCKED (needs to pay)
+        return true;
+      }
+      // Student's cohort is NOT in paidCohortIds → FREE, continue
     }
 
-    // Check coming_soon with cohort logic
+    // 3. Check coming_soon with cohort logic
     if (!module.coming_soon) {
       return false;
     }
 
-    const comingSoonCohortIds = (module as any).coming_soon_cohort_ids;
+    const comingSoonCohortIds = (module as any).coming_soon_cohort_ids as string[] | null;
 
     // null = all cohorts (locked for everyone)
     if (comingSoonCohortIds === null) {
@@ -154,7 +165,7 @@ export function NetflixMembersHome({
     }
 
     // empty array = no cohorts (not locked for anyone)
-    if (comingSoonCohortIds.length === 0) {
+    if (Array.isArray(comingSoonCohortIds) && comingSoonCohortIds.length === 0) {
       return false;
     }
 
