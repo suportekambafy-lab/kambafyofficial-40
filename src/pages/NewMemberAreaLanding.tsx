@@ -50,22 +50,26 @@ const NewMemberAreaLanding = () => {
     {
       title: "Tela de Login",
       description: "Login elegante com animações e efeitos visuais modernos",
-      image: memberAreaLogin
+      image: memberAreaLogin,
+      objectFit: "cover" as const
     },
     {
       title: "Página Inicial",
       description: "Hero cinematográfico com seu curso em destaque estilo Netflix",
-      image: memberAreaHero
+      image: memberAreaHero,
+      objectFit: "cover" as const
     },
     {
       title: "Módulos do Curso",
       description: "Visualização de módulos com capas atrativas e progresso visual",
-      image: memberAreaModules
+      image: memberAreaModules,
+      objectFit: "contain" as const
     },
     {
       title: "Player de Vídeo",
       description: "Player profissional com controles avançados e lista de aulas",
-      image: memberAreaPlayer
+      image: memberAreaPlayer,
+      objectFit: "contain" as const
     }
   ];
 
@@ -164,7 +168,7 @@ const NewMemberAreaLanding = () => {
                     key={index}
                     src={screenshot.image}
                     alt={screenshot.title}
-                    className="absolute inset-0 w-full h-full object-cover object-top"
+                    className={`absolute inset-0 w-full h-full ${screenshot.objectFit === 'contain' ? 'object-contain' : 'object-cover object-top'}`}
                     initial={{ opacity: 0 }}
                     animate={{ 
                       opacity: activeScreenshot === index ? 1 : 0,
