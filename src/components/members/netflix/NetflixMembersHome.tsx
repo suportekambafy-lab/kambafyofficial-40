@@ -7,7 +7,6 @@ import { NetflixCourseCard } from './NetflixCourseCard';
 import { NetflixModuleSidebar } from './NetflixModuleSidebar';
 import { NetflixProgressPanel } from './NetflixProgressPanel';
 import { Lesson, Module } from '@/types/memberArea';
-import { membersThemeColors } from '@/hooks/useMembersTheme';
 
 interface MemberArea {
   id: string;
@@ -45,7 +44,7 @@ interface NetflixMembersHomeProps {
   onLogout: () => void;
 }
 
-function NetflixMembersHomeContent({
+export function NetflixMembersHome({
   memberArea,
   modules,
   lessons,
@@ -56,18 +55,15 @@ function NetflixMembersHomeContent({
   onLessonSelect,
   onLogout,
 }: NetflixMembersHomeProps) {
-  // Always use dark theme - pure black like login page
-  const colors = membersThemeColors.dark;
-  
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isProgressPanelOpen, setIsProgressPanelOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Apply dark background on body when this component is mounted
+  // Force dark background on body when this component is mounted
   useEffect(() => {
     const originalBg = document.body.style.backgroundColor;
-    document.body.style.backgroundColor = '#000000';
-    document.documentElement.style.backgroundColor = '#000000';
+    document.body.style.backgroundColor = 'hsl(30, 20%, 12%)';
+    document.documentElement.style.backgroundColor = 'hsl(30, 20%, 12%)';
     
     return () => {
       document.body.style.backgroundColor = originalBg;
@@ -238,18 +234,18 @@ function NetflixMembersHomeContent({
 
   return (
     <div 
-      className="min-h-screen relative netflix-member-area transition-colors duration-300"
+      className="min-h-screen relative netflix-member-area"
       data-netflix-member-area="true"
       style={{ 
-        background: colors.background,
-        color: colors.text
+        background: 'hsl(30 20% 12%)',
+        color: 'hsl(40 20% 95%)'
       }}
     >
       {/* Warm ambient background effect */}
       <div 
-        className="fixed inset-0 pointer-events-none transition-all duration-300"
+        className="fixed inset-0 pointer-events-none"
         style={{
-          background: colors.backgroundGradient
+          background: 'radial-gradient(ellipse 80% 50% at 50% 0%, hsl(30 30% 25% / 0.4) 0%, transparent 60%)'
         }}
       />
       {/* Header */}
@@ -413,9 +409,4 @@ function NetflixMembersHomeContent({
       />
     </div>
   );
-}
-
-// Export the component directly (no theme provider needed - always dark)
-export function NetflixMembersHome(props: NetflixMembersHomeProps) {
-  return <NetflixMembersHomeContent {...props} />;
 }

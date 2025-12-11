@@ -318,17 +318,17 @@ export function NetflixHeader({
         </div>
 
         {/* Right: Search, Notifications, Profile */}
-        <div className="flex items-center gap-3">
-          {/* Search Bar */}
+        <div className="flex items-center gap-4">
+          {/* Search Bar - Netflix Style */}
           <div className="hidden md:block relative">
-            <div className="flex items-center bg-zinc-800/60 backdrop-blur-xl rounded-full px-4 py-2.5 w-[200px] lg:w-[280px] border border-zinc-700/50">
-              <Search className="w-4 h-4 text-zinc-400 mr-3" />
+            <div className="flex items-center bg-stone-800/60 backdrop-blur-xl rounded-full px-4 py-2.5 w-[200px] lg:w-[280px] border border-amber-900/20">
+              <Search className="w-4 h-4 text-amber-200/50 mr-3" />
               <input
                 type="text"
                 placeholder="Pesquisar aulas..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-transparent border-none outline-none text-white text-sm placeholder:text-zinc-500 w-full"
+                className="bg-transparent border-none outline-none text-amber-100 text-sm placeholder:text-stone-400 w-full"
               />
             </div>
           </div>
