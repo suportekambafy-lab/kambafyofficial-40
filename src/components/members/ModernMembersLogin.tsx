@@ -129,20 +129,21 @@ export default function ModernMembersLogin() {
   const [is2FAForOwner, setIs2FAForOwner] = useState(false);
   const id = useId();
 
-  // Cores Kambafy - verde principal da marca
-  const kambafyGreen = '#7CC652';
-  const kambafyGreenDark = '#5BA33C';
-  const kambafyGreenLight = '#A8D98A';
+  // Cores Netflix/Warm - consistentes com a área de membros
+  const netflixBg = 'hsl(30, 20%, 12%)';
+  const netflixSurface = 'hsl(30, 15%, 18%)';
+  const netflixCard = 'hsl(30, 12%, 22%)';
+  const netflixAccent = 'hsl(0, 70%, 55%)';
+  const netflixGreen = 'hsl(94, 55%, 45%)';
   
-  // Usar cores da área de membros se disponíveis, senão usar Kambafy padrão
-  const primaryColor = memberArea?.primary_color || kambafyGreen;
-  const accentColor = memberArea?.accent_color || kambafyGreenDark;
+  // Usar cores da área de membros se disponíveis
+  const primaryColor = memberArea?.primary_color || netflixGreen;
+  const accentColor = memberArea?.accent_color || netflixAccent;
   const primaryHsl = hexToHsl(primaryColor);
   const accentHsl = hexToHsl(accentColor);
+  
   useEffect(() => {
     console.log('🎨 ModernMembersLogin - Current theme:', theme);
-    console.log('🎨 ModernMembersLogin - HTML classes:', document.documentElement.classList.toString());
-    console.log('🎨 ModernMembersLogin - localStorage theme:', localStorage.getItem('kambafy-ui-theme'));
   }, [theme]);
 
   // Extrair email da URL se disponível
@@ -300,22 +301,17 @@ export default function ModernMembersLogin() {
     debouncedAccess(email.trim());
   };
 
-  // Estilo dinâmico do gradiente baseado nas cores da área
-  const gradientStyle = {
-    background: `radial-gradient(ellipse at top left, ${primaryColor}15 0%, transparent 50%), 
-                 radial-gradient(ellipse at bottom right, ${accentColor}15 0%, transparent 50%),
-                 radial-gradient(ellipse at center, ${primaryColor}08 0%, transparent 70%)`
+  // Estilo Netflix com gradiente warm
+  const netflixGradientStyle = {
+    background: `linear-gradient(180deg, hsl(30, 25%, 8%) 0%, hsl(30, 15%, 15%) 100%)`
   };
 
   // Mostrar tela de 2FA se necessário
   if (requires2FA && pendingEmail) {
-    return <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-4 relative overflow-hidden">
-        {/* Background com gradiente dinâmico */}
-        <div className="absolute inset-0" style={gradientStyle} />
-        
-        {/* Orbes animados */}
+    return <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden" style={netflixGradientStyle}>
+        {/* Orbes animados warm */}
         <motion.div className="absolute top-20 left-20 w-72 h-72 rounded-full blur-3xl opacity-20" style={{
-        backgroundColor: primaryColor
+        backgroundColor: 'hsl(30, 40%, 30%)'
       }} animate={{
         scale: [1, 1.2, 1],
         opacity: [0.2, 0.3, 0.2]
@@ -325,7 +321,7 @@ export default function ModernMembersLogin() {
         ease: "easeInOut"
       }} />
         <motion.div className="absolute bottom-20 right-20 w-96 h-96 rounded-full blur-3xl opacity-15" style={{
-        backgroundColor: accentColor
+        backgroundColor: 'hsl(0, 70%, 40%)'
       }} animate={{
         scale: [1.2, 1, 1.2],
         opacity: [0.15, 0.25, 0.15]
@@ -360,9 +356,9 @@ export default function ModernMembersLogin() {
         delay: 0.2
       }} className="w-full max-w-md relative z-10">
           <div className="backdrop-blur-xl border rounded-2xl p-8 shadow-2xl" style={{
-          backgroundColor: 'rgba(24, 24, 27, 0.8)',
-          borderColor: `${primaryColor}30`,
-          boxShadow: `0 25px 50px -12px ${primaryColor}20`
+          backgroundColor: 'hsl(30, 12%, 22%, 0.9)',
+          borderColor: 'hsl(30, 10%, 30%)',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
         }}>
             <div className="flex flex-col items-center gap-3 mb-8">
               <motion.div initial={{
@@ -374,18 +370,16 @@ export default function ModernMembersLogin() {
               type: "spring",
               stiffness: 200
             }} className="flex size-14 shrink-0 items-center justify-center rounded-full" style={{
-              background: `linear-gradient(135deg, ${primaryColor}30, ${accentColor}30)`,
-              border: `1px solid ${primaryColor}50`
+              background: 'linear-gradient(135deg, hsl(30, 20%, 25%), hsl(0, 50%, 35%))',
+              border: '1px solid hsl(30, 15%, 35%)'
             }}>
-                <Shield className="h-7 w-7" style={{
-                color: primaryColor
-              }} />
+                <Shield className="h-7 w-7 text-amber-200" />
               </motion.div>
               <div className="text-center">
-                <h1 className="text-xl font-bold tracking-tight text-white">
+                <h1 className="text-xl font-bold tracking-tight" style={{ color: 'hsl(40, 20%, 95%)' }}>
                   Verificação de Segurança
                 </h1>
-                <p className="text-sm text-zinc-400 mt-2 max-w-xs">
+                <p className="text-sm mt-2 max-w-xs" style={{ color: 'hsl(30, 10%, 60%)' }}>
                   {is2FAForOwner ? "Como dono desta área, você precisa verificar sua identidade" : "Detectamos um novo navegador. Por segurança, confirme sua identidade"}
                 </p>
               </div>
@@ -403,20 +397,11 @@ export default function ModernMembersLogin() {
         </motion.div>
       </div>;
   }
-  return <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-4 relative overflow-hidden">
-      {/* Background com gradiente dinâmico */}
-      <div className="absolute inset-0" style={gradientStyle} />
-      
-      {/* Grid pattern sutil */}
-      <div className="absolute inset-0 opacity-[0.02]" style={{
-      backgroundImage: `linear-gradient(${primaryColor} 1px, transparent 1px), linear-gradient(90deg, ${primaryColor} 1px, transparent 1px)`,
-      backgroundSize: '50px 50px'
-    }} />
-      
-      {/* Orbes animados */}
+  return <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden" style={netflixGradientStyle}>
+      {/* Orbes animados warm */}
       <motion.div className="absolute top-10 left-10 w-64 h-64 rounded-full blur-3xl" style={{
-      backgroundColor: primaryColor,
-      opacity: 0.15
+      backgroundColor: 'hsl(30, 40%, 25%)',
+      opacity: 0.2
     }} animate={{
       x: [0, 30, 0],
       y: [0, -20, 0],
@@ -427,8 +412,8 @@ export default function ModernMembersLogin() {
       ease: "easeInOut"
     }} />
       <motion.div className="absolute bottom-10 right-10 w-80 h-80 rounded-full blur-3xl" style={{
-      backgroundColor: accentColor,
-      opacity: 0.12
+      backgroundColor: 'hsl(0, 60%, 35%)',
+      opacity: 0.15
     }} animate={{
       x: [0, -30, 0],
       y: [0, 20, 0],
@@ -439,11 +424,11 @@ export default function ModernMembersLogin() {
       ease: "easeInOut"
     }} />
       <motion.div className="absolute top-1/2 left-1/4 w-48 h-48 rounded-full blur-3xl" style={{
-      backgroundColor: primaryColor,
-      opacity: 0.08
+      backgroundColor: 'hsl(30, 30%, 20%)',
+      opacity: 0.1
     }} animate={{
       scale: [1, 1.3, 1],
-      opacity: [0.08, 0.12, 0.08]
+      opacity: [0.1, 0.15, 0.1]
     }} transition={{
       duration: 8,
       repeat: Infinity,
@@ -477,15 +462,15 @@ export default function ModernMembersLogin() {
       delay: 0.15,
       ease: "easeOut"
     }} className="w-full max-w-sm relative z-10">
-        {/* Card com glassmorphism */}
+        {/* Card com estilo Netflix */}
         <div className="backdrop-blur-xl border rounded-2xl p-8 shadow-2xl relative overflow-hidden" style={{
-        backgroundColor: 'rgba(24, 24, 27, 0.75)',
-        borderColor: `${primaryColor}25`,
-        boxShadow: `0 25px 50px -12px ${primaryColor}15, 0 0 0 1px ${primaryColor}10`
+        backgroundColor: 'hsl(30, 12%, 22%, 0.9)',
+        borderColor: 'hsl(30, 10%, 30%)',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
       }}>
           {/* Brilho sutil no topo do card */}
           <div className="absolute top-0 left-0 right-0 h-px" style={{
-          background: `linear-gradient(90deg, transparent, ${primaryColor}50, transparent)`
+          background: 'linear-gradient(90deg, transparent, hsl(30, 20%, 40%), transparent)'
         }} />
           
           <div className="flex flex-col items-center gap-3 mb-8">
@@ -502,17 +487,15 @@ export default function ModernMembersLogin() {
             damping: 15
           }} className="relative">
               {/* Glow atrás do logo */}
-              <div className="absolute inset-0 rounded-full blur-xl opacity-50" style={{
-              backgroundColor: primaryColor
+              <div className="absolute inset-0 rounded-full blur-xl opacity-40" style={{
+              backgroundColor: 'hsl(30, 30%, 40%)'
             }} />
               <div className="relative flex size-16 shrink-0 items-center justify-center rounded-full overflow-hidden" style={{
-              background: memberArea?.login_logo_url || memberArea?.logo_url ? 'transparent' : `linear-gradient(135deg, ${primaryColor}40, ${accentColor}40)`,
-              border: `2px solid ${primaryColor}40`,
-              boxShadow: `0 0 20px ${primaryColor}30`
+              background: memberArea?.login_logo_url || memberArea?.logo_url ? 'transparent' : 'linear-gradient(135deg, hsl(30, 20%, 30%), hsl(0, 50%, 40%))',
+              border: '2px solid hsl(30, 15%, 35%)',
+              boxShadow: '0 0 20px hsl(30, 20%, 20%)'
             }}>
-                {memberArea?.login_logo_url || memberArea?.logo_url ? <img src={memberArea.login_logo_url || memberArea.logo_url} alt="Logo" className="w-full h-full object-cover" /> : <BookOpen className="h-7 w-7" style={{
-                color: primaryColor
-              }} />}
+                {memberArea?.login_logo_url || memberArea?.logo_url ? <img src={memberArea.login_logo_url || memberArea.logo_url} alt="Logo" className="w-full h-full object-cover" /> : <BookOpen className="h-7 w-7 text-amber-200" />}
               </div>
             </motion.div>
             
@@ -525,10 +508,10 @@ export default function ModernMembersLogin() {
           }} transition={{
             delay: 0.4
           }} className="text-center">
-              <h1 className="text-xl font-bold tracking-tight text-white">
+              <h1 className="text-xl font-bold tracking-tight" style={{ color: 'hsl(40, 20%, 95%)' }}>
                 {memberArea?.name || 'Área de Membros'}
               </h1>
-              <p className="text-sm text-zinc-400 mt-2">
+              <p className="text-sm mt-2" style={{ color: 'hsl(30, 10%, 60%)' }}>
                 Digite seu email para acessar o conteúdo exclusivo
               </p>
             </motion.div>
@@ -544,14 +527,16 @@ export default function ModernMembersLogin() {
           }} transition={{
             delay: 0.45
           }} className="space-y-2">
-              <Label htmlFor={`${id}-email`} className="text-zinc-300 text-sm font-medium">
+              <Label htmlFor={`${id}-email`} className="text-sm font-medium" style={{ color: 'hsl(40, 15%, 80%)' }}>
                 Email de Acesso
               </Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
-                <Input id={`${id}-email`} type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="seu@email.com" className="pl-10 bg-zinc-900/50 border-zinc-700/50 text-white placeholder:text-zinc-500 focus-visible:border-zinc-500 focus-visible:ring-1 h-12 rounded-xl transition-all duration-200" style={{
-                '--tw-ring-color': `${primaryColor}50`
-              } as React.CSSProperties} required disabled={isSubmitting} />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: 'hsl(30, 10%, 50%)' }} />
+                <Input id={`${id}-email`} type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="seu@email.com" className="pl-10 h-12 rounded-xl transition-all duration-200" style={{
+                backgroundColor: 'hsl(30, 15%, 18%)',
+                borderColor: 'hsl(30, 10%, 28%)',
+                color: 'hsl(40, 20%, 95%)'
+              }} required disabled={isSubmitting} />
               </div>
             </motion.div>
             
@@ -564,10 +549,9 @@ export default function ModernMembersLogin() {
           }} transition={{
             delay: 0.5
           }}>
-              <Button type="submit" className="w-full h-12 font-semibold text-base rounded-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100" style={{
-              background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})`,
-              color: 'white',
-              boxShadow: `0 10px 30px -10px ${primaryColor}60`
+              <Button type="submit" className="w-full h-12 font-semibold text-base rounded-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 text-white" style={{
+              background: 'linear-gradient(135deg, hsl(0, 70%, 50%), hsl(0, 60%, 40%))',
+              boxShadow: '0 10px 30px -10px hsla(0, 70%, 40%, 0.5)'
             }} disabled={isSubmitting || !email}>
                 {isSubmitting && <motion.div animate={{
                 rotate: 360
@@ -589,12 +573,12 @@ export default function ModernMembersLogin() {
             y: 0
           }} transition={{
             delay: 0.55
-          }} className="text-center mt-8 pt-6 border-t border-zinc-800/50">
-              <p className="text-xs text-zinc-500 mb-2">
+          }} className="text-center mt-8 pt-6" style={{ borderTop: '1px solid hsl(30, 10%, 25%)' }}>
+              <p className="text-xs mb-2" style={{ color: 'hsl(30, 10%, 50%)' }}>
                 Precisa acessar o portal de clientes?
               </p>
               <a href="/auth" className="text-sm font-medium transition-colors duration-200 hover:underline" style={{
-              color: primaryColor
+              color: 'hsl(0, 70%, 55%)'
             }}>
                 Clique aqui para fazer login no portal
               </a>
@@ -612,15 +596,15 @@ export default function ModernMembersLogin() {
       }} transition={{
         delay: 0.65
       }} className="mt-10 text-center">
-          <div className="flex items-center justify-center gap-1.5 text-xs text-zinc-500">
+          <div className="flex items-center justify-center gap-1.5 text-xs" style={{ color: 'hsl(30, 10%, 50%)' }}>
             <span>Plataforma desenvolvida por</span>
             <a href="https://kambafy.com" target="_blank" rel="noopener noreferrer" className="font-medium transition-colors duration-200" style={{
-            color: primaryColor
+            color: 'hsl(94, 55%, 50%)'
           }}>
               Kambafy
             </a>
           </div>
-          <p className="text-xs text-zinc-600 mt-1">
+          <p className="text-xs mt-1" style={{ color: 'hsl(30, 10%, 40%)' }}>
             Criação e gestão de áreas de membros profissionais
           </p>
         </motion.div>
