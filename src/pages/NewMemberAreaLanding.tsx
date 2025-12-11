@@ -49,12 +49,6 @@ const NewMemberAreaLanding = () => {
 
   const screenshots = [
     {
-      title: "Tela de Login",
-      description: "Login elegante com animações e efeitos visuais modernos",
-      image: memberAreaLogin,
-      objectFit: "cover" as const
-    },
-    {
       title: "Página Inicial",
       description: "Hero cinematográfico com seu curso em destaque estilo Netflix",
       image: memberAreaHero,
@@ -76,6 +70,12 @@ const NewMemberAreaLanding = () => {
       title: "Player de Vídeo",
       description: "Player profissional com controles avançados e lista de aulas",
       image: memberAreaPlayer,
+      objectFit: "cover" as const
+    },
+    {
+      title: "Tela de Login",
+      description: "Login elegante com animações e efeitos visuais modernos",
+      image: memberAreaLogin,
       objectFit: "cover" as const
     }
   ];
