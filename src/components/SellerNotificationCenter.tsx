@@ -134,7 +134,7 @@ export function SellerNotificationCenter() {
           title: 'Endereço Incompleto',
           message: 'Complete seu endereço para receber correspondências',
           icon: <MapPin className="h-4 w-4 text-blue-600" />,
-          action: () => { navigate('/identidade'); setIsOpen(false); },
+          action: () => { navigate('/vendedor/configuracoes/conta'); setIsOpen(false); },
           actionLabel: 'Completar',
           priority: 3
         });
