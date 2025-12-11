@@ -1285,13 +1285,8 @@ export default function ModernMembersArea({ memberAreaId: propMemberAreaId, isEm
                     </div>
                   </motion.div>)}
               </motion.div>
-            </div>)}
+            </div>
         </div>
-
-        {/* Ofertas na Área de Membros - Abaixo dos Módulos */}
-        {!selectedLesson && memberAreaId && (
-          <MemberAreaOffers memberAreaId={memberAreaId} />
-        )}
       </div>
 
       {/* Modal de Pagamento de Módulo */}
