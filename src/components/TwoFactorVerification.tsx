@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence, useAnimationControls } from 'framer-motion';
-import { CheckCircle2 } from 'lucide-react';
 
 interface TwoFactorVerificationProps {
   email: string;
@@ -34,14 +33,14 @@ const CheckIcon = ({ size = 16, strokeWidth = 3, ...props }: { size?: number; st
 // Success animation component
 const OTPSuccess = () => {
   return (
-    <div className="flex items-center justify-center gap-4 w-full py-8">
+    <div className="flex items-center justify-center gap-4 w-full py-6">
       <motion.div
         initial={{ opacity: 0, scale: 0.5 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.3, type: "spring", stiffness: 500, damping: 30 }}
-        className="w-16 h-16 bg-green-500 ring-4 ring-green-500/20 text-white flex items-center justify-center rounded-full"
+        className="w-14 h-14 bg-green-500 ring-4 ring-green-500/20 text-white flex items-center justify-center rounded-full"
       >
-        <CheckIcon size={32} strokeWidth={3} />
+        <CheckIcon size={28} strokeWidth={3} />
       </motion.div>
       <motion.p
         initial={{ opacity: 0, x: -10 }}
@@ -49,7 +48,7 @@ const OTPSuccess = () => {
         transition={{ delay: 0.4, duration: 0.4 }}
         className="text-green-500 font-semibold text-lg"
       >
-        Código Verificado!
+        Verificado!
       </motion.p>
     </div>
   );
@@ -63,7 +62,7 @@ const OTPError = () => {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
       transition={{ duration: 0.2 }}
-      className="text-center text-red-500 font-medium mt-2 absolute -bottom-8 w-full text-sm"
+      className="text-center text-red-500 font-medium mt-2 text-sm"
     >
       Código inválido. Tente novamente.
     </motion.div>
@@ -78,8 +77,7 @@ const OTPInputBox = ({
   onKeyDown, 
   onPaste,
   state, 
-  disabled,
-  totalInputs = 6
+  disabled
 }: { 
   index: number; 
   value: string;
@@ -88,9 +86,9 @@ const OTPInputBox = ({
   onPaste: (e: React.ClipboardEvent<HTMLInputElement>) => void;
   state: 'idle' | 'error' | 'success' | 'loading';
   disabled: boolean;
-  totalInputs?: number;
 }) => {
   const animationControls = useAnimationControls();
+
   useEffect(() => {
     animationControls.start({
       opacity: 1,
@@ -123,12 +121,12 @@ const OTPInputBox = ({
 
   const getBackgroundColor = () => {
     if (state === 'success') return 'bg-green-500/5';
-    return 'bg-card';
+    return 'bg-muted/50';
   };
 
   return (
     <motion.div
-      className={`w-12 h-14 md:w-14 md:h-16 rounded-xl ring-2 ${getBorderColor()} ${getBackgroundColor()} overflow-hidden transition-all duration-300`}
+      className={`w-11 h-13 md:w-12 md:h-14 rounded-xl ring-2 ${getBorderColor()} ${getBackgroundColor()} overflow-hidden transition-all duration-300`}
       initial={{ opacity: 0, y: 10 }}
       animate={animationControls}
     >
@@ -143,7 +141,7 @@ const OTPInputBox = ({
         onPaste={onPaste}
         onFocus={handleFocus}
         onBlur={handleBlur}
-        className="w-full h-full text-center text-2xl md:text-3xl font-semibold outline-none caret-foreground bg-transparent text-foreground"
+        className="w-full h-full text-center text-xl md:text-2xl font-semibold outline-none caret-foreground bg-transparent text-foreground"
         disabled={disabled || state === 'success'}
       />
     </motion.div>
@@ -331,7 +329,7 @@ const TwoFactorVerification = ({
         
         setTimeout(() => {
           onVerificationSuccess();
-        }, 1500);
+        }, 1200);
         return;
       }
 
@@ -350,7 +348,7 @@ const TwoFactorVerification = ({
       
       setTimeout(() => {
         onVerificationSuccess();
-      }, 1500);
+      }, 1200);
     } catch (error: any) {
       setState('error');
       await animationControls.start({
@@ -379,117 +377,87 @@ const TwoFactorVerification = ({
     sendVerificationCode();
   };
 
-  const getContextTitle = () => {
-    switch (context) {
-      case 'bank_details_change': return 'Verificação para Alterar IBAN';
-      case 'withdrawal': return 'Confirmação de Saque';
-      case 'password_change': return 'Verificação de Alteração de Senha';
-      case 'disable_2fa': return 'Confirmação para Desativar 2FA';
-      case 'member_area_login': return 'Verificação de Acesso';
-      default: return 'Digite o Código de Verificação';
-    }
-  };
-
-  // Logo component
-  const LogoIcon = () => (
-    <div className="w-16 h-16 bg-foreground rounded-full flex items-center justify-center">
-      <div className="flex space-x-1">
-        <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-      </div>
-    </div>
-  );
-
   return (
-    <div className="rounded-3xl p-6 md:p-8 w-full max-w-sm relative overflow-hidden bg-card border border-border shadow-lg">
-      <div className="relative z-10">
-        {/* Logo */}
-        <div className="flex justify-center mb-6">
-          <LogoIcon />
-        </div>
+    <div className="w-full">
+      <AnimatePresence mode="wait">
+        {state === 'success' ? (
+          <motion.div
+            key="success"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.3 }}
+          >
+            <OTPSuccess />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="form"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="space-y-4"
+          >
+            {/* Email indicator */}
+            <p className="text-center text-muted-foreground text-sm">
+              {codeAlreadySent ? "Código enviado para" : "Enviando código para"}
+              <br />
+              <span className="font-medium text-foreground">{email}</span>
+            </p>
 
-        {/* Title */}
-        <h1 className="text-xl md:text-2xl font-semibold text-center text-foreground mb-2">
-          {state === "success" ? "Verificação Concluída!" : getContextTitle()}
-        </h1>
-
-        <AnimatePresence mode="wait">
-          {state === "success" ? (
-            <motion.div
-              key="success"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-              className="flex items-center justify-center"
-              style={{ height: "180px" }}
+            {/* OTP Input */}
+            <motion.div 
+              animate={animationControls}
+              className="flex items-center justify-center gap-1.5 md:gap-2"
             >
-              <OTPSuccess />
+              {code.map((digit, index) => (
+                <OTPInputBox
+                  key={index}
+                  index={index}
+                  value={digit}
+                  onChange={handleCodeChange}
+                  onKeyDown={handleKeyDown}
+                  onPaste={handlePaste}
+                  state={state}
+                  disabled={loading}
+                />
+              ))}
             </motion.div>
-          ) : (
-            <motion.div
-              key="form"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
+
+            {/* Error message */}
+            <AnimatePresence>
+              {state === 'error' && <OTPError />}
+            </AnimatePresence>
+
+            {/* Resend Link */}
+            <div className="text-center text-sm pt-2">
+              <span className="text-muted-foreground">Não recebeu? </span>
+              {isResendDisabled ? (
+                <span className="text-muted-foreground/70">Reenviar em {timeLeft}s</span>
+              ) : (
+                <button
+                  onClick={handleResend}
+                  disabled={resendLoading}
+                  className="font-medium text-foreground hover:underline focus:outline-none disabled:opacity-50"
+                >
+                  {resendLoading ? 'Enviando...' : 'Reenviar código'}
+                </button>
+              )}
+            </div>
+
+            {/* Back button */}
+            <Button 
+              onClick={handleBackClick} 
+              variant="outline" 
+              className="w-full rounded-xl"
+              disabled={loading}
             >
-              {/* Description */}
-              <p className="text-center text-muted-foreground mt-2 mb-6 text-sm">
-                {codeAlreadySent ? "Enviamos um código de 6 dígitos para" : "Enviando código para"}
-                <br />
-                <span className="font-medium text-foreground">{email}</span>
-              </p>
-
-              {/* OTP Input Area */}
-              <div className="flex flex-col items-center justify-center gap-2 mb-8 relative">
-                <motion.div animate={animationControls} className="flex items-center justify-center gap-2 md:gap-3">
-                  {code.map((digit, index) => (
-                    <OTPInputBox
-                      key={`input-${index}`}
-                      index={index}
-                      value={digit}
-                      onChange={handleCodeChange}
-                      onKeyDown={handleKeyDown}
-                      onPaste={handlePaste}
-                      state={state}
-                      disabled={loading}
-                    />
-                  ))}
-                </motion.div>
-                <AnimatePresence>{state === "error" && <OTPError />}</AnimatePresence>
-              </div>
-
-              {/* Resend Link */}
-              <div className="text-center text-sm mb-6">
-                <span className="text-muted-foreground">Não recebeu o código? </span>
-                {isResendDisabled ? (
-                  <span className="text-muted-foreground/70">Reenviar em {timeLeft}s</span>
-                ) : (
-                  <button
-                    onClick={handleResend}
-                    disabled={resendLoading}
-                    className="font-medium text-foreground hover:underline focus:outline-none focus:ring-2 focus:ring-ring rounded disabled:opacity-50"
-                  >
-                    {resendLoading ? 'Enviando...' : 'Clique para reenviar'}
-                  </button>
-                )}
-              </div>
-
-              {/* Back button */}
-              <Button 
-                onClick={handleBackClick} 
-                variant="outline" 
-                className="w-full"
-                disabled={loading}
-              >
-                Voltar
-              </Button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+              Voltar
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
