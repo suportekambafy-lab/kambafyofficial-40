@@ -237,17 +237,10 @@ export function NetflixMembersHome({
       className="min-h-screen relative netflix-member-area"
       data-netflix-member-area="true"
       style={{ 
-        background: 'hsl(30 20% 12%)',
-        color: 'hsl(40 20% 95%)'
+        background: '#000000',
+        color: 'hsl(0 0% 95%)'
       }}
     >
-      {/* Warm ambient background effect */}
-      <div 
-        className="fixed inset-0 pointer-events-none"
-        style={{
-          background: 'radial-gradient(ellipse 80% 50% at 50% 0%, hsl(30 30% 25% / 0.4) 0%, transparent 60%)'
-        }}
-      />
       {/* Header */}
       <NetflixHeader
         logoUrl={memberArea.logo_url}
