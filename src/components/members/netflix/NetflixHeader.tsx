@@ -73,8 +73,8 @@ export function NetflixHeader({
       className={cn(
         'fixed top-0 left-0 right-0 z-50 transition-all duration-500',
         isScrolled 
-          ? 'bg-stone-900/80 backdrop-blur-2xl border-b border-amber-900/20' 
-          : 'bg-gradient-to-b from-stone-900/60 to-transparent'
+          ? 'bg-stone-950/90 backdrop-blur-xl' 
+          : 'bg-transparent'
       )}
       initial={{ y: -100 }}
       animate={{ y: 0 }}
