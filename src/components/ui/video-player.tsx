@@ -40,6 +40,7 @@ interface VideoPlayerProps {
   hlsUrl?: string;
   embedUrl?: string;
   startTime?: number;
+  autoPlay?: boolean;
   onProgress?: (progress: number) => void;
   onTimeUpdate?: (currentTime: number, duration: number) => void;
   onPlay?: () => void;
@@ -55,6 +56,7 @@ const VideoPlayer = ({
   hlsUrl,
   embedUrl,
   startTime = 0,
+  autoPlay = false,
   onProgress,
   onTimeUpdate,
   onPlay,
@@ -643,6 +645,16 @@ const VideoPlayer = ({
       setIsLoading(false);
       setErrorMessage(null);
       onLoadedMetadata?.();
+      
+      // AutoPlay when video is ready
+      if (autoPlay && videoRef.current) {
+        videoRef.current.play().then(() => {
+          setIsPlaying(true);
+          onPlay?.();
+        }).catch((error) => {
+          console.log('Autoplay blocked:', error);
+        });
+      }
     }
   };
   const handleVideoError = () => {

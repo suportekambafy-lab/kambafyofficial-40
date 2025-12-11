@@ -234,7 +234,8 @@ export function NetflixLessonViewer({
                   key={`${lesson.id}-${videoKey}`} 
                   hlsUrl={hlsUrl || undefined} 
                   embedUrl={lesson.bunny_embed_url || lesson.video_url || undefined} 
-                  startTime={startTime} 
+                  startTime={startTime}
+                  autoPlay={true}
                   onTimeUpdate={onUpdateProgress && !isReplayMode ? (currentTime, duration) => {
                     onUpdateProgress(lesson.id, currentTime, duration);
                   } : undefined} 
