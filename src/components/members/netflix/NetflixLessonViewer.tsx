@@ -226,6 +226,18 @@ export function NetflixLessonViewer({
         {/* Lesson Info */}
         <div className="px-4 md:px-8 lg:px-16 py-8">
           <div className="max-w-5xl mx-auto">
+            {/* Navigation Buttons - Top */}
+            <div className="flex justify-between mb-6">
+              <Button variant="ghost" onClick={() => prevLesson && onNavigateLesson(prevLesson.id)} disabled={!prevLesson} className="gap-2 text-white/70 hover:text-white hover:bg-white/10">
+                <ArrowLeft className="w-4 h-4" />
+                Anterior
+              </Button>
+              <Button onClick={() => nextLesson && onNavigateLesson(nextLesson.id)} disabled={!nextLesson} className="gap-2 bg-netflix-green hover:bg-netflix-green/90 text-black font-bold">
+                Próxima
+                <SkipForward className="w-4 h-4" />
+              </Button>
+            </div>
+
             {/* Title & Meta */}
             <div className="mb-6">
               <div className="flex items-center gap-2 mb-2">
@@ -374,17 +386,6 @@ export function NetflixLessonViewer({
               </AnimatePresence>
             </div>
 
-            {/* Navigation Buttons */}
-            <div className="flex justify-between mt-8">
-              <Button variant="ghost" onClick={() => prevLesson && onNavigateLesson(prevLesson.id)} disabled={!prevLesson} className="gap-2 text-white/70 hover:text-white hover:bg-white/10">
-                <ArrowLeft className="w-4 h-4" />
-                Anterior
-              </Button>
-              <Button onClick={() => nextLesson && onNavigateLesson(nextLesson.id)} disabled={!nextLesson} className="gap-2 bg-netflix-green hover:bg-netflix-green/90 text-black font-bold">
-                Próxima
-                <SkipForward className="w-4 h-4" />
-              </Button>
-            </div>
           </div>
         </div>
       </main>
