@@ -178,7 +178,7 @@ export function MemberAreaOffers({
   if (offers.length === 0) {
     return null;
   }
-  return <section className="py-8 md:py-12 px-3 md:px-4 max-w-full overflow-x-hidden">
+  return <section id="offers-section" className="py-8 md:py-12 px-3 md:px-4 max-w-full overflow-x-hidden">
       <div className="container mx-auto max-w-6xl">
         {/* Header */}
         <motion.div 
