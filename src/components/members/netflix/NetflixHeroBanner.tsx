@@ -136,7 +136,7 @@ export function NetflixHeroBanner({
               transition={{ delay: 0.2 }}
               className="flex items-center gap-2"
             >
-              <span className="text-netflix-red font-black text-lg">N</span>
+              <img src="/kambafy-icon-collapsed.svg" alt="Kambafy" className="w-6 h-6" />
               <span className="text-white/80 text-xs font-medium tracking-[0.2em] uppercase">CURSO</span>
             </motion.div>
 
