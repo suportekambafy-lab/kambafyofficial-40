@@ -11,16 +11,6 @@ interface TwoFactorCardProps {
   subtitle?: string;
 }
 
-// Logo component for the 2FA card
-const LogoIcon = () => (
-  <div className="w-16 h-16 bg-foreground rounded-full flex items-center justify-center">
-    <div className="flex space-x-1">
-      <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-    </div>
-  </div>
-);
 
 /**
  * TwoFactorCard - A styled wrapper for TwoFactorVerification
