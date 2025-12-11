@@ -258,9 +258,18 @@ export function NetflixHeader({
 
   const navItems = [
     { id: 'home', label: 'Home', icon: Home },
-    { id: 'courses', label: 'Meus Cursos', icon: PlayCircle },
+    { id: 'modules', label: 'Módulos', icon: PlayCircle },
     { id: 'community', label: 'Comunidade', icon: Users },
   ];
+
+  const handleNavClick = (itemId: string) => {
+    if (itemId === 'modules') {
+      const modulesSection = document.getElementById('modules-section');
+      if (modulesSection) {
+        modulesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  };
 
   return (
     <motion.header
@@ -288,6 +297,7 @@ export function NetflixHeader({
               {navItems.map((item) => (
                 <button
                   key={item.id}
+                  onClick={() => handleNavClick(item.id)}
                   className={cn(
                     'px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300',
                     activeTab === item.id
@@ -531,6 +541,10 @@ export function NetflixHeader({
             {navItems.map((item) => (
               <button
                 key={item.id}
+                onClick={() => {
+                  handleNavClick(item.id);
+                  setIsMobileMenuOpen(false);
+                }}
                 className={cn(
                   'flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors',
                   activeTab === item.id
