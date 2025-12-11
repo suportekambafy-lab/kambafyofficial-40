@@ -7,6 +7,7 @@ import { NetflixCourseCard } from './NetflixCourseCard';
 import { NetflixModuleSidebar } from './NetflixModuleSidebar';
 import { NetflixProgressPanel } from './NetflixProgressPanel';
 import { Lesson, Module } from '@/types/memberArea';
+import { MembersThemeProvider, useMembersTheme, membersThemeColors } from '@/hooks/useMembersTheme';
 
 interface MemberArea {
   id: string;
@@ -44,7 +45,7 @@ interface NetflixMembersHomeProps {
   onLogout: () => void;
 }
 
-export function NetflixMembersHome({
+function NetflixMembersHomeContent({
   memberArea,
   modules,
   lessons,
@@ -55,21 +56,24 @@ export function NetflixMembersHome({
   onLessonSelect,
   onLogout,
 }: NetflixMembersHomeProps) {
+  const { isDark, theme } = useMembersTheme();
+  const colors = membersThemeColors[theme];
+  
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isProgressPanelOpen, setIsProgressPanelOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Force dark background on body when this component is mounted
+  // Apply theme background on body when this component is mounted
   useEffect(() => {
     const originalBg = document.body.style.backgroundColor;
-    document.body.style.backgroundColor = 'hsl(30, 20%, 12%)';
-    document.documentElement.style.backgroundColor = 'hsl(30, 20%, 12%)';
+    document.body.style.backgroundColor = colors.background;
+    document.documentElement.style.backgroundColor = colors.background;
     
     return () => {
       document.body.style.backgroundColor = originalBg;
       document.documentElement.style.backgroundColor = '';
     };
-  }, []);
+  }, [colors.background]);
 
   // Calculate course stats
   const completedLessons = useMemo(() => {
@@ -234,18 +238,18 @@ export function NetflixMembersHome({
 
   return (
     <div 
-      className="min-h-screen relative netflix-member-area"
+      className="min-h-screen relative netflix-member-area transition-colors duration-300"
       data-netflix-member-area="true"
       style={{ 
-        background: 'hsl(30 20% 12%)',
-        color: 'hsl(40 20% 95%)'
+        background: colors.background,
+        color: colors.text
       }}
     >
       {/* Warm ambient background effect */}
       <div 
-        className="fixed inset-0 pointer-events-none"
+        className="fixed inset-0 pointer-events-none transition-all duration-300"
         style={{
-          background: 'radial-gradient(ellipse 80% 50% at 50% 0%, hsl(30 30% 25% / 0.4) 0%, transparent 60%)'
+          background: colors.backgroundGradient
         }}
       />
       {/* Header */}
@@ -408,5 +412,14 @@ export function NetflixMembersHome({
         userName={user?.name}
       />
     </div>
+  );
+}
+
+// Wrapper component with theme provider
+export function NetflixMembersHome(props: NetflixMembersHomeProps) {
+  return (
+    <MembersThemeProvider defaultTheme="dark">
+      <NetflixMembersHomeContent {...props} />
+    </MembersThemeProvider>
   );
 }
