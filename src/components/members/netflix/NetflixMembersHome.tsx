@@ -327,7 +327,7 @@ export function NetflixMembersHome({
               subtitle={`${modules.length} módulos`}
               showSeeAll
             >
-              {modules.filter(m => m.cover_image_url).map(module => (
+              {modules.map(module => (
                 <NetflixCourseCard
                   key={module.id}
                   id={module.id}
