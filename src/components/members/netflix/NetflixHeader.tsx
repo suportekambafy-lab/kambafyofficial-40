@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
-import kambafyLogo from '@/assets/kambafy-logo.png';
+import kambafyLogo from '@/assets/kambafy-logo-gray.png';
 
 interface NetflixHeaderProps {
   logoUrl?: string;
