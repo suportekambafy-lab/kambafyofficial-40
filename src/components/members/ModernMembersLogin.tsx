@@ -129,9 +129,14 @@ export default function ModernMembersLogin() {
   const [is2FAForOwner, setIs2FAForOwner] = useState(false);
   const id = useId();
 
-  // Cores dinâmicas baseadas na área de membros
-  const primaryColor = memberArea?.primary_color || '#10b981';
-  const accentColor = memberArea?.accent_color || '#6366f1';
+  // Cores Kambafy - verde principal da marca
+  const kambafyGreen = '#7CC652';
+  const kambafyGreenDark = '#5BA33C';
+  const kambafyGreenLight = '#A8D98A';
+  
+  // Usar cores da área de membros se disponíveis, senão usar Kambafy padrão
+  const primaryColor = memberArea?.primary_color || kambafyGreen;
+  const accentColor = memberArea?.accent_color || kambafyGreenDark;
   const primaryHsl = hexToHsl(primaryColor);
   const accentHsl = hexToHsl(accentColor);
   useEffect(() => {
