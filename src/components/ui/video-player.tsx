@@ -6,36 +6,23 @@ import { Play, Pause, Volume2, Volume1, VolumeX, SkipForward, SkipBack, Settings
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import Hls from 'hls.js';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 const formatTime = (seconds: number) => {
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = Math.floor(seconds % 60);
   return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
 };
-
 const CustomSlider = ({
   value,
   onChange,
-  className,
+  className
 }: {
   value: number;
   onChange: (value: number) => void;
   className?: string;
 }) => {
-  return (
-    <div className={cn("relative w-full group/progress", className)}>
-      <input
-        type="range"
-        min={0}
-        max={100}
-        value={value}
-        onChange={(e) => onChange(parseFloat(e.target.value))}
-        className="w-full h-1 bg-white/30 rounded-full appearance-none cursor-pointer
+  return <div className={cn("relative w-full group/progress", className)}>
+      <input type="range" min={0} max={100} value={value} onChange={e => onChange(parseFloat(e.target.value))} className="w-full h-1 bg-white/30 rounded-full appearance-none cursor-pointer
           [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 
           [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white 
           [&::-webkit-slider-thumb]:shadow-sm [&::-webkit-slider-thumb]:cursor-pointer
@@ -43,15 +30,11 @@ const CustomSlider = ({
           group-hover/progress:[&::-webkit-slider-thumb]:scale-125
           [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:h-3
           [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white
-          [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:cursor-pointer"
-        style={{
-          background: `linear-gradient(to right, #ffffff 0%, #ffffff ${value}%, rgba(255,255,255,0.3) ${value}%, rgba(255,255,255,0.3) 100%)`,
-        }}
-      />
-    </div>
-  );
+          [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:cursor-pointer" style={{
+      background: `linear-gradient(to right, #ffffff 0%, #ffffff ${value}%, rgba(255,255,255,0.3) ${value}%, rgba(255,255,255,0.3) 100%)`
+    }} />
+    </div>;
 };
-
 interface VideoPlayerProps {
   src?: string;
   hlsUrl?: string;
@@ -66,10 +49,8 @@ interface VideoPlayerProps {
   onLoadedMetadata?: () => void;
   crossOrigin?: "" | "anonymous" | "use-credentials";
 }
-
 type VideoSource = 'hls' | 'iframe' | 'direct';
-
-const VideoPlayer = ({ 
+const VideoPlayer = ({
   src,
   hlsUrl,
   embedUrl,
@@ -79,7 +60,7 @@ const VideoPlayer = ({
   onPlay,
   onPause,
   onEnded,
-  onError, 
+  onError,
   onLoadedMetadata,
   crossOrigin = "anonymous"
 }: VideoPlayerProps) => {
@@ -88,7 +69,6 @@ const VideoPlayer = ({
   const hlsRef = useRef<Hls | null>(null);
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(1);
   const [progress, setProgress] = useState(0);
@@ -97,19 +77,22 @@ const VideoPlayer = ({
   const [showControls, setShowControls] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [availableQualities, setAvailableQualities] = useState<Array<{label: string, height: number}>>([]);
+  const [availableQualities, setAvailableQualities] = useState<Array<{
+    label: string;
+    height: number;
+  }>>([]);
   const [currentQuality, setCurrentQuality] = useState<string>('auto');
   const [showQualityMenu, setShowQualityMenu] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [hideControlsTimeout, setHideControlsTimeout] = useState<NodeJS.Timeout | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  
+
   // Detect if video is from Vimeo
   const isVimeoVideo = embedUrl?.includes('player.vimeo.com') || embedUrl?.includes('vimeo.com') || hlsUrl?.includes('vimeo.com');
-  
+
   // Detect if video is from Cloudflare Stream
   const isCloudflareStream = embedUrl?.includes('cloudflarestream.com') || hlsUrl?.includes('cloudflarestream.com');
-  
+
   // Fallback system state
   const [currentSource, setCurrentSource] = useState<VideoSource | null>(null);
   const [failedSources, setFailedSources] = useState<Set<VideoSource>>(new Set());
@@ -145,13 +128,13 @@ const VideoPlayer = ({
         console.log('🎬 Tentando HLS como fonte principal');
         setCurrentSource('hls');
         return;
-      } 
+      }
       // Iframe como fallback (não-Cloudflare)
       if (embedUrl) {
         console.log('🎬 Tentando iframe como fonte principal');
         setCurrentSource('iframe');
         return;
-      } 
+      }
       // Vídeo direto
       if (src) {
         console.log('🎬 Tentando vídeo direto como fonte principal');
@@ -164,10 +147,9 @@ const VideoPlayer = ({
   // Handle source failure and automatic fallback
   const handleSourceFailure = (source: VideoSource, error?: string) => {
     console.error(`❌ Fonte ${source} falhou:`, error);
-    
     setFailedSources(prev => new Set([...prev, source]));
     setIsLoading(false);
-    
+
     // ⛔ Cloudflare Stream NUNCA deve tentar iframe
     if (isCloudflareStream) {
       console.error('❌ Cloudflare Stream falhou - sem fallback disponível');
@@ -175,7 +157,7 @@ const VideoPlayer = ({
       onError?.();
       return;
     }
-    
+
     // Try next available source
     if (source === 'hls' && embedUrl && !failedSources.has('iframe') && !isCloudflareStream) {
       console.log('🔄 Fallback: HLS → iframe');
@@ -221,10 +203,8 @@ const VideoPlayer = ({
       handleSourceFailure(source, 'Máximo de tentativas excedido');
       return;
     }
-
     const delay = Math.min(1000 * Math.pow(2, attempt), 10000); // Max 10s
     console.log(`🔄 Tentando novamente ${source} em ${delay}ms (tentativa ${attempt + 1}/3)`);
-    
     retryTimeoutRef.current = setTimeout(() => {
       setRetryCount(attempt + 1);
       // Force re-render to trigger useEffect
@@ -236,10 +216,8 @@ const VideoPlayer = ({
   // HLS loading with error handling
   useEffect(() => {
     if (currentSource !== 'hls' || !hlsUrl || !videoRef.current) return;
-
     const video = videoRef.current;
     let mounted = true;
-    
     const cleanup = () => {
       if (hlsRef.current) {
         hlsRef.current.destroy();
@@ -256,7 +234,6 @@ const VideoPlayer = ({
       console.log('🎬 Usando HLS nativo (Safari/iOS)');
       setIsNativeHls(true);
       video.src = hlsUrl;
-      
       const handleSuccess = () => {
         if (mounted) {
           console.log('✅ HLS nativo carregado');
@@ -265,24 +242,25 @@ const VideoPlayer = ({
           if (startTime > 0) video.currentTime = startTime;
         }
       };
-      
       const handleError = (e: Event) => {
         if (mounted) {
           const videoError = (e.target as HTMLVideoElement)?.error;
           console.error('❌ Erro no HLS nativo:', videoError?.code, videoError?.message);
-          
+
           // Safari-specific: Try iframe fallback immediately if CORS error
-          if (videoError?.code === 2) { // MEDIA_ERR_NETWORK
+          if (videoError?.code === 2) {
+            // MEDIA_ERR_NETWORK
             console.log('🔄 Detectado erro de rede no Safari, tentando iframe...');
           }
-          
           handleSourceFailure('hls', 'Erro ao carregar HLS nativo');
         }
       };
-      
-      video.addEventListener('loadedmetadata', handleSuccess, { once: true });
-      video.addEventListener('error', handleError, { once: true });
-      
+      video.addEventListener('loadedmetadata', handleSuccess, {
+        once: true
+      });
+      video.addEventListener('error', handleError, {
+        once: true
+      });
       return () => {
         mounted = false;
         video.removeEventListener('loadedmetadata', handleSuccess);
@@ -292,7 +270,6 @@ const VideoPlayer = ({
     // hls.js for other browsers
     else if (Hls.isSupported()) {
       console.log('🎬 Usando hls.js');
-      
       const hls = new Hls({
         enableWorker: true,
         lowLatencyMode: true,
@@ -306,20 +283,21 @@ const VideoPlayer = ({
         fragLoadingTimeOut: 20000,
         fragLoadingMaxRetry: 4,
         // 🎯 Configurações para começar em qualidade alta
-        startLevel: -1, // Auto, mas otimizado com abrEwmaDefaultEstimate
-        abrEwmaDefaultEstimate: 5000000, // Assumir 5Mbps (boa conexão) no início
-        abrBandWidthFactor: 0.95, // Usar 95% da banda estimada
-        abrBandWidthUpFactor: 0.7, // Subir qualidade mais rapidamente
-        abrMaxWithRealBitrate: true, // Usar bitrate real dos fragmentos
+        startLevel: -1,
+        // Auto, mas otimizado com abrEwmaDefaultEstimate
+        abrEwmaDefaultEstimate: 5000000,
+        // Assumir 5Mbps (boa conexão) no início
+        abrBandWidthFactor: 0.95,
+        // Usar 95% da banda estimada
+        abrBandWidthUpFactor: 0.7,
+        // Subir qualidade mais rapidamente
+        abrMaxWithRealBitrate: true // Usar bitrate real dos fragmentos
       });
-      
       hlsRef.current = hls;
       hls.loadSource(hlsUrl);
       hls.attachMedia(video);
-      
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         if (!mounted) return;
-        
         console.log('✅ HLS manifest carregado');
         console.log('📊 Níveis disponíveis:', hls.levels.map(l => ({
           height: l.height,
@@ -327,28 +305,17 @@ const VideoPlayer = ({
           bitrate: l.bitrate,
           name: l.name
         })));
-        
         setIsLoading(false);
         setErrorMessage(null);
-        
         const levels = hls.levels.map((level, index) => ({
-          label: level.height >= 2160 ? '4K' : 
-                 level.height >= 1080 ? '1080p' : 
-                 level.height >= 720 ? '720p' : 
-                 level.height >= 480 ? '480p' : 
-                 level.height >= 360 ? '360p' : 
-                 `${level.height}p`,
+          label: level.height >= 2160 ? '4K' : level.height >= 1080 ? '1080p' : level.height >= 720 ? '720p' : level.height >= 480 ? '480p' : level.height >= 360 ? '360p' : `${level.height}p`,
           height: level.height,
           index
         }));
-        
-        const uniqueQualities = Array.from(
-          new Map(levels.map(item => [item.height, item])).values()
-        ).sort((a, b) => b.height - a.height);
-        
+        const uniqueQualities = Array.from(new Map(levels.map(item => [item.height, item])).values()).sort((a, b) => b.height - a.height);
         console.log('🎯 Qualidades únicas detectadas:', uniqueQualities);
         setAvailableQualities(uniqueQualities);
-        
+
         // 🚀 Forçar qualidade inicial em 720p ou superior se disponível
         if (uniqueQualities.length > 0) {
           const preferred720p = hls.levels.findIndex(l => l.height >= 720);
@@ -357,9 +324,7 @@ const VideoPlayer = ({
             console.log(`🎯 Qualidade inicial definida: ${hls.levels[preferred720p].height}p`);
           } else if (hls.levels.length > 0) {
             // Se não tem 720p, começar na melhor disponível
-            const bestLevel = hls.levels.reduce((best, current, idx) => 
-              current.height > hls.levels[best].height ? idx : best, 0
-            );
+            const bestLevel = hls.levels.reduce((best, current, idx) => current.height > hls.levels[best].height ? idx : best, 0);
             hls.nextLevel = bestLevel;
             console.log(`🎯 Qualidade inicial (melhor disponível): ${hls.levels[bestLevel].height}p`);
           }
@@ -367,54 +332,50 @@ const VideoPlayer = ({
           console.warn('⚠️ Nenhuma qualidade detectada no manifest');
           console.warn('⚠️ Cloudflare Stream pode não expor níveis via HLS');
           // 📋 Adicionar qualidades padrão do Cloudflare como fallback
-          const cloudflareDefaults = [
-            { label: '1080p', height: 1080, index: 0 },
-            { label: '720p', height: 720, index: 1 },
-            { label: '480p', height: 480, index: 2 },
-            { label: '360p', height: 360, index: 3 }
-          ];
+          const cloudflareDefaults = [{
+            label: '1080p',
+            height: 1080,
+            index: 0
+          }, {
+            label: '720p',
+            height: 720,
+            index: 1
+          }, {
+            label: '480p',
+            height: 480,
+            index: 2
+          }, {
+            label: '360p',
+            height: 360,
+            index: 3
+          }];
           setAvailableQualities(cloudflareDefaults);
           console.log('📋 Usando qualidades padrão do Cloudflare:', cloudflareDefaults);
         }
-        
         if (startTime > 0) video.currentTime = startTime;
       });
-      
+
       // 🔍 Evento adicional: detecção quando níveis carregam
       hls.on(Hls.Events.LEVEL_LOADED, () => {
         if (!mounted || availableQualities.length > 0) return;
-        
         console.log('🎬 LEVEL_LOADED - Tentando detectar qualidades novamente...');
         console.log('🎬 Total de níveis agora:', hls.levels?.length || 0);
-        
         if (hls.levels && hls.levels.length > 0) {
           const levels = hls.levels.map((level, index) => ({
-            label: level.height >= 2160 ? '4K' : 
-                   level.height >= 1080 ? '1080p' : 
-                   level.height >= 720 ? '720p' : 
-                   level.height >= 480 ? '480p' : 
-                   level.height >= 360 ? '360p' : 
-                   `${level.height}p`,
+            label: level.height >= 2160 ? '4K' : level.height >= 1080 ? '1080p' : level.height >= 720 ? '720p' : level.height >= 480 ? '480p' : level.height >= 360 ? '360p' : `${level.height}p`,
             height: level.height,
             index
           }));
-          
-          const uniqueQualities = Array.from(
-            new Map(levels.map(item => [item.height, item])).values()
-          ).sort((a, b) => b.height - a.height);
-          
+          const uniqueQualities = Array.from(new Map(levels.map(item => [item.height, item])).values()).sort((a, b) => b.height - a.height);
           if (uniqueQualities.length > 0) {
             console.log('✅ Qualidades detectadas via LEVEL_LOADED:', uniqueQualities);
             setAvailableQualities(uniqueQualities);
           }
         }
       });
-      
       hls.on(Hls.Events.ERROR, (_event, data) => {
         if (!mounted) return;
-        
         console.error('❌ Erro HLS:', data.type, data.details);
-        
         if (data.fatal) {
           switch (data.type) {
             case Hls.ErrorTypes.NETWORK_ERROR:
@@ -441,7 +402,6 @@ const VideoPlayer = ({
           }
         }
       });
-      
       return () => {
         mounted = false;
         cleanup();
@@ -455,30 +415,25 @@ const VideoPlayer = ({
   // Vimeo postMessage API para rastrear progresso - DEVE vir antes de qualquer return
   useEffect(() => {
     if (currentSource !== 'iframe' || !embedUrl || !isVimeoVideo || !iframeRef.current) return;
-
     const iframe = iframeRef.current;
     let mounted = true;
-
     const handleMessage = (event: MessageEvent) => {
       // Verificar origem do Vimeo
       if (!event.origin.includes('vimeo.com')) return;
-
       try {
         const data = JSON.parse(event.data);
-        
         if (!mounted) return;
-
         switch (data.event) {
           case 'ready':
             console.log('🎬 Vimeo player pronto via postMessage');
             setIsLoading(false);
             setErrorMessage(null);
-            
+
             // Solicitar duração
             iframe.contentWindow?.postMessage(JSON.stringify({
               method: 'getDuration'
             }), '*');
-            
+
             // Definir tempo inicial se fornecido
             if (startTime > 0) {
               console.log('⏱️ Definindo tempo inicial:', startTime);
@@ -487,54 +442,45 @@ const VideoPlayer = ({
                 value: startTime
               }), '*');
             }
-            
+
             // Habilitar eventos de progresso
             iframe.contentWindow?.postMessage(JSON.stringify({
               method: 'addEventListener',
               value: 'timeupdate'
             }), '*');
-            
             iframe.contentWindow?.postMessage(JSON.stringify({
               method: 'addEventListener',
               value: 'play'
             }), '*');
-            
             iframe.contentWindow?.postMessage(JSON.stringify({
               method: 'addEventListener',
               value: 'pause'
             }), '*');
-            
             iframe.contentWindow?.postMessage(JSON.stringify({
               method: 'addEventListener',
               value: 'ended'
             }), '*');
             break;
-
           case 'timeupdate':
             if (data.data) {
               const currentTime = data.data.seconds;
               const videoDuration = data.data.duration;
-              const progress = (currentTime / videoDuration) * 100;
-              
+              const progress = currentTime / videoDuration * 100;
               setCurrentTime(currentTime);
               setDuration(videoDuration);
               setProgress(progress);
-              
               onProgress?.(progress);
               onTimeUpdate?.(currentTime, videoDuration);
             }
             break;
-
           case 'play':
             setIsPlaying(true);
             onPlay?.();
             break;
-
           case 'pause':
             setIsPlaying(false);
             onPause?.();
             break;
-
           case 'ended':
             setIsPlaying(false);
             onEnded?.();
@@ -549,9 +495,7 @@ const VideoPlayer = ({
         // Ignorar erros de parse de mensagens que não são JSON
       }
     };
-
     window.addEventListener('message', handleMessage);
-
     return () => {
       mounted = false;
       window.removeEventListener('message', handleMessage);
@@ -560,10 +504,8 @@ const VideoPlayer = ({
       }
     };
   }, [currentSource, embedUrl, isVimeoVideo, startTime, onProgress, onTimeUpdate, onPlay, onPause, onEnded]);
-
   const togglePlay = async () => {
     if (!videoRef.current || currentSource === 'iframe') return;
-    
     try {
       if (isPlaying) {
         videoRef.current.pause();
@@ -578,7 +520,6 @@ const VideoPlayer = ({
       console.error('Erro ao reproduzir vídeo:', error);
     }
   };
-
   const handleVolumeChange = (value: number) => {
     if (videoRef.current) {
       const newVolume = value / 100;
@@ -587,29 +528,25 @@ const VideoPlayer = ({
       setIsMuted(newVolume === 0);
     }
   };
-
   const handleTimeUpdate = () => {
     if (videoRef.current) {
-      const progress = (videoRef.current.currentTime / videoRef.current.duration) * 100;
+      const progress = videoRef.current.currentTime / videoRef.current.duration * 100;
       setProgress(isFinite(progress) ? progress : 0);
       setCurrentTime(videoRef.current.currentTime);
       setDuration(videoRef.current.duration);
-      
       onProgress?.(isFinite(progress) ? progress : 0);
       onTimeUpdate?.(videoRef.current.currentTime, videoRef.current.duration);
     }
   };
-
   const handleSeek = (value: number) => {
     if (videoRef.current && videoRef.current.duration) {
-      const time = (value / 100) * videoRef.current.duration;
+      const time = value / 100 * videoRef.current.duration;
       if (isFinite(time)) {
         videoRef.current.currentTime = time;
         setProgress(value);
       }
     }
   };
-
   const toggleMute = () => {
     if (videoRef.current) {
       videoRef.current.muted = !isMuted;
@@ -622,42 +559,34 @@ const VideoPlayer = ({
       }
     }
   };
-
   const setSpeed = (speed: number) => {
     if (videoRef.current) {
       videoRef.current.playbackRate = speed;
       setPlaybackSpeed(speed);
     }
   };
-
   const skipTime = (seconds: number) => {
     if (videoRef.current) {
       const newTime = Math.max(0, Math.min(videoRef.current.duration, videoRef.current.currentTime + seconds));
       videoRef.current.currentTime = newTime;
     }
   };
-
   const changeQuality = (quality: string) => {
     if (!hlsRef.current) return;
-    
     setCurrentQuality(quality);
-    
     if (quality === 'auto') {
       hlsRef.current.currentLevel = -1;
       console.log('📺 Qualidade: Automática');
     } else {
       const qualityHeight = parseInt(quality);
       const levelIndex = hlsRef.current.levels.findIndex(level => level.height === qualityHeight);
-      
       if (levelIndex !== -1) {
         hlsRef.current.currentLevel = levelIndex;
         console.log(`📺 Qualidade: ${quality}p`);
       }
     }
-    
     setShowQualityMenu(false);
   };
-
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
       containerRef.current?.requestFullscreen();
@@ -665,12 +594,10 @@ const VideoPlayer = ({
       document.exitFullscreen();
     }
   };
-
   const resetHideControlsTimeout = () => {
     if (hideControlsTimeout) {
       clearTimeout(hideControlsTimeout);
     }
-
     if (isPlaying) {
       const timeout = setTimeout(() => {
         setShowControls(false);
@@ -678,17 +605,14 @@ const VideoPlayer = ({
       setHideControlsTimeout(timeout);
     }
   };
-
   const handleMouseMove = () => {
     setShowControls(true);
     resetHideControlsTimeout();
   };
-
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
     };
-
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
@@ -697,7 +621,6 @@ const VideoPlayer = ({
       }
     };
   }, [hideControlsTimeout]);
-
   useEffect(() => {
     if (isPlaying) {
       resetHideControlsTimeout();
@@ -708,28 +631,23 @@ const VideoPlayer = ({
       }
     }
   }, [isPlaying]);
-
   const handleLoadedMetadata = () => {
     if (videoRef.current) {
       setDuration(videoRef.current.duration);
-      
       if (startTime > 0 && startTime < videoRef.current.duration) {
         videoRef.current.currentTime = startTime;
-        const initialProgress = (startTime / videoRef.current.duration) * 100;
+        const initialProgress = startTime / videoRef.current.duration * 100;
         setProgress(initialProgress);
         setCurrentTime(startTime);
       }
-      
       setIsLoading(false);
       setErrorMessage(null);
       onLoadedMetadata?.();
     }
   };
-
   const handleVideoError = () => {
     const error = videoRef.current?.error;
     console.error('❌ Erro no elemento de vídeo:', error?.code, error?.message);
-    
     if (currentSource === 'hls' || currentSource === 'direct') {
       handleSourceFailure(currentSource as VideoSource, error?.message);
     }
@@ -741,8 +659,7 @@ const VideoPlayer = ({
 
   // Error display with ISP/DNS help
   if (shouldShowError) {
-    return (
-      <div className="relative w-full h-full bg-black rounded-lg overflow-hidden">
+    return <div className="relative w-full h-full bg-black rounded-lg overflow-hidden">
         <div className="w-full h-full min-h-[300px] flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800">
           <div className="text-center text-white p-8 max-w-lg">
             <Play className="h-16 w-16 mx-auto mb-4 text-red-400" />
@@ -760,19 +677,17 @@ const VideoPlayer = ({
             </div>
 
             <div className="space-y-3">
-              <button
-                onClick={() => setShowDnsHelp(!showDnsHelp)}
-                className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors font-medium"
-              >
+              <button onClick={() => setShowDnsHelp(!showDnsHelp)} className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors font-medium">
                 {showDnsHelp ? '🔼 Esconder' : '🔧'} Como resolver (Mudar DNS)
               </button>
 
-              {showDnsHelp && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  className="bg-white/5 rounded-lg p-4 text-left space-y-3"
-                >
+              {showDnsHelp && <motion.div initial={{
+              opacity: 0,
+              height: 0
+            }} animate={{
+              opacity: 1,
+              height: 'auto'
+            }} className="bg-white/5 rounded-lg p-4 text-left space-y-3">
                   <p className="text-sm font-semibold text-blue-300">📱 No seu celular:</p>
                   <ol className="text-xs text-gray-300 space-y-2 list-decimal list-inside">
                     <li>Abra <strong>Configurações</strong> → <strong>Wi-Fi</strong></li>
@@ -793,19 +708,11 @@ const VideoPlayer = ({
                     <li>DNS alternativo: <code className="bg-black/50 px-2 py-1 rounded">1.1.1.1</code></li>
                     <li>Clique OK e atualize a página</li>
                   </ol>
-                </motion.div>
-              )}
+                </motion.div>}
 
-              {embedUrl && (
-                <a 
-                  href={embedUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block w-full px-4 py-3 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
-                >
+              {embedUrl && <a href={embedUrl} target="_blank" rel="noopener noreferrer" className="block w-full px-4 py-3 bg-white/10 hover:bg-white/20 rounded-lg transition-colors">
                   🔗 Abrir em nova aba
-                </a>
-              )}
+                </a>}
             </div>
 
             <p className="text-xs text-gray-500 mt-4">
@@ -813,43 +720,24 @@ const VideoPlayer = ({
             </p>
           </div>
         </div>
-      </div>
-    );
+      </div>;
   }
 
   // HLS Player
   if (shouldShowHLS) {
-    return (
-      <div
-        ref={containerRef}
-        className="relative w-full h-full bg-black rounded-card overflow-hidden group"
-        onMouseMove={handleMouseMove}
-        onMouseLeave={() => isPlaying && setShowControls(false)}
-        tabIndex={0}
-      >
-        {isLoading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-10">
+    return <div ref={containerRef} className="relative w-full h-full bg-black rounded-card overflow-hidden group" onMouseMove={handleMouseMove} onMouseLeave={() => isPlaying && setShowControls(false)} tabIndex={0}>
+        {isLoading && <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-10">
             <div className="text-center text-white">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4" />
               <p className="text-sm">Carregando vídeo{retryCount > 0 ? ` (tentativa ${retryCount + 1}/3)` : ''}...</p>
             </div>
-          </div>
-        )}
+          </div>}
 
         {/* Botão de Qualidade Sempre Visível (canto superior direito) */}
         <div className="absolute top-4 right-4 z-50">
           <Popover open={showQualityMenu} onOpenChange={setShowQualityMenu}>
             <PopoverTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="bg-black/70 hover:bg-black/90 backdrop-blur-sm text-white border border-white/20 gap-2 h-9 px-3 transition-all hover:scale-105"
-              >
-                <Settings className="h-4 w-4" />
-                <span className="text-xs font-medium">
-                  {currentQuality === 'auto' ? 'Auto' : `${currentQuality}p`}
-                </span>
-              </Button>
+              
             </PopoverTrigger>
             <PopoverContent className="w-56 p-3 bg-black/95 backdrop-blur-md border-white/20 z-[200]" side="bottom" align="end">
               <div className="space-y-2">
@@ -858,15 +746,7 @@ const VideoPlayer = ({
                   <p className="text-sm font-semibold text-white">Qualidade do Vídeo</p>
                 </div>
                 
-                <button
-                  onClick={() => changeQuality('auto')}
-                  className={cn(
-                    "w-full text-left px-3 py-2 text-sm rounded-md transition-all flex items-center justify-between",
-                    currentQuality === 'auto' 
-                      ? "bg-primary/20 text-primary border border-primary/50" 
-                      : "text-white/80 hover:bg-white/10 hover:text-white"
-                  )}
-                >
+                <button onClick={() => changeQuality('auto')} className={cn("w-full text-left px-3 py-2 text-sm rounded-md transition-all flex items-center justify-between", currentQuality === 'auto' ? "bg-primary/20 text-primary border border-primary/50" : "text-white/80 hover:bg-white/10 hover:text-white")}>
                   <span className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-green-500" />
                     Automática
@@ -874,84 +754,41 @@ const VideoPlayer = ({
                   {currentQuality === 'auto' && <span className="text-primary">✓</span>}
                 </button>
 
-                {availableQualities.length > 0 ? (
-                  <>
+                {availableQualities.length > 0 ? <>
                     <div className="pt-1 pb-1">
                       <p className="text-xs text-white/50 px-1">Qualidade Manual</p>
                     </div>
-                    {availableQualities.map((quality) => (
-                      <button
-                        key={quality.height}
-                        onClick={() => changeQuality(quality.height.toString())}
-                        className={cn(
-                          "w-full text-left px-3 py-2 text-sm rounded-md transition-all flex items-center justify-between",
-                          currentQuality === quality.height.toString()
-                            ? "bg-primary/20 text-primary border border-primary/50" 
-                            : "text-white/80 hover:bg-white/10 hover:text-white"
-                        )}
-                      >
+                    {availableQualities.map(quality => <button key={quality.height} onClick={() => changeQuality(quality.height.toString())} className={cn("w-full text-left px-3 py-2 text-sm rounded-md transition-all flex items-center justify-between", currentQuality === quality.height.toString() ? "bg-primary/20 text-primary border border-primary/50" : "text-white/80 hover:bg-white/10 hover:text-white")}>
                         <span>{quality.label}</span>
                         {currentQuality === quality.height.toString() && <span className="text-primary">✓</span>}
-                      </button>
-                    ))}
-                  </>
-                ) : (
-                  <div className="px-3 py-2 text-xs text-white/40 text-center border border-white/5 rounded-md bg-white/5">
+                      </button>)}
+                  </> : <div className="px-3 py-2 text-xs text-white/40 text-center border border-white/5 rounded-md bg-white/5">
                     🔍 Detectando qualidades disponíveis...
-                  </div>
-                )}
+                  </div>}
               </div>
             </PopoverContent>
           </Popover>
         </div>
         
-        <video
-          ref={videoRef}
-          className="w-full h-full object-cover"
-          onTimeUpdate={handleTimeUpdate}
-          onLoadedMetadata={handleLoadedMetadata}
-          onEnded={() => {
-            setIsPlaying(false);
-            onEnded?.();
-          }}
-          onError={handleVideoError}
-          onClick={togglePlay}
-          {...(!isNativeHls && { crossOrigin })}
-          preload="metadata"
-          controls={false}
-          playsInline
-        />
+        <video ref={videoRef} className="w-full h-full object-cover" onTimeUpdate={handleTimeUpdate} onLoadedMetadata={handleLoadedMetadata} onEnded={() => {
+        setIsPlaying(false);
+        onEnded?.();
+      }} onError={handleVideoError} onClick={togglePlay} {...!isNativeHls && {
+        crossOrigin
+      }} preload="metadata" controls={false} playsInline />
 
         {/* Play/Pause Overlay */}
-        <div
-          className={cn(
-            "absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-300",
-            !isPlaying || showControls ? "opacity-100" : "opacity-0"
-          )}
-        >
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              togglePlay();
-            }}
-            className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center text-white hover:bg-white/30 transition-all duration-200 pointer-events-auto"
-          >
-            {isPlaying ? (
-              <Pause className="w-6 h-6 ml-0.5" />
-            ) : (
-              <Play className="w-6 h-6 ml-1" />
-            )}
+        <div className={cn("absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-300", !isPlaying || showControls ? "opacity-100" : "opacity-0")}>
+          <button onClick={e => {
+          e.stopPropagation();
+          togglePlay();
+        }} className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center text-white hover:bg-white/30 transition-all duration-200 pointer-events-auto">
+            {isPlaying ? <Pause className="w-6 h-6 ml-0.5" /> : <Play className="w-6 h-6 ml-1" />}
           </button>
         </div>
 
         {/* Controls Bar */}
-        <div
-          className={cn(
-            "absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent",
-            "transition-opacity duration-300 pointer-events-none",
-            showControls ? "opacity-100" : "opacity-0"
-          )}
-        >
+        <div className={cn("absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent", "transition-opacity duration-300 pointer-events-none", showControls ? "opacity-100" : "opacity-0")}>
           <div className="p-4 space-y-3 pointer-events-auto">
             {/* Progress Bar */}
             <div className="flex items-center gap-2 text-white text-sm">
@@ -967,50 +804,30 @@ const VideoPlayer = ({
             {/* Control Buttons */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    skipTime(-10);
-                  }}
-                  className="p-2 text-white hover:bg-white/20 rounded-md transition-colors"
-                >
+                <button onClick={e => {
+                e.stopPropagation();
+                skipTime(-10);
+              }} className="p-2 text-white hover:bg-white/20 rounded-md transition-colors">
                   <SkipBack className="w-4 h-4" />
                 </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    togglePlay();
-                  }}
-                  className="p-2 text-white hover:bg-white/20 rounded-md transition-colors"
-                >
-                  {isPlaying ? (
-                    <Pause className="w-4 h-4" />
-                  ) : (
-                    <Play className="w-4 h-4 ml-0.5" />
-                  )}
+                <button onClick={e => {
+                e.stopPropagation();
+                togglePlay();
+              }} className="p-2 text-white hover:bg-white/20 rounded-md transition-colors">
+                  {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
                 </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    skipTime(10);
-                  }}
-                  className="p-2 text-white hover:bg-white/20 rounded-md transition-colors"
-                >
+                <button onClick={e => {
+                e.stopPropagation();
+                skipTime(10);
+              }} className="p-2 text-white hover:bg-white/20 rounded-md transition-colors">
                   <SkipForward className="w-4 h-4" />
                 </button>
                 <div className="flex items-center gap-2 group/volume">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleMute();
-                    }}
-                    className="p-2 text-white hover:bg-white/20 rounded-md transition-colors"
-                  >
-                    {isMuted || volume === 0 ? (
-                      <VolumeX className="w-4 h-4" />
-                    ) : (
-                      <Volume2 className="w-4 h-4" />
-                    )}
+                  <button onClick={e => {
+                  e.stopPropagation();
+                  toggleMute();
+                }} className="p-2 text-white hover:bg-white/20 rounded-md transition-colors">
+                    {isMuted || volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
                   </button>
                   <div className="w-0 group-hover/volume:w-20 transition-all duration-200 overflow-hidden">
                     <CustomSlider value={volume * 100} onChange={handleVolumeChange} />
@@ -1020,41 +837,24 @@ const VideoPlayer = ({
 
               <div className="flex items-center gap-2">
                 <div className="hidden md:flex items-center gap-1">
-                  {[0.5, 1, 1.5, 2].map((speed) => (
-                    <button
-                      key={speed}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSpeed(speed);
-                      }}
-                      className={cn(
-                        "px-2 py-1 text-xs text-white hover:bg-white/20 rounded-md transition-colors",
-                        playbackSpeed === speed && "bg-white/20"
-                      )}
-                    >
+                  {[0.5, 1, 1.5, 2].map(speed => <button key={speed} onClick={e => {
+                  e.stopPropagation();
+                  setSpeed(speed);
+                }} className={cn("px-2 py-1 text-xs text-white hover:bg-white/20 rounded-md transition-colors", playbackSpeed === speed && "bg-white/20")}>
                       {speed}x
-                    </button>
-                  ))}
+                    </button>)}
                 </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleFullscreen();
-                  }}
-                  className="p-2 text-white hover:bg-white/20 rounded-md transition-colors"
-                >
-                  {isFullscreen ? (
-                    <Minimize className="w-4 h-4" />
-                  ) : (
-                    <Maximize className="w-4 h-4" />
-                  )}
+                <button onClick={e => {
+                e.stopPropagation();
+                toggleFullscreen();
+              }} className="p-2 text-white hover:bg-white/20 rounded-md transition-colors">
+                  {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
                 </button>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    );
+      </div>;
   }
 
   // Iframe Player
@@ -1079,7 +879,6 @@ const VideoPlayer = ({
           return embedUrl;
         }
       }
-      
       if (isCloudflareStream) {
         // Cloudflare Stream NUNCA deve usar iframe - sempre HLS
         console.error('⚠️ Tentando usar iframe para Cloudflare Stream - isso não vai funcionar');
@@ -1092,115 +891,62 @@ const VideoPlayer = ({
         }
         return embedUrl;
       }
-      
       return embedUrl;
     })();
-    
-    return (
-      <motion.div 
-        className="relative w-full h-full overflow-hidden bg-black"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        {isLoading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black z-10">
+    return <motion.div className="relative w-full h-full overflow-hidden bg-black" initial={{
+      opacity: 0,
+      y: 20
+    }} animate={{
+      opacity: 1,
+      y: 0
+    }} transition={{
+      duration: 0.5
+    }}>
+        {isLoading && <div className="absolute inset-0 flex items-center justify-center bg-black z-10">
             <div className="text-center text-white">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4" />
               <p className="text-sm">Carregando vídeo...</p>
             </div>
-          </div>
-        )}
+          </div>}
         
-        <iframe
-          ref={iframeRef}
-          src={processedEmbedUrl}
-          className="w-full h-full min-h-[300px] border-0"
-          frameBorder="0"
-          allowFullScreen
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-          title="Player de vídeo"
-          onLoad={() => {
-            console.log('✅ Iframe carregado');
-            setIsLoading(false);
-            setErrorMessage(null);
-          }}
-          onError={() => {
-            console.error('❌ Erro ao carregar iframe');
-            handleSourceFailure('iframe', 'Erro ao carregar iframe');
-          }}
-        />
-      </motion.div>
-    );
+        <iframe ref={iframeRef} src={processedEmbedUrl} className="w-full h-full min-h-[300px] border-0" frameBorder="0" allowFullScreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" title="Player de vídeo" onLoad={() => {
+        console.log('✅ Iframe carregado');
+        setIsLoading(false);
+        setErrorMessage(null);
+      }} onError={() => {
+        console.error('❌ Erro ao carregar iframe');
+        handleSourceFailure('iframe', 'Erro ao carregar iframe');
+      }} />
+      </motion.div>;
   }
 
   // Direct Video Player
   if (currentSource === 'direct' && src) {
-    return (
-      <div
-        ref={containerRef}
-        className="relative w-full h-full bg-black rounded-card overflow-hidden group"
-        onMouseMove={handleMouseMove}
-        onMouseLeave={() => isPlaying && setShowControls(false)}
-        tabIndex={0}
-      >
-        {isLoading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-10">
+    return <div ref={containerRef} className="relative w-full h-full bg-black rounded-card overflow-hidden group" onMouseMove={handleMouseMove} onMouseLeave={() => isPlaying && setShowControls(false)} tabIndex={0}>
+        {isLoading && <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-10">
             <div className="text-center text-white">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4" />
               <p className="text-sm">Carregando vídeo...</p>
             </div>
-          </div>
-        )}
+          </div>}
         
-        <video
-          ref={videoRef}
-          className="w-full h-full object-cover"
-          onTimeUpdate={handleTimeUpdate}
-          onLoadedMetadata={handleLoadedMetadata}
-          onEnded={() => {
-            setIsPlaying(false);
-            onEnded?.();
-          }}
-          onError={handleVideoError}
-          src={src}
-          onClick={togglePlay}
-          crossOrigin={crossOrigin}
-          preload="metadata"
-          autoPlay
-          playsInline
-        />
+        <video ref={videoRef} className="w-full h-full object-cover" onTimeUpdate={handleTimeUpdate} onLoadedMetadata={handleLoadedMetadata} onEnded={() => {
+        setIsPlaying(false);
+        onEnded?.();
+      }} onError={handleVideoError} src={src} onClick={togglePlay} crossOrigin={crossOrigin} preload="metadata" autoPlay playsInline />
 
         {/* Play/Pause Overlay */}
-        <div
-          className={cn(
-            "absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-300",
-            !isPlaying || showControls ? "opacity-100" : "opacity-0"
-          )}
-        >
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              togglePlay();
-            }}
-            className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center text-white hover:bg-white/30 transition-all duration-200 pointer-events-auto"
-          >
-            {isPlaying ? (
-              <Pause className="w-6 h-6 ml-0.5" />
-            ) : (
-              <Play className="w-6 h-6 ml-1" />
-            )}
+        <div className={cn("absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-300", !isPlaying || showControls ? "opacity-100" : "opacity-0")}>
+          <button onClick={e => {
+          e.stopPropagation();
+          togglePlay();
+        }} className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center text-white hover:bg-white/30 transition-all duration-200 pointer-events-auto">
+            {isPlaying ? <Pause className="w-6 h-6 ml-0.5" /> : <Play className="w-6 h-6 ml-1" />}
           </button>
         </div>
 
         {/* Controls Bar */}
-        <div
-          className={cn(
-            "absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent",
-            "transition-opacity duration-300 pointer-events-none",
-            showControls ? "opacity-100" : "opacity-0"
-          )}
-        >
+        <div className={cn("absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent", "transition-opacity duration-300 pointer-events-none", showControls ? "opacity-100" : "opacity-0")}>
           <div className="p-4 space-y-3 pointer-events-auto">
             {/* Progress Bar */}
             <div className="flex items-center gap-2 text-white text-sm">
@@ -1216,50 +962,30 @@ const VideoPlayer = ({
             {/* Control Buttons */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    skipTime(-10);
-                  }}
-                  className="p-2 text-white hover:bg-white/20 rounded-md transition-colors"
-                >
+                <button onClick={e => {
+                e.stopPropagation();
+                skipTime(-10);
+              }} className="p-2 text-white hover:bg-white/20 rounded-md transition-colors">
                   <SkipBack className="w-4 h-4" />
                 </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    togglePlay();
-                  }}
-                  className="p-2 text-white hover:bg-white/20 rounded-md transition-colors"
-                >
-                  {isPlaying ? (
-                    <Pause className="w-4 h-4" />
-                  ) : (
-                    <Play className="w-4 h-4 ml-0.5" />
-                  )}
+                <button onClick={e => {
+                e.stopPropagation();
+                togglePlay();
+              }} className="p-2 text-white hover:bg-white/20 rounded-md transition-colors">
+                  {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
                 </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    skipTime(10);
-                  }}
-                  className="p-2 text-white hover:bg-white/20 rounded-md transition-colors"
-                >
+                <button onClick={e => {
+                e.stopPropagation();
+                skipTime(10);
+              }} className="p-2 text-white hover:bg-white/20 rounded-md transition-colors">
                   <SkipForward className="w-4 h-4" />
                 </button>
                 <div className="flex items-center gap-2 group/volume">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleMute();
-                    }}
-                    className="p-2 text-white hover:bg-white/20 rounded-md transition-colors"
-                  >
-                    {isMuted || volume === 0 ? (
-                      <VolumeX className="w-4 h-4" />
-                    ) : (
-                      <Volume2 className="w-4 h-4" />
-                    )}
+                  <button onClick={e => {
+                  e.stopPropagation();
+                  toggleMute();
+                }} className="p-2 text-white hover:bg-white/20 rounded-md transition-colors">
+                    {isMuted || volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
                   </button>
                   <div className="w-0 group-hover/volume:w-20 transition-all duration-200 overflow-hidden">
                     <CustomSlider value={volume * 100} onChange={handleVolumeChange} />
@@ -1269,46 +995,28 @@ const VideoPlayer = ({
 
               <div className="flex items-center gap-2">
                 <div className="hidden md:flex items-center gap-1">
-                  {[0.5, 1, 1.5, 2].map((speed) => (
-                    <button
-                      key={speed}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSpeed(speed);
-                      }}
-                      className={cn(
-                        "px-2 py-1 text-xs text-white hover:bg-white/20 rounded-md transition-colors",
-                        playbackSpeed === speed && "bg-white/20"
-                      )}
-                    >
+                  {[0.5, 1, 1.5, 2].map(speed => <button key={speed} onClick={e => {
+                  e.stopPropagation();
+                  setSpeed(speed);
+                }} className={cn("px-2 py-1 text-xs text-white hover:bg-white/20 rounded-md transition-colors", playbackSpeed === speed && "bg-white/20")}>
                       {speed}x
-                    </button>
-                  ))}
+                    </button>)}
                 </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleFullscreen();
-                  }}
-                  className="p-2 text-white hover:bg-white/20 rounded-md transition-colors"
-                >
-                  {isFullscreen ? (
-                    <Minimize className="w-4 h-4" />
-                  ) : (
-                    <Maximize className="w-4 h-4" />
-                  )}
+                <button onClick={e => {
+                e.stopPropagation();
+                toggleFullscreen();
+              }} className="p-2 text-white hover:bg-white/20 rounded-md transition-colors">
+                  {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
                 </button>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    );
+      </div>;
   }
 
   // No valid source
-  return (
-    <div className="relative w-full h-full bg-black rounded-lg overflow-hidden">
+  return <div className="relative w-full h-full bg-black rounded-lg overflow-hidden">
       <div className="w-full h-full min-h-[300px] flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800">
         <div className="text-center text-white p-8">
           <Play className="h-16 w-16 mx-auto mb-4 text-gray-400" />
@@ -1316,8 +1024,6 @@ const VideoPlayer = ({
           <p className="text-gray-400">O vídeo desta aula ainda não foi carregado.</p>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default VideoPlayer;
