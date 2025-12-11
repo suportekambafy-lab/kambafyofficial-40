@@ -146,6 +146,24 @@ export function NetflixMembersHome({
     return modules.find(m => m.id === moduleId)?.title;
   };
 
+  // Generate thumbnail URL from Bunny CDN hls_url
+  const getLessonThumbnail = (lesson: Lesson) => {
+    // First try video_data thumbnail
+    if (lesson.video_data?.thumbnail) {
+      return lesson.video_data.thumbnail as string;
+    }
+    // Generate from hls_url (Bunny CDN pattern)
+    if (lesson.hls_url) {
+      // Extract base URL and video ID from hls_url
+      // Pattern: https://vz-xxx.b-cdn.net/VIDEO_ID/playlist.m3u8
+      const match = lesson.hls_url.match(/^(https:\/\/[^/]+\/[^/]+)/);
+      if (match) {
+        return `${match[1]}/thumbnail.jpg`;
+      }
+    }
+    return undefined;
+  };
+
   return (
     <div 
       className="min-h-screen relative netflix-member-area"
@@ -195,7 +213,7 @@ export function NetflixMembersHome({
                   key={lesson.id}
                   id={lesson.id}
                   title={lesson.title}
-                  thumbnail={lesson.video_data?.thumbnail as string}
+                  thumbnail={getLessonThumbnail(lesson)}
                   duration={lesson.duration}
                   progress={lessonProgress[lesson.id]?.progress_percentage}
                   moduleTitle={getModuleTitle(lesson.module_id)}
@@ -237,7 +255,7 @@ export function NetflixMembersHome({
                   key={lesson.id}
                   id={lesson.id}
                   title={lesson.title}
-                  thumbnail={lesson.video_data?.thumbnail as string}
+                  thumbnail={getLessonThumbnail(lesson)}
                   duration={lesson.duration}
                   isCompleted={lessonProgress[lesson.id]?.completed}
                   moduleTitle={getModuleTitle(lesson.module_id)}
