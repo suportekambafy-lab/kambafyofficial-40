@@ -121,6 +121,7 @@ const Auth = () => {
 
     setLoading(true);
     setErrorField('');
+    setChecking2FA(true); // Bloquear redirecionamento ANTES de fazer login
 
     try {
       const userType = selectedUserType === 'customer' ? 'customer' : 'business';
@@ -144,13 +145,11 @@ const Auth = () => {
 
         setErrorField(message);
         setLoading(false);
+        setChecking2FA(false); // Liberar se houve erro
         return;
       }
 
       // Login bem-sucedido - verificar se precisa de 2FA
-      // Bloquear redirecionamento automático enquanto verificamos
-      setChecking2FA(true);
-      
       const { data: { user: loggedUser } } = await supabase.auth.getUser();
       
       if (loggedUser) {
