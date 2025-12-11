@@ -44,7 +44,10 @@ const isDeviceTrusted = (email: string): boolean => {
 // Marcar dispositivo como confiável para um email
 const trustDevice = (email: string): void => {
   const trustedDevices = localStorage.getItem('member_area_trusted_devices');
-  let devices: Record<string, { deviceId: string; expiresAt: string }> = {};
+  let devices: Record<string, {
+    deviceId: string;
+    expiresAt: string;
+  }> = {};
   try {
     if (trustedDevices) {
       devices = JSON.parse(trustedDevices);
@@ -61,12 +64,15 @@ const trustDevice = (email: string): void => {
   };
   localStorage.setItem('member_area_trusted_devices', JSON.stringify(devices));
 };
-
 export default function ModernMembersLogin() {
-  const { id: memberAreaId } = useParams();
+  const {
+    id: memberAreaId
+  } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { toast } = useCustomToast();
+  const {
+    toast
+  } = useCustomToast();
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [memberArea, setMemberArea] = useState<any>(null);
@@ -91,17 +97,13 @@ export default function ModernMembersLogin() {
   useEffect(() => {
     const fetchOwnerEmail = async () => {
       if (!memberAreaId) return;
-      const { data: memberAreaData } = await supabase
-        .from('member_areas')
-        .select('user_id')
-        .eq('id', memberAreaId)
-        .single();
+      const {
+        data: memberAreaData
+      } = await supabase.from('member_areas').select('user_id').eq('id', memberAreaId).single();
       if (memberAreaData?.user_id) {
-        const { data: ownerProfile } = await supabase
-          .from('profiles')
-          .select('email')
-          .eq('user_id', memberAreaData.user_id)
-          .single();
+        const {
+          data: ownerProfile
+        } = await supabase.from('profiles').select('email').eq('user_id', memberAreaData.user_id).single();
         if (ownerProfile?.email) {
           setOwnerEmail(ownerProfile.email.toLowerCase().trim());
         }
@@ -126,12 +128,13 @@ export default function ModernMembersLogin() {
   };
 
   // Debounced function para validação e acesso
-  const { debouncedFunc: debouncedAccess } = useDebounced(async (email: string) => {
+  const {
+    debouncedFunc: debouncedAccess
+  } = useDebounced(async (email: string) => {
     if (isSubmitting) return;
     setIsSubmitting(true);
     try {
       const normalizedEmail = email.toLowerCase().trim();
-
       if (normalizedEmail === 'validar@kambafy.com') {
         toast({
           title: "✅ Acesso de validação autorizado!",
@@ -143,7 +146,6 @@ export default function ModernMembersLogin() {
         }, 800);
         return;
       }
-
       if (ownerEmail && normalizedEmail === ownerEmail) {
         setPendingEmail(normalizedEmail);
         setIs2FAForOwner(true);
@@ -151,14 +153,10 @@ export default function ModernMembersLogin() {
         setIsSubmitting(false);
         return;
       }
-
-      const { data: studentAccess, error } = await supabase
-        .from('member_area_students')
-        .select('*')
-        .eq('member_area_id', memberAreaId)
-        .ilike('student_email', normalizedEmail)
-        .single();
-
+      const {
+        data: studentAccess,
+        error
+      } = await supabase.from('member_area_students').select('*').eq('member_area_id', memberAreaId).ilike('student_email', normalizedEmail).single();
       if (error || !studentAccess) {
         toast({
           title: "❌ Acesso negado",
@@ -167,7 +165,6 @@ export default function ModernMembersLogin() {
         });
         return;
       }
-
       if (isDeviceTrusted(normalizedEmail)) {
         completeLogin(normalizedEmail, false);
       } else {
@@ -185,22 +182,18 @@ export default function ModernMembersLogin() {
       setIsSubmitting(false);
     }
   }, 1000);
-
   useEffect(() => {
     const fetchMemberArea = async () => {
       if (!memberAreaId) return;
-      const { data } = await supabase
-        .from('member_areas')
-        .select('name, login_logo_url, logo_url, primary_color, accent_color, background_style')
-        .eq('id', memberAreaId)
-        .single();
+      const {
+        data
+      } = await supabase.from('member_areas').select('name, login_logo_url, logo_url, primary_color, accent_color, background_style').eq('id', memberAreaId).single();
       if (data) {
         setMemberArea(data);
       }
     };
     fetchMemberArea();
   }, [memberAreaId]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) {
@@ -224,18 +217,11 @@ export default function ModernMembersLogin() {
 
   // Mostrar tela de 2FA se necessário
   if (requires2FA && pendingEmail) {
-    return (
-      <div className="flex w-full flex-col min-h-screen bg-black relative">
+    return <div className="flex w-full flex-col min-h-screen bg-black relative">
         {/* Canvas Background */}
         <div className="absolute inset-0 z-0">
           <Suspense fallback={<div className="absolute inset-0 bg-black" />}>
-            <CanvasRevealEffect
-              animationSpeed={3}
-              containerClassName="bg-black"
-              colors={[[255, 255, 255], [255, 255, 255]]}
-              dotSize={6}
-              reverse={false}
-            />
+            <CanvasRevealEffect animationSpeed={3} containerClassName="bg-black" colors={[[255, 255, 255], [255, 255, 255]]} dotSize={6} reverse={false} />
           </Suspense>
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(0,0,0,0.8)_0%,_transparent_100%)]" />
           <div className="absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-b from-black to-transparent" />
@@ -243,108 +229,105 @@ export default function ModernMembersLogin() {
 
         {/* Content */}
         <div className="relative z-10 flex flex-col flex-1 items-center justify-center p-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="w-full max-w-md"
-          >
+          <motion.div initial={{
+          opacity: 0,
+          y: 20
+        }} animate={{
+          opacity: 1,
+          y: 0
+        }} transition={{
+          duration: 0.5
+        }} className="w-full max-w-md">
             <div className="space-y-6 text-center mb-8">
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                className="mx-auto w-16 h-16 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center"
-              >
+              <motion.div initial={{
+              scale: 0
+            }} animate={{
+              scale: 1
+            }} transition={{
+              delay: 0.2,
+              type: "spring",
+              stiffness: 200
+            }} className="mx-auto w-16 h-16 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center">
                 <Shield className="h-8 w-8 text-white" />
               </motion.div>
               <div>
                 <h1 className="text-2xl font-bold text-white">Verificação de Segurança</h1>
                 <p className="text-white/50 mt-2 text-sm">
-                  {is2FAForOwner
-                    ? "Como dono desta área, você precisa verificar sua identidade"
-                    : "Detectamos um novo navegador. Por segurança, confirme sua identidade"}
+                  {is2FAForOwner ? "Como dono desta área, você precisa verificar sua identidade" : "Detectamos um novo navegador. Por segurança, confirme sua identidade"}
                 </p>
               </div>
             </div>
 
             <div className="backdrop-blur-sm bg-white/5 border border-white/10 rounded-2xl p-6">
-              <TwoFactorVerification
-                email={pendingEmail}
-                context="member_area_login"
-                onVerificationSuccess={() => {
-                  setRequires2FA(false);
-                  completeLogin(pendingEmail, true);
-                }}
-                onBack={() => {
-                  setRequires2FA(false);
-                  setPendingEmail('');
-                  setIs2FAForOwner(false);
-                }}
-              />
+              <TwoFactorVerification email={pendingEmail} context="member_area_login" onVerificationSuccess={() => {
+              setRequires2FA(false);
+              completeLogin(pendingEmail, true);
+            }} onBack={() => {
+              setRequires2FA(false);
+              setPendingEmail('');
+              setIs2FAForOwner(false);
+            }} />
             </div>
           </motion.div>
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="flex w-full flex-col min-h-screen bg-black relative">
+  return <div className="flex w-full flex-col min-h-screen bg-black relative">
       {/* Canvas Background */}
       <div className="absolute inset-0 z-0">
-        {initialCanvasVisible && (
-          <Suspense fallback={<div className="absolute inset-0 bg-black" />}>
+        {initialCanvasVisible && <Suspense fallback={<div className="absolute inset-0 bg-black" />}>
             <div className="absolute inset-0">
-              <CanvasRevealEffect
-                animationSpeed={3}
-                containerClassName="bg-black"
-                colors={[[255, 255, 255], [255, 255, 255]]}
-                dotSize={6}
-                reverse={false}
-              />
+              <CanvasRevealEffect animationSpeed={3} containerClassName="bg-black" colors={[[255, 255, 255], [255, 255, 255]]} dotSize={6} reverse={false} />
             </div>
-          </Suspense>
-        )}
+          </Suspense>}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(0,0,0,0.8)_0%,_transparent_100%)]" />
         <div className="absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-b from-black to-transparent" />
       </div>
 
       {/* Content */}
       <div className="relative z-10 flex flex-col flex-1 items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          className="w-full max-w-sm"
-        >
+        <motion.div initial={{
+        opacity: 0,
+        y: 30
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} transition={{
+        duration: 0.6,
+        ease: "easeOut"
+      }} className="w-full max-w-sm">
           <AnimatePresence mode="wait">
-            <motion.div
-              key="email-step"
-              initial={{ opacity: 0, x: -100 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -100 }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
-              className="space-y-6 text-center"
-            >
+            <motion.div key="email-step" initial={{
+            opacity: 0,
+            x: -100
+          }} animate={{
+            opacity: 1,
+            x: 0
+          }} exit={{
+            opacity: 0,
+            x: -100
+          }} transition={{
+            duration: 0.4,
+            ease: "easeOut"
+          }} className="space-y-6 text-center">
               {/* Logo */}
-              {(memberArea?.login_logo_url || memberArea?.logo_url) && (
-                <motion.div
-                  initial={{ scale: 0, rotate: -180 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  transition={{ delay: 0.2, type: "spring", stiffness: 200, damping: 15 }}
-                  className="mx-auto"
-                >
+              {(memberArea?.login_logo_url || memberArea?.logo_url) && <motion.div initial={{
+              scale: 0,
+              rotate: -180
+            }} animate={{
+              scale: 1,
+              rotate: 0
+            }} transition={{
+              delay: 0.2,
+              type: "spring",
+              stiffness: 200,
+              damping: 15
+            }} className="mx-auto">
                   <div className="relative w-20 h-20 mx-auto">
                     <div className="absolute inset-0 rounded-full blur-xl opacity-40 bg-white/20" />
-                    <img
-                      src={memberArea.login_logo_url || memberArea.logo_url}
-                      alt="Logo"
-                      className="relative w-full h-full object-contain rounded-full"
-                    />
+                    <img src={memberArea.login_logo_url || memberArea.logo_url} alt="Logo" className="relative w-full h-full object-contain rounded-full" />
                   </div>
-                </motion.div>
-              )}
+                </motion.div>}
 
               {/* Title */}
               <div className="space-y-1">
@@ -359,68 +342,48 @@ export default function ModernMembersLogin() {
               {/* Form */}
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="relative">
-                  <input
-                    ref={inputRef}
-                    id={`${id}-email`}
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="seu@email.com"
-                    className="w-full backdrop-blur-sm bg-white/5 text-white border border-white/10 rounded-full py-3.5 px-5 pr-12 focus:outline-none focus:border-white/30 text-center transition-colors"
-                    required
-                    disabled={isSubmitting}
-                  />
-                  <button
-                    type="submit"
-                    disabled={isSubmitting || !email}
-                    className="absolute right-1.5 top-1/2 -translate-y-1/2 text-black w-10 h-10 flex items-center justify-center rounded-full bg-white hover:bg-white/90 transition-colors disabled:opacity-30 disabled:bg-white/20 disabled:text-white/50 disabled:cursor-not-allowed"
-                  >
-                    {isSubmitting ? (
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                        className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full"
-                      />
-                    ) : (
-                      <span className="text-lg font-medium">→</span>
-                    )}
+                  <input ref={inputRef} id={`${id}-email`} type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="seu@email.com" className="w-full backdrop-blur-sm bg-white/5 text-white border border-white/10 rounded-full py-3.5 px-5 pr-12 focus:outline-none focus:border-white/30 text-center transition-colors" required disabled={isSubmitting} />
+                  <button type="submit" disabled={isSubmitting || !email} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-black w-10 h-10 flex items-center justify-center rounded-full bg-white hover:bg-white/90 transition-colors disabled:opacity-30 disabled:bg-white/20 disabled:text-white/50 disabled:cursor-not-allowed">
+                    {isSubmitting ? <motion.div animate={{
+                    rotate: 360
+                  }} transition={{
+                    duration: 1,
+                    repeat: Infinity,
+                    ease: "linear"
+                  }} className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full" /> : <span className="text-lg font-medium">→</span>}
                   </button>
                 </div>
               </form>
 
               {/* Portal link */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                className="pt-8"
-              >
+              <motion.div initial={{
+              opacity: 0,
+              y: 10
+            }} animate={{
+              opacity: 1,
+              y: 0
+            }} transition={{
+              delay: 0.5
+            }} className="pt-8">
                 <p className="text-xs text-white/30 mb-2">
                   Precisa acessar o portal de clientes?
                 </p>
-                <a
-                  href="/auth"
-                  className="text-sm font-medium text-white/50 hover:text-white/70 transition-colors underline underline-offset-4"
-                >
+                <a href="/auth" className="text-sm font-medium text-white/50 hover:text-white/70 transition-colors underline underline-offset-4">
                   Clique aqui para fazer login no portal
                 </a>
               </motion.div>
 
               {/* Footer */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.6 }}
-                className="pt-6"
-              >
+              <motion.div initial={{
+              opacity: 0
+            }} animate={{
+              opacity: 1
+            }} transition={{
+              delay: 0.6
+            }} className="pt-6">
                 <p className="text-xs text-white/20">
                   Plataforma desenvolvida por{' '}
-                  <a
-                    href="https://kambafy.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-white/30 hover:text-white/50 transition-colors"
-                  >
+                  <a href="https://kambafy.com" target="_blank" rel="noopener noreferrer" className="transition-colors text-white/[0.51]">
                     Kambafy
                   </a>
                 </p>
@@ -429,6 +392,5 @@ export default function ModernMembersLogin() {
           </AnimatePresence>
         </motion.div>
       </div>
-    </div>
-  );
+    </div>;
 }
