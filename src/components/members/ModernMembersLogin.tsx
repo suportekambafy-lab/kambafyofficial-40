@@ -550,8 +550,9 @@ export default function ModernMembersLogin() {
             delay: 0.5
           }}>
               <Button type="submit" className="w-full h-12 font-semibold text-base rounded-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 text-white" style={{
-              background: 'linear-gradient(135deg, hsl(0, 70%, 50%), hsl(0, 60%, 40%))',
-              boxShadow: '0 10px 30px -10px hsla(0, 70%, 40%, 0.5)'
+              background: 'linear-gradient(135deg, hsl(0, 0%, 15%), hsl(0, 0%, 8%))',
+              boxShadow: '0 10px 30px -10px hsla(0, 0%, 0%, 0.5)',
+              border: '1px solid hsl(0, 0%, 25%)'
             }} disabled={isSubmitting || !email}>
                 {isSubmitting && <motion.div animate={{
                 rotate: 360
