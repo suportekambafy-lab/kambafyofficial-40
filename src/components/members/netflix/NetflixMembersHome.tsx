@@ -251,6 +251,7 @@ export function NetflixMembersHome({
           </div>
 
           {/* New Lessons */}
+          <div id="community-section">
           {newLessons.length > 0 && (
             <NetflixCarousel title="Adicionados Recentemente" showSeeAll>
               {newLessons.map(lesson => (
@@ -268,6 +269,7 @@ export function NetflixMembersHome({
               ))}
             </NetflixCarousel>
           )}
+          </div>
         </div>
       </main>
 
