@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from "@/components/ui/button";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence, useAnimationControls } from 'framer-motion';
@@ -14,28 +13,41 @@ interface TwoFactorVerificationProps {
   skipInitialSend?: boolean;
 }
 
+// Check icon component
+const CheckIcon = ({ size = 16, strokeWidth = 3, ...props }: { size?: number; strokeWidth?: number; [key: string]: any }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={strokeWidth}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M20 6 9 17l-5-5" />
+  </svg>
+);
+
 // Success animation component
-const OTPSuccess = ({ isMemberArea }: { isMemberArea: boolean }) => {
+const OTPSuccess = () => {
   return (
-    <div className="flex flex-col items-center justify-center gap-4 w-full py-8">
+    <div className="flex items-center justify-center gap-4 w-full py-8">
       <motion.div
         initial={{ opacity: 0, scale: 0.5 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.2, type: "spring", stiffness: 500, damping: 30 }}
-        className="w-16 h-16 flex items-center justify-center rounded-full"
-        style={{
-          backgroundColor: isMemberArea ? 'hsl(94, 55%, 45%)' : 'hsl(var(--checkout-green))',
-          boxShadow: isMemberArea ? '0 0 30px hsla(94, 55%, 45%, 0.4)' : undefined
-        }}
+        transition={{ delay: 0.3, type: "spring", stiffness: 500, damping: 30 }}
+        className="w-16 h-16 bg-green-500 ring-4 ring-green-500/20 text-white flex items-center justify-center rounded-full"
       >
-        <CheckCircle2 className="w-8 h-8 text-white" />
+        <CheckIcon size={32} strokeWidth={3} />
       </motion.div>
       <motion.p
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, x: -10 }}
+        animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.4, duration: 0.4 }}
-        className="font-semibold text-lg"
-        style={{ color: isMemberArea ? 'hsl(94, 55%, 50%)' : 'hsl(var(--checkout-green))' }}
+        className="text-green-500 font-semibold text-lg"
       >
         Código Verificado!
       </motion.p>
@@ -43,7 +55,22 @@ const OTPSuccess = ({ isMemberArea }: { isMemberArea: boolean }) => {
   );
 };
 
-// Single OTP input box component
+// Error message component
+const OTPError = () => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.2 }}
+      className="text-center text-red-500 font-medium mt-2 absolute -bottom-8 w-full text-sm"
+    >
+      Código inválido. Tente novamente.
+    </motion.div>
+  );
+};
+
+// Single OTP input box component with animations
 const OTPInputBox = ({ 
   index, 
   value, 
@@ -51,8 +78,8 @@ const OTPInputBox = ({
   onKeyDown, 
   onPaste,
   state, 
-  isMemberArea,
-  disabled 
+  disabled,
+  totalInputs = 6
 }: { 
   index: number; 
   value: string;
@@ -60,26 +87,25 @@ const OTPInputBox = ({
   onKeyDown: (index: number, e: React.KeyboardEvent<HTMLInputElement>) => void;
   onPaste: (e: React.ClipboardEvent<HTMLInputElement>) => void;
   state: 'idle' | 'error' | 'success' | 'loading';
-  isMemberArea: boolean;
   disabled: boolean;
+  totalInputs?: number;
 }) => {
   const animationControls = useAnimationControls();
-  const inputRef = useRef<HTMLInputElement>(null);
-
   useEffect(() => {
     animationControls.start({
       opacity: 1,
       y: 0,
-      transition: { type: "spring", stiffness: 700, damping: 20, delay: index * 0.05 }
+      transition: { type: "spring" as const, stiffness: 700, damping: 20, delay: index * 0.05 },
     });
-  }, [animationControls, index]);
+    return () => animationControls.stop();
+  }, []);
 
   const handleFocus = () => {
-    animationControls.start({ y: -3, transition: { type: "spring", stiffness: 700, damping: 20 } });
+    animationControls.start({ y: -5, transition: { type: "spring" as const, stiffness: 700, damping: 20 } });
   };
 
   const handleBlur = () => {
-    animationControls.start({ y: 0, transition: { type: "spring", stiffness: 700, damping: 20 } });
+    animationControls.start({ y: 0, transition: { type: "spring" as const, stiffness: 700, damping: 20 } });
   };
 
   const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -90,19 +116,23 @@ const OTPInputBox = ({
   };
 
   const getBorderColor = () => {
-    if (state === 'error') return isMemberArea ? 'hsl(0, 70%, 50%)' : 'hsl(var(--destructive))';
-    if (state === 'success') return isMemberArea ? 'hsl(94, 55%, 50%)' : 'hsl(var(--checkout-green))';
-    return isMemberArea ? 'hsl(30, 10%, 30%)' : 'hsl(var(--border))';
+    if (state === 'error') return 'ring-red-400';
+    if (state === 'success') return 'ring-green-500';
+    return 'ring-border focus-within:ring-muted-foreground';
+  };
+
+  const getBackgroundColor = () => {
+    if (state === 'success') return 'bg-green-500/5';
+    return 'bg-card';
   };
 
   return (
     <motion.div
+      className={`w-12 h-14 md:w-14 md:h-16 rounded-xl ring-2 ${getBorderColor()} ${getBackgroundColor()} overflow-hidden transition-all duration-300`}
       initial={{ opacity: 0, y: 10 }}
       animate={animationControls}
-      className="relative"
     >
       <input
-        ref={inputRef}
         id={`otp-input-${index}`}
         type="text"
         inputMode="numeric"
@@ -113,16 +143,8 @@ const OTPInputBox = ({
         onPaste={onPaste}
         onFocus={handleFocus}
         onBlur={handleBlur}
+        className="w-full h-full text-center text-2xl md:text-3xl font-semibold outline-none caret-foreground bg-transparent text-foreground"
         disabled={disabled || state === 'success'}
-        className="w-12 h-14 md:w-14 md:h-16 text-center text-2xl md:text-3xl font-bold rounded-xl outline-none transition-all duration-200 focus:ring-2"
-        style={{
-          backgroundColor: isMemberArea ? 'hsl(30, 15%, 18%)' : 'hsl(var(--background))',
-          borderWidth: '2px',
-          borderStyle: 'solid',
-          borderColor: getBorderColor(),
-          color: isMemberArea ? 'hsl(40, 20%, 95%)' : 'white',
-          boxShadow: state === 'success' ? `0 0 15px ${isMemberArea ? 'hsla(94, 55%, 50%, 0.3)' : 'hsla(94, 55%, 55%, 0.3)'}` : undefined
-        }}
       />
     </motion.div>
   );
@@ -145,7 +167,6 @@ const TwoFactorVerification = ({
   const animationControls = useAnimationControls();
   const initialSendRef = useRef(false);
 
-  const isMemberArea = context === 'member_area_login';
   const timerKey = `2fa_timer_${context}_${email}`;
 
   const getInitialTimeLeft = () => {
@@ -156,10 +177,11 @@ const TwoFactorVerification = ({
       const remaining = savedTime - elapsed;
       if (remaining > 0) return remaining;
     }
-    return 300;
+    return 60;
   };
 
   const [timeLeft, setTimeLeft] = useState(getInitialTimeLeft);
+  const [isResendDisabled, setIsResendDisabled] = useState(true);
 
   const sendVerificationCode = useCallback(async () => {
     if (resendLoading) return;
@@ -191,7 +213,8 @@ const TwoFactorVerification = ({
       setCodeAlreadySent(true);
       setInitialSendComplete(true);
       toast({ title: "Código enviado!", description: "Verifique seu email para o código de 6 dígitos." });
-      setTimeLeft(300);
+      setTimeLeft(60);
+      setIsResendDisabled(true);
     } catch (error) {
       toast({ title: "Erro", description: "Erro ao enviar código. Tente novamente.", variant: "destructive" });
     } finally {
@@ -212,11 +235,27 @@ const TwoFactorVerification = ({
     }
   }, [skipInitialSend, initialSendComplete, context, sendVerificationCode]);
 
+  // Countdown timer
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (isResendDisabled && timeLeft > 0) {
+      timer = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            setIsResendDisabled(false);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [isResendDisabled, timeLeft]);
+
+  // Save timer state
   useEffect(() => {
     if (timeLeft > 0) {
       sessionStorage.setItem(timerKey, JSON.stringify({ timeLeft, timestamp: Date.now() }));
-      const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
-      return () => clearTimeout(timer);
     } else {
       sessionStorage.removeItem(timerKey);
     }
@@ -315,8 +354,8 @@ const TwoFactorVerification = ({
     } catch (error: any) {
       setState('error');
       await animationControls.start({
-        x: [0, 10, -10, 10, -10, 0],
-        transition: { duration: 0.4 }
+        x: [0, 5, -5, 5, -5, 0],
+        transition: { duration: 0.3 }
       });
       toast({
         title: "Erro na verificação",
@@ -336,10 +375,8 @@ const TwoFactorVerification = ({
     onBack();
   };
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  const handleResend = () => {
+    sendVerificationCode();
   };
 
   const getContextTitle = () => {
@@ -349,126 +386,110 @@ const TwoFactorVerification = ({
       case 'password_change': return 'Verificação de Alteração de Senha';
       case 'disable_2fa': return 'Confirmação para Desativar 2FA';
       case 'member_area_login': return 'Verificação de Acesso';
-      default: return 'Verificação de Segurança';
+      default: return 'Digite o Código de Verificação';
     }
   };
 
+  // Logo component
+  const LogoIcon = () => (
+    <div className="w-16 h-16 bg-foreground rounded-full flex items-center justify-center">
+      <div className="flex space-x-1">
+        <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="w-full max-w-md">
-      <AnimatePresence mode="wait">
-        {state === 'success' ? (
-          <motion.div
-            key="success"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.3 }}
-          >
-            <OTPSuccess isMemberArea={isMemberArea} />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="form"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="space-y-6"
-          >
-            {/* Title */}
-            <div className="text-center">
-              <h2 className="text-xl font-bold mb-2" style={{ color: isMemberArea ? 'hsl(40, 20%, 95%)' : 'white' }}>
-                {getContextTitle()}
-              </h2>
-              <p className="text-sm" style={{ color: isMemberArea ? 'hsl(30, 10%, 60%)' : 'hsl(var(--muted-foreground))' }}>
-                {codeAlreadySent ? "Digite o código de 6 dígitos enviado para" : "Enviando código para"}
-              </p>
-              <p className="font-medium mt-1" style={{ color: isMemberArea ? 'hsl(94, 55%, 50%)' : 'hsl(var(--checkout-green))' }}>
-                {email}
-              </p>
-            </div>
+    <div className="rounded-3xl p-6 md:p-8 w-full max-w-sm relative overflow-hidden bg-card border border-border shadow-lg">
+      <div className="relative z-10">
+        {/* Logo */}
+        <div className="flex justify-center mb-6">
+          <LogoIcon />
+        </div>
 
-            {/* OTP Input */}
-            <motion.div 
-              animate={animationControls}
-              className="flex items-center justify-center gap-2 md:gap-3"
+        {/* Title */}
+        <h1 className="text-xl md:text-2xl font-semibold text-center text-foreground mb-2">
+          {state === "success" ? "Verificação Concluída!" : getContextTitle()}
+        </h1>
+
+        <AnimatePresence mode="wait">
+          {state === "success" ? (
+            <motion.div
+              key="success"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+              className="flex items-center justify-center"
+              style={{ height: "180px" }}
             >
-              {code.map((digit, index) => (
-                <OTPInputBox
-                  key={index}
-                  index={index}
-                  value={digit}
-                  onChange={handleCodeChange}
-                  onKeyDown={handleKeyDown}
-                  onPaste={handlePaste}
-                  state={state}
-                  isMemberArea={isMemberArea}
-                  disabled={loading}
-                />
-              ))}
+              <OTPSuccess />
             </motion.div>
+          ) : (
+            <motion.div
+              key="form"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              {/* Description */}
+              <p className="text-center text-muted-foreground mt-2 mb-6 text-sm">
+                {codeAlreadySent ? "Enviamos um código de 6 dígitos para" : "Enviando código para"}
+                <br />
+                <span className="font-medium text-foreground">{email}</span>
+              </p>
 
-            {/* Error message */}
-            <AnimatePresence>
-              {state === 'error' && (
-                <motion.p
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="text-center text-sm"
-                  style={{ color: isMemberArea ? 'hsl(0, 70%, 55%)' : 'hsl(var(--destructive))' }}
-                >
-                  Código inválido. Tente novamente.
-                </motion.p>
-              )}
-            </AnimatePresence>
-
-            {/* Timer */}
-            <div className="text-center text-sm" style={{ color: isMemberArea ? 'hsl(30, 10%, 55%)' : 'hsl(var(--muted-foreground))' }}>
-              {timeLeft > 0 ? (
-                <p>Código expira em: <span className="font-mono font-medium">{formatTime(timeLeft)}</span></p>
-              ) : (
-                <p style={{ color: 'hsl(var(--destructive))' }}>Código expirado</p>
-              )}
-            </div>
-
-            {/* Loading indicator */}
-            {loading && (
-              <div className="flex justify-center">
-                <LoadingSpinner size="sm" />
+              {/* OTP Input Area */}
+              <div className="flex flex-col items-center justify-center gap-2 mb-8 relative">
+                <motion.div animate={animationControls} className="flex items-center justify-center gap-2 md:gap-3">
+                  {code.map((digit, index) => (
+                    <OTPInputBox
+                      key={`input-${index}`}
+                      index={index}
+                      value={digit}
+                      onChange={handleCodeChange}
+                      onKeyDown={handleKeyDown}
+                      onPaste={handlePaste}
+                      state={state}
+                      disabled={loading}
+                    />
+                  ))}
+                </motion.div>
+                <AnimatePresence>{state === "error" && <OTPError />}</AnimatePresence>
               </div>
-            )}
 
-            {/* Actions */}
-            <div className="space-y-3">
-              <div className="text-center text-sm" style={{ color: isMemberArea ? 'hsl(30, 10%, 55%)' : 'hsl(var(--muted-foreground))' }}>
-                <span>Não recebeu o código? </span>
-                {timeLeft > 240 ? (
-                  <span>Reenviar em {formatTime(timeLeft - 240)}</span>
+              {/* Resend Link */}
+              <div className="text-center text-sm mb-6">
+                <span className="text-muted-foreground">Não recebeu o código? </span>
+                {isResendDisabled ? (
+                  <span className="text-muted-foreground/70">Reenviar em {timeLeft}s</span>
                 ) : (
                   <button
-                    onClick={sendVerificationCode}
+                    onClick={handleResend}
                     disabled={resendLoading}
-                    className="font-medium underline hover:no-underline transition-all"
-                    style={{ color: isMemberArea ? 'hsl(94, 55%, 50%)' : 'hsl(var(--checkout-green))' }}
+                    className="font-medium text-foreground hover:underline focus:outline-none focus:ring-2 focus:ring-ring rounded disabled:opacity-50"
                   >
                     {resendLoading ? 'Enviando...' : 'Clique para reenviar'}
                   </button>
                 )}
               </div>
 
+              {/* Back button */}
               <Button 
                 onClick={handleBackClick} 
-                variant="ghost" 
+                variant="outline" 
                 className="w-full"
-                style={isMemberArea ? { color: 'hsl(30, 10%, 55%)' } : {}}
+                disabled={loading}
               >
-                Cancelar
+                Voltar
               </Button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 };
