@@ -72,18 +72,18 @@ export const useMembersTheme = () => {
   return context;
 };
 
-// Theme color tokens
+// Theme color tokens - matching login page dark theme
 export const membersThemeColors = {
   dark: {
-    background: 'hsl(30 20% 12%)',
-    backgroundGradient: 'radial-gradient(ellipse 80% 50% at 50% 0%, hsl(30 30% 25% / 0.4) 0%, transparent 60%)',
-    text: 'hsl(40 20% 95%)',
-    textMuted: 'hsl(30 10% 60%)',
-    surface: 'hsl(30 15% 16%)',
-    surfaceHover: 'hsl(30 15% 20%)',
-    border: 'hsl(30 20% 25%)',
-    accent: 'hsl(35 90% 55%)',
-    accentMuted: 'hsl(35 60% 35%)',
+    background: '#000000', // Pure black like login
+    backgroundGradient: 'radial-gradient(ellipse 80% 50% at 50% 0%, hsl(0 0% 12% / 0.6) 0%, transparent 60%)',
+    text: '#ffffff',
+    textMuted: 'hsl(0 0% 64%)', // zinc-400
+    surface: 'hsl(0 0% 4%)', // zinc-950
+    surfaceHover: 'hsl(0 0% 9%)', // zinc-900
+    border: 'hsl(0 0% 15%)', // zinc-800
+    accent: 'hsl(0 0% 64%)', // zinc-400
+    accentMuted: 'hsl(0 0% 27%)', // zinc-700
   },
   light: {
     background: 'hsl(40 30% 96%)',
