@@ -84,18 +84,13 @@ const Auth = () => {
   }, [mode, userTypeParam]);
 
   useEffect(() => {
-    // Não redirecionar se estiver em processo de 2FA (já fez login mas precisa verificar)
-    if (currentView === '2fa-verification' || pending2FAData) {
-      return;
-    }
-    
     if (user) {
       const userType = localStorage.getItem('userType') || 'business';
       const redirectPath = userType === 'customer' ? '/meus-acessos' : '/vendedor';
       
       navigate(redirectPath, { replace: true });
     }
-  }, [user, navigate, currentView, pending2FAData]);
+  }, [user, navigate]);
 
   const handleUserTypeSelect = (type: 'customer' | 'seller' | null) => {
     setSelectedUserType(type);
@@ -146,32 +141,14 @@ const Auth = () => {
         return;
       }
 
-      // Login bem-sucedido - verificar se precisa de 2FA
+      // Login bem-sucedido - registrar dispositivo (sem 2FA bloqueante para evitar problemas)
       const { data: { user: loggedUser } } = await supabase.auth.getUser();
       
       if (loggedUser) {
-        const check2FA = await checkLogin2FARequired(loggedUser);
-        
-        if (check2FA.requires2FA && check2FA.reason) {
-          console.log('🔐 2FA necessário:', check2FA.reason);
-          
-          // IMPORTANTE: Definir estados ANTES do logout para evitar race condition
-          setPending2FAData({
-            email: check2FA.userEmail,
-            userId: check2FA.userId,
-            password: password, // Guardar para relogar depois
-            reason: check2FA.reason
-          });
-          setCurrentView('2fa-verification');
-          setLoading(false);
-          
-          // Fazer logout DEPOIS de definir os estados
-          await supabase.auth.signOut();
-          return;
-        }
-        
         // Registrar login bem-sucedido
         await registerSuccessfulLogin(loggedUser.id);
+        
+        // O redirecionamento acontece automaticamente pelo useEffect que monitora o user
       }
     } catch (error) {
       setErrorField("Ocorreu um erro. Tente novamente.");
