@@ -97,9 +97,19 @@ export default {
 					success: 'hsl(var(--admin-success))',
 					warning: 'hsl(var(--admin-warning))',
 					error: 'hsl(var(--admin-error))',
-					pending: 'hsl(var(--admin-pending))'
+				pending: 'hsl(var(--admin-pending))'
 				},
-			},
+				netflix: {
+					bg: 'hsl(var(--netflix-bg))',
+					surface: 'hsl(var(--netflix-surface))',
+					card: 'hsl(var(--netflix-card))',
+					text: 'hsl(var(--netflix-text))',
+					'text-muted': 'hsl(var(--netflix-text-muted))',
+					accent: 'hsl(var(--netflix-accent))',
+					green: 'hsl(var(--netflix-green))',
+					border: 'hsl(var(--netflix-border))',
+					'card-hover': 'hsl(var(--netflix-card-hover))',
+				},
 			borderRadius: {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',

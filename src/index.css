@@ -115,6 +115,20 @@ All colors MUST be HSL.
     /* Shadows */
     --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.06);
     --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
+    
+    /* Netflix-style Member Area Tokens */
+    --netflix-bg: 220 15% 8%;
+    --netflix-surface: 220 12% 12%;
+    --netflix-card: 220 10% 16%;
+    --netflix-text: 0 0% 95%;
+    --netflix-text-muted: 0 0% 65%;
+    --netflix-accent: 0 70% 55%;
+    --netflix-green: 94 55% 55%;
+    --netflix-gradient-start: 220 20% 6%;
+    --netflix-gradient-end: 220 15% 10%;
+    --netflix-hero-overlay: linear-gradient(180deg, transparent 0%, rgba(15, 15, 20, 0.4) 50%, rgba(15, 15, 20, 0.95) 100%);
+    --netflix-card-hover: 220 12% 20%;
+    --netflix-border: 220 10% 22%;
   }
 
   .dark {
