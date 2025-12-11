@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { LogIn, Mail, BookOpen, Shield } from 'lucide-react';
+import { LogIn, Mail, BookOpen, Shield, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useCustomToast } from '@/hooks/useCustomToast';
 import { useDebounced } from '@/hooks/useDebounced';
@@ -75,6 +75,33 @@ const trustDevice = (email: string): void => {
   localStorage.setItem('member_area_trusted_devices', JSON.stringify(devices));
 };
 
+// Converter hex para HSL
+const hexToHsl = (hex: string): { h: number; s: number; l: number } | null => {
+  if (!hex || !hex.startsWith('#')) return null;
+  
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  let h = 0;
+  let s = 0;
+  const l = (max + min) / 2;
+  
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+      case g: h = ((b - r) / d + 2) / 6; break;
+      case b: h = ((r - g) / d + 4) / 6; break;
+    }
+  }
+  
+  return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+};
+
 export default function ModernMembersLogin() {
   const { id: memberAreaId } = useParams();
   const navigate = useNavigate();
@@ -89,6 +116,12 @@ export default function ModernMembersLogin() {
   const [pendingEmail, setPendingEmail] = useState('');
   const [is2FAForOwner, setIs2FAForOwner] = useState(false);
   const id = useId();
+  
+  // Cores dinâmicas baseadas na área de membros
+  const primaryColor = memberArea?.primary_color || '#10b981';
+  const accentColor = memberArea?.accent_color || '#6366f1';
+  const primaryHsl = hexToHsl(primaryColor);
+  const accentHsl = hexToHsl(accentColor);
   
   useEffect(() => {
     console.log('🎨 ModernMembersLogin - Current theme:', theme);
@@ -276,39 +309,85 @@ export default function ModernMembersLogin() {
     debouncedAccess(email.trim());
   };
 
+  // Estilo dinâmico do gradiente baseado nas cores da área
+  const gradientStyle = {
+    background: `radial-gradient(ellipse at top left, ${primaryColor}15 0%, transparent 50%), 
+                 radial-gradient(ellipse at bottom right, ${accentColor}15 0%, transparent 50%),
+                 radial-gradient(ellipse at center, ${primaryColor}08 0%, transparent 70%)`,
+  };
+
   // Mostrar tela de 2FA se necessário
   if (requires2FA && pendingEmail) {
     return (
-      <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
+      <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-4 relative overflow-hidden">
+        {/* Background com gradiente dinâmico */}
+        <div className="absolute inset-0" style={gradientStyle} />
+        
+        {/* Orbes animados */}
+        <motion.div
+          className="absolute top-20 left-20 w-72 h-72 rounded-full blur-3xl opacity-20"
+          style={{ backgroundColor: primaryColor }}
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.2, 0.3, 0.2],
+          }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute bottom-20 right-20 w-96 h-96 rounded-full blur-3xl opacity-15"
+          style={{ backgroundColor: accentColor }}
+          animate={{
+            scale: [1.2, 1, 1.2],
+            opacity: [0.15, 0.25, 0.15],
+          }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+        />
+
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="mb-8"
+          className="mb-8 relative z-10"
         >
           <img 
             src={kambafyLogo} 
             alt="Kambafy" 
-            className="h-20 w-auto opacity-60"
+            className="h-16 w-auto opacity-50"
           />
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, y: 20, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="w-full max-w-md"
+          className="w-full max-w-md relative z-10"
         >
-          <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6 shadow-2xl">
-            <div className="flex flex-col items-center gap-2 mb-6">
-              <div className="flex size-11 shrink-0 items-center justify-center rounded-full border border-emerald-500/50 bg-emerald-500/10">
-                <Shield className="h-6 w-6 text-emerald-400" />
-              </div>
+          <div 
+            className="backdrop-blur-xl border rounded-2xl p-8 shadow-2xl"
+            style={{
+              backgroundColor: 'rgba(24, 24, 27, 0.8)',
+              borderColor: `${primaryColor}30`,
+              boxShadow: `0 25px 50px -12px ${primaryColor}20`,
+            }}
+          >
+            <div className="flex flex-col items-center gap-3 mb-8">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
+                className="flex size-14 shrink-0 items-center justify-center rounded-full"
+                style={{
+                  background: `linear-gradient(135deg, ${primaryColor}30, ${accentColor}30)`,
+                  border: `1px solid ${primaryColor}50`,
+                }}
+              >
+                <Shield className="h-7 w-7" style={{ color: primaryColor }} />
+              </motion.div>
               <div className="text-center">
-                <h1 className="text-lg font-semibold tracking-tight text-white">
+                <h1 className="text-xl font-bold tracking-tight text-white">
                   Verificação de Segurança
                 </h1>
-                <p className="text-sm text-zinc-400 mt-1">
+                <p className="text-sm text-zinc-400 mt-2 max-w-xs">
                   {is2FAForOwner 
                     ? "Como dono desta área, você precisa verificar sua identidade"
                     : "Detectamos um novo navegador. Por segurança, confirme sua identidade"
@@ -322,7 +401,7 @@ export default function ModernMembersLogin() {
               context="member_area_login"
               onVerificationSuccess={() => {
                 setRequires2FA(false);
-                completeLogin(pendingEmail, true); // Marcar dispositivo como confiável
+                completeLogin(pendingEmail, true);
               }}
               onBack={() => {
                 setRequires2FA(false);
@@ -337,96 +416,189 @@ export default function ModernMembersLogin() {
   }
 
   return (
-    <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-4 relative overflow-hidden">
+      {/* Background com gradiente dinâmico */}
+      <div className="absolute inset-0" style={gradientStyle} />
+      
+      {/* Grid pattern sutil */}
+      <div 
+        className="absolute inset-0 opacity-[0.02]"
+        style={{
+          backgroundImage: `linear-gradient(${primaryColor} 1px, transparent 1px), linear-gradient(90deg, ${primaryColor} 1px, transparent 1px)`,
+          backgroundSize: '50px 50px',
+        }}
+      />
+      
+      {/* Orbes animados */}
+      <motion.div
+        className="absolute top-10 left-10 w-64 h-64 rounded-full blur-3xl"
+        style={{ backgroundColor: primaryColor, opacity: 0.15 }}
+        animate={{
+          x: [0, 30, 0],
+          y: [0, -20, 0],
+          scale: [1, 1.1, 1],
+        }}
+        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+      />
+      <motion.div
+        className="absolute bottom-10 right-10 w-80 h-80 rounded-full blur-3xl"
+        style={{ backgroundColor: accentColor, opacity: 0.12 }}
+        animate={{
+          x: [0, -30, 0],
+          y: [0, 20, 0],
+          scale: [1.1, 1, 1.1],
+        }}
+        transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+      />
+      <motion.div
+        className="absolute top-1/2 left-1/4 w-48 h-48 rounded-full blur-3xl"
+        style={{ backgroundColor: primaryColor, opacity: 0.08 }}
+        animate={{
+          scale: [1, 1.3, 1],
+          opacity: [0.08, 0.12, 0.08],
+        }}
+        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+      />
+
       {/* Logo do Kambafy */}
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: -30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="mb-8"
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="mb-10 relative z-10"
       >
         <img 
           src={kambafyLogo} 
           alt="Kambafy" 
-          className="h-20 w-auto opacity-60"
+          className="h-14 w-auto opacity-40 hover:opacity-60 transition-opacity duration-300"
         />
       </motion.div>
 
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-        className="w-full max-w-sm"
+        initial={{ opacity: 0, y: 30, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.6, delay: 0.15, ease: "easeOut" }}
+        className="w-full max-w-sm relative z-10"
       >
-        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6 shadow-2xl">
-          <div className="flex flex-col items-center gap-2 mb-6">
+        {/* Card com glassmorphism */}
+        <div 
+          className="backdrop-blur-xl border rounded-2xl p-8 shadow-2xl relative overflow-hidden"
+          style={{
+            backgroundColor: 'rgba(24, 24, 27, 0.75)',
+            borderColor: `${primaryColor}25`,
+            boxShadow: `0 25px 50px -12px ${primaryColor}15, 0 0 0 1px ${primaryColor}10`,
+          }}
+        >
+          {/* Brilho sutil no topo do card */}
+          <div 
+            className="absolute top-0 left-0 right-0 h-px"
+            style={{
+              background: `linear-gradient(90deg, transparent, ${primaryColor}50, transparent)`,
+            }}
+          />
+          
+          <div className="flex flex-col items-center gap-3 mb-8">
             <motion.div
-              initial={{ scale: 0.8, rotate: -10 }}
+              initial={{ scale: 0, rotate: -180 }}
               animate={{ scale: 1, rotate: 0 }}
-              transition={{ delay: 0.2, type: "spring" }}
-              className="flex size-11 shrink-0 items-center justify-center rounded-full border border-zinc-700 overflow-hidden"
-              aria-hidden="true"
+              transition={{ delay: 0.3, type: "spring", stiffness: 200, damping: 15 }}
+              className="relative"
             >
-              {memberArea?.login_logo_url || memberArea?.logo_url ? (
-                <img 
-                  src={memberArea.login_logo_url || memberArea.logo_url} 
-                  alt="Logo"
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <BookOpen className="h-6 w-6 text-zinc-300" />
-              )}
+              {/* Glow atrás do logo */}
+              <div 
+                className="absolute inset-0 rounded-full blur-xl opacity-50"
+                style={{ backgroundColor: primaryColor }}
+              />
+              <div 
+                className="relative flex size-16 shrink-0 items-center justify-center rounded-full overflow-hidden"
+                style={{
+                  background: memberArea?.login_logo_url || memberArea?.logo_url 
+                    ? 'transparent' 
+                    : `linear-gradient(135deg, ${primaryColor}40, ${accentColor}40)`,
+                  border: `2px solid ${primaryColor}40`,
+                  boxShadow: `0 0 20px ${primaryColor}30`,
+                }}
+              >
+                {memberArea?.login_logo_url || memberArea?.logo_url ? (
+                  <img 
+                    src={memberArea.login_logo_url || memberArea.logo_url} 
+                    alt="Logo"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <BookOpen className="h-7 w-7" style={{ color: primaryColor }} />
+                )}
+              </div>
             </motion.div>
-            <div className="text-center">
-              <h1 className="text-lg font-semibold tracking-tight text-white">
+            
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="text-center"
+            >
+              <h1 className="text-xl font-bold tracking-tight text-white">
                 {memberArea?.name || 'Área de Membros'}
               </h1>
-              <p className="text-sm text-zinc-400 mt-1">
-                Digite seu email para acessar o conteúdo
+              <p className="text-sm text-zinc-400 mt-2">
+                Digite seu email para acessar o conteúdo exclusivo
               </p>
-            </div>
+            </motion.div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <motion.div 
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
+              transition={{ delay: 0.45 }}
               className="space-y-2"
             >
-              <Label htmlFor={`${id}-email`} className="text-zinc-200">Email de Acesso</Label>
-              <Input
-                id={`${id}-email`}
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="seu@email.com"
-                className="bg-zinc-900 border-zinc-700 text-white placeholder:text-zinc-500 focus-visible:border-zinc-500"
-                required
-                disabled={isSubmitting}
-              />
+              <Label htmlFor={`${id}-email`} className="text-zinc-300 text-sm font-medium">
+                Email de Acesso
+              </Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+                <Input
+                  id={`${id}-email`}
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="seu@email.com"
+                  className="pl-10 bg-zinc-900/50 border-zinc-700/50 text-white placeholder:text-zinc-500 focus-visible:border-zinc-500 focus-visible:ring-1 h-12 rounded-xl transition-all duration-200"
+                  style={{
+                    '--tw-ring-color': `${primaryColor}50`,
+                  } as React.CSSProperties}
+                  required
+                  disabled={isSubmitting}
+                />
+              </div>
             </motion.div>
             
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
+              transition={{ delay: 0.5 }}
             >
               <Button 
                 type="submit" 
-                className="w-full bg-white text-black hover:bg-zinc-100 font-medium disabled:bg-zinc-700 disabled:text-zinc-300" 
+                className="w-full h-12 font-semibold text-base rounded-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                style={{
+                  background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})`,
+                  color: 'white',
+                  boxShadow: `0 10px 30px -10px ${primaryColor}60`,
+                }}
                 disabled={isSubmitting || !email}
               >
                 {isSubmitting ? (
                   <motion.div
                     animate={{ rotate: 360 }}
                     transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    className="w-4 h-4 border-2 border-current border-t-transparent rounded-full mr-2"
+                    className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full mr-2"
                   />
                 ) : (
-                  <Mail className="h-4 w-4 mr-2" />
+                  <Sparkles className="h-5 w-5 mr-2" />
                 )}
-                {isSubmitting ? 'Processando...' : 'Acessar Área'}
+                {isSubmitting ? 'Verificando...' : 'Acessar Conteúdo'}
               </Button>
             </motion.div>
 
@@ -434,15 +606,16 @@ export default function ModernMembersLogin() {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="text-center mt-6 pt-4 border-t border-zinc-800"
+              transition={{ delay: 0.55 }}
+              className="text-center mt-8 pt-6 border-t border-zinc-800/50"
             >
               <p className="text-xs text-zinc-500 mb-2">
                 Precisa acessar o portal de clientes?
               </p>
               <a
                 href="/auth"
-                className="text-sm text-zinc-400 hover:text-zinc-300 transition-colors underline"
+                className="text-sm font-medium transition-colors duration-200 hover:underline"
+                style={{ color: primaryColor }}
               >
                 Clique aqui para fazer login no portal
               </a>
@@ -454,21 +627,22 @@ export default function ModernMembersLogin() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="mt-8 text-center"
+          transition={{ delay: 0.65 }}
+          className="mt-10 text-center"
         >
-          <div className="flex items-center justify-center gap-1 text-xs text-zinc-600">
+          <div className="flex items-center justify-center gap-1.5 text-xs text-zinc-500">
             <span>Plataforma desenvolvida por</span>
             <a 
               href="https://kambafy.com" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="text-zinc-400 hover:text-zinc-300 font-medium transition-colors"
+              className="font-medium transition-colors duration-200"
+              style={{ color: primaryColor }}
             >
               Kambafy
             </a>
           </div>
-          <p className="text-xs text-zinc-700 mt-1">
+          <p className="text-xs text-zinc-600 mt-1">
             Criação e gestão de áreas de membros profissionais
           </p>
         </motion.div>
