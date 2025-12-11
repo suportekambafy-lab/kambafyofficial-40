@@ -176,7 +176,7 @@ export function NetflixHeroBanner({
               <span>{totalModules} Módulos</span>
               <span>·</span>
               <span>{totalLessons} Aulas</span>
-              {featuredLesson?.duration && featuredLesson.duration > 0 && (
+              {featuredLesson?.duration !== undefined && featuredLesson.duration > 0 && (
                 <span className="flex items-center gap-1">
                   <Clock className="w-3 h-3 md:w-3.5 md:h-3.5" />
                   {formatDuration(featuredLesson.duration)}
