@@ -683,3 +683,21 @@ html {
 .carousel-scroll::-webkit-scrollbar {
   display: none;
 }
+
+/* Member Area Netflix-style - Force dark background */
+.netflix-member-area,
+.netflix-member-area body,
+[data-netflix-member-area="true"] {
+  background: hsl(30 20% 12%) !important;
+  color: hsl(40 20% 95%) !important;
+}
+
+/* Override any white backgrounds in member area header */
+.netflix-header {
+  background: transparent !important;
+}
+
+.netflix-header.scrolled {
+  background: hsl(30 15% 8% / 0.95) !important;
+  backdrop-filter: blur(20px);
+}
