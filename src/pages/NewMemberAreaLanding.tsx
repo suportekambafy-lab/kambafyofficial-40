@@ -1,7 +1,6 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Play, Users, Sparkles, Monitor, Smartphone, Shield, Zap, Star, CheckCircle2, Lock, ChevronLeft, ChevronRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ArrowLeft, Play, Users, Monitor, Smartphone, Shield, Zap, ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { useState } from "react";
 
 // Import screenshots
@@ -16,12 +15,12 @@ const NewMemberAreaLanding = () => {
 
   const features = [
     {
-      icon: Sparkles,
+      icon: Monitor,
       title: "Design Premium",
       description: "Interface moderna inspirada nas melhores plataformas de streaming"
     },
     {
-      icon: Monitor,
+      icon: Play,
       title: "Player Avançado",
       description: "Controle de velocidade, qualidade HD e experiência cinematográfica"
     },
@@ -79,96 +78,101 @@ const NewMemberAreaLanding = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 text-white overflow-hidden">
-      {/* Background Effects */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-zinc-900/50 via-transparent to-transparent" />
-      </div>
+    <div className="relative bg-[#111111] text-gray-300 min-h-screen overflow-x-hidden">
+      {/* Background dots pattern - same as landing */}
+      <div className="fixed inset-0 z-0 pointer-events-none opacity-30" style={{
+        backgroundImage: 'radial-gradient(circle, rgba(129, 231, 106, 0.3) 1px, transparent 1px)',
+        backgroundSize: '25px 25px'
+      }} />
+      <div className="fixed inset-0 z-1 pointer-events-none" style={{
+        background: 'linear-gradient(to bottom, transparent 0%, #111111 90%), radial-gradient(ellipse at center, transparent 40%, #111111 95%)'
+      }} />
 
       {/* Header */}
-      <header className="relative z-10 border-b border-white/10 backdrop-blur-xl bg-zinc-900/50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+      <header className="w-full sticky top-0 z-30 backdrop-blur-md border-b border-gray-800/50 bg-[#111111]/80">
+        <nav className="flex justify-between items-center max-w-screen-xl mx-auto h-[70px] px-6 md:px-10 lg:px-16">
           <button 
             onClick={() => navigate('/')}
-            className="flex items-center gap-2 text-white/70 hover:text-white transition-colors"
+            className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
-            <span className="hidden sm:inline">Voltar</span>
+            <span className="hidden sm:inline text-sm">Voltar</span>
           </button>
           
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-lg">K</span>
-            </div>
-            <span className="font-bold text-xl">Kambafy</span>
+          <div className="flex items-center">
+            <img 
+              src="/kambafy-logo-white.png" 
+              alt="Kambafy" 
+              className="h-10 w-auto"
+            />
           </div>
           
-          <Button 
+          <motion.button
             onClick={() => navigate('/auth')}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground"
+            className="bg-[#81e76a] text-[#111111] px-4 py-2 rounded-md text-sm font-semibold hover:bg-opacity-90 transition-colors duration-200"
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
           >
             Começar Agora
-          </Button>
-        </div>
+          </motion.button>
+        </nav>
       </header>
 
       {/* Hero Section */}
-      <section className="relative z-10 py-16 md:py-24">
-        <div className="container mx-auto px-4">
+      <section className="relative z-10 pt-20 pb-12 md:pt-28 md:pb-16">
+        <div className="max-w-screen-xl mx-auto px-6 md:px-10 lg:px-16">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             className="text-center max-w-4xl mx-auto"
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/20 border border-primary/30 rounded-full mb-6">
-              <Sparkles className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium text-primary">Novo Visual 2025</span>
+            <div className="inline-block bg-[#1a1a1a] border border-gray-700 text-[#81e76a] px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium mb-6">
+              Novo Visual 2025
             </div>
             
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
-              A <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-orange-400 to-primary">Nova Área</span> de Membros
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
+              A Nova <span className="text-[#81e76a]">Área de Membros</span>
             </h1>
             
-            <p className="text-lg md:text-xl text-zinc-400 mb-8 max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg lg:text-xl text-gray-400 max-w-2xl mx-auto mb-8">
               Uma experiência premium para seus alunos. Design cinematográfico, player profissional e interface intuitiva que impressiona.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button 
-                size="lg"
+              <motion.button 
                 onClick={() => navigate('/auth')}
-                className="bg-white text-black hover:bg-white/90 gap-2 text-lg px-8 py-6"
+                className="bg-[#81e76a] text-[#111111] px-8 py-3 rounded-md text-base font-semibold hover:bg-opacity-90 transition-colors inline-flex items-center justify-center gap-2"
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
               >
                 <Play className="w-5 h-5 fill-current" />
                 Criar Minha Área
-              </Button>
-              <Button 
-                size="lg"
-                variant="outline"
-                className="border-white/20 text-white hover:bg-white/10 gap-2 text-lg px-8 py-6"
+              </motion.button>
+              <motion.button 
+                onClick={() => navigate('/auth')}
+                className="border border-gray-600 text-white px-8 py-3 rounded-md text-base font-medium hover:bg-white/10 transition-colors inline-flex items-center justify-center gap-2"
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
               >
-                <Star className="w-5 h-5" />
                 Ver Demonstração
-              </Button>
+              </motion.button>
             </div>
           </motion.div>
         </div>
       </section>
 
       {/* Screenshots Gallery */}
-      <section className="relative z-10 py-12 md:py-20 overflow-hidden">
-        <div className="container mx-auto px-4">
+      <section className="relative z-10 py-12 md:py-20">
+        <div className="max-w-screen-xl mx-auto px-6 md:px-10 lg:px-16">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="text-center mb-10"
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Visualize a Experiência</h2>
-            <p className="text-zinc-400 max-w-xl mx-auto">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Visualize a Experiência</h2>
+            <p className="text-gray-400 max-w-xl mx-auto">
               Cada detalhe foi pensado para oferecer a melhor experiência de aprendizado
             </p>
           </motion.div>
@@ -179,26 +183,26 @@ const NewMemberAreaLanding = () => {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="max-w-6xl mx-auto relative"
+            className="max-w-5xl mx-auto relative"
           >
             {/* Browser Mockup */}
-            <div className="bg-zinc-800 rounded-xl overflow-hidden shadow-2xl border border-white/10">
+            <div className="bg-[#1a1a1a] rounded-xl overflow-hidden shadow-2xl border border-gray-800">
               {/* Browser Header */}
-              <div className="flex items-center gap-2 px-4 py-3 bg-zinc-900 border-b border-white/10">
+              <div className="flex items-center gap-2 px-4 py-3 bg-[#0a0a0a] border-b border-gray-800">
                 <div className="flex gap-2">
-                  <div className="w-3 h-3 rounded-full bg-red-500" />
-                  <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                  <div className="w-3 h-3 rounded-full bg-green-500" />
+                  <div className="w-3 h-3 rounded-full bg-red-500/80" />
+                  <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
+                  <div className="w-3 h-3 rounded-full bg-green-500/80" />
                 </div>
                 <div className="flex-1 mx-4">
-                  <div className="bg-zinc-700/50 rounded-md px-4 py-1.5 text-sm text-zinc-400 text-center max-w-md mx-auto">
+                  <div className="bg-[#2a2a2a] rounded-md px-4 py-1.5 text-sm text-gray-500 text-center max-w-md mx-auto">
                     membros.kambafy.com/area/seu-curso
                   </div>
                 </div>
               </div>
               
               {/* Screenshot Content */}
-              <div className="relative aspect-[16/9] overflow-hidden bg-zinc-900">
+              <div className="relative aspect-[16/9] overflow-hidden bg-[#0a0a0a]">
                 {screenshots.map((screenshot, index) => (
                   <motion.img
                     key={index}
@@ -219,15 +223,15 @@ const NewMemberAreaLanding = () => {
             {/* Navigation Arrows */}
             <button
               onClick={prevScreenshot}
-              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 md:-translate-x-12 w-12 h-12 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center transition-all border border-white/10"
+              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 md:-translate-x-14 w-10 h-10 md:w-12 md:h-12 bg-[#1a1a1a] hover:bg-[#2a2a2a] rounded-full flex items-center justify-center transition-all border border-gray-700"
             >
-              <ChevronLeft className="w-6 h-6" />
+              <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
             </button>
             <button
               onClick={nextScreenshot}
-              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 md:translate-x-12 w-12 h-12 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center transition-all border border-white/10"
+              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 md:translate-x-14 w-10 h-10 md:w-12 md:h-12 bg-[#1a1a1a] hover:bg-[#2a2a2a] rounded-full flex items-center justify-center transition-all border border-gray-700"
             >
-              <ChevronRight className="w-6 h-6" />
+              <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
             </button>
 
             {/* Screenshot Info */}
@@ -237,8 +241,8 @@ const NewMemberAreaLanding = () => {
               animate={{ opacity: 1, y: 0 }}
               className="text-center mt-6"
             >
-              <h3 className="text-xl font-semibold mb-2">{screenshots[activeScreenshot].title}</h3>
-              <p className="text-zinc-400">{screenshots[activeScreenshot].description}</p>
+              <h3 className="text-xl font-semibold text-white mb-2">{screenshots[activeScreenshot].title}</h3>
+              <p className="text-gray-400">{screenshots[activeScreenshot].description}</p>
             </motion.div>
 
             {/* Dots Navigation */}
@@ -247,10 +251,10 @@ const NewMemberAreaLanding = () => {
                 <button
                   key={index}
                   onClick={() => setActiveScreenshot(index)}
-                  className={`w-2.5 h-2.5 rounded-full transition-all ${
+                  className={`h-2.5 rounded-full transition-all ${
                     activeScreenshot === index 
-                      ? 'bg-primary w-8' 
-                      : 'bg-white/30 hover:bg-white/50'
+                      ? 'bg-[#81e76a] w-8' 
+                      : 'bg-gray-600 hover:bg-gray-500 w-2.5'
                   }`}
                 />
               ))}
@@ -258,7 +262,7 @@ const NewMemberAreaLanding = () => {
           </motion.div>
 
           {/* Thumbnail Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12 max-w-5xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mt-12 max-w-4xl mx-auto">
             {screenshots.map((item, index) => (
               <motion.button
                 key={item.title}
@@ -267,10 +271,10 @@ const NewMemberAreaLanding = () => {
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
                 onClick={() => setActiveScreenshot(index)}
-                className={`text-left overflow-hidden rounded-xl border transition-all ${
+                className={`text-left overflow-hidden rounded-lg border transition-all ${
                   activeScreenshot === index 
-                    ? 'border-primary ring-2 ring-primary/50' 
-                    : 'border-white/10 hover:border-white/30'
+                    ? 'border-[#81e76a] ring-2 ring-[#81e76a]/30' 
+                    : 'border-gray-700 hover:border-gray-600'
                 }`}
               >
                 <div className="aspect-video overflow-hidden">
@@ -280,8 +284,8 @@ const NewMemberAreaLanding = () => {
                     className="w-full h-full object-cover object-top hover:scale-105 transition-transform duration-300"
                   />
                 </div>
-                <div className="p-3 bg-zinc-800/50">
-                  <h3 className="font-medium text-sm">{item.title}</h3>
+                <div className="p-2.5 bg-[#1a1a1a]">
+                  <h3 className="font-medium text-xs text-white">{item.title}</h3>
                 </div>
               </motion.button>
             ))}
@@ -291,22 +295,22 @@ const NewMemberAreaLanding = () => {
 
       {/* Features Grid */}
       <section className="relative z-10 py-16 md:py-24">
-        <div className="container mx-auto px-4">
+        <div className="max-w-screen-xl mx-auto px-6 md:px-10 lg:px-16">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
               Tudo que você precisa
             </h2>
-            <p className="text-zinc-400 max-w-xl mx-auto">
+            <p className="text-gray-400 max-w-xl mx-auto">
               Recursos premium para criar uma experiência de aprendizado única
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 max-w-5xl mx-auto">
             {features.map((feature, index) => (
               <motion.div
                 key={feature.title}
@@ -314,13 +318,13 @@ const NewMemberAreaLanding = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                className="group p-6 bg-gradient-to-br from-white/5 to-transparent rounded-2xl border border-white/10 hover:border-primary/50 transition-all duration-300"
+                className="group p-6 bg-[#1a1a1a] rounded-xl border border-gray-800 hover:border-[#81e76a]/50 transition-all duration-300"
               >
-                <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center mb-4 group-hover:bg-primary/30 transition-colors">
-                  <feature.icon className="w-6 h-6 text-primary" />
+                <div className="w-10 h-10 bg-[#81e76a]/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-[#81e76a]/20 transition-colors">
+                  <feature.icon className="w-5 h-5 text-[#81e76a]" />
                 </div>
-                <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
-                <p className="text-sm text-zinc-400">{feature.description}</p>
+                <h3 className="text-base font-semibold text-white mb-2">{feature.title}</h3>
+                <p className="text-sm text-gray-400">{feature.description}</p>
               </motion.div>
             ))}
           </div>
@@ -328,49 +332,49 @@ const NewMemberAreaLanding = () => {
       </section>
 
       {/* Comparison Section */}
-      <section className="relative z-10 py-16 md:py-24 bg-gradient-to-b from-transparent via-primary/5 to-transparent">
-        <div className="container mx-auto px-4">
+      <section className="relative z-10 py-16 md:py-24">
+        <div className="max-w-screen-xl mx-auto px-6 md:px-10 lg:px-16">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
               Antes vs Depois
             </h2>
-            <p className="text-zinc-400">
+            <p className="text-gray-400">
               A evolução que seus alunos vão adorar
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
             {/* Before */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              className="p-6 bg-zinc-900/50 rounded-2xl border border-zinc-800"
+              className="p-6 bg-[#1a1a1a] rounded-xl border border-gray-800"
             >
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-3 h-3 rounded-full bg-zinc-500" />
-                <span className="text-zinc-500 font-medium">Antes</span>
+                <div className="w-3 h-3 rounded-full bg-gray-500" />
+                <span className="text-gray-500 font-medium">Antes</span>
               </div>
-              <ul className="space-y-3 text-sm text-zinc-500">
-                <li className="flex items-center gap-2">
-                  <span className="w-5 h-5 flex items-center justify-center">✕</span>
+              <ul className="space-y-3 text-sm text-gray-500">
+                <li className="flex items-center gap-3">
+                  <span className="text-red-400">✕</span>
                   Design básico e genérico
                 </li>
-                <li className="flex items-center gap-2">
-                  <span className="w-5 h-5 flex items-center justify-center">✕</span>
+                <li className="flex items-center gap-3">
+                  <span className="text-red-400">✕</span>
                   Player de vídeo simples
                 </li>
-                <li className="flex items-center gap-2">
-                  <span className="w-5 h-5 flex items-center justify-center">✕</span>
+                <li className="flex items-center gap-3">
+                  <span className="text-red-400">✕</span>
                   Navegação confusa
                 </li>
-                <li className="flex items-center gap-2">
-                  <span className="w-5 h-5 flex items-center justify-center">✕</span>
+                <li className="flex items-center gap-3">
+                  <span className="text-red-400">✕</span>
                   Sem personalização
                 </li>
               </ul>
@@ -381,27 +385,27 @@ const NewMemberAreaLanding = () => {
               initial={{ opacity: 0, x: 20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              className="p-6 bg-gradient-to-br from-primary/20 to-transparent rounded-2xl border border-primary/30"
+              className="p-6 bg-[#81e76a]/5 rounded-xl border border-[#81e76a]/30"
             >
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-3 h-3 rounded-full bg-primary" />
-                <span className="text-primary font-medium">Depois</span>
+                <div className="w-3 h-3 rounded-full bg-[#81e76a]" />
+                <span className="text-[#81e76a] font-medium">Depois</span>
               </div>
               <ul className="space-y-3 text-sm text-white">
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-primary" />
+                <li className="flex items-center gap-3">
+                  <Check className="w-4 h-4 text-[#81e76a]" />
                   Design premium estilo Netflix
                 </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-primary" />
+                <li className="flex items-center gap-3">
+                  <Check className="w-4 h-4 text-[#81e76a]" />
                   Player profissional com controles
                 </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-primary" />
+                <li className="flex items-center gap-3">
+                  <Check className="w-4 h-4 text-[#81e76a]" />
                   Navegação intuitiva e fluida
                 </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-primary" />
+                <li className="flex items-center gap-3">
+                  <Check className="w-4 h-4 text-[#81e76a]" />
                   Totalmente personalizável
                 </li>
               </ul>
@@ -411,29 +415,29 @@ const NewMemberAreaLanding = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="relative z-10 py-20 md:py-32">
-        <div className="container mx-auto px-4">
+      <section className="relative z-10 py-16 md:py-24">
+        <div className="max-w-screen-xl mx-auto px-6 md:px-10 lg:px-16">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="max-w-3xl mx-auto text-center bg-gradient-to-br from-primary/20 via-primary/10 to-transparent p-8 md:p-12 rounded-3xl border border-primary/30"
+            className="max-w-2xl mx-auto text-center bg-[#1a1a1a] p-8 md:p-12 rounded-2xl border border-gray-800"
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
               Pronto para impressionar seus alunos?
             </h2>
-            <p className="text-zinc-400 mb-8 max-w-lg mx-auto">
+            <p className="text-gray-400 mb-8 max-w-lg mx-auto">
               Comece agora e transforme a experiência do seu curso com a nova área de membros da Kambafy.
             </p>
-            <Button 
-              size="lg"
+            <motion.button 
               onClick={() => navigate('/auth')}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 text-lg px-8 py-6"
+              className="bg-[#81e76a] text-[#111111] px-8 py-3 rounded-md text-base font-semibold hover:bg-opacity-90 transition-colors"
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
             >
-              <Sparkles className="w-5 h-5" />
               Começar Gratuitamente
-            </Button>
-            <p className="text-xs text-zinc-500 mt-4">
+            </motion.button>
+            <p className="text-xs text-gray-500 mt-4">
               Sem cartão de crédito • Configure em minutos
             </p>
           </motion.div>
@@ -441,15 +445,14 @@ const NewMemberAreaLanding = () => {
       </section>
 
       {/* Footer */}
-      <footer className="relative z-10 border-t border-white/10 py-8">
-        <div className="container mx-auto px-4 text-center">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <div className="w-6 h-6 bg-primary rounded flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">K</span>
-            </div>
-            <span className="font-semibold">Kambafy</span>
-          </div>
-          <p className="text-sm text-zinc-500">
+      <footer className="relative z-10 border-t border-gray-800 py-8">
+        <div className="max-w-screen-xl mx-auto px-6 md:px-10 lg:px-16 text-center">
+          <img 
+            src="/kambafy-logo-white.png" 
+            alt="Kambafy" 
+            className="h-8 w-auto mx-auto mb-4"
+          />
+          <p className="text-sm text-gray-500">
             © 2025 Kambafy. Todos os direitos reservados.
           </p>
         </div>
