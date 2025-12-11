@@ -37,6 +37,8 @@ interface NetflixMembersHomeProps {
     email?: string;
     avatar_url?: string;
   };
+  studentCohortId?: string | null;
+  modulesWithAccess?: Set<string>;
   onLessonSelect: (lesson: Lesson) => void;
   onLogout: () => void;
 }
@@ -47,6 +49,8 @@ export function NetflixMembersHome({
   lessons,
   lessonProgress,
   user,
+  studentCohortId,
+  modulesWithAccess,
   onLessonSelect,
   onLogout,
 }: NetflixMembersHomeProps) {
@@ -125,6 +129,44 @@ export function NetflixMembersHome({
     return lessons.filter(lesson => lessonProgress[lesson.id]?.completed).slice(0, 10);
   }, [lessons, lessonProgress]);
 
+  // Check if module is locked based on cohort configuration
+  const isModuleLocked = (module: Module): boolean => {
+    // If student has individual access, module is not locked
+    if (modulesWithAccess?.has(module.id)) {
+      return false;
+    }
+
+    // Check if module is paid and student doesn't have access
+    if (module.is_paid && !modulesWithAccess?.has(module.id)) {
+      return true;
+    }
+
+    // Check coming_soon with cohort logic
+    if (!module.coming_soon) {
+      return false;
+    }
+
+    const comingSoonCohortIds = (module as any).coming_soon_cohort_ids;
+
+    // null = all cohorts (locked for everyone)
+    if (comingSoonCohortIds === null) {
+      return true;
+    }
+
+    // empty array = no cohorts (not locked for anyone)
+    if (comingSoonCohortIds.length === 0) {
+      return false;
+    }
+
+    // If student has no cohort, not locked
+    if (!studentCohortId) {
+      return false;
+    }
+
+    // Locked only if student's cohort is in the list
+    return comingSoonCohortIds.includes(studentCohortId);
+  };
+
   // Format modules with lesson data for sidebar
   const formattedModules = useMemo(() => {
     return modules.map(module => ({
@@ -132,7 +174,7 @@ export function NetflixMembersHome({
       title: module.title,
       description: module.description,
       cover_image_url: module.cover_image_url,
-      isLocked: module.coming_soon || module.is_paid,
+      isLocked: isModuleLocked(module),
       lessons: (lessonsByModule[module.id] || []).map(lesson => ({
         id: lesson.id,
         title: lesson.title,
@@ -142,7 +184,7 @@ export function NetflixMembersHome({
         isLocked: lesson.is_scheduled && lesson.scheduled_at && new Date(lesson.scheduled_at) > new Date(),
       })),
     }));
-  }, [modules, lessonsByModule, lessonProgress]);
+  }, [modules, lessonsByModule, lessonProgress, studentCohortId, modulesWithAccess]);
 
   const handlePlay = () => {
     if (nextLesson) {
@@ -275,7 +317,7 @@ export function NetflixMembersHome({
                   title={module.title}
                   thumbnail={module.cover_image_url}
                   tags={[`${(lessonsByModule[module.id] || []).length} aulas`]}
-                  isLocked={module.coming_soon || module.is_paid}
+                  isLocked={isModuleLocked(module)}
                   onClick={() => {
                     const firstLesson = lessonsByModule[module.id]?.[0];
                     if (firstLesson) onLessonSelect(firstLesson);

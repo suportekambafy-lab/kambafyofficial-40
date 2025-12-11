@@ -842,6 +842,8 @@ export default function ModernMembersArea({ memberAreaId: propMemberAreaId, isEm
             avatar_url: user?.user_metadata?.avatar_url || user?.user_metadata?.picture || userProfileAvatar || 
               (user?.email ? `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'U')}&background=d97706&color=1c1917&bold=true&size=128` : undefined),
           }}
+          studentCohortId={studentCohortId}
+          modulesWithAccess={modulesWithAccess}
           onLessonSelect={handleLessonClick}
           onLogout={handleLogout}
         />
