@@ -229,31 +229,6 @@ export function NetflixMembersHome({
             </NetflixCarousel>
           )}
 
-          {/* Other Modules as Carousels */}
-          {modules.slice(1).filter(m => (lessonsByModule[m.id] || []).length > 0).map(module => (
-            <NetflixCarousel 
-              key={module.id} 
-              title={module.title}
-              subtitle={`${lessonsByModule[module.id]?.length || 0} aulas`}
-              showSeeAll
-            >
-              {(lessonsByModule[module.id] || []).map(lesson => (
-                <NetflixCourseCard
-                  key={lesson.id}
-                  id={lesson.id}
-                  title={lesson.title}
-                  thumbnail={lesson.video_data?.thumbnail as string}
-                  duration={lesson.duration}
-                  isCompleted={lessonProgress[lesson.id]?.completed}
-                  progress={lessonProgress[lesson.id]?.progress_percentage}
-                  tags={[module.title]}
-                  isLocked={lesson.is_scheduled && lesson.scheduled_at && new Date(lesson.scheduled_at) > new Date()}
-                  onClick={() => onLessonSelect(lesson)}
-                />
-              ))}
-            </NetflixCarousel>
-          ))}
-
           {/* New Lessons */}
           {newLessons.length > 0 && (
             <NetflixCarousel title="Adicionados Recentemente" showSeeAll>
@@ -267,24 +242,6 @@ export function NetflixMembersHome({
                   isCompleted={lessonProgress[lesson.id]?.completed}
                   moduleTitle={getModuleTitle(lesson.module_id)}
                   tags={['Novo']}
-                  onClick={() => onLessonSelect(lesson)}
-                />
-              ))}
-            </NetflixCarousel>
-          )}
-
-          {/* Completed - Review */}
-          {completedLessonsList.length > 0 && (
-            <NetflixCarousel title="Revisitar" subtitle="Aulas que você já concluiu">
-              {completedLessonsList.map(lesson => (
-                <NetflixCourseCard
-                  key={lesson.id}
-                  id={lesson.id}
-                  title={lesson.title}
-                  thumbnail={lesson.video_data?.thumbnail as string}
-                  duration={lesson.duration}
-                  isCompleted
-                  moduleTitle={getModuleTitle(lesson.module_id)}
                   onClick={() => onLessonSelect(lesson)}
                 />
               ))}
