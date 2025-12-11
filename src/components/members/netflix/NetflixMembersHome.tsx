@@ -186,6 +186,7 @@ export function NetflixMembersHome({
         userName={user?.name}
         userEmail={user?.email}
         userAvatar={user?.avatar_url}
+        memberAreaId={memberArea.id}
         onSearch={setSearchQuery}
         onLogout={onLogout}
       />
