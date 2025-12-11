@@ -34,6 +34,7 @@ export interface Lesson {
   is_scheduled?: boolean;
   complementary_links?: ComplementaryLink[];
   lesson_materials?: LessonMaterial[];
+  cover_image_url?: string | null;
 }
 
 export interface Module {
