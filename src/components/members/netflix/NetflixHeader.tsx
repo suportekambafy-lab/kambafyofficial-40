@@ -268,6 +268,11 @@ export function NetflixHeader({
       if (modulesSection) {
         modulesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
+    } else if (itemId === 'community') {
+      const communitySection = document.getElementById('community-section');
+      if (communitySection) {
+        communitySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     }
   };
 
