@@ -205,24 +205,25 @@ export function NetflixMembersHome({
             </NetflixCarousel>
           )}
 
-          {/* You might also like - First Module */}
-          {modules.length > 0 && (lessonsByModule[modules[0].id] || []).length > 0 && (
+          {/* Todos os Módulos */}
+          {modules.length > 0 && (
             <NetflixCarousel 
-              title="You might also like"
+              title="Todos os Módulos"
+              subtitle={`${modules.length} módulos`}
               showSeeAll
             >
-              {(lessonsByModule[modules[0].id] || []).map(lesson => (
+              {modules.filter(m => m.cover_image_url).map(module => (
                 <NetflixCourseCard
-                  key={lesson.id}
-                  id={lesson.id}
-                  title={lesson.title}
-                  thumbnail={lesson.video_data?.thumbnail as string}
-                  duration={lesson.duration}
-                  isCompleted={lessonProgress[lesson.id]?.completed}
-                  progress={lessonProgress[lesson.id]?.progress_percentage}
-                  tags={[getModuleTitle(lesson.module_id) || 'Curso']}
-                  isLocked={lesson.is_scheduled && lesson.scheduled_at && new Date(lesson.scheduled_at) > new Date()}
-                  onClick={() => onLessonSelect(lesson)}
+                  key={module.id}
+                  id={module.id}
+                  title={module.title}
+                  thumbnail={module.cover_image_url}
+                  tags={[`${(lessonsByModule[module.id] || []).length} aulas`]}
+                  isLocked={module.coming_soon || module.is_paid}
+                  onClick={() => {
+                    const firstLesson = lessonsByModule[module.id]?.[0];
+                    if (firstLesson) onLessonSelect(firstLesson);
+                  }}
                 />
               ))}
             </NetflixCarousel>
