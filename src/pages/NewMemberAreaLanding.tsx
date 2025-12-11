@@ -4,7 +4,7 @@ import { ArrowLeft, Play, Users, Monitor, Smartphone, Shield, Zap, ChevronLeft, 
 import { useState } from "react";
 
 // Import screenshots
-import memberAreaLogin from "@/assets/member-area-login.png";
+import memberAreaLogin from "@/assets/member-area-login.gif";
 import memberAreaHero from "@/assets/member-area-hero.png";
 import memberAreaModules from "@/assets/member-area-modules.png";
 import memberAreaLessons from "@/assets/member-area-lessons.png";
