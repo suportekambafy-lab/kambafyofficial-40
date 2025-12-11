@@ -1,10 +1,18 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Play, Users, Sparkles, Monitor, Smartphone, Shield, Zap, Star, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Play, Users, Sparkles, Monitor, Smartphone, Shield, Zap, Star, CheckCircle2, Lock, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
+
+// Import screenshots
+import memberAreaLogin from "@/assets/member-area-login.png";
+import memberAreaHero from "@/assets/member-area-hero.png";
+import memberAreaModules from "@/assets/member-area-modules.png";
+import memberAreaPlayer from "@/assets/member-area-player.png";
 
 const NewMemberAreaLanding = () => {
   const navigate = useNavigate();
+  const [activeScreenshot, setActiveScreenshot] = useState(0);
 
   const features = [
     {
@@ -42,21 +50,33 @@ const NewMemberAreaLanding = () => {
   const screenshots = [
     {
       title: "Tela de Login",
-      description: "Login elegante com animações e efeitos visuais modernos"
+      description: "Login elegante com animações e efeitos visuais modernos",
+      image: memberAreaLogin
     },
     {
       title: "Página Inicial",
-      description: "Hero cinematográfico com seu curso em destaque estilo Netflix"
+      description: "Hero cinematográfico com seu curso em destaque estilo Netflix",
+      image: memberAreaHero
     },
     {
-      title: "Módulos",
-      description: "Visualização de módulos com capas atrativas e progresso visual"
+      title: "Módulos do Curso",
+      description: "Visualização de módulos com capas atrativas e progresso visual",
+      image: memberAreaModules
     },
     {
       title: "Player de Vídeo",
-      description: "Player profissional com controles avançados e lista de aulas"
+      description: "Player profissional com controles avançados e lista de aulas",
+      image: memberAreaPlayer
     }
   ];
+
+  const nextScreenshot = () => {
+    setActiveScreenshot((prev) => (prev + 1) % screenshots.length);
+  };
+
+  const prevScreenshot = () => {
+    setActiveScreenshot((prev) => (prev - 1 + screenshots.length) % screenshots.length);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 text-white overflow-hidden">
@@ -95,7 +115,7 @@ const NewMemberAreaLanding = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="relative z-10 py-20 md:py-32">
+      <section className="relative z-10 py-16 md:py-24">
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -138,14 +158,14 @@ const NewMemberAreaLanding = () => {
         </div>
       </section>
 
-      {/* Screenshots Preview */}
-      <section className="relative z-10 py-16 md:py-24 overflow-hidden">
+      {/* Screenshots Gallery */}
+      <section className="relative z-10 py-12 md:py-20 overflow-hidden">
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-12"
+            className="text-center mb-10"
           >
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Visualize a Experiência</h2>
             <p className="text-zinc-400 max-w-xl mx-auto">
@@ -153,14 +173,15 @@ const NewMemberAreaLanding = () => {
             </p>
           </motion.div>
 
-          {/* Mockup Browser */}
+          {/* Main Screenshot Carousel */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="max-w-5xl mx-auto"
+            className="max-w-6xl mx-auto relative"
           >
+            {/* Browser Mockup */}
             <div className="bg-zinc-800 rounded-xl overflow-hidden shadow-2xl border border-white/10">
               {/* Browser Header */}
               <div className="flex items-center gap-2 px-4 py-3 bg-zinc-900 border-b border-white/10">
@@ -176,77 +197,93 @@ const NewMemberAreaLanding = () => {
                 </div>
               </div>
               
-              {/* Content Preview */}
-              <div className="aspect-video bg-gradient-to-br from-zinc-800 via-zinc-900 to-black relative">
-                {/* Navbar Mock */}
-                <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-black/50 to-transparent flex items-center px-8 gap-8">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 bg-primary rounded" />
-                    <span className="font-semibold text-white/90">Kambafy</span>
-                  </div>
-                  <div className="hidden md:flex items-center gap-6">
-                    <span className="text-sm bg-primary/20 px-3 py-1 rounded-full text-primary">Home</span>
-                    <span className="text-sm text-white/60">Módulos</span>
-                    <span className="text-sm text-white/60">Ofertas</span>
-                  </div>
-                </div>
-
-                {/* Hero Mock */}
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full h-full bg-gradient-to-r from-black/80 via-black/50 to-transparent p-8 md:p-16 flex flex-col justify-center">
-                    <div className="max-w-lg">
-                      <div className="text-xs text-yellow-500 font-bold mb-2">MARCA MILIONÁRIA</div>
-                      <h3 className="text-2xl md:text-4xl font-bold text-white mb-3">BEM VINDO A MARCA MILIONÁRIA</h3>
-                      <div className="flex items-center gap-3 text-xs md:text-sm text-white/60 mb-4">
-                        <span>2024</span>
-                        <span className="px-2 py-0.5 border border-white/30 rounded text-xs">PREMIUM</span>
-                        <span>26 Módulos</span>
-                        <span>⏱ 5 min</span>
-                      </div>
-                      <p className="text-sm text-white/70 mb-4 hidden md:block">
-                        A profissão do futuro, que transformou milhares de vidas, agora é sua vez
-                      </p>
-                      <div className="w-32 h-1 bg-zinc-700 rounded-full overflow-hidden">
-                        <div className="w-1/3 h-full bg-green-500 rounded-full" />
-                      </div>
-                      <span className="text-xs text-white/50 mt-1">38% concluído</span>
-                      <div className="flex gap-3 mt-4">
-                        <div className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded-full text-sm font-medium">
-                          <Play className="w-4 h-4 fill-current" />
-                          Play
-                        </div>
-                        <div className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-full text-sm font-medium">
-                          <Users className="w-4 h-4" />
-                          Ver Currículo
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Gradient overlay on right side for image effect */}
-                <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-zinc-700/30 to-transparent" />
+              {/* Screenshot Content */}
+              <div className="relative aspect-[16/9] overflow-hidden bg-zinc-900">
+                {screenshots.map((screenshot, index) => (
+                  <motion.img
+                    key={index}
+                    src={screenshot.image}
+                    alt={screenshot.title}
+                    className="absolute inset-0 w-full h-full object-cover object-top"
+                    initial={{ opacity: 0 }}
+                    animate={{ 
+                      opacity: activeScreenshot === index ? 1 : 0,
+                      scale: activeScreenshot === index ? 1 : 1.05
+                    }}
+                    transition={{ duration: 0.5 }}
+                  />
+                ))}
               </div>
+            </div>
+
+            {/* Navigation Arrows */}
+            <button
+              onClick={prevScreenshot}
+              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 md:-translate-x-12 w-12 h-12 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center transition-all border border-white/10"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+            <button
+              onClick={nextScreenshot}
+              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 md:translate-x-12 w-12 h-12 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center transition-all border border-white/10"
+            >
+              <ChevronRight className="w-6 h-6" />
+            </button>
+
+            {/* Screenshot Info */}
+            <motion.div 
+              key={activeScreenshot}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center mt-6"
+            >
+              <h3 className="text-xl font-semibold mb-2">{screenshots[activeScreenshot].title}</h3>
+              <p className="text-zinc-400">{screenshots[activeScreenshot].description}</p>
+            </motion.div>
+
+            {/* Dots Navigation */}
+            <div className="flex justify-center gap-2 mt-6">
+              {screenshots.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setActiveScreenshot(index)}
+                  className={`w-2.5 h-2.5 rounded-full transition-all ${
+                    activeScreenshot === index 
+                      ? 'bg-primary w-8' 
+                      : 'bg-white/30 hover:bg-white/50'
+                  }`}
+                />
+              ))}
             </div>
           </motion.div>
 
-          {/* Screenshot Labels */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12 max-w-4xl mx-auto">
+          {/* Thumbnail Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12 max-w-5xl mx-auto">
             {screenshots.map((item, index) => (
-              <motion.div
+              <motion.button
                 key={item.title}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                className="text-center p-4 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-colors"
+                onClick={() => setActiveScreenshot(index)}
+                className={`text-left overflow-hidden rounded-xl border transition-all ${
+                  activeScreenshot === index 
+                    ? 'border-primary ring-2 ring-primary/50' 
+                    : 'border-white/10 hover:border-white/30'
+                }`}
               >
-                <div className="w-10 h-10 mx-auto mb-3 bg-primary/20 rounded-lg flex items-center justify-center">
-                  <CheckCircle2 className="w-5 h-5 text-primary" />
+                <div className="aspect-video overflow-hidden">
+                  <img 
+                    src={item.image} 
+                    alt={item.title}
+                    className="w-full h-full object-cover object-top hover:scale-105 transition-transform duration-300"
+                  />
                 </div>
-                <h3 className="font-semibold text-sm mb-1">{item.title}</h3>
-                <p className="text-xs text-zinc-500">{item.description}</p>
-              </motion.div>
+                <div className="p-3 bg-zinc-800/50">
+                  <h3 className="font-medium text-sm">{item.title}</h3>
+                </div>
+              </motion.button>
             ))}
           </div>
         </div>
