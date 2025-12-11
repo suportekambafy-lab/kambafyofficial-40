@@ -71,31 +71,7 @@ export function NetflixMembersHome({
   }, [lessonProgress]);
 
   const totalLessons = lessons.length;
-  const totalModules = modules.length;
   const courseProgress = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
-
-  // Calculate completed modules (all lessons in module completed)
-  const completedModules = useMemo(() => {
-    return modules.filter(module => {
-      const moduleLessons = lessons.filter(l => l.module_id === module.id);
-      if (moduleLessons.length === 0) return false;
-      return moduleLessons.every(lesson => lessonProgress[lesson.id]?.completed);
-    }).length;
-  }, [modules, lessons, lessonProgress]);
-
-  // Calculate total watch time in minutes
-  const totalWatchTime = useMemo(() => {
-    let totalSeconds = 0;
-    lessons.forEach(lesson => {
-      const progress = lessonProgress[lesson.id];
-      if (progress?.video_current_time) {
-        totalSeconds += progress.video_current_time;
-      } else if (progress?.completed && lesson.duration) {
-        totalSeconds += lesson.duration;
-      }
-    });
-    return Math.round(totalSeconds / 60);
-  }, [lessons, lessonProgress]);
 
   // Get lessons that are in progress (started but not completed)
   const continueWatchingLessons = useMemo(() => {
@@ -223,9 +199,6 @@ export function NetflixMembersHome({
           featuredLesson={nextLesson}
           totalLessons={totalLessons}
           completedLessons={completedLessons}
-          totalModules={totalModules}
-          completedModules={completedModules}
-          totalWatchTime={totalWatchTime}
           lastWatchedProgress={nextLesson ? lessonProgress[nextLesson.id]?.progress_percentage : 0}
           onPlay={handlePlay}
           onViewCurriculum={() => setIsSidebarOpen(true)}
