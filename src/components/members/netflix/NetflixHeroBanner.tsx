@@ -138,7 +138,7 @@ export function NetflixHeroBanner({
             >
               <img src="/kambafy-icon-collapsed.svg" alt="Kambafy" className="w-6 h-6" />
               {memberArea.logo_url ? (
-                <img src={memberArea.logo_url} alt={memberArea.name} className="h-6 max-w-[120px] object-contain" />
+                <img src={memberArea.logo_url} alt={memberArea.name} className="h-10 max-w-[200px] object-contain" />
               ) : (
                 <span className="text-white/80 text-xs font-medium tracking-[0.2em] uppercase">{memberArea.name}</span>
               )}
