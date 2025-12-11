@@ -176,3 +176,12 @@ verify_jwt = false
 
 [functions.create-multibanco-order]
 verify_jwt = false
+
+[functions.send-member-announcement]
+verify_jwt = false
+
+[functions.save-onesignal-player-id]
+verify_jwt = false
+
+[functions.onesignal-set-external-id]
+verify_jwt = false
