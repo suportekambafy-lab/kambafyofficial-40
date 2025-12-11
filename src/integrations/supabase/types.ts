@@ -1376,6 +1376,7 @@ export type Database = {
           bunny_embed_url: string | null
           bunny_video_id: string | null
           complementary_links: Json | null
+          cover_image_url: string | null
           created_at: string
           description: string | null
           duration: number
@@ -1398,6 +1399,7 @@ export type Database = {
           bunny_embed_url?: string | null
           bunny_video_id?: string | null
           complementary_links?: Json | null
+          cover_image_url?: string | null
           created_at?: string
           description?: string | null
           duration?: number
@@ -1420,6 +1422,7 @@ export type Database = {
           bunny_embed_url?: string | null
           bunny_video_id?: string | null
           complementary_links?: Json | null
+          cover_image_url?: string | null
           created_at?: string
           description?: string | null
           duration?: number

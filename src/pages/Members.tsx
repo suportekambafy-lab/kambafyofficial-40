@@ -122,7 +122,8 @@ export default function Members() {
     complementary_links: [] as ComplementaryLink[],
     lesson_materials: [] as LessonMaterial[],
     is_scheduled: false,
-    scheduled_at: null as Date | null
+    scheduled_at: null as Date | null,
+    cover_image_url: ''
   });
   const [moduleFormData, setModuleFormData] = useState({
     title: '',
@@ -650,7 +651,8 @@ export default function Members() {
         complementary_links: JSON.stringify(validatedLinks),
         lesson_materials: JSON.stringify(safeMaterials),
         is_scheduled: formData.is_scheduled,
-        scheduled_at: formData.is_scheduled && formData.scheduled_at ? formData.scheduled_at.toISOString() : null
+        scheduled_at: formData.is_scheduled && formData.scheduled_at ? formData.scheduled_at.toISOString() : null,
+        cover_image_url: formData.cover_image_url?.trim() || null
       };
       console.log('🔍 Form data before saving:', {
         form_complementary_links: formData.complementary_links,
@@ -742,7 +744,8 @@ export default function Members() {
       complementary_links: processedLinks,
       lesson_materials: processedMaterials,
       is_scheduled: lesson.is_scheduled || false,
-      scheduled_at: lesson.scheduled_at ? new Date(lesson.scheduled_at) : null
+      scheduled_at: lesson.scheduled_at ? new Date(lesson.scheduled_at) : null,
+      cover_image_url: (lesson as any).cover_image_url || ''
     });
     console.log('📝 Form data set to:', {
       complementary_links: processedLinks,
@@ -881,7 +884,8 @@ export default function Members() {
       complementary_links: [],
       lesson_materials: [],
       is_scheduled: false,
-      scheduled_at: null
+      scheduled_at: null,
+      cover_image_url: ''
     });
     setEditingLesson(null);
     setSelectedModuleForLesson('');
@@ -1007,7 +1011,8 @@ export default function Members() {
       complementary_links: [],
       lesson_materials: [],
       is_scheduled: false,
-      scheduled_at: null
+      scheduled_at: null,
+      cover_image_url: ''
     });
     setEditingLesson(null);
     setSelectedModuleForLesson(moduleId);
@@ -1987,6 +1992,24 @@ export default function Members() {
                 ...prev,
                 description: e.target.value
               }))} placeholder="Descreva o conteúdo da aula..." rows={3} />
+              </div>
+
+              {/* Capa da Aula */}
+              <div className="space-y-2">
+                <ImageUploader
+                  label="Capa da Aula"
+                  value={formData.cover_image_url}
+                  onChange={(url) => setFormData(prev => ({
+                    ...prev,
+                    cover_image_url: url || ''
+                  }))}
+                  bucket="member-areas"
+                  folder="lesson-covers"
+                  aspectRatio="16:9"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Imagem de capa exibida na lista de aulas. Recomendado: 1280x720px
+                </p>
               </div>
 
               {/* Só mostra o seletor de módulo se não estiver editando e não foi pré-selecionado */}
