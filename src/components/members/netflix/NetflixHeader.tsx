@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import kambafyLogo from '@/assets/kambafy-logo.png';
 
 interface NetflixHeaderProps {
   logoUrl?: string;
@@ -80,21 +81,13 @@ export function NetflixHeader({
       transition={{ duration: 0.4, ease: 'easeOut' }}
     >
       <div className="flex items-center justify-between h-20 md:h-24 px-6 md:px-12 lg:px-16">
-        {/* Left: Logo */}
+        {/* Left: Kambafy Logo */}
         <div className="flex items-center gap-8">
-          {logoUrl ? (
-            <img 
-              src={logoUrl} 
-              alt="Logo" 
-              className="h-8 md:h-10 w-auto object-contain"
-            />
-          ) : (
-            <div className="flex items-center gap-2">
-              <span className="text-2xl md:text-3xl font-black text-netflix-red tracking-tight" style={{ fontFamily: 'Inter, sans-serif' }}>
-                KAMBAFY
-              </span>
-            </div>
-          )}
+          <img 
+            src={kambafyLogo} 
+            alt="Kambafy" 
+            className="h-8 md:h-10 w-auto object-contain"
+          />
 
           {/* Desktop Navigation - Netflix Style Pills */}
           <nav className="hidden md:flex items-center">
