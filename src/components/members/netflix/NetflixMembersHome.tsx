@@ -5,6 +5,7 @@ import { NetflixHeroBanner } from './NetflixHeroBanner';
 import { NetflixCarousel } from './NetflixCarousel';
 import { NetflixCourseCard } from './NetflixCourseCard';
 import { NetflixModuleSidebar } from './NetflixModuleSidebar';
+import { NetflixProgressPanel } from './NetflixProgressPanel';
 import { Lesson, Module } from '@/types/memberArea';
 
 interface MemberArea {
@@ -55,6 +56,7 @@ export function NetflixMembersHome({
   onLogout,
 }: NetflixMembersHomeProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isProgressPanelOpen, setIsProgressPanelOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Force dark background on body when this component is mounted
@@ -267,7 +269,7 @@ export function NetflixMembersHome({
           completedLessons={completedLessons}
           lastWatchedProgress={nextLesson ? lessonProgress[nextLesson.id]?.progress_percentage : 0}
           onPlay={handlePlay}
-          onViewCurriculum={() => setIsSidebarOpen(true)}
+          onViewCurriculum={() => setIsProgressPanelOpen(true)}
         />
 
         {/* Carousels */}
@@ -394,6 +396,17 @@ export function NetflixMembersHome({
           className="fixed inset-0 bg-black/60 z-30 backdrop-blur-sm"
         />
       )}
+
+      {/* Progress Panel */}
+      <NetflixProgressPanel
+        isOpen={isProgressPanelOpen}
+        onClose={() => setIsProgressPanelOpen(false)}
+        modules={modules}
+        lessons={lessons}
+        lessonProgress={lessonProgress}
+        onLessonSelect={onLessonSelect}
+        userName={user?.name}
+      />
     </div>
   );
 }
