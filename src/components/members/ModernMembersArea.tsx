@@ -867,7 +867,7 @@ export default function ModernMembersArea({ memberAreaId: propMemberAreaId, isEm
 
   // Layout com aula selecionada - Netflix Style
   return (
-    <>
+    <div className="min-h-screen" style={{ background: 'hsl(30 20% 12%)' }}>
       <NetflixLessonViewer
         lesson={selectedLesson}
         lessons={lessons || []}
@@ -885,10 +885,7 @@ export default function ModernMembersArea({ memberAreaId: propMemberAreaId, isEm
       />
       
       {/* Comentários da aula */}
-      <div 
-        className="px-4 md:px-8 lg:px-16 pb-20"
-        style={{ background: 'hsl(30 20% 12%)' }}
-      >
+      <div className="px-4 md:px-8 lg:px-16 pb-20">
         <div className="max-w-5xl mx-auto">
           <LessonComments 
             lessonId={selectedLesson.id} 
@@ -908,6 +905,6 @@ export default function ModernMembersArea({ memberAreaId: propMemberAreaId, isEm
         studentEmail={user?.email || verifiedEmail || ''}
         onPaymentSuccess={handlePaymentSuccess}
       />
-    </>
+    </div>
   );
 }
