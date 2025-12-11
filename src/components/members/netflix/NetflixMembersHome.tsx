@@ -225,6 +225,7 @@ export function NetflixMembersHome({
           )}
 
           {/* Todos os Módulos */}
+          <div id="modules-section">
           {modules.length > 0 && (
             <NetflixCarousel 
               title="Todos os Módulos"
@@ -247,6 +248,7 @@ export function NetflixMembersHome({
               ))}
             </NetflixCarousel>
           )}
+          </div>
 
           {/* New Lessons */}
           {newLessons.length > 0 && (
