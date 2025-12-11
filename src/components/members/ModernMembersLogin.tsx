@@ -245,6 +245,16 @@ export default function ModernMembersLogin() {
             {/* Custom dark themed 2FA component */}
             <div className="rounded-3xl p-6 md:p-8 w-full relative overflow-hidden bg-white/5 backdrop-blur-sm border border-white/10 shadow-2xl">
               <div className="relative z-10">
+                {/* Logo */}
+                <div className="flex justify-center mb-6">
+                  <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center">
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    </div>
+                  </div>
+                </div>
 
                 {/* Title */}
                 <h1 className="text-xl md:text-2xl font-semibold text-center text-white mb-2">

@@ -11,6 +11,16 @@ interface TwoFactorCardProps {
   subtitle?: string;
 }
 
+// Logo component for the 2FA card
+const LogoIcon = () => (
+  <div className="w-16 h-16 bg-foreground rounded-full flex items-center justify-center">
+    <div className="flex space-x-1">
+      <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+    </div>
+  </div>
+);
 
 /**
  * TwoFactorCard - A styled wrapper for TwoFactorVerification
@@ -50,6 +60,11 @@ export function TwoFactorCard({
   return (
     <div className="rounded-3xl p-6 md:p-8 w-full max-w-sm relative overflow-hidden bg-card border border-border shadow-lg mx-auto">
       <div className="relative z-10">
+        {/* Logo */}
+        <div className="flex justify-center mb-6">
+          <LogoIcon />
+        </div>
+
         {/* Title */}
         <h1 className="text-xl md:text-2xl font-semibold text-center text-foreground mb-2">
           {title || getDefaultTitle()}
