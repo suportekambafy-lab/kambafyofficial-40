@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Play, Volume2, VolumeX, Clock, Star, BookOpen, Users2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -43,6 +43,9 @@ export function NetflixHeroBanner({
 }: NetflixHeroBannerProps) {
   const [isMuted, setIsMuted] = useState(true);
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+  
+  // Only show video if there's actually a video URL
+  const hasVideoUrl = Boolean(memberArea.hero_video_url || featuredLesson?.video_url);
   const [showVideo, setShowVideo] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -50,13 +53,14 @@ export function NetflixHeroBanner({
   const hasProgress = lastWatchedProgress > 0 || completedLessons > 0;
 
   useEffect(() => {
+    // Only start video timer if there's actually a video URL
+    if (!hasVideoUrl) return;
+    
     const timer = setTimeout(() => {
-      if (memberArea.hero_video_url || featuredLesson?.video_url) {
-        setShowVideo(true);
-      }
+      setShowVideo(true);
     }, 2000);
     return () => clearTimeout(timer);
-  }, [memberArea.hero_video_url, featuredLesson?.video_url]);
+  }, [hasVideoUrl]);
 
   const formatDuration = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
@@ -69,45 +73,44 @@ export function NetflixHeroBanner({
     <div className="relative w-full">
       {/* Main Hero Container with rounded corners */}
       <div className="relative mx-6 md:mx-12 lg:mx-16 mt-24 md:mt-28 rounded-3xl overflow-hidden" style={{ aspectRatio: '16/9', maxHeight: '75vh' }}>
-        {/* Background Video/Image */}
+        {/* Background Image - Always visible */}
         <div className="absolute inset-0">
-          <AnimatePresence>
-            {showVideo && (memberArea.hero_video_url || featuredLesson?.video_url) ? (
-              <motion.video
-                ref={videoRef}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: isVideoLoaded ? 1 : 0 }}
-                exit={{ opacity: 0 }}
+          <motion.div
+            initial={{ scale: 1.05 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 8, ease: 'easeOut' }}
+            className="w-full h-full"
+          >
+            {memberArea.hero_image_url ? (
+              <img
+                src={memberArea.hero_image_url}
+                alt={memberArea.name}
                 className="w-full h-full object-cover"
-                src={memberArea.hero_video_url || featuredLesson?.video_url}
-                autoPlay
-                loop
-                muted={isMuted}
-                playsInline
-                onLoadedData={() => setIsVideoLoaded(true)}
               />
             ) : (
-              <motion.div
-                initial={{ scale: 1.05 }}
-                animate={{ scale: 1 }}
-                transition={{ duration: 8, ease: 'easeOut' }}
-                className="w-full h-full"
-              >
-                {memberArea.hero_image_url ? (
-                  <img
-                    src={memberArea.hero_image_url}
-                    alt={memberArea.name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div 
-                    className="w-full h-full bg-gradient-to-br from-amber-900/50 via-stone-800 to-stone-900"
-                  />
-                )}
-              </motion.div>
+              <div 
+                className="w-full h-full bg-gradient-to-br from-amber-900/50 via-stone-800 to-stone-900"
+              />
             )}
-          </AnimatePresence>
+          </motion.div>
         </div>
+
+        {/* Video Overlay - Only if video exists and is ready */}
+        {hasVideoUrl && showVideo && (
+          <div className="absolute inset-0">
+            <video
+              ref={videoRef}
+              className="w-full h-full object-cover transition-opacity duration-500"
+              style={{ opacity: isVideoLoaded ? 1 : 0 }}
+              src={memberArea.hero_video_url || featuredLesson?.video_url}
+              autoPlay
+              loop
+              muted={isMuted}
+              playsInline
+              onLoadedData={() => setIsVideoLoaded(true)}
+            />
+          </div>
+        )}
 
         {/* Gradient Overlays - More cinematic */}
         <div 
@@ -235,7 +238,7 @@ export function NetflixHeroBanner({
           </div>
 
           {/* Mute Button (if video) */}
-          {showVideo && isVideoLoaded && (memberArea.hero_video_url || featuredLesson?.video_url) && (
+          {hasVideoUrl && showVideo && isVideoLoaded && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
