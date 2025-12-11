@@ -129,26 +129,25 @@ export function NetflixHeroBanner({
         {/* Content - More compact on mobile */}
         <div className="absolute inset-x-0 bottom-0 p-4 md:p-10 lg:p-12">
           <div className="max-w-2xl space-y-2 md:space-y-4">
-            {/* Course Logo - Smaller on mobile */}
+            {/* Course Logo */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="hidden md:block"
             >
               {memberArea.logo_url ? (
-                <img src={memberArea.logo_url} alt={memberArea.name} className="h-16 max-w-[280px] object-contain" />
+                <img src={memberArea.logo_url} alt={memberArea.name} className="h-8 md:h-16 max-w-[180px] md:max-w-[280px] object-contain" />
               ) : (
-                <span className="text-white/80 text-sm font-medium tracking-[0.2em] uppercase">{memberArea.name}</span>
+                <span className="text-white/80 text-xs md:text-sm font-medium tracking-[0.2em] uppercase">{memberArea.name}</span>
               )}
             </motion.div>
 
-            {/* Title - Smaller on mobile */}
+            {/* Title */}
             <motion.h1
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="text-2xl md:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[0.95] uppercase"
+              className="text-xl md:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[0.95] uppercase"
               style={{ 
                 textShadow: '0 4px 30px rgba(0, 0, 0, 0.5)',
                 fontFamily: 'Inter, SF Pro, sans-serif',
@@ -158,36 +157,36 @@ export function NetflixHeroBanner({
               {memberArea.hero_title || memberArea.name}
             </motion.h1>
 
-            {/* Meta Info - Hidden on mobile */}
+            {/* Meta Info - Visible on all screens */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="hidden md:flex flex-wrap items-center gap-3 text-sm text-white/90"
+              className="flex flex-wrap items-center gap-2 md:gap-3 text-xs md:text-sm text-white/90"
             >
               <span className="font-medium">2024</span>
               <Badge 
                 variant="outline" 
-                className="border-white/40 text-white/90 text-xs px-2 py-0.5 rounded"
+                className="border-white/40 text-white/90 text-[10px] md:text-xs px-1.5 md:px-2 py-0.5 rounded"
               >
                 PREMIUM
               </Badge>
               <span>{totalLessons} Módulos</span>
               {featuredLesson?.duration && (
                 <span className="flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5" />
+                  <Clock className="w-3 h-3 md:w-3.5 md:h-3.5" />
                   {formatDuration(featuredLesson.duration)}
                 </span>
               )}
             </motion.div>
 
-            {/* Description - Hidden on mobile */}
+            {/* Description - Visible on all screens */}
             {(memberArea.hero_description || memberArea.description) && (
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
-                className="hidden md:block text-sm md:text-base text-white/70 max-w-lg line-clamp-3 leading-relaxed"
+                className="text-xs md:text-base text-white/70 max-w-lg line-clamp-2 md:line-clamp-3 leading-relaxed"
               >
                 {memberArea.hero_description || memberArea.description}
               </motion.p>
