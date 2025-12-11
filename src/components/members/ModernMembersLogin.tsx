@@ -217,11 +217,18 @@ export default function ModernMembersLogin() {
 
   // Mostrar tela de 2FA se necessário
   if (requires2FA && pendingEmail) {
-    return <div className="flex w-full flex-col min-h-screen bg-black relative">
+    return (
+      <div className="flex w-full flex-col min-h-screen bg-black relative">
         {/* Canvas Background */}
         <div className="absolute inset-0 z-0">
           <Suspense fallback={<div className="absolute inset-0 bg-black" />}>
-            <CanvasRevealEffect animationSpeed={3} containerClassName="bg-black" colors={[[255, 255, 255], [255, 255, 255]]} dotSize={6} reverse={false} />
+            <CanvasRevealEffect 
+              animationSpeed={3} 
+              containerClassName="bg-black" 
+              colors={[[255, 255, 255], [255, 255, 255]]} 
+              dotSize={6} 
+              reverse={false} 
+            />
           </Suspense>
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(0,0,0,0.8)_0%,_transparent_100%)]" />
           <div className="absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-b from-black to-transparent" />
@@ -229,48 +236,56 @@ export default function ModernMembersLogin() {
 
         {/* Content */}
         <div className="relative z-10 flex flex-col flex-1 items-center justify-center p-4">
-          <motion.div initial={{
-          opacity: 0,
-          y: 20
-        }} animate={{
-          opacity: 1,
-          y: 0
-        }} transition={{
-          duration: 0.5
-        }} className="w-full max-w-md">
-            <div className="space-y-6 text-center mb-8">
-              <motion.div initial={{
-              scale: 0
-            }} animate={{
-              scale: 1
-            }} transition={{
-              delay: 0.2,
-              type: "spring",
-              stiffness: 200
-            }} className="mx-auto w-16 h-16 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center">
-                <Shield className="h-8 w-8 text-white" />
-              </motion.div>
-              <div>
-                <h1 className="text-2xl font-bold text-white">Verificação de Segurança</h1>
-                <p className="text-white/50 mt-2 text-sm">
-                  {is2FAForOwner ? "Como dono desta área, você precisa verificar sua identidade" : "Detectamos um novo navegador. Por segurança, confirme sua identidade"}
-                </p>
-              </div>
-            </div>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ duration: 0.5 }} 
+            className="w-full max-w-sm"
+          >
+            {/* Custom dark themed 2FA component */}
+            <div className="rounded-3xl p-6 md:p-8 w-full relative overflow-hidden bg-white/5 backdrop-blur-sm border border-white/10 shadow-2xl">
+              <div className="relative z-10">
+                {/* Logo */}
+                <div className="flex justify-center mb-6">
+                  <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center">
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    </div>
+                  </div>
+                </div>
 
-            <div className="backdrop-blur-sm bg-white/5 border border-white/10 rounded-2xl p-6">
-              <TwoFactorVerification email={pendingEmail} context="member_area_login" onVerificationSuccess={() => {
-              setRequires2FA(false);
-              completeLogin(pendingEmail, true);
-            }} onBack={() => {
-              setRequires2FA(false);
-              setPendingEmail('');
-              setIs2FAForOwner(false);
-            }} />
+                {/* Title */}
+                <h1 className="text-xl md:text-2xl font-semibold text-center text-white mb-2">
+                  Verificação de Segurança
+                </h1>
+                <p className="text-center text-white/50 text-sm mb-6">
+                  {is2FAForOwner 
+                    ? "Como dono desta área, você precisa verificar sua identidade" 
+                    : "Detectamos um novo navegador. Por segurança, confirme sua identidade"
+                  }
+                </p>
+
+                <TwoFactorVerification 
+                  email={pendingEmail} 
+                  context="member_area_login" 
+                  onVerificationSuccess={() => {
+                    setRequires2FA(false);
+                    completeLogin(pendingEmail, true);
+                  }} 
+                  onBack={() => {
+                    setRequires2FA(false);
+                    setPendingEmail('');
+                    setIs2FAForOwner(false);
+                  }} 
+                />
+              </div>
             </div>
           </motion.div>
         </div>
-      </div>;
+      </div>
+    );
   }
   return <div className="flex w-full flex-col min-h-screen bg-black relative">
       {/* Canvas Background */}
