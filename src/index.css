@@ -112,9 +112,9 @@ All colors MUST be HSL.
     --admin-error: 0 84% 60%;
     --admin-pending: 45 93% 47%;
 
-    /* Shadows */
-    --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.06);
-    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
+    /* Shadow opacity values - use inline with box-shadow */
+    --shadow-card-color: 0 0% 0%;
+    --shadow-lg-color: 0 0% 0%;
     
     /* Netflix-style Member Area Tokens */
     --netflix-bg: 220 15% 8%;
@@ -126,7 +126,6 @@ All colors MUST be HSL.
     --netflix-green: 94 55% 55%;
     --netflix-gradient-start: 220 20% 6%;
     --netflix-gradient-end: 220 15% 10%;
-    --netflix-hero-overlay: linear-gradient(180deg, transparent 0%, rgba(15, 15, 20, 0.4) 50%, rgba(15, 15, 20, 0.95) 100%);
     --netflix-card-hover: 220 12% 20%;
     --netflix-border: 220 10% 22%;
   }
@@ -187,9 +186,9 @@ All colors MUST be HSL.
     --card-border-green: 94 55% 50%;
     --card-border-yellow: 45 90% 60%;
 
-    /* Dark shadows */
-    --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.3);
-    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4);
+    /* Dark shadows - defined inline where used */
+    --shadow-card-opacity: 0.3;
+    --shadow-lg-opacity: 0.4;
   }
 }
 

@@ -96,8 +96,8 @@ export default {
 					'active-bg': 'hsl(var(--admin-active-bg))',
 					success: 'hsl(var(--admin-success))',
 					warning: 'hsl(var(--admin-warning))',
-					error: 'hsl(var(--admin-error))',
-				pending: 'hsl(var(--admin-pending))'
+				error: 'hsl(var(--admin-error))',
+					pending: 'hsl(var(--admin-pending))'
 				},
 				netflix: {
 					bg: 'hsl(var(--netflix-bg))',
@@ -110,6 +110,7 @@ export default {
 					border: 'hsl(var(--netflix-border))',
 					'card-hover': 'hsl(var(--netflix-card-hover))',
 				},
+			},
 			borderRadius: {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
