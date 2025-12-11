@@ -94,12 +94,12 @@ const NewMemberAreaLanding = () => {
 
       {/* Header */}
       <header className="w-full sticky top-0 z-30 backdrop-blur-md border-b border-gray-800/50 bg-[#111111]/80">
-        <nav className="flex justify-between items-center max-w-screen-xl mx-auto h-[70px] px-6 md:px-10 lg:px-16">
+        <nav className="flex justify-between items-center max-w-screen-xl mx-auto h-[60px] sm:h-[70px] px-4 sm:px-6 md:px-10 lg:px-16">
           <button 
             onClick={() => navigate('/')}
-            className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+            className="flex items-center gap-1.5 sm:gap-2 text-gray-400 hover:text-white transition-colors"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
             <span className="hidden sm:inline text-sm">Voltar</span>
           </button>
           
@@ -107,32 +107,32 @@ const NewMemberAreaLanding = () => {
             <img 
               src="/kambafy-logo-white.png" 
               alt="Kambafy" 
-              className="h-10 w-auto"
+              className="h-8 sm:h-10 w-auto"
             />
           </div>
           
           <motion.button
             onClick={() => navigate('/auth')}
-            className="bg-[#81e76a] text-[#111111] px-4 py-2 rounded-md text-sm font-semibold hover:bg-opacity-90 transition-colors duration-200"
+            className="bg-[#81e76a] text-[#111111] px-3 sm:px-4 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-semibold hover:bg-opacity-90 transition-colors duration-200"
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
           >
-            Começar Agora
+            Começar
           </motion.button>
         </nav>
       </header>
 
       {/* Screenshots Gallery */}
-      <section className="relative z-10 pt-10 pb-12 md:pt-16 md:pb-20">
-        <div className="max-w-screen-xl mx-auto px-6 md:px-10 lg:px-16">
+      <section className="relative z-10 pt-6 pb-8 sm:pt-10 sm:pb-12 md:pt-16 md:pb-20">
+        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 md:px-10 lg:px-16">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-10"
+            className="text-center mb-6 sm:mb-10"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Visualize a Experiência</h2>
-            <p className="text-gray-400 max-w-xl mx-auto">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2 sm:mb-4">Visualize a Experiência</h2>
+            <p className="text-sm sm:text-base text-gray-400 max-w-xl mx-auto px-2">
               Cada detalhe foi pensado para oferecer a melhor experiência de aprendizado
             </p>
           </motion.div>
@@ -146,9 +146,9 @@ const NewMemberAreaLanding = () => {
             className="max-w-5xl mx-auto relative"
           >
             {/* Browser Mockup */}
-            <div className="bg-[#1a1a1a] rounded-xl overflow-hidden shadow-2xl border border-gray-800">
-              {/* Browser Header */}
-              <div className="flex items-center gap-2 px-4 py-3 bg-[#0a0a0a] border-b border-gray-800">
+            <div className="bg-[#1a1a1a] rounded-lg sm:rounded-xl overflow-hidden shadow-2xl border border-gray-800">
+              {/* Browser Header - Hidden on mobile */}
+              <div className="hidden sm:flex items-center gap-2 px-4 py-3 bg-[#0a0a0a] border-b border-gray-800">
                 <div className="flex gap-2">
                   <div className="w-3 h-3 rounded-full bg-red-500/80" />
                   <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
@@ -162,7 +162,7 @@ const NewMemberAreaLanding = () => {
               </div>
               
               {/* Screenshot Content */}
-              <div className="relative aspect-[16/9] overflow-hidden bg-[#0a0a0a]">
+              <div className="relative aspect-[4/3] sm:aspect-[16/9] overflow-hidden bg-[#0a0a0a]">
                 {screenshots.map((screenshot, index) => (
                   <motion.img
                     key={index}
@@ -183,15 +183,15 @@ const NewMemberAreaLanding = () => {
             {/* Navigation Arrows */}
             <button
               onClick={prevScreenshot}
-              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 md:-translate-x-14 w-10 h-10 md:w-12 md:h-12 bg-[#1a1a1a] hover:bg-[#2a2a2a] rounded-full flex items-center justify-center transition-all border border-gray-700"
+              className="absolute left-1 sm:left-0 top-1/2 -translate-y-1/2 sm:-translate-x-2 md:-translate-x-14 w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-[#1a1a1a]/90 sm:bg-[#1a1a1a] hover:bg-[#2a2a2a] rounded-full flex items-center justify-center transition-all border border-gray-700"
             >
-              <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
+              <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
             </button>
             <button
               onClick={nextScreenshot}
-              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 md:translate-x-14 w-10 h-10 md:w-12 md:h-12 bg-[#1a1a1a] hover:bg-[#2a2a2a] rounded-full flex items-center justify-center transition-all border border-gray-700"
+              className="absolute right-1 sm:right-0 top-1/2 -translate-y-1/2 sm:translate-x-2 md:translate-x-14 w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-[#1a1a1a]/90 sm:bg-[#1a1a1a] hover:bg-[#2a2a2a] rounded-full flex items-center justify-center transition-all border border-gray-700"
             >
-              <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
+              <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
             </button>
 
             {/* Screenshot Info */}
@@ -199,22 +199,22 @@ const NewMemberAreaLanding = () => {
               key={activeScreenshot}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-center mt-6"
+              className="text-center mt-4 sm:mt-6 px-2"
             >
-              <h3 className="text-xl font-semibold text-white mb-2">{screenshots[activeScreenshot].title}</h3>
-              <p className="text-gray-400">{screenshots[activeScreenshot].description}</p>
+              <h3 className="text-lg sm:text-xl font-semibold text-white mb-1 sm:mb-2">{screenshots[activeScreenshot].title}</h3>
+              <p className="text-sm sm:text-base text-gray-400">{screenshots[activeScreenshot].description}</p>
             </motion.div>
 
             {/* Dots Navigation */}
-            <div className="flex justify-center gap-2 mt-6">
+            <div className="flex justify-center gap-2 mt-4 sm:mt-6">
               {screenshots.map((_, index) => (
                 <button
                   key={index}
                   onClick={() => setActiveScreenshot(index)}
-                  className={`h-2.5 rounded-full transition-all ${
+                  className={`h-2 sm:h-2.5 rounded-full transition-all ${
                     activeScreenshot === index 
-                      ? 'bg-[#81e76a] w-8' 
-                      : 'bg-gray-600 hover:bg-gray-500 w-2.5'
+                      ? 'bg-[#81e76a] w-6 sm:w-8' 
+                      : 'bg-gray-600 hover:bg-gray-500 w-2 sm:w-2.5'
                   }`}
                 />
               ))}
@@ -222,7 +222,7 @@ const NewMemberAreaLanding = () => {
           </motion.div>
 
           {/* Thumbnail Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mt-12 max-w-4xl mx-auto">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-4 md:gap-4 mt-8 sm:mt-12 max-w-4xl mx-auto">
             {screenshots.map((item, index) => (
               <motion.button
                 key={item.title}
@@ -231,7 +231,7 @@ const NewMemberAreaLanding = () => {
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
                 onClick={() => setActiveScreenshot(index)}
-                className={`text-left overflow-hidden rounded-lg border transition-all ${
+                className={`text-left overflow-hidden rounded-md sm:rounded-lg border transition-all ${
                   activeScreenshot === index 
                     ? 'border-[#81e76a] ring-2 ring-[#81e76a]/30' 
                     : 'border-gray-700 hover:border-gray-600'
@@ -244,8 +244,8 @@ const NewMemberAreaLanding = () => {
                     className="w-full h-full object-cover object-top hover:scale-105 transition-transform duration-300"
                   />
                 </div>
-                <div className="p-2.5 bg-[#1a1a1a]">
-                  <h3 className="font-medium text-xs text-white">{item.title}</h3>
+                <div className="p-2 sm:p-2.5 bg-[#1a1a1a]">
+                  <h3 className="font-medium text-[10px] sm:text-xs text-white truncate">{item.title}</h3>
                 </div>
               </motion.button>
             ))}
@@ -254,23 +254,23 @@ const NewMemberAreaLanding = () => {
       </section>
 
       {/* Features Grid */}
-      <section className="relative z-10 py-16 md:py-24">
-        <div className="max-w-screen-xl mx-auto px-6 md:px-10 lg:px-16">
+      <section className="relative z-10 py-10 sm:py-16 md:py-24">
+        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 md:px-10 lg:px-16">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-12"
+            className="text-center mb-8 sm:mb-12"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2 sm:mb-4">
               Tudo que você precisa
             </h2>
-            <p className="text-gray-400 max-w-xl mx-auto">
+            <p className="text-sm sm:text-base text-gray-400 max-w-xl mx-auto px-2">
               Recursos premium para criar uma experiência de aprendizado única
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 max-w-5xl mx-auto">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-5 max-w-5xl mx-auto">
             {features.map((feature, index) => (
               <motion.div
                 key={feature.title}
@@ -278,13 +278,13 @@ const NewMemberAreaLanding = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                className="group p-6 bg-[#1a1a1a] rounded-xl border border-gray-800 hover:border-[#81e76a]/50 transition-all duration-300"
+                className="group p-4 sm:p-5 md:p-6 bg-[#1a1a1a] rounded-lg sm:rounded-xl border border-gray-800 hover:border-[#81e76a]/50 transition-all duration-300"
               >
-                <div className="w-10 h-10 bg-[#81e76a]/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-[#81e76a]/20 transition-colors">
-                  <feature.icon className="w-5 h-5 text-[#81e76a]" />
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#81e76a]/10 rounded-lg flex items-center justify-center mb-3 sm:mb-4 group-hover:bg-[#81e76a]/20 transition-colors">
+                  <feature.icon className="w-4 h-4 sm:w-5 sm:h-5 text-[#81e76a]" />
                 </div>
-                <h3 className="text-base font-semibold text-white mb-2">{feature.title}</h3>
-                <p className="text-sm text-gray-400">{feature.description}</p>
+                <h3 className="text-sm sm:text-base font-semibold text-white mb-1 sm:mb-2">{feature.title}</h3>
+                <p className="text-xs sm:text-sm text-gray-400 line-clamp-2 sm:line-clamp-none">{feature.description}</p>
               </motion.div>
             ))}
           </div>
@@ -292,48 +292,48 @@ const NewMemberAreaLanding = () => {
       </section>
 
       {/* Comparison Section */}
-      <section className="relative z-10 py-16 md:py-24">
-        <div className="max-w-screen-xl mx-auto px-6 md:px-10 lg:px-16">
+      <section className="relative z-10 py-10 sm:py-16 md:py-24">
+        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 md:px-10 lg:px-16">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-12"
+            className="text-center mb-8 sm:mb-12"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2 sm:mb-4">
               Antes vs Depois
             </h2>
-            <p className="text-gray-400">
+            <p className="text-sm sm:text-base text-gray-400">
               A evolução que seus alunos vão adorar
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 max-w-3xl mx-auto">
             {/* Before */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              className="p-6 bg-[#1a1a1a] rounded-xl border border-gray-800"
+              className="p-4 sm:p-6 bg-[#1a1a1a] rounded-lg sm:rounded-xl border border-gray-800"
             >
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-3 h-3 rounded-full bg-gray-500" />
-                <span className="text-gray-500 font-medium">Antes</span>
+              <div className="flex items-center gap-2 mb-3 sm:mb-4">
+                <div className="w-2.5 sm:w-3 h-2.5 sm:h-3 rounded-full bg-gray-500" />
+                <span className="text-sm sm:text-base text-gray-500 font-medium">Antes</span>
               </div>
-              <ul className="space-y-3 text-sm text-gray-500">
-                <li className="flex items-center gap-3">
+              <ul className="space-y-2 sm:space-y-3 text-xs sm:text-sm text-gray-500">
+                <li className="flex items-center gap-2 sm:gap-3">
                   <span className="text-red-400">✕</span>
                   Design básico e genérico
                 </li>
-                <li className="flex items-center gap-3">
+                <li className="flex items-center gap-2 sm:gap-3">
                   <span className="text-red-400">✕</span>
                   Player de vídeo simples
                 </li>
-                <li className="flex items-center gap-3">
+                <li className="flex items-center gap-2 sm:gap-3">
                   <span className="text-red-400">✕</span>
                   Navegação confusa
                 </li>
-                <li className="flex items-center gap-3">
+                <li className="flex items-center gap-2 sm:gap-3">
                   <span className="text-red-400">✕</span>
                   Sem personalização
                 </li>
@@ -345,27 +345,27 @@ const NewMemberAreaLanding = () => {
               initial={{ opacity: 0, x: 20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              className="p-6 bg-[#81e76a]/5 rounded-xl border border-[#81e76a]/30"
+              className="p-4 sm:p-6 bg-[#81e76a]/5 rounded-lg sm:rounded-xl border border-[#81e76a]/30"
             >
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-3 h-3 rounded-full bg-[#81e76a]" />
-                <span className="text-[#81e76a] font-medium">Depois</span>
+              <div className="flex items-center gap-2 mb-3 sm:mb-4">
+                <div className="w-2.5 sm:w-3 h-2.5 sm:h-3 rounded-full bg-[#81e76a]" />
+                <span className="text-sm sm:text-base text-[#81e76a] font-medium">Depois</span>
               </div>
-              <ul className="space-y-3 text-sm text-white">
-                <li className="flex items-center gap-3">
-                  <Check className="w-4 h-4 text-[#81e76a]" />
+              <ul className="space-y-2 sm:space-y-3 text-xs sm:text-sm text-white">
+                <li className="flex items-center gap-2 sm:gap-3">
+                  <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#81e76a] flex-shrink-0" />
                   Design premium estilo Netflix
                 </li>
-                <li className="flex items-center gap-3">
-                  <Check className="w-4 h-4 text-[#81e76a]" />
+                <li className="flex items-center gap-2 sm:gap-3">
+                  <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#81e76a] flex-shrink-0" />
                   Player profissional com controles
                 </li>
-                <li className="flex items-center gap-3">
-                  <Check className="w-4 h-4 text-[#81e76a]" />
+                <li className="flex items-center gap-2 sm:gap-3">
+                  <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#81e76a] flex-shrink-0" />
                   Navegação intuitiva e fluida
                 </li>
-                <li className="flex items-center gap-3">
-                  <Check className="w-4 h-4 text-[#81e76a]" />
+                <li className="flex items-center gap-2 sm:gap-3">
+                  <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#81e76a] flex-shrink-0" />
                   Totalmente personalizável
                 </li>
               </ul>
@@ -375,29 +375,29 @@ const NewMemberAreaLanding = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="relative z-10 py-16 md:py-24">
-        <div className="max-w-screen-xl mx-auto px-6 md:px-10 lg:px-16">
+      <section className="relative z-10 py-10 sm:py-16 md:py-24">
+        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 md:px-10 lg:px-16">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="max-w-2xl mx-auto text-center bg-[#1a1a1a] p-8 md:p-12 rounded-2xl border border-gray-800"
+            className="max-w-2xl mx-auto text-center bg-[#1a1a1a] p-6 sm:p-8 md:p-12 rounded-xl sm:rounded-2xl border border-gray-800"
           >
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-3 sm:mb-4">
               Pronto para impressionar seus alunos?
             </h2>
-            <p className="text-gray-400 mb-8 max-w-lg mx-auto">
+            <p className="text-sm sm:text-base text-gray-400 mb-6 sm:mb-8 max-w-lg mx-auto">
               Comece agora e transforme a experiência do seu curso com a nova área de membros da Kambafy.
             </p>
             <motion.button 
               onClick={() => navigate('/auth')}
-              className="bg-[#81e76a] text-[#111111] px-8 py-3 rounded-md text-base font-semibold hover:bg-opacity-90 transition-colors"
+              className="bg-[#81e76a] text-[#111111] px-6 sm:px-8 py-2.5 sm:py-3 rounded-md text-sm sm:text-base font-semibold hover:bg-opacity-90 transition-colors w-full sm:w-auto"
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
             >
               Começar Gratuitamente
             </motion.button>
-            <p className="text-xs text-gray-500 mt-4">
+            <p className="text-[10px] sm:text-xs text-gray-500 mt-3 sm:mt-4">
               Sem cartão de crédito • Configure em minutos
             </p>
           </motion.div>
@@ -405,14 +405,14 @@ const NewMemberAreaLanding = () => {
       </section>
 
       {/* Footer */}
-      <footer className="relative z-10 border-t border-gray-800 py-8">
-        <div className="max-w-screen-xl mx-auto px-6 md:px-10 lg:px-16 text-center">
+      <footer className="relative z-10 border-t border-gray-800 py-6 sm:py-8">
+        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 md:px-10 lg:px-16 text-center">
           <img 
             src="/kambafy-logo-white.png" 
             alt="Kambafy" 
-            className="h-8 w-auto mx-auto mb-4"
+            className="h-6 sm:h-8 w-auto mx-auto mb-3 sm:mb-4"
           />
-          <p className="text-sm text-gray-500">
+          <p className="text-xs sm:text-sm text-gray-500">
             © 2025 Kambafy. Todos os direitos reservados.
           </p>
         </div>
