@@ -9,6 +9,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { SignInPage, Testimonial } from '@/components/ui/sign-in';
 import loginHeroImage from '@/assets/about-section-team.jpg';
 import victorAvatar from '@/assets/testimonial-victor-muabi.jpg';
+import { useLogin2FA } from '@/hooks/useLogin2FA';
+import TwoFactorVerification from '@/components/TwoFactorVerification';
 
 const sampleTestimonials: Testimonial[] = [
   {
@@ -35,7 +37,7 @@ const Auth = () => {
   const [searchParams] = useSearchParams();
   const mode = searchParams.get('mode');
   const userTypeParam = searchParams.get('type') as 'customer' | 'seller' | null;
-  const [currentView, setCurrentView] = useState<'login' | 'signup' | 'password-recovery' | 'reset-password' | 'signup-verification'>('login');
+  const [currentView, setCurrentView] = useState<'login' | 'signup' | 'password-recovery' | 'reset-password' | 'signup-verification' | '2fa-verification'>('login');
   const [selectedUserType, setSelectedUserType] = useState<'customer' | 'seller' | null>(userTypeParam);
   
   // Estados para verificação de signup
@@ -43,6 +45,14 @@ const Auth = () => {
     email: string;
     password: string;
     fullName: string;
+  } | null>(null);
+  
+  // Estados para 2FA após login
+  const [pending2FAData, setPending2FAData] = useState<{
+    email: string;
+    userId: string;
+    password: string; // Guardar temporariamente para relogar após 2FA
+    reason: 'new_device' | 'new_browser' | 'long_inactivity' | 'suspicious_ip';
   } | null>(null);
   
   // Estados para o novo design
@@ -57,7 +67,7 @@ const Auth = () => {
   
   const { signUp, signIn, user } = useAuth();
   const navigate = useNavigate();
-  // Não precisamos mais do useToast
+  const { checkLogin2FARequired, registerSuccessfulLogin } = useLogin2FA();
 
   useEffect(() => {
     if (mode === 'signup') {
@@ -119,7 +129,6 @@ const Auth = () => {
         } else if (result.error.message.includes('Email not confirmed') || result.error.code === 'email_not_confirmed') {
           message = "Email não confirmado! Verifique sua caixa de entrada e clique no link de confirmação.";
           
-          // Mostrar toast específico para email não confirmado
           toast({
             title: "⚠️ Email não confirmado",
             description: "Você precisa confirmar seu email antes de fazer login. Verifique sua caixa de entrada.",
@@ -128,12 +137,89 @@ const Auth = () => {
         }
 
         setErrorField(message);
+        setLoading(false);
+        return;
+      }
+
+      // Login bem-sucedido - verificar se precisa de 2FA
+      const { data: { user: loggedUser } } = await supabase.auth.getUser();
+      
+      if (loggedUser) {
+        const check2FA = await checkLogin2FARequired(loggedUser);
+        
+        if (check2FA.requires2FA && check2FA.reason) {
+          console.log('🔐 2FA necessário:', check2FA.reason);
+          
+          // Fazer logout temporário para forçar 2FA
+          await supabase.auth.signOut();
+          
+          setPending2FAData({
+            email: check2FA.userEmail,
+            userId: check2FA.userId,
+            password: password, // Guardar para relogar depois
+            reason: check2FA.reason
+          });
+          setCurrentView('2fa-verification');
+          setLoading(false);
+          return;
+        }
+        
+        // Registrar login bem-sucedido
+        await registerSuccessfulLogin(loggedUser.id);
       }
     } catch (error) {
       setErrorField("Ocorreu um erro. Tente novamente.");
     } finally {
       setLoading(false);
     }
+  };
+  
+  // Callback para 2FA verificado com sucesso
+  const handle2FASuccess = async () => {
+    if (!pending2FAData) return;
+    
+    try {
+      // Relogar o usuário
+      const { error: reloginError } = await supabase.auth.signInWithPassword({
+        email: pending2FAData.email,
+        password: pending2FAData.password
+      });
+      
+      if (reloginError) {
+        console.error('Erro ao relogar após 2FA:', reloginError);
+        setErrorField('Erro ao completar login. Tente novamente.');
+        setCurrentView('login');
+        setPending2FAData(null);
+        return;
+      }
+      
+      // Registrar login com dispositivo confiável
+      await registerSuccessfulLogin(pending2FAData.userId, true);
+      
+      // Limpar dados sensíveis
+      setPending2FAData(null);
+      
+      // Redirecionar
+      const userType = localStorage.getItem('userType') || 'business';
+      const redirectPath = userType === 'customer' ? '/meus-acessos' : '/vendedor';
+      
+      toast({
+        title: "Login verificado!",
+        description: "Dispositivo verificado com sucesso.",
+      });
+      
+      navigate(redirectPath, { replace: true });
+    } catch (error) {
+      console.error('Erro ao finalizar 2FA:', error);
+      setCurrentView('login');
+      setPending2FAData(null);
+    }
+  };
+  
+  // Callback para voltar do 2FA
+  const handle2FABack = async () => {
+    setPending2FAData(null);
+    setCurrentView('login');
   };
 
 
@@ -256,6 +342,65 @@ const Auth = () => {
       <PasswordRecovery
         onBack={() => setCurrentView('login')}
       />
+    );
+  }
+
+  // Tela de verificação 2FA após login
+  if (currentView === '2fa-verification' && pending2FAData) {
+    const get2FAMessage = () => {
+      switch (pending2FAData.reason) {
+        case 'new_device':
+          return 'Detectamos um novo dispositivo. Por segurança, confirme sua identidade.';
+        case 'new_browser':
+          return 'Detectamos um novo navegador. Por segurança, confirme sua identidade.';
+        case 'long_inactivity':
+          return 'Há algum tempo que não acessa sua conta. Por segurança, confirme sua identidade.';
+        case 'suspicious_ip':
+          return 'Detectamos um acesso de uma localização diferente. Por segurança, confirme sua identidade.';
+        default:
+          return 'Por segurança, confirme sua identidade.';
+      }
+    };
+
+    return (
+      <div className="min-h-screen flex flex-col md:flex-row font-geist w-full overflow-x-hidden">
+        <section className="flex-1 flex items-center justify-center p-4 md:p-8 py-8">
+          <div className="w-full max-w-md">
+            <div className="rounded-3xl p-8 bg-card border border-border shadow-lg">
+              {/* Logo */}
+              <div className="flex justify-center mb-6">
+                <div className="w-16 h-16 bg-foreground rounded-full flex items-center justify-center">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  </div>
+                </div>
+              </div>
+
+              <h1 className="text-2xl font-semibold text-center mb-2">
+                Verificação de Segurança
+              </h1>
+              <p className="text-center text-muted-foreground mb-6">
+                {get2FAMessage()}
+              </p>
+
+              <TwoFactorVerification
+                email={pending2FAData.email}
+                onVerificationSuccess={handle2FASuccess}
+                onBack={handle2FABack}
+                context="login"
+              />
+            </div>
+          </div>
+        </section>
+
+        {sampleTestimonials.length > 0 && (
+          <section className="hidden md:block flex-1 relative p-4">
+            <div className="animate-slide-right animate-delay-300 absolute inset-4 rounded-3xl bg-cover bg-center" style={{ backgroundImage: `url(${loginHeroImage})` }}></div>
+          </section>
+        )}
+      </div>
     );
   }
 
