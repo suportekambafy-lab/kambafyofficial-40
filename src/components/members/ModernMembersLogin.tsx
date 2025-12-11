@@ -373,23 +373,16 @@ export default function ModernMembersLogin() {
                   <button
                     type="submit"
                     disabled={isSubmitting || !email}
-                    className="absolute right-1.5 top-1/2 -translate-y-1/2 text-white w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed group overflow-hidden"
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 text-black w-10 h-10 flex items-center justify-center rounded-full bg-white hover:bg-white/90 transition-colors disabled:opacity-30 disabled:bg-white/20 disabled:text-white/50 disabled:cursor-not-allowed"
                   >
                     {isSubmitting ? (
                       <motion.div
                         animate={{ rotate: 360 }}
                         transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                        className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full"
+                        className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full"
                       />
                     ) : (
-                      <span className="relative w-full h-full block overflow-hidden">
-                        <span className="absolute inset-0 flex items-center justify-center transition-transform duration-300 group-hover:translate-x-full">
-                          →
-                        </span>
-                        <span className="absolute inset-0 flex items-center justify-center transition-transform duration-300 -translate-x-full group-hover:translate-x-0">
-                          →
-                        </span>
-                      </span>
+                      <span className="text-lg font-medium">→</span>
                     )}
                   </button>
                 </div>
