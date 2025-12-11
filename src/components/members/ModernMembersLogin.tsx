@@ -578,7 +578,7 @@ export default function ModernMembersLogin() {
                 Precisa acessar o portal de clientes?
               </p>
               <a href="/auth" className="text-sm font-medium transition-colors duration-200 hover:underline" style={{
-              color: 'hsl(0, 70%, 55%)'
+              color: 'hsl(94, 55%, 50%)'
             }}>
                 Clique aqui para fazer login no portal
               </a>
