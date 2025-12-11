@@ -181,6 +181,7 @@ const App = () => {
                        })()}
                        <Route path="/" element={<OptimizedRoutes.Index />} />
                       <Route path="/auth" element={<OptimizedRoutes.Auth />} />
+                      <Route path="/verificar-2fa" element={<OptimizedRoutes.Verify2FA />} />
                       <Route path="/reset-password" element={<OptimizedRoutes.ResetPassword />} />
                        <Route path="/produto/:productId" element={<OptimizedRoutes.ProductSalesPage />} />
                        <Route path="/checkout/:productId" element={<OptimizedRoutes.Checkout />} />

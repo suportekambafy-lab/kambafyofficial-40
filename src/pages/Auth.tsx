@@ -65,7 +65,7 @@ const Auth = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [resetLoading, setResetLoading] = useState(false);
   
-  const { signUp, signIn, user } = useAuth();
+  const { signUp, signIn, user, set2FARequired, requires2FA } = useAuth();
   const navigate = useNavigate();
   const { checkLogin2FARequired, registerSuccessfulLogin } = useLogin2FA();
 
@@ -84,13 +84,18 @@ const Auth = () => {
   }, [mode, userTypeParam]);
 
   useEffect(() => {
+    // Não redirecionar se está aguardando verificação 2FA
+    if (requires2FA) {
+      return;
+    }
+    
     if (user) {
       const userType = localStorage.getItem('userType') || 'business';
       const redirectPath = userType === 'customer' ? '/meus-acessos' : '/vendedor';
       
       navigate(redirectPath, { replace: true });
     }
-  }, [user, navigate]);
+  }, [user, navigate, requires2FA]);
 
   const handleUserTypeSelect = (type: 'customer' | 'seller' | null) => {
     setSelectedUserType(type);
@@ -141,10 +146,24 @@ const Auth = () => {
         return;
       }
 
-      // Login bem-sucedido - registrar dispositivo (sem 2FA bloqueante para evitar problemas)
+      // Login bem-sucedido - verificar se precisa de 2FA
       const { data: { user: loggedUser } } = await supabase.auth.getUser();
       
       if (loggedUser) {
+        const check2FA = await checkLogin2FARequired(loggedUser);
+        
+        if (check2FA.requires2FA && check2FA.reason) {
+          console.log('🔐 2FA necessário:', check2FA.reason);
+          
+          // Sinalizar ao contexto que precisa de 2FA
+          set2FARequired(true, loggedUser.email || '');
+          
+          // Redirecionar para página de verificação 2FA
+          navigate('/verificar-2fa', { replace: true });
+          setLoading(false);
+          return;
+        }
+        
         // Registrar login bem-sucedido
         await registerSuccessfulLogin(loggedUser.id);
         
