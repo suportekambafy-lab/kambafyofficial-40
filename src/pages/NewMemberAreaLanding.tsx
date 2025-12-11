@@ -169,7 +169,7 @@ const NewMemberAreaLanding = () => {
               </div>
               
               {/* Screenshot Content */}
-              <div className="relative aspect-[4/3] sm:aspect-[16/9] overflow-hidden bg-[#0a0a0a]">
+              <div className="relative aspect-[3/4] sm:aspect-[16/9] overflow-hidden bg-[#0a0a0a]">
                 {screenshots.map((screenshot, index) => (
                   <motion.img
                     key={index}
