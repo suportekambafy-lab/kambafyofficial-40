@@ -335,8 +335,33 @@ const handler = async (req: Request): Promise<Response> => {
         `;
         break;
       
+      case 'login':
+        subject = 'Código de verificação - Acesso à sua conta Kambafy';
+        htmlContent = `
+          <html>
+          <head>
+            <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          </head>
+          <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+              <div style="text-align: center; padding: 40px 30px;">
+                <h1 style="margin: 0 0 10px; font-size: 28px; font-weight: 700; color: #1e293b;">KAMBAFY</h1>
+                <h2 style="margin: 0 0 20px; font-size: 20px; font-weight: 600; color: #16a34a;">Verificação de Segurança</h2>
+                <p style="margin: 0 0 10px; color: #475569;">Detectamos uma tentativa de login na sua conta a partir de um novo dispositivo ou navegador.</p>
+                <p style="margin: 0 0 25px; color: #475569;">Para sua segurança, confirme que é você com o código abaixo:</p>
+                ${codeDisplay}
+                <p style="margin: 20px 0 0; color: #64748b; font-size: 14px;">Este código é válido por 10 minutos.</p>
+                <p style="margin: 10px 0 0; color: #dc2626; font-size: 14px;"><strong>⚠️ Se você não tentou fazer login, alguém pode estar tentando acessar sua conta. Recomendamos alterar sua senha.</strong></p>
+              </div>
+            </div>
+          </body>
+          </html>
+        `;
+        break;
+      
       default:
-        subject = 'Código de verificação - KambaPay';
+        subject = 'Código de verificação - Kambafy';
         htmlContent = `
           <html>
           <head>

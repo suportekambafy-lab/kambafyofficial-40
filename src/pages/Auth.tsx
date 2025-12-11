@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -11,6 +10,8 @@ import loginHeroImage from '@/assets/about-section-team.jpg';
 import victorAvatar from '@/assets/testimonial-victor-muabi.jpg';
 import { useLogin2FA } from '@/hooks/useLogin2FA';
 import TwoFactorVerification from '@/components/TwoFactorVerification';
+import KambafyLogo from '@/assets/kambafy-logo-gray.svg';
+import { motion } from 'framer-motion';
 
 const sampleTestimonials: Testimonial[] = [
   {
@@ -369,42 +370,78 @@ const Auth = () => {
       }
     };
 
+    const isCustomerType = selectedUserType === 'customer';
+    
     return (
-      <div className="min-h-screen flex flex-col md:flex-row font-geist w-full overflow-x-hidden">
+      <div className="min-h-screen flex flex-col md:flex-row font-geist w-full overflow-x-hidden bg-background">
         <section className="flex-1 flex items-center justify-center p-4 md:p-8 py-8">
-          <div className="w-full max-w-md">
-            <div className="rounded-3xl p-8 bg-card border border-border shadow-lg">
-              {/* Logo */}
-              <div className="flex justify-center mb-6">
-                <div className="w-16 h-16 bg-foreground rounded-full flex items-center justify-center">
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  </div>
+          <motion.div 
+            className="w-full max-w-md"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <div className="rounded-3xl p-8 bg-card border border-border shadow-xl">
+              {/* Logo Kambafy */}
+              <motion.div 
+                className="flex justify-center mb-8"
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.1, duration: 0.3 }}
+              >
+                <div className="w-20 h-20 bg-foreground rounded-2xl flex items-center justify-center p-3 shadow-lg">
+                  <img 
+                    src={KambafyLogo} 
+                    alt="Kambafy" 
+                    className="w-full h-full object-contain"
+                  />
                 </div>
-              </div>
+              </motion.div>
 
-              <h1 className="text-2xl font-semibold text-center mb-2">
-                Verificação de Segurança
-              </h1>
-              <p className="text-center text-muted-foreground mb-6">
-                {get2FAMessage()}
-              </p>
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, duration: 0.3 }}
+              >
+                <h1 className="text-2xl font-semibold text-center mb-2 text-foreground">
+                  Verificação de Segurança
+                </h1>
+                <p className="text-center text-muted-foreground mb-2">
+                  {isCustomerType 
+                    ? 'Confirme sua identidade para acessar seus cursos.'
+                    : 'Confirme sua identidade para acessar seu painel de vendedor.'
+                  }
+                </p>
+                <p className="text-center text-sm text-muted-foreground/70 mb-6">
+                  {get2FAMessage()}
+                </p>
+              </motion.div>
 
-              <TwoFactorVerification
-                email={pending2FAData.email}
-                onVerificationSuccess={handle2FASuccess}
-                onBack={handle2FABack}
-                context="login"
-              />
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3, duration: 0.3 }}
+              >
+                <TwoFactorVerification
+                  email={pending2FAData.email}
+                  onVerificationSuccess={handle2FASuccess}
+                  onBack={handle2FABack}
+                  context="login"
+                />
+              </motion.div>
             </div>
-          </div>
+          </motion.div>
         </section>
 
         {sampleTestimonials.length > 0 && (
           <section className="hidden md:block flex-1 relative p-4">
-            <div className="animate-slide-right animate-delay-300 absolute inset-4 rounded-3xl bg-cover bg-center" style={{ backgroundImage: `url(${loginHeroImage})` }}></div>
+            <motion.div 
+              className="absolute inset-4 rounded-3xl bg-cover bg-center shadow-2xl" 
+              style={{ backgroundImage: `url(${loginHeroImage})` }}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+            />
           </section>
         )}
       </div>
