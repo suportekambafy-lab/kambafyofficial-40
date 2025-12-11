@@ -434,23 +434,38 @@ export function BankingInfo({ isVerified = false }: BankingInfoProps) {
   // Verificação 2FA
   if (currentStep === 'requesting_2fa' && user?.email) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-            <CreditCard className="h-4 w-4 sm:h-5 sm:w-5" />
-            Verificação de Segurança
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <TwoFactorVerification
-            email={user.email}
-            context="bank_details_change"
-            onVerificationSuccess={handle2FASuccess}
-            onBack={handle2FACancel}
-            skipInitialSend={sessionRestored}
-          />
-        </CardContent>
-      </Card>
+      <div className="flex items-center justify-center p-4">
+        <div className="rounded-3xl p-6 md:p-8 w-full max-w-sm relative overflow-hidden bg-card border border-border shadow-lg">
+          <div className="relative z-10">
+            {/* Logo */}
+            <div className="flex justify-center mb-6">
+              <div className="w-16 h-16 bg-foreground rounded-full flex items-center justify-center">
+                <div className="flex space-x-1">
+                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Title */}
+            <h1 className="text-xl md:text-2xl font-semibold text-center text-foreground mb-2">
+              Verificação de Segurança
+            </h1>
+            <p className="text-center text-muted-foreground text-sm mb-6">
+              Por segurança, confirme sua identidade para alterar dados bancários
+            </p>
+
+            <TwoFactorVerification
+              email={user.email}
+              context="bank_details_change"
+              onVerificationSuccess={handle2FASuccess}
+              onBack={handle2FACancel}
+              skipInitialSend={sessionRestored}
+            />
+          </div>
+        </div>
+      </div>
     );
   }
 
