@@ -132,7 +132,11 @@ export function NetflixLessonViewer({
     return `${minutes} min`;
   };
   const getLessonThumbnail = (l: Lesson) => {
+    // First priority: lesson cover image
+    if ((l as any).cover_image_url) return (l as any).cover_image_url as string;
+    // Second: video_data thumbnail
     if (l.video_data?.thumbnail) return l.video_data.thumbnail as string;
+    // Third: Generate from hls_url
     if (l.hls_url) {
       const match = l.hls_url.match(/^(https:\/\/[^/]+\/[^/]+)/);
       if (match) return `${match[1]}/thumbnail.jpg`;

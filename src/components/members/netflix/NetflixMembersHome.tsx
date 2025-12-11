@@ -208,13 +208,17 @@ export function NetflixMembersHome({
     return modules.find(m => m.id === moduleId)?.title;
   };
 
-  // Generate thumbnail URL from Bunny CDN hls_url
+  // Generate thumbnail URL - prioritize lesson cover, then video thumbnail
   const getLessonThumbnail = (lesson: Lesson) => {
-    // First try video_data thumbnail
+    // First priority: lesson cover image
+    if ((lesson as any).cover_image_url) {
+      return (lesson as any).cover_image_url as string;
+    }
+    // Second: video_data thumbnail
     if (lesson.video_data?.thumbnail) {
       return lesson.video_data.thumbnail as string;
     }
-    // Generate from hls_url (Bunny CDN pattern)
+    // Third: Generate from hls_url (Bunny CDN pattern)
     if (lesson.hls_url) {
       // Extract base URL and video ID from hls_url
       // Pattern: https://vz-xxx.b-cdn.net/VIDEO_ID/playlist.m3u8
