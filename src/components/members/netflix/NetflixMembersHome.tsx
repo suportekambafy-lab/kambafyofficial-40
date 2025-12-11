@@ -166,7 +166,7 @@ export function NetflixMembersHome({
         />
 
         {/* Carousels */}
-        <div className="relative z-10 -mt-20 md:-mt-32 pb-20 space-y-2 md:space-y-4">
+        <div className="relative z-10 pt-8 md:pt-12 pb-20 space-y-4">
           {/* Continue Watching */}
           {continueWatchingLessons.length > 0 && (
             <NetflixCarousel title="Continuar a Assistir" subtitle={`${continueWatchingLessons.length} em progresso`}>
@@ -185,8 +185,31 @@ export function NetflixMembersHome({
             </NetflixCarousel>
           )}
 
-          {/* Modules as Carousels */}
-          {modules.filter(m => (lessonsByModule[m.id] || []).length > 0).map(module => (
+          {/* You might also like - First Module */}
+          {modules.length > 0 && (lessonsByModule[modules[0].id] || []).length > 0 && (
+            <NetflixCarousel 
+              title="You might also like"
+              showSeeAll
+            >
+              {(lessonsByModule[modules[0].id] || []).map(lesson => (
+                <NetflixCourseCard
+                  key={lesson.id}
+                  id={lesson.id}
+                  title={lesson.title}
+                  thumbnail={lesson.video_data?.thumbnail as string}
+                  duration={lesson.duration}
+                  isCompleted={lessonProgress[lesson.id]?.completed}
+                  progress={lessonProgress[lesson.id]?.progress_percentage}
+                  tags={[getModuleTitle(lesson.module_id) || 'Curso']}
+                  isLocked={lesson.is_scheduled && lesson.scheduled_at && new Date(lesson.scheduled_at) > new Date()}
+                  onClick={() => onLessonSelect(lesson)}
+                />
+              ))}
+            </NetflixCarousel>
+          )}
+
+          {/* Other Modules as Carousels */}
+          {modules.slice(1).filter(m => (lessonsByModule[m.id] || []).length > 0).map(module => (
             <NetflixCarousel 
               key={module.id} 
               title={module.title}
@@ -202,6 +225,7 @@ export function NetflixMembersHome({
                   duration={lesson.duration}
                   isCompleted={lessonProgress[lesson.id]?.completed}
                   progress={lessonProgress[lesson.id]?.progress_percentage}
+                  tags={[module.title]}
                   isLocked={lesson.is_scheduled && lesson.scheduled_at && new Date(lesson.scheduled_at) > new Date()}
                   onClick={() => onLessonSelect(lesson)}
                 />

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Info, Plus, Volume2, VolumeX, Clock, Users, Star, BookOpen } from 'lucide-react';
+import { Play, Volume2, VolumeX, Clock, Star, BookOpen, Users2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -49,7 +49,6 @@ export function NetflixHeroBanner({
   const progressPercentage = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
   const hasProgress = lastWatchedProgress > 0 || completedLessons > 0;
 
-  // Auto-play video preview after delay
   useEffect(() => {
     const timer = setTimeout(() => {
       if (memberArea.hero_video_url || featuredLesson?.video_url) {
@@ -67,212 +66,192 @@ export function NetflixHeroBanner({
   };
 
   return (
-    <div className="relative w-full h-[70vh] md:h-[80vh] min-h-[500px] overflow-hidden">
-      {/* Background Video/Image */}
-      <div className="absolute inset-0">
-        <AnimatePresence>
-          {showVideo && (memberArea.hero_video_url || featuredLesson?.video_url) ? (
-            <motion.video
-              ref={videoRef}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: isVideoLoaded ? 1 : 0 }}
-              exit={{ opacity: 0 }}
-              className="w-full h-full object-cover"
-              src={memberArea.hero_video_url || featuredLesson?.video_url}
-              autoPlay
-              loop
-              muted={isMuted}
-              playsInline
-              onLoadedData={() => setIsVideoLoaded(true)}
-            />
-          ) : (
-            <motion.div
-              initial={{ scale: 1.1 }}
-              animate={{ scale: 1 }}
-              transition={{ duration: 10, ease: 'easeOut' }}
-              className="w-full h-full"
-            >
-              {memberArea.hero_image_url ? (
-                <img
-                  src={memberArea.hero_image_url}
-                  alt={memberArea.name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div 
-                  className="w-full h-full"
-                  style={{
-                    background: `linear-gradient(135deg, hsl(var(--netflix-gradient-start)) 0%, hsl(var(--netflix-surface)) 50%, hsl(var(--netflix-gradient-end)) 100%)`
-                  }}
-                />
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Gradient Overlays */}
-      <div 
-        className="absolute inset-0"
-        style={{
-          background: 'linear-gradient(180deg, transparent 0%, rgba(15, 15, 20, 0.3) 40%, rgba(15, 15, 20, 0.85) 85%, hsl(var(--netflix-bg)) 100%)'
-        }}
-      />
-      <div 
-        className="absolute inset-0"
-        style={{
-          background: 'linear-gradient(90deg, rgba(15, 15, 20, 0.8) 0%, transparent 50%, transparent 100%)'
-        }}
-      />
-
-      {/* Content */}
-      <div className="absolute inset-0 flex flex-col justify-end pb-16 md:pb-24 px-6 md:px-12 lg:px-16">
-        <div className="max-w-3xl space-y-4 md:space-y-6">
-          {/* Course Badge */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="flex items-center gap-3"
-          >
-            {memberArea.logo_url && (
-              <img 
-                src={memberArea.logo_url} 
-                alt="" 
-                className="h-8 md:h-10 w-auto object-contain"
+    <div className="relative w-full">
+      {/* Main Hero Container with rounded corners */}
+      <div className="relative mx-6 md:mx-12 lg:mx-16 mt-24 md:mt-28 rounded-3xl overflow-hidden" style={{ aspectRatio: '16/9', maxHeight: '75vh' }}>
+        {/* Background Video/Image */}
+        <div className="absolute inset-0">
+          <AnimatePresence>
+            {showVideo && (memberArea.hero_video_url || featuredLesson?.video_url) ? (
+              <motion.video
+                ref={videoRef}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: isVideoLoaded ? 1 : 0 }}
+                exit={{ opacity: 0 }}
+                className="w-full h-full object-cover"
+                src={memberArea.hero_video_url || featuredLesson?.video_url}
+                autoPlay
+                loop
+                muted={isMuted}
+                playsInline
+                onLoadedData={() => setIsVideoLoaded(true)}
               />
+            ) : (
+              <motion.div
+                initial={{ scale: 1.05 }}
+                animate={{ scale: 1 }}
+                transition={{ duration: 8, ease: 'easeOut' }}
+                className="w-full h-full"
+              >
+                {memberArea.hero_image_url ? (
+                  <img
+                    src={memberArea.hero_image_url}
+                    alt={memberArea.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div 
+                    className="w-full h-full bg-gradient-to-br from-amber-900/50 via-stone-800 to-stone-900"
+                  />
+                )}
+              </motion.div>
             )}
-            <Badge 
-              variant="outline" 
-              className="bg-white/10 border-white/20 text-white/90 backdrop-blur-sm px-3 py-1"
-            >
-              <BookOpen className="w-3 h-3 mr-1.5" />
-              CURSO
-            </Badge>
-          </motion.div>
-
-          {/* Title */}
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="text-4xl md:text-6xl lg:text-7xl font-bold text-white tracking-tight leading-none"
-            style={{ 
-              textShadow: '2px 4px 20px rgba(0, 0, 0, 0.5)',
-              fontFamily: 'Inter, SF Pro, sans-serif'
-            }}
-          >
-            {memberArea.hero_title || memberArea.name}
-          </motion.h1>
-
-          {/* Meta Info */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="flex flex-wrap items-center gap-3 md:gap-4 text-sm md:text-base text-white/80"
-          >
-            {progressPercentage > 0 && (
-              <span className="flex items-center gap-1.5 text-primary font-medium">
-                <Star className="w-4 h-4 fill-primary" />
-                {progressPercentage}% Completo
-              </span>
-            )}
-            <span className="flex items-center gap-1.5">
-              <BookOpen className="w-4 h-4" />
-              {totalLessons} Aulas
-            </span>
-            {featuredLesson?.duration && (
-              <span className="flex items-center gap-1.5">
-                <Clock className="w-4 h-4" />
-                {formatDuration(featuredLesson.duration)}
-              </span>
-            )}
-          </motion.div>
-
-          {/* Description */}
-          {(memberArea.hero_description || memberArea.description) && (
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="text-base md:text-lg text-white/70 max-w-2xl line-clamp-3"
-            >
-              {memberArea.hero_description || memberArea.description}
-            </motion.p>
-          )}
-
-          {/* Progress Bar (if in progress) */}
-          {hasProgress && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.55 }}
-              className="w-full max-w-md"
-            >
-              <Progress 
-                value={progressPercentage} 
-                className="h-1.5 bg-white/20"
-              />
-              <p className="text-xs text-white/50 mt-1.5">
-                {completedLessons} de {totalLessons} aulas concluídas
-              </p>
-            </motion.div>
-          )}
-
-          {/* Action Buttons */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="flex flex-wrap items-center gap-3 pt-2"
-          >
-            <Button
-              onClick={onPlay}
-              size="lg"
-              className="bg-white hover:bg-white/90 text-black font-semibold px-6 md:px-8 h-11 md:h-12 rounded-md gap-2 transition-all hover:scale-105"
-            >
-              <Play className="w-5 h-5 md:w-6 md:h-6 fill-black" />
-              {hasProgress ? 'Continuar' : 'Começar'}
-            </Button>
-
-            <Button
-              onClick={onViewCurriculum}
-              size="lg"
-              variant="outline"
-              className="bg-white/20 hover:bg-white/30 text-white border-transparent font-semibold px-6 md:px-8 h-11 md:h-12 rounded-md gap-2 backdrop-blur-sm transition-all"
-            >
-              <Info className="w-5 h-5 md:w-6 md:h-6" />
-              Ver Currículo
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="icon"
-              className="w-11 h-11 md:w-12 md:h-12 rounded-full border border-white/40 text-white hover:bg-white/10"
-            >
-              <Plus className="w-5 h-5 md:w-6 md:h-6" />
-            </Button>
-          </motion.div>
+          </AnimatePresence>
         </div>
 
-        {/* Mute Button (if video) */}
-        {showVideo && isVideoLoaded && (memberArea.hero_video_url || featuredLesson?.video_url) && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="absolute bottom-16 md:bottom-24 right-6 md:right-12"
-          >
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsMuted(!isMuted)}
-              className="w-10 h-10 rounded-full border border-white/40 text-white hover:bg-white/10"
+        {/* Gradient Overlays - More cinematic */}
+        <div 
+          className="absolute inset-0"
+          style={{
+            background: 'linear-gradient(180deg, transparent 0%, transparent 30%, rgba(0, 0, 0, 0.4) 60%, rgba(0, 0, 0, 0.85) 100%)'
+          }}
+        />
+        <div 
+          className="absolute inset-0"
+          style={{
+            background: 'linear-gradient(90deg, rgba(0, 0, 0, 0.6) 0%, transparent 40%, transparent 100%)'
+          }}
+        />
+
+        {/* Content */}
+        <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-10 lg:p-12">
+          <div className="max-w-2xl space-y-4">
+            {/* Series Badge - Netflix style */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="flex items-center gap-2"
             >
-              {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-            </Button>
-          </motion.div>
-        )}
+              <span className="text-netflix-red font-black text-lg">N</span>
+              <span className="text-white/80 text-xs font-medium tracking-[0.2em] uppercase">CURSO</span>
+            </motion.div>
+
+            {/* Title - Large stylized */}
+            <motion.h1
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[0.9] uppercase"
+              style={{ 
+                textShadow: '0 4px 30px rgba(0, 0, 0, 0.5)',
+                fontFamily: 'Inter, SF Pro, sans-serif',
+                letterSpacing: '-0.02em'
+              }}
+            >
+              {memberArea.hero_title || memberArea.name}
+            </motion.h1>
+
+            {/* Meta Info - Year, Rating, Modules, Duration */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="flex flex-wrap items-center gap-3 text-sm text-white/90"
+            >
+              <span className="font-medium">2024</span>
+              <Badge 
+                variant="outline" 
+                className="border-white/40 text-white/90 text-xs px-2 py-0.5 rounded"
+              >
+                PREMIUM
+              </Badge>
+              <span>{totalLessons} Módulos</span>
+              {featuredLesson?.duration && (
+                <span className="flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5" />
+                  {formatDuration(featuredLesson.duration)}
+                </span>
+              )}
+            </motion.div>
+
+            {/* Description */}
+            {(memberArea.hero_description || memberArea.description) && (
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="text-sm md:text-base text-white/70 max-w-lg line-clamp-3 leading-relaxed"
+              >
+                {memberArea.hero_description || memberArea.description}
+              </motion.p>
+            )}
+
+            {/* Progress Bar (if in progress) */}
+            {hasProgress && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.55 }}
+                className="w-full max-w-sm"
+              >
+                <Progress 
+                  value={progressPercentage} 
+                  className="h-1 bg-white/20"
+                />
+                <p className="text-xs text-white/50 mt-1.5">
+                  {progressPercentage}% concluído
+                </p>
+              </motion.div>
+            )}
+
+            {/* Action Buttons - Netflix Style */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+              className="flex flex-wrap items-center gap-3 pt-2"
+            >
+              {/* Play Button - White filled */}
+              <Button
+                onClick={onPlay}
+                size="lg"
+                className="bg-white hover:bg-white/90 text-black font-bold px-6 md:px-8 h-12 rounded-lg gap-2 transition-all hover:scale-105 shadow-xl"
+              >
+                <Play className="w-5 h-5 fill-black" />
+                Play
+              </Button>
+
+              {/* Watch Together / Curriculum Button - Accent colored */}
+              <Button
+                onClick={onViewCurriculum}
+                size="lg"
+                className="bg-netflix-red hover:bg-netflix-red/90 text-white font-bold px-6 md:px-8 h-12 rounded-lg gap-2 transition-all"
+              >
+                <Users2 className="w-5 h-5" />
+                Ver Currículo
+              </Button>
+            </motion.div>
+          </div>
+
+          {/* Mute Button (if video) */}
+          {showVideo && isVideoLoaded && (memberArea.hero_video_url || featuredLesson?.video_url) && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="absolute bottom-6 md:bottom-10 right-6 md:right-10"
+            >
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsMuted(!isMuted)}
+                className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20"
+              >
+                {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+              </Button>
+            </motion.div>
+          )}
+        </div>
       </div>
     </div>
   );

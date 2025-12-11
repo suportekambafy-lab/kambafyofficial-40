@@ -107,6 +107,7 @@ export default {
 					'text-muted': 'hsl(var(--netflix-text-muted))',
 					accent: 'hsl(var(--netflix-accent))',
 					green: 'hsl(var(--netflix-green))',
+					red: 'hsl(var(--netflix-red))',
 					border: 'hsl(var(--netflix-border))',
 					'card-hover': 'hsl(var(--netflix-card-hover))',
 				},
