@@ -6,7 +6,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { MessageCircle, Send, Clock, Trash2, CheckSquare, Square, BadgeCheck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-
 interface Comment {
   id: string;
   comment: string;
@@ -18,14 +17,12 @@ interface Comment {
   avatar_url?: string | null;
   is_owner?: boolean;
 }
-
 interface LessonCommentsProps {
   lessonId: string;
   studentEmail?: string;
   studentName?: string;
   memberAreaId?: string;
 }
-
 export function LessonComments({
   lessonId,
   studentEmail,
@@ -44,40 +41,32 @@ export function LessonComments({
   const [commentsEnabled, setCommentsEnabled] = useState(true);
   const [selectedComments, setSelectedComments] = useState<Set<string>>(new Set());
   const [isDeletingMultiple, setIsDeletingMultiple] = useState(false);
-
   const loadComments = async () => {
     try {
       setIsLoading(true);
-      
+
       // Primeiro buscar o email do dono da área
       let ownerEmailLocal = ownerEmail;
       if (!ownerEmailLocal && memberAreaId) {
-        const { data: memberArea } = await supabase
-          .from('member_areas')
-          .select('user_id')
-          .eq('id', memberAreaId)
-          .single();
-        
+        const {
+          data: memberArea
+        } = await supabase.from('member_areas').select('user_id').eq('id', memberAreaId).single();
         if (memberArea?.user_id) {
-          const { data: ownerProfile } = await supabase
-            .from('profiles')
-            .select('email')
-            .eq('user_id', memberArea.user_id)
-            .single();
-          
+          const {
+            data: ownerProfile
+          } = await supabase.from('profiles').select('email').eq('user_id', memberArea.user_id).single();
           if (ownerProfile?.email) {
             ownerEmailLocal = ownerProfile.email.toLowerCase().trim();
             setOwnerEmail(ownerEmailLocal);
           }
         }
       }
-      
-      const { data, error } = await supabase
-        .from('lesson_comments')
-        .select('*')
-        .eq('lesson_id', lessonId)
-        .order('created_at', { ascending: true });
-
+      const {
+        data,
+        error
+      } = await supabase.from('lesson_comments').select('*').eq('lesson_id', lessonId).order('created_at', {
+        ascending: true
+      });
       if (error) {
         console.error('Erro ao carregar comentários:', error);
         return;
@@ -86,21 +75,16 @@ export function LessonComments({
       // Buscar avatares dos usuários baseados nos emails únicos
       const uniqueEmails = [...new Set(data?.map(c => c.user_email?.toLowerCase().trim()).filter(Boolean))];
       let avatarMap: Record<string, string> = {};
-      
       if (uniqueEmails.length > 0) {
         // Buscar avatares usando ilike para cada email para ser case-insensitive
         for (const email of uniqueEmails) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('email, avatar_url')
-            .ilike('email', email)
-            .maybeSingle();
-          
+          const {
+            data: profile
+          } = await supabase.from('profiles').select('email, avatar_url').ilike('email', email).maybeSingle();
           if (profile?.email && profile?.avatar_url) {
             avatarMap[email] = profile.avatar_url;
           }
         }
-        
         console.log('👤 Avatar map loaded:', avatarMap);
       }
 
@@ -112,8 +96,8 @@ export function LessonComments({
       data?.forEach(comment => {
         const email = comment.user_email?.toLowerCase().trim();
         const isOwnerComment = email && ownerEmailLocal && email === ownerEmailLocal;
-        commentMap[comment.id] = { 
-          ...comment, 
+        commentMap[comment.id] = {
+          ...comment,
           replies: [],
           avatar_url: email ? avatarMap[email] || null : null,
           is_owner: isOwnerComment
@@ -128,7 +112,6 @@ export function LessonComments({
           topLevelComments.push(commentMap[comment.id]);
         }
       });
-
       setComments(topLevelComments);
     } catch (error) {
       console.error('Erro ao carregar comentários:', error);
@@ -136,7 +119,6 @@ export function LessonComments({
       setIsLoading(false);
     }
   };
-
   useEffect(() => {
     if (lessonId) {
       loadComments();
@@ -150,66 +132,58 @@ export function LessonComments({
         console.log('[LessonComments] No memberAreaId provided');
         return;
       }
-      
       console.log('[LessonComments] Checking member area:', memberAreaId);
 
       // Buscar configuração da área de membros e o perfil do dono
-      const { data: memberArea, error } = await supabase
-        .from('member_areas')
-        .select('user_id, comments_enabled')
-        .eq('id', memberAreaId)
-        .single();
-
+      const {
+        data: memberArea,
+        error
+      } = await supabase.from('member_areas').select('user_id, comments_enabled').eq('id', memberAreaId).single();
       console.log('[LessonComments] Member area data:', memberArea);
       console.log('[LessonComments] Error:', error);
-
       if (memberArea) {
         const enabled = memberArea.comments_enabled ?? true;
         console.log('[LessonComments] Comments enabled:', enabled);
         setCommentsEnabled(enabled);
 
         // Buscar o email do dono da área
-        const { data: ownerProfile } = await supabase
-          .from('profiles')
-          .select('email')
-          .eq('user_id', memberArea.user_id)
-          .single();
-
+        const {
+          data: ownerProfile
+        } = await supabase.from('profiles').select('email').eq('user_id', memberArea.user_id).single();
         console.log('[LessonComments] Owner profile:', ownerProfile);
         console.log('[LessonComments] Student email:', studentEmail);
 
         // Verificar se é o dono via autenticação OU via email de estudante
-        const { data: { user } } = await supabase.auth.getUser();
+        const {
+          data: {
+            user
+          }
+        } = await supabase.auth.getUser();
         const isOwnerByAuth = user && memberArea.user_id === user.id;
-        const isOwnerByEmail = studentEmail && ownerProfile?.email && 
-          studentEmail.toLowerCase().trim() === ownerProfile.email.toLowerCase().trim();
-
+        const isOwnerByEmail = studentEmail && ownerProfile?.email && studentEmail.toLowerCase().trim() === ownerProfile.email.toLowerCase().trim();
         if (isOwnerByAuth || isOwnerByEmail) {
           console.log('[LessonComments] User is area owner!');
           setIsAreaOwner(true);
         }
       }
     };
-
     checkAreaOwner();
   }, [memberAreaId, studentEmail]);
-
   const handleSubmitComment = async (parentCommentId?: string) => {
     const commentText = parentCommentId ? replyText : newComment;
-    
     if (!commentText.trim()) {
       toast.error('Digite um comentário');
       return;
     }
-
     if (!studentEmail || !studentName) {
       toast.error('Erro de autenticação');
       return;
     }
-
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.functions.invoke('add-member-area-comment', {
+      const {
+        error
+      } = await supabase.functions.invoke('add-member-area-comment', {
         body: {
           lessonId,
           comment: commentText.trim(),
@@ -218,7 +192,6 @@ export function LessonComments({
           parentCommentId: parentCommentId || null
         }
       });
-
       if (error) {
         console.error('Erro ao adicionar comentário:', error);
         toast.error('Erro ao adicionar comentário');
@@ -227,7 +200,7 @@ export function LessonComments({
 
       // Recarregar comentários
       await loadComments();
-      
+
       // Limpar formulários
       if (parentCommentId) {
         setReplyingTo(null);
@@ -235,7 +208,6 @@ export function LessonComments({
       } else {
         setNewComment('');
       }
-
       toast.success('Comentário adicionado!');
     } catch (error) {
       console.error('Erro ao adicionar comentário:', error);
@@ -244,19 +216,15 @@ export function LessonComments({
       setIsSubmitting(false);
     }
   };
-
   const handleDeleteComment = async (commentId: string) => {
     if (!confirm('Tem certeza que deseja apagar este comentário?')) {
       return;
     }
-
     setDeletingCommentId(commentId);
     try {
-      const { error } = await supabase
-        .from('lesson_comments')
-        .delete()
-        .eq('id', commentId);
-
+      const {
+        error
+      } = await supabase.from('lesson_comments').delete().eq('id', commentId);
       if (error) {
         console.error('Erro ao apagar comentário:', error);
         toast.error('Erro ao apagar comentário');
@@ -280,27 +248,21 @@ export function LessonComments({
       setDeletingCommentId(null);
     }
   };
-
   const handleDeleteMultiple = async () => {
     if (selectedComments.size === 0) return;
-
     if (!confirm(`Tem certeza que deseja apagar ${selectedComments.size} comentário(s)?`)) {
       return;
     }
-
     setIsDeletingMultiple(true);
     try {
-      const { error } = await supabase
-        .from('lesson_comments')
-        .delete()
-        .in('id', Array.from(selectedComments));
-
+      const {
+        error
+      } = await supabase.from('lesson_comments').delete().in('id', Array.from(selectedComments));
       if (error) {
         console.error('Erro ao apagar comentários:', error);
         toast.error('Erro ao apagar comentários');
         return;
       }
-
       setSelectedComments(new Set());
       await loadComments();
       toast.success(`${selectedComments.size} comentário(s) apagado(s) com sucesso!`);
@@ -311,7 +273,6 @@ export function LessonComments({
       setIsDeletingMultiple(false);
     }
   };
-
   const toggleCommentSelection = (commentId: string) => {
     const newSelected = new Set(selectedComments);
     if (newSelected.has(commentId)) {
@@ -321,7 +282,6 @@ export function LessonComments({
     }
     setSelectedComments(newSelected);
   };
-
   const toggleSelectAll = () => {
     if (selectedComments.size === getAllCommentIds().length) {
       setSelectedComments(new Set());
@@ -329,7 +289,6 @@ export function LessonComments({
       setSelectedComments(new Set(getAllCommentIds()));
     }
   };
-
   const getAllCommentIds = (): string[] => {
     const ids: string[] = [];
     const collectIds = (commentList: Comment[]) => {
@@ -343,7 +302,6 @@ export function LessonComments({
     collectIds(comments);
     return ids;
   };
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('pt-BR', {
       day: '2-digit',
@@ -353,30 +311,19 @@ export function LessonComments({
       minute: '2-digit'
     });
   };
-
   const getInitials = (name: string) => {
     if (name && name !== 'Usuário' && name.length > 0) {
       return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
     }
     return 'US';
   };
-
-  const renderComment = (comment: Comment, isReply = false) => (
-    <div key={comment.id} className={`p-3 sm:p-4 bg-white/5 rounded-2xl border border-white/10 ${isReply ? 'ml-4 sm:ml-8 mt-2' : ''} ${selectedComments.has(comment.id) ? 'ring-2 ring-netflix-green' : ''}`}>
+  const renderComment = (comment: Comment, isReply = false) => <div key={comment.id} className={`p-3 sm:p-4 bg-white/5 rounded-2xl border border-white/10 ${isReply ? 'ml-4 sm:ml-8 mt-2' : ''} ${selectedComments.has(comment.id) ? 'ring-2 ring-netflix-green' : ''}`}>
       <div className="flex gap-2 sm:gap-3">
-        {isAreaOwner && (
-          <div className="flex-shrink-0 pt-1">
-            <Checkbox
-              checked={selectedComments.has(comment.id)}
-              onCheckedChange={() => toggleCommentSelection(comment.id)}
-              className="data-[state=checked]:bg-netflix-green data-[state=checked]:border-netflix-green"
-            />
-          </div>
-        )}
+        {isAreaOwner && <div className="flex-shrink-0 pt-1">
+            <Checkbox checked={selectedComments.has(comment.id)} onCheckedChange={() => toggleCommentSelection(comment.id)} className="data-[state=checked]:bg-netflix-green data-[state=checked]:border-netflix-green" />
+          </div>}
         <Avatar className="h-8 w-8 sm:h-10 sm:w-10 ring-2 ring-white/20 flex-shrink-0">
-          {comment.avatar_url && (
-            <AvatarImage src={comment.avatar_url} alt={comment.user_name} />
-          )}
+          {comment.avatar_url && <AvatarImage src={comment.avatar_url} alt={comment.user_name} />}
           <AvatarFallback className="bg-netflix-green text-black text-xs sm:text-sm font-bold">
             {getInitials(comment.user_name)}
           </AvatarFallback>
@@ -385,14 +332,12 @@ export function LessonComments({
         <div className="flex-1 min-w-0 space-y-2">
           <div className="flex items-center gap-1.5">
             <p className="font-medium text-white text-sm truncate">{comment.user_name || 'Usuário'}</p>
-            {comment.is_owner && (
-              <span title="Professor verificado" className="flex-shrink-0">
+            {comment.is_owner && <span title="Professor verificado" className="flex-shrink-0">
                 <svg className="w-4 h-4" viewBox="0 0 24 24" aria-label="Verificado">
                   <circle cx="12" cy="12" r="10" fill="#1D9BF0" />
                   <path d="M9.5 12.5L11 14L15 10" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
                 </svg>
-              </span>
-            )}
+              </span>}
           </div>
           
           <p className="text-xs text-white/50 flex items-center gap-1">
@@ -403,98 +348,54 @@ export function LessonComments({
           <p className="text-sm sm:text-base text-white/80 leading-relaxed break-words overflow-wrap-anywhere whitespace-pre-wrap">{comment.comment}</p>
           
           <div className="flex gap-2 mt-2">
-            {!isReply && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
-                className="text-xs text-netflix-green hover:text-netflix-green/80 h-7 px-2"
-              >
+            {!isReply && <Button variant="ghost" size="sm" onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)} className="text-xs text-netflix-green hover:text-netflix-green/80 h-7 px-2">
                 {replyingTo === comment.id ? 'Cancelar' : 'Responder'}
-              </Button>
-            )}
+              </Button>}
             
-            {isAreaOwner && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleDeleteComment(comment.id)}
-                disabled={deletingCommentId === comment.id}
-                className="text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 h-7 px-2"
-              >
-                {deletingCommentId === comment.id ? (
-                  <>
+            {isAreaOwner && <Button variant="ghost" size="sm" onClick={() => handleDeleteComment(comment.id)} disabled={deletingCommentId === comment.id} className="text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 h-7 px-2">
+                {deletingCommentId === comment.id ? <>
                     <div className="w-3 h-3 border-2 border-red-400 border-t-transparent rounded-full animate-spin mr-1" />
                     Apagando...
-                  </>
-                ) : (
-                  <>
+                  </> : <>
                     <Trash2 className="h-3 w-3 mr-1" />
                     Apagar
-                  </>
-                )}
-              </Button>
-            )}
+                  </>}
+              </Button>}
           </div>
           
-          {replyingTo === comment.id && (
-            <div className="mt-3 space-y-2">
-              <Textarea
-                placeholder="Digite sua resposta..."
-                value={replyText}
-                onChange={(e) => setReplyText(e.target.value)}
-                rows={2}
-                className="border-white/10 text-white placeholder-white/40 resize-none bg-white/5 text-sm w-full rounded-xl"
-              />
+          {replyingTo === comment.id && <div className="mt-3 space-y-2">
+              <Textarea placeholder="Digite sua resposta..." value={replyText} onChange={e => setReplyText(e.target.value)} rows={2} className="border-white/10 text-white placeholder-white/40 resize-none bg-white/5 text-sm w-full rounded-xl" />
               <div className="flex flex-col sm:flex-row justify-end gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setReplyingTo(null);
-                    setReplyText('');
-                  }}
-                  className="text-xs w-full sm:w-auto"
-                >
+                <Button variant="ghost" size="sm" onClick={() => {
+              setReplyingTo(null);
+              setReplyText('');
+            }} className="text-xs w-full sm:w-auto">
                   Cancelar
                 </Button>
-                <Button
-                  onClick={() => handleSubmitComment(comment.id)}
-                  disabled={!replyText.trim() || isSubmitting}
-                  size="sm"
-                  className="bg-netflix-green hover:bg-netflix-green/90 text-black font-bold text-xs w-full sm:w-auto"
-                >
+                <Button onClick={() => handleSubmitComment(comment.id)} disabled={!replyText.trim() || isSubmitting} size="sm" className="bg-netflix-green hover:bg-netflix-green/90 text-black font-bold text-xs w-full sm:w-auto">
                   Responder
                 </Button>
               </div>
-            </div>
-          )}
+            </div>}
           
-          {comment.replies && comment.replies.length > 0 && (
-            <div className="mt-3 space-y-2">
+          {comment.replies && comment.replies.length > 0 && <div className="mt-3 space-y-2">
               {comment.replies.map(reply => renderComment(reply, true))}
-            </div>
-          )}
+            </div>}
         </div>
       </div>
-    </div>
-  );
+    </div>;
 
   // Se comentários estão desabilitados, mostrar mensagem
   if (!commentsEnabled) {
-    return (
-      <div className="mt-8 bg-white/5 rounded-2xl border border-white/10 p-8">
+    return <div className="mt-8 bg-white/5 rounded-2xl border border-white/10 p-8">
         <div className="text-center">
           <MessageCircle className="h-12 w-12 text-white/30 mx-auto mb-4" />
           <p className="text-white/70 text-base font-medium">Comentários desativados</p>
           <p className="text-white/40 text-sm mt-2">O instrutor desativou os comentários para esta área de membros</p>
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="mt-8 bg-white/5 rounded-2xl border border-white/10 overflow-hidden">
+  return <div className="mt-8 bg-white/5 rounded-2xl border border-white/10 overflow-hidden">
       <div className="px-4 sm:px-6 py-4 border-b border-white/10">
         <div className="flex items-center justify-between">
           <h3 className="flex items-center gap-2 text-white font-semibold text-base sm:text-lg">
@@ -502,98 +403,54 @@ export function LessonComments({
             <span className="truncate">Comentários ({comments.reduce((count, comment) => count + 1 + (comment.replies?.length || 0), 0)})</span>
           </h3>
           
-          {isAreaOwner && comments.length > 0 && (
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={toggleSelectAll}
-                className="text-xs text-white/50 hover:text-white"
-              >
-                {selectedComments.size === getAllCommentIds().length ? (
-                  <>
+          {isAreaOwner && comments.length > 0 && <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" onClick={toggleSelectAll} className="text-xs text-white/50 hover:text-white">
+                {selectedComments.size === getAllCommentIds().length ? <>
                     <CheckSquare className="h-4 w-4 mr-1" />
                     Desselecionar
-                  </>
-                ) : (
-                  <>
+                  </> : <>
                     <Square className="h-4 w-4 mr-1" />
                     Selecionar
-                  </>
-                )}
+                  </>}
               </Button>
               
-              {selectedComments.size > 0 && (
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={handleDeleteMultiple}
-                  disabled={isDeletingMultiple}
-                  className="text-xs"
-                >
-                  {isDeletingMultiple ? (
-                    <>
+              {selectedComments.size > 0 && <Button variant="destructive" size="sm" onClick={handleDeleteMultiple} disabled={isDeletingMultiple} className="text-xs">
+                  {isDeletingMultiple ? <>
                       <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin mr-1" />
                       Apagando...
-                    </>
-                  ) : (
-                    <>
+                    </> : <>
                       <Trash2 className="h-4 w-4 mr-1" />
                       Apagar ({selectedComments.size})
-                    </>
-                  )}
-                </Button>
-              )}
-            </div>
-          )}
+                    </>}
+                </Button>}
+            </div>}
         </div>
       </div>
       <div className="p-4 sm:p-6 space-y-6">
         <div className="space-y-3">
-          <Textarea 
-            placeholder="Deixe seu comentário sobre esta aula..." 
-            value={newComment} 
-            onChange={(e) => setNewComment(e.target.value)} 
-            rows={3} 
-            className="border-white/10 text-sm sm:text-base text-white placeholder-white/40 resize-none bg-white/5 w-full rounded-xl" 
-          />
+          <Textarea placeholder="Deixe seu comentário sobre esta aula..." value={newComment} onChange={e => setNewComment(e.target.value)} rows={3} className="border-white/10 text-sm sm:text-base text-white placeholder-white/40 resize-none bg-white/5 w-full rounded-xl" />
           <div className="flex justify-end">
-            <Button 
-              onClick={() => handleSubmitComment()} 
-              disabled={!newComment.trim() || isSubmitting} 
-              className="bg-netflix-green hover:bg-netflix-green/90 text-black font-bold w-full sm:w-auto text-sm"
-            >
-              {isSubmitting ? (
-                <>
+            <Button onClick={() => handleSubmitComment()} disabled={!newComment.trim() || isSubmitting} className="bg-netflix-green hover:bg-netflix-green/90 text-black font-bold w-full sm:w-auto text-sm">
+              {isSubmitting ? <>
                   <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin mr-2" />
                   Enviando...
-                </>
-              ) : (
-                <>
+                </> : <>
                   <Send className="h-4 w-4 mr-2" />
                   Comentar
-                </>
-              )}
+                </>}
             </Button>
           </div>
         </div>
 
         <div className="space-y-4">
-          {isLoading ? (
-            <div className="text-center py-8">
+          {isLoading ? <div className="text-center py-8">
               <div className="w-8 h-8 border-2 border-netflix-green border-t-transparent rounded-full animate-spin mx-auto mb-4" />
               <p className="text-white/50">Carregando comentários...</p>
-            </div>
-          ) : comments.length === 0 ? (
-            <div className="text-center py-8">
-              <MessageCircle className="h-12 w-12 text-white/20 mx-auto mb-4" />
+            </div> : comments.length === 0 ? <div className="text-center py-8">
+              
               <p className="text-white/50">Seja o primeiro a comentar nesta aula!</p>
-            </div>
-          ) : (
-            comments.map(comment => renderComment(comment))
-          )}
+            </div> : comments.map(comment => renderComment(comment))}
         </div>
       </div>
-    </div>
-  );
+    </div>;
 }
