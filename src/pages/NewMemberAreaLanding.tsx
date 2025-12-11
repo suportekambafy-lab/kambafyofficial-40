@@ -228,34 +228,36 @@ const NewMemberAreaLanding = () => {
             </div>
           </motion.div>
 
-          {/* Thumbnail Grid */}
-          <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-4 md:gap-4 mt-8 sm:mt-12 max-w-4xl mx-auto">
-            {screenshots.map((item, index) => (
-              <motion.button
-                key={item.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                onClick={() => setActiveScreenshot(index)}
-                className={`text-left overflow-hidden rounded-md sm:rounded-lg border transition-all ${
-                  activeScreenshot === index 
-                    ? 'border-[#81e76a] ring-2 ring-[#81e76a]/30' 
-                    : 'border-gray-700 hover:border-gray-600'
-                }`}
-              >
-                <div className="aspect-video overflow-hidden">
-                  <img 
-                    src={item.image} 
-                    alt={item.title}
-                    className="w-full h-full object-cover object-top hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
-                <div className="p-2 sm:p-2.5 bg-[#1a1a1a]">
-                  <h3 className="font-medium text-[10px] sm:text-xs text-white truncate">{item.title}</h3>
-                </div>
-              </motion.button>
-            ))}
+          {/* Thumbnail Carousel */}
+          <div className="mt-8 sm:mt-12 overflow-x-auto scrollbar-hide">
+            <div className="flex gap-3 sm:gap-4 pb-4 px-2 min-w-max mx-auto justify-center">
+              {screenshots.map((item, index) => (
+                <motion.button
+                  key={item.title}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                  onClick={() => setActiveScreenshot(index)}
+                  className={`text-left overflow-hidden rounded-md sm:rounded-lg border transition-all flex-shrink-0 w-[180px] sm:w-[200px] md:w-[220px] ${
+                    activeScreenshot === index 
+                      ? 'border-[#81e76a] ring-2 ring-[#81e76a]/30' 
+                      : 'border-gray-700 hover:border-gray-600'
+                  }`}
+                >
+                  <div className="aspect-video overflow-hidden">
+                    <img 
+                      src={item.image} 
+                      alt={item.title}
+                      className="w-full h-full object-cover object-top hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+                  <div className="p-2 sm:p-2.5 bg-[#1a1a1a]">
+                    <h3 className="font-medium text-[10px] sm:text-xs text-white truncate">{item.title}</h3>
+                  </div>
+                </motion.button>
+              ))}
+            </div>
           </div>
         </div>
       </section>
