@@ -59,6 +59,7 @@ const Auth = () => {
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorField, setErrorField] = useState('');
+  const [checking2FA, setChecking2FA] = useState(false); // Bloqueia redirecionamento enquanto verifica 2FA
   
   // Estados para redefinição de senha
   const [newPassword, setNewPassword] = useState('');
@@ -84,8 +85,8 @@ const Auth = () => {
   }, [mode, userTypeParam]);
 
   useEffect(() => {
-    // Não redirecionar se está aguardando verificação 2FA
-    if (requires2FA) {
+    // Não redirecionar se está verificando 2FA ou aguardando verificação
+    if (checking2FA || requires2FA) {
       return;
     }
     
@@ -95,7 +96,7 @@ const Auth = () => {
       
       navigate(redirectPath, { replace: true });
     }
-  }, [user, navigate, requires2FA]);
+  }, [user, navigate, requires2FA, checking2FA]);
 
   const handleUserTypeSelect = (type: 'customer' | 'seller' | null) => {
     setSelectedUserType(type);
@@ -147,6 +148,9 @@ const Auth = () => {
       }
 
       // Login bem-sucedido - verificar se precisa de 2FA
+      // Bloquear redirecionamento automático enquanto verificamos
+      setChecking2FA(true);
+      
       const { data: { user: loggedUser } } = await supabase.auth.getUser();
       
       if (loggedUser) {
@@ -159,6 +163,7 @@ const Auth = () => {
           set2FARequired(true, loggedUser.email || '');
           
           // Redirecionar para página de verificação 2FA
+          setChecking2FA(false);
           navigate('/verificar-2fa', { replace: true });
           setLoading(false);
           return;
@@ -166,9 +171,10 @@ const Auth = () => {
         
         // Registrar login bem-sucedido
         await registerSuccessfulLogin(loggedUser.id);
-        
-        // O redirecionamento acontece automaticamente pelo useEffect que monitora o user
       }
+      
+      // Liberar redirecionamento automático
+      setChecking2FA(false);
     } catch (error) {
       setErrorField("Ocorreu um erro. Tente novamente.");
     } finally {
