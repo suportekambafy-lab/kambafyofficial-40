@@ -4074,6 +4074,7 @@ export type Database = {
           bunny_embed_url: string
           bunny_video_id: string
           complementary_links: Json
+          cover_image_url: string
           created_at: string
           description: string
           duration: number
