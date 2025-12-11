@@ -452,16 +452,8 @@ export function NetflixLessonViewer({
                 )}
               </Tabs>
 
-              {/* Comments Section */}
-              <div className="mb-8">
-                <LessonComments
-                  lessonId={lesson.id}
-                  studentEmail={studentEmail}
-                  studentName={studentName}
-                  memberAreaId={memberArea.id}
-                />
-              </div>
-              <div className="lg:hidden bg-white/5 rounded-2xl border border-white/10 overflow-hidden">
+              {/* Module Lessons List - Mobile Only */}
+              <div className="lg:hidden bg-white/5 rounded-2xl border border-white/10 overflow-hidden mb-8">
                 <button 
                   onClick={() => setShowLessonList(!showLessonList)} 
                   className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-white/5 transition-colors"
@@ -489,6 +481,16 @@ export function NetflixLessonViewer({
                     </motion.div>
                   )}
                 </AnimatePresence>
+              </div>
+
+              {/* Comments Section */}
+              <div className="mb-8">
+                <LessonComments
+                  lessonId={lesson.id}
+                  studentEmail={studentEmail}
+                  studentName={studentName}
+                  memberAreaId={memberArea.id}
+                />
               </div>
             </div>
           </div>
