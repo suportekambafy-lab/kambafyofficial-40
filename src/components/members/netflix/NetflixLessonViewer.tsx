@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   ArrowLeft, 
   Play, 
@@ -14,7 +15,8 @@ import {
   CheckCircle2,
   FileText,
   Link as LinkIcon,
-  BookOpen
+  BookOpen,
+  Info
 } from 'lucide-react';
 import { Lesson, Module } from '@/types/memberArea';
 import VideoPlayer from '@/components/ui/video-player';
@@ -313,67 +315,109 @@ export function NetflixLessonViewer({
                   </Badge>
                 )}
               </div>
-              <h1 className="text-2xl md:text-3xl font-bold text-white mb-3">
+              <h1 className="text-2xl md:text-3xl font-bold text-white">
                 {lesson.title}
               </h1>
-              {lesson.description && (
-                <p className="text-white/60 leading-relaxed">
-                  {lesson.description}
-                </p>
-              )}
             </div>
 
-            {/* Materials & Links */}
-            {((lesson.lesson_materials && (lesson.lesson_materials as any[]).length > 0) ||
-              (lesson.complementary_links && (lesson.complementary_links as any[]).length > 0)) && (
-              <div className="grid md:grid-cols-2 gap-4 mb-8">
+            {/* Content Tabs */}
+            <Tabs defaultValue="about" className="mb-8">
+              <TabsList className="bg-white/5 border border-white/10 p-1 h-auto">
+                <TabsTrigger 
+                  value="about" 
+                  className="data-[state=active]:bg-netflix-green data-[state=active]:text-black text-white/70 gap-2"
+                >
+                  <Info className="w-4 h-4" />
+                  Sobre
+                </TabsTrigger>
                 {lesson.lesson_materials && (lesson.lesson_materials as any[]).length > 0 && (
-                  <div className="bg-white/5 rounded-2xl p-5 border border-white/10">
-                    <h3 className="text-sm font-semibold text-white/80 mb-3 flex items-center gap-2">
-                      <FileText className="w-4 h-4" />
-                      Materiais
-                    </h3>
-                    <div className="space-y-2">
+                  <TabsTrigger 
+                    value="materials" 
+                    className="data-[state=active]:bg-netflix-green data-[state=active]:text-black text-white/70 gap-2"
+                  >
+                    <FileText className="w-4 h-4" />
+                    Materiais
+                    <Badge className="bg-white/20 text-white/80 border-0 text-xs ml-1">
+                      {(lesson.lesson_materials as any[]).length}
+                    </Badge>
+                  </TabsTrigger>
+                )}
+                {lesson.complementary_links && (lesson.complementary_links as any[]).length > 0 && (
+                  <TabsTrigger 
+                    value="links" 
+                    className="data-[state=active]:bg-netflix-green data-[state=active]:text-black text-white/70 gap-2"
+                  >
+                    <LinkIcon className="w-4 h-4" />
+                    Links
+                    <Badge className="bg-white/20 text-white/80 border-0 text-xs ml-1">
+                      {(lesson.complementary_links as any[]).length}
+                    </Badge>
+                  </TabsTrigger>
+                )}
+              </TabsList>
+
+              <TabsContent value="about" className="mt-4">
+                <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+                  {lesson.description ? (
+                    <p className="text-white/70 leading-relaxed whitespace-pre-wrap">
+                      {lesson.description}
+                    </p>
+                  ) : (
+                    <p className="text-white/40 italic">Nenhuma descrição disponível para esta aula.</p>
+                  )}
+                </div>
+              </TabsContent>
+
+              {lesson.lesson_materials && (lesson.lesson_materials as any[]).length > 0 && (
+                <TabsContent value="materials" className="mt-4">
+                  <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+                    <div className="grid gap-3">
                       {(lesson.lesson_materials as any[]).map((material, i) => (
                         <a
                           key={i}
                           href={material.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-2 text-sm text-netflix-green hover:underline"
+                          className="flex items-center gap-3 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors group"
                         >
-                          <FileText className="w-3.5 h-3.5" />
-                          {material.name || `Material ${i + 1}`}
+                          <div className="w-10 h-10 rounded-lg bg-netflix-green/20 flex items-center justify-center">
+                            <FileText className="w-5 h-5 text-netflix-green" />
+                          </div>
+                          <span className="text-white/80 group-hover:text-netflix-green transition-colors">
+                            {material.name || `Material ${i + 1}`}
+                          </span>
                         </a>
                       ))}
                     </div>
                   </div>
-                )}
-                
-                {lesson.complementary_links && (lesson.complementary_links as any[]).length > 0 && (
-                  <div className="bg-white/5 rounded-2xl p-5 border border-white/10">
-                    <h3 className="text-sm font-semibold text-white/80 mb-3 flex items-center gap-2">
-                      <LinkIcon className="w-4 h-4" />
-                      Links Complementares
-                    </h3>
-                    <div className="space-y-2">
+                </TabsContent>
+              )}
+
+              {lesson.complementary_links && (lesson.complementary_links as any[]).length > 0 && (
+                <TabsContent value="links" className="mt-4">
+                  <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+                    <div className="grid gap-3">
                       {(lesson.complementary_links as any[]).map((link, i) => (
                         <a
                           key={i}
                           href={link.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-2 text-sm text-netflix-green hover:underline"
+                          className="flex items-center gap-3 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors group"
                         >
-                          <LinkIcon className="w-3.5 h-3.5" />
-                          {link.title || link.url}
+                          <div className="w-10 h-10 rounded-lg bg-netflix-green/20 flex items-center justify-center">
+                            <LinkIcon className="w-5 h-5 text-netflix-green" />
+                          </div>
+                          <span className="text-white/80 group-hover:text-netflix-green transition-colors">
+                            {link.title || link.url}
+                          </span>
                         </a>
                       ))}
                     </div>
                   </div>
-                )}
-              </div>
-            )}
+                </TabsContent>
+              )}
+            </Tabs>
 
             {/* Module Lessons List */}
             <div className="bg-white/5 rounded-2xl border border-white/10 overflow-hidden">
