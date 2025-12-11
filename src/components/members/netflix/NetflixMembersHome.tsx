@@ -62,8 +62,8 @@ export function NetflixMembersHome({
   // Force dark background on body when this component is mounted
   useEffect(() => {
     const originalBg = document.body.style.backgroundColor;
-    document.body.style.backgroundColor = '#000000';
-    document.documentElement.style.backgroundColor = '#000000';
+    document.body.style.backgroundColor = 'hsl(30, 20%, 12%)';
+    document.documentElement.style.backgroundColor = 'hsl(30, 20%, 12%)';
     
     return () => {
       document.body.style.backgroundColor = originalBg;
@@ -237,10 +237,17 @@ export function NetflixMembersHome({
       className="min-h-screen relative netflix-member-area"
       data-netflix-member-area="true"
       style={{ 
-        background: '#000000',
-        color: 'hsl(0 0% 95%)'
+        background: 'hsl(30 20% 12%)',
+        color: 'hsl(40 20% 95%)'
       }}
     >
+      {/* Warm ambient background effect */}
+      <div 
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          background: 'radial-gradient(ellipse 80% 50% at 50% 0%, hsl(30 30% 25% / 0.4) 0%, transparent 60%)'
+        }}
+      />
       {/* Header */}
       <NetflixHeader
         logoUrl={memberArea.logo_url}
