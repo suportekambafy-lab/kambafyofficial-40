@@ -101,20 +101,20 @@ const NewMemberAreaLanding = () => {
 
       {/* Header */}
       <header className="w-full sticky top-0 z-30 backdrop-blur-md border-b border-gray-800/50 bg-[#111111]/80">
-        <nav className="flex justify-between items-center max-w-screen-xl mx-auto h-[60px] sm:h-[70px] px-4 sm:px-6 md:px-10 lg:px-16">
+        <nav className="flex justify-between items-center max-w-screen-xl mx-auto h-[70px] sm:h-[80px] md:h-[90px] px-4 sm:px-6 md:px-10 lg:px-16">
           <button 
             onClick={() => navigate('/')}
             className="flex items-center gap-1.5 sm:gap-2 text-gray-400 hover:text-white transition-colors"
           >
-            <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="hidden sm:inline text-sm">Voltar</span>
+            <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+            <span className="hidden sm:inline text-sm md:text-base">Voltar</span>
           </button>
           
           <div className="flex items-center">
             <img 
               src="/kambafy-logo-white.png" 
               alt="Kambafy" 
-              className="h-8 sm:h-10 w-auto"
+              className="h-10 sm:h-12 md:h-14 w-auto"
             />
           </div>
           
