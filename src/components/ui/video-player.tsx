@@ -782,7 +782,7 @@ const VideoPlayer = ({
           </Popover>
         </div>
         
-        <video ref={videoRef} className="w-full h-full object-cover" onTimeUpdate={handleTimeUpdate} onLoadedMetadata={handleLoadedMetadata} onEnded={() => {
+        <video ref={videoRef} className="w-full h-full object-contain" onTimeUpdate={handleTimeUpdate} onLoadedMetadata={handleLoadedMetadata} onEnded={() => {
         setIsPlaying(false);
         onEnded?.();
       }} onError={handleVideoError} onClick={togglePlay} {...!isNativeHls && {
@@ -942,7 +942,7 @@ const VideoPlayer = ({
             </div>
           </div>}
         
-        <video ref={videoRef} className="w-full h-full object-cover" onTimeUpdate={handleTimeUpdate} onLoadedMetadata={handleLoadedMetadata} onEnded={() => {
+        <video ref={videoRef} className="w-full h-full object-contain" onTimeUpdate={handleTimeUpdate} onLoadedMetadata={handleLoadedMetadata} onEnded={() => {
         setIsPlaying(false);
         onEnded?.();
       }} onError={handleVideoError} src={src} onClick={togglePlay} crossOrigin={crossOrigin} preload="metadata" autoPlay playsInline />
