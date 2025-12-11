@@ -688,8 +688,8 @@ html {
 .netflix-member-area,
 .netflix-member-area body,
 [data-netflix-member-area="true"] {
-  background: hsl(30 20% 12%) !important;
-  color: hsl(40 20% 95%) !important;
+  background: #000000 !important;
+  color: hsl(0 0% 95%) !important;
 }
 
 /* Override any white backgrounds in member area header */
@@ -698,6 +698,6 @@ html {
 }
 
 .netflix-header.scrolled {
-  background: hsl(30 15% 8% / 0.95) !important;
+  background: hsl(0 0% 5% / 0.95) !important;
   backdrop-filter: blur(20px);
 }
