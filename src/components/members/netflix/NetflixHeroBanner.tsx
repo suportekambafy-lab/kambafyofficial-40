@@ -72,7 +72,7 @@ export function NetflixHeroBanner({
   return (
     <div className="relative w-full">
       {/* Main Hero Container with rounded corners */}
-      <div className="relative mx-6 md:mx-12 lg:mx-16 mt-24 md:mt-28 rounded-3xl overflow-hidden" style={{ aspectRatio: '16/9', maxHeight: '75vh' }}>
+      <div className="relative mx-4 md:mx-12 lg:mx-16 mt-20 md:mt-28 rounded-3xl overflow-hidden aspect-square md:aspect-video lg:aspect-video" style={{ maxHeight: '75vh' }}>
         {/* Background Image - Always visible */}
         <div className="absolute inset-0">
           <motion.div
