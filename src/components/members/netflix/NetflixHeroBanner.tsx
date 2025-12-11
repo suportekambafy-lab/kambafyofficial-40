@@ -234,7 +234,7 @@ export function NetflixHeroBanner({
                 className="bg-netflix-red hover:bg-netflix-red/90 text-white font-bold px-4 md:px-8 h-10 md:h-12 rounded-lg gap-2 transition-all text-sm md:text-base"
               >
                 <Users2 className="w-4 h-4 md:w-5 md:h-5" />
-                <span className="hidden sm:inline">Ver</span> Currículo
+                <span className="hidden sm:inline">Ver</span> Progresso
               </Button>
             </motion.div>
           </div>
