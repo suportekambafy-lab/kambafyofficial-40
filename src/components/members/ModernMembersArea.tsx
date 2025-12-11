@@ -23,6 +23,7 @@ import { MemberNotificationBell } from './MemberNotificationBell';
 import { Lesson, Module } from '@/types/memberArea';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useMemberLessonProgress } from '@/hooks/useMemberLessonProgress';
+import { NetflixMembersHome } from './netflix';
 
 // Função para detectar e atualizar duração do vídeo automaticamente
 const detectAndUpdateVideoDuration = async (lesson: Lesson) => {
@@ -816,6 +817,55 @@ export default function ModernMembersArea({ memberAreaId: propMemberAreaId, isEm
   const currentUserEmail = user?.email || (verifiedEmail ? decodeURIComponent(verifiedEmail).toLowerCase().trim() : null);
   const isOwner = currentUserEmail && ownerEmail && currentUserEmail.toLowerCase().trim() === ownerEmail;
 
+  // Se não há aula selecionada, mostrar o layout Netflix
+  if (!selectedLesson) {
+    return (
+      <>
+        <NetflixMembersHome
+          memberArea={{
+            id: memberAreaId || '',
+            name: currentMemberArea?.name || '',
+            description: currentMemberArea?.description,
+            hero_image_url: currentMemberArea?.hero_image_url,
+            hero_video_url: (currentMemberArea as any)?.hero_video_url,
+            hero_title: (currentMemberArea as any)?.hero_title,
+            hero_description: (currentMemberArea as any)?.hero_description,
+            logo_url: currentMemberArea?.logo_url,
+            primary_color: currentMemberArea?.primary_color,
+          }}
+          modules={modules}
+          lessons={lessons}
+          lessonProgress={lessonProgress}
+          user={{
+            name: user?.user_metadata?.full_name || user?.user_metadata?.name,
+            email: user?.email,
+            avatar_url: user?.user_metadata?.avatar_url || user?.user_metadata?.picture || userProfileAvatar || undefined,
+          }}
+          onLessonSelect={handleLessonClick}
+          onLogout={handleLogout}
+        />
+        
+        {/* Ofertas na Área de Membros */}
+        {memberAreaId && (
+          <div className="bg-[hsl(30_20%_12%)]">
+            <MemberAreaOffers memberAreaId={memberAreaId} />
+          </div>
+        )}
+        
+        {/* Modal de Pagamento de Módulo */}
+        <ModulePaymentModal
+          open={paymentModalOpen}
+          onOpenChange={setPaymentModalOpen}
+          module={moduleForPayment}
+          memberAreaId={memberAreaId || ''}
+          studentEmail={user?.email || verifiedEmail || ''}
+          onPaymentSuccess={handlePaymentSuccess}
+        />
+      </>
+    );
+  }
+
+  // Layout com aula selecionada (mantém o design original)
   return <div className="min-h-screen bg-gray-950 dark text-white">
       {/* Menu Slide Lateral - Ocultar quando embutido no app */}
       {!isEmbeddedInApp && (
@@ -836,129 +886,13 @@ export default function ModernMembersArea({ memberAreaId: propMemberAreaId, isEm
           isOwner={isOwner || false}
         />
       )}
-      
-      {/* Hero Section - Ocultar quando aula selecionada */}
-      {!selectedLesson && <motion.section className="relative bg-gradient-to-br from-black via-gray-950 to-gray-900 overflow-hidden">
-          {/* Background Pattern */}
-          <div className="absolute inset-0 bg-grid-white/[0.01] bg-[size:40px_40px]" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
-          
-          {/* Hero Video Background (se tiver vídeo, usa vídeo; senão usa imagem) */}
-          {(currentMemberArea as any)?.hero_video_url ? (
-            <div className="absolute inset-0 opacity-50">
-              <video 
-                src={(currentMemberArea as any).hero_video_url} 
-                autoPlay 
-                loop 
-                muted 
-                playsInline
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
-            </div>
-          ) : currentMemberArea?.hero_image_url ? (
-            <div className="absolute inset-0 opacity-40">
-              <img src={currentMemberArea.hero_image_url} alt={currentMemberArea.name} className="w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent" />
-            </div>
-          ) : null}
-          
-          <div className="relative container mx-auto px-4 py-20">
-            {/* Header */}
-            <motion.div className="flex justify-between items-center mb-8 absolute top-4 left-4 right-4 z-10">
-              <div className="flex items-center gap-3">
-                
-                {currentMemberArea?.logo_url ? <Avatar className="h-12 w-12 ring-2 ring-emerald-400/50">
-                    <AvatarImage src={currentMemberArea.logo_url} alt={currentMemberArea.name} />
-                    <AvatarFallback className="bg-emerald-600">
-                      <GraduationCap className="h-6 w-6 text-white" />
-                    </AvatarFallback>
-                  </Avatar> : <div className="h-12 w-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center">
-                    <GraduationCap className="h-6 w-6 text-white" />
-                  </div>}
-                <div className="text-white">
-                  <p className="text-sm text-emerald-400">Área de Membros</p>
-                  <p className="text-sm text-gray-300">
-                    Olá, {(() => {
-                      console.log('🎯 ModernMembersArea - Debug name:', {
-                        user: user,
-                        session: session,
-                        userMetadata: user?.user_metadata,
-                        sessionUserMetadata: session?.user?.user_metadata,
-                        userEmail: user?.email
-                      });
-                      return user?.user_metadata?.full_name || session?.user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Estudante';
-                    })()}
-                  </p>
-                </div>
-              </div>
-              {/* Sino de Notificações */}
-              {memberAreaId && (user?.email || verifiedEmail) && (
-                <MemberNotificationBell 
-                  studentEmail={user?.email || (verifiedEmail ? decodeURIComponent(verifiedEmail) : '')}
-                  memberAreaId={memberAreaId}
-                  onNotificationClick={(notification) => {
-                    if (notification.data?.lesson_id) {
-                      const lesson = lessons.find(l => l.id === notification.data.lesson_id);
-                      if (lesson) {
-                        setSelectedLesson(lesson);
-                      }
-                    }
-                  }}
-                />
-              )}
-            </motion.div>
 
-            {/* Course Hero */}
-            <motion.div className="text-center mb-12 mt-20 sm:mt-8">
-              <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 mb-4">
-                <Trophy className="h-3 w-3 mr-1" />
-                Curso Premium
-              </Badge>
-              
-              <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-                {currentMemberArea?.hero_title || currentMemberArea?.name}
-              </h1>
-              
-              <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
-                {currentMemberArea?.hero_description || currentMemberArea?.description}
-              </p>
-            </motion.div>
-          </div>
-        </motion.section>}
-
-      {/* Header fixo quando aula selecionada */}
-      {selectedLesson && <motion.header className="bg-black/95 backdrop-blur-md border-b border-gray-800 sticky top-0 z-50">
-          <div className="container mx-auto px-4 py-4 bg-zinc-950">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <Button variant="ghost" size="sm" onClick={() => setSelectedLesson(null)} className="text-white hover:text-emerald-400">
-                  <ArrowLeft className="h-4 w-4" />
-                </Button>
-                <Badge variant="outline" className="text-emerald-400 border-emerald-500/30">
-                  Aula {lessons.indexOf(selectedLesson) + 1}
-                </Badge>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="text-xs bg-gray-800">
-                  <Clock className="h-3 w-3 mr-1" />
-                  {selectedLesson.duration > 0 ? `${Math.round(selectedLesson.duration / 60)} min` : 'Duração não definida'}
-                </Badge>
-                <Button variant="ghost" size="sm" onClick={() => setSidebarVisible(!sidebarVisible)} className="text-white hover:text-emerald-400">
-                  {sidebarVisible ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </motion.header>}
-
-      {/* Main Content Area */}
+      {/* Main Content Area - Lesson Viewer */}
       <div className="bg-black min-h-screen">
-        <div className={selectedLesson ? "" : "container mx-auto px-4 py-12"}>
+        <div className="">
           
           {/* Layout quando aula selecionada */}
-          {selectedLesson ? <div className="flex min-h-screen relative w-full max-w-full overflow-x-hidden">
+          <div className="flex min-h-screen relative w-full max-w-full overflow-x-hidden">
               {/* Overlay para mobile */}
               {isMobile && sidebarVisible && <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setSidebarVisible(false)} />}
               

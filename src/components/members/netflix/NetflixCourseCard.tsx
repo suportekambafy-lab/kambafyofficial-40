@@ -46,46 +46,49 @@ export function NetflixCourseCard({
   };
 
   const cardSizes = {
-    default: 'w-[220px] md:w-[260px]',
-    featured: 'w-[280px] md:w-[320px]',
-    compact: 'w-[160px] md:w-[180px]',
+    default: 'w-[240px] md:w-[280px]',
+    featured: 'w-[300px] md:w-[360px]',
+    compact: 'w-[180px] md:w-[220px]',
   };
 
   return (
     <motion.div
       className={cn(
-        'relative flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer group',
+        'relative flex-shrink-0 rounded-3xl overflow-hidden cursor-pointer group',
         cardSizes[variant],
         isLocked && 'opacity-60'
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={!isLocked ? onClick : undefined}
-      whileHover={{ scale: 1.03, y: -4 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+      whileHover={{ scale: 1.02, y: -2 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+      style={{
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
+      }}
     >
       {/* Card Container with aspect ratio */}
-      <div className="relative aspect-[4/3]">
+      <div className="relative aspect-[5/4]">
         {/* Thumbnail */}
-        <div className="absolute inset-0 bg-gradient-to-br from-stone-700 to-stone-900">
+        <div className="absolute inset-0 bg-gradient-to-br from-amber-800/30 to-stone-800">
           {thumbnail ? (
             <img
               src={thumbnail}
               alt={title}
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center">
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-amber-900/40 to-stone-800">
               <BookOpen className="w-12 h-12 text-white/20" />
             </div>
           )}
         </div>
 
-        {/* Gradient Overlay - Stronger at bottom */}
+        {/* Frosted glass overlay at bottom */}
         <div 
-          className="absolute inset-0 transition-opacity duration-300"
+          className="absolute inset-x-0 bottom-0 h-2/3"
           style={{
-            background: 'linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.95) 100%)'
+            background: 'linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.7) 100%)'
           }}
         />
 
@@ -130,14 +133,14 @@ export function NetflixCourseCard({
               </h3>
             </div>
             
-            {/* Play Button - Always visible, Netflix style */}
+            {/* Play Button - Green circle like Netflix reference */}
             {!isLocked && (
               <motion.button
-                className="flex-shrink-0 w-9 h-9 rounded-full bg-primary flex items-center justify-center shadow-lg"
+                className="flex-shrink-0 w-10 h-10 rounded-full bg-netflix-green flex items-center justify-center shadow-lg"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <Play className="w-4 h-4 text-white fill-white ml-0.5" />
+                <Play className="w-4 h-4 text-black fill-black ml-0.5" />
               </motion.button>
             )}
           </div>

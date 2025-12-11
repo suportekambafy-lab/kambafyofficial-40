@@ -117,18 +117,19 @@ All colors MUST be HSL.
     --shadow-lg-color: 0 0% 0%;
     
     /* Netflix-style Member Area Tokens */
-    --netflix-bg: 220 15% 8%;
-    --netflix-surface: 220 12% 12%;
-    --netflix-card: 220 10% 16%;
-    --netflix-text: 0 0% 95%;
-    --netflix-text-muted: 0 0% 65%;
+    --netflix-bg: 30 20% 12%;
+    --netflix-surface: 30 15% 18%;
+    --netflix-card: 30 12% 22%;
+    --netflix-text: 40 20% 95%;
+    --netflix-text-muted: 30 10% 60%;
     --netflix-accent: 0 70% 55%;
     --netflix-red: 0 76% 50%;
-    --netflix-green: 94 55% 55%;
-    --netflix-gradient-start: 220 20% 6%;
-    --netflix-gradient-end: 220 15% 10%;
-    --netflix-card-hover: 220 12% 20%;
-    --netflix-border: 220 10% 22%;
+    --netflix-green: 94 55% 45%;
+    --netflix-gradient-start: 30 25% 8%;
+    --netflix-gradient-end: 30 15% 15%;
+    --netflix-card-hover: 30 12% 28%;
+    --netflix-border: 30 10% 30%;
+    --netflix-glass: 30 20% 50%;
   }
 
   .dark {
