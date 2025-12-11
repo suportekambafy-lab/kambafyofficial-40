@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Play, Clock } from 'lucide-react';
+import { Play } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 
@@ -186,26 +185,15 @@ export function ContinueWatching({ memberAreaId, studentEmail, onLessonSelect }:
     }
   };
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
   if (isLoading) {
-    console.log('⏳ ContinueWatching ainda carregando...');
     return (
-      <Card className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-primary/20">
-        <CardContent className="p-6">
-          <div className="flex items-center gap-3">
-            <div className="w-16 h-16 rounded-full bg-primary/20 animate-pulse" />
-            <div className="flex-1 space-y-2">
-              <div className="h-4 bg-primary/10 rounded animate-pulse w-32" />
-              <div className="h-3 bg-primary/10 rounded animate-pulse w-48" />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex items-center gap-3 bg-white/10 border border-white/20 px-4 py-3 rounded-lg animate-pulse">
+        <div className="w-10 h-10 rounded-full bg-white/20" />
+        <div className="flex-1 space-y-2">
+          <div className="h-3 bg-white/20 rounded w-24" />
+          <div className="h-4 bg-white/20 rounded w-32" />
+        </div>
+      </div>
     );
   }
 
@@ -217,53 +205,26 @@ export function ContinueWatching({ memberAreaId, studentEmail, onLessonSelect }:
   console.log('✅ ContinueWatching renderizando card:', lastLesson);
 
   return (
-    <Card className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-primary/20 overflow-hidden">
-      <CardContent className="p-6">
-        <div className="flex items-start gap-4">
-          <div className="flex-shrink-0">
-            <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
-              <Play className="h-8 w-8 text-primary" />
-            </div>
+    <Button 
+      onClick={handleContinueWatching}
+      className="group flex items-center gap-3 bg-white/10 hover:bg-white/20 text-white border border-white/20 px-4 py-3 h-auto rounded-lg backdrop-blur-sm transition-all"
+    >
+      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary flex items-center justify-center group-hover:scale-110 transition-transform">
+        <Play className="h-5 w-5 text-primary-foreground fill-current" />
+      </div>
+      <div className="flex flex-col items-start text-left min-w-0">
+        <span className="text-xs text-white/60">Continuar Assistindo</span>
+        <span className="text-sm font-medium truncate max-w-[200px]">{lastLesson.title}</span>
+        <div className="flex items-center gap-2 mt-1">
+          <div className="w-24 bg-white/20 rounded-full h-1">
+            <div 
+              className="bg-primary rounded-full h-1 transition-all duration-300"
+              style={{ width: `${lastLesson.progress_percentage}%` }}
+            />
           </div>
-          
-          <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-semibold text-foreground mb-1">
-              Continuar Vendo
-            </h3>
-            <p className="text-sm text-muted-foreground truncate mb-3">
-              {lastLesson.title}
-            </p>
-            
-            <div className="space-y-2 mb-4">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Clock className="h-3 w-3" />
-                <span>
-                  {formatTime(lastLesson.video_current_time)} / {formatTime(lastLesson.duration)}
-                </span>
-              </div>
-              
-              <div className="w-full bg-secondary rounded-full h-2">
-                <div 
-                  className="bg-primary rounded-full h-2 transition-all duration-300"
-                  style={{ width: `${lastLesson.progress_percentage}%` }}
-                />
-              </div>
-              
-              <p className="text-xs text-muted-foreground">
-                {lastLesson.progress_percentage}% concluído
-              </p>
-            </div>
-            
-            <Button 
-              onClick={handleContinueWatching}
-              className="w-full sm:w-auto"
-            >
-              <Play className="h-4 w-4 mr-2" />
-              Continuar de onde parei
-            </Button>
-          </div>
+          <span className="text-[10px] text-white/50">{lastLesson.progress_percentage}%</span>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </Button>
   );
 }
