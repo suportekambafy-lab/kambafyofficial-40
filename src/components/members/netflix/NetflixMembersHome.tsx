@@ -62,8 +62,8 @@ export function NetflixMembersHome({
   // Force dark background on body when this component is mounted
   useEffect(() => {
     const originalBg = document.body.style.backgroundColor;
-    document.body.style.backgroundColor = 'hsl(30, 20%, 12%)';
-    document.documentElement.style.backgroundColor = 'hsl(30, 20%, 12%)';
+    document.body.style.backgroundColor = '#000000';
+    document.documentElement.style.backgroundColor = '#000000';
     
     return () => {
       document.body.style.backgroundColor = originalBg;
