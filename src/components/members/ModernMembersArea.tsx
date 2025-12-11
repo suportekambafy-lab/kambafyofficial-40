@@ -874,27 +874,18 @@ export default function ModernMembersArea({ memberAreaId: propMemberAreaId, isEm
         modules={modules || []}
         lessonProgress={lessonProgress || {}}
         memberArea={{
+          id: memberAreaId || '',
           logo_url: currentMemberArea?.logo_url,
           name: currentMemberArea?.name || '',
         }}
+        studentEmail={user?.email || verifiedEmail}
+        studentName={user?.email?.split('@')[0] || verifiedEmail?.split('@')[0]}
         onNavigateLesson={handleNavigateLesson}
         onClose={() => setSelectedLesson(null)}
         onUpdateProgress={updateVideoProgress || ((lessonId, time, duration) => {
           console.log('🎬 Progress update (fallback):', { lessonId, time, duration });
         })}
       />
-      
-      {/* Comentários da aula */}
-      <div className="px-4 md:px-8 lg:px-16 pb-20">
-        <div className="max-w-5xl mx-auto">
-          <LessonComments 
-            lessonId={selectedLesson.id} 
-            studentEmail={user?.email} 
-            studentName={user?.email?.split('@')[0]} 
-            memberAreaId={memberAreaId}
-          />
-        </div>
-      </div>
       
       {/* Modal de Pagamento de Módulo */}
       <ModulePaymentModal

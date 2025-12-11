@@ -4,10 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Play, RotateCcw, SkipForward, ChevronDown, ChevronUp, Clock, CheckCircle2, FileText, Link as LinkIcon, Info, PanelRightClose, PanelRightOpen } from 'lucide-react';
+import { ArrowLeft, Play, RotateCcw, SkipForward, ChevronDown, ChevronUp, Clock, CheckCircle2, FileText, Link as LinkIcon, Info, PanelRightClose, PanelRightOpen, MessageCircle } from 'lucide-react';
 import { Lesson, Module } from '@/types/memberArea';
 import VideoPlayer from '@/components/ui/video-player';
 import { LessonReleaseTimer } from '@/components/ui/lesson-release-timer';
+import { LessonComments } from '@/components/members/LessonComments';
 import { cn } from '@/lib/utils';
 
 interface NetflixLessonViewerProps {
@@ -16,9 +17,12 @@ interface NetflixLessonViewerProps {
   modules: Module[];
   lessonProgress?: Record<string, any>;
   memberArea: {
+    id: string;
     logo_url?: string;
     name: string;
   };
+  studentEmail?: string;
+  studentName?: string;
   onNavigateLesson: (lessonId: string) => void;
   onClose: () => void;
   onUpdateProgress?: (lessonId: string, currentTime: number, duration: number) => void;
@@ -30,6 +34,8 @@ export function NetflixLessonViewer({
   modules = [],
   lessonProgress = {},
   memberArea,
+  studentEmail,
+  studentName,
   onNavigateLesson,
   onClose,
   onUpdateProgress
@@ -446,7 +452,15 @@ export function NetflixLessonViewer({
                 )}
               </Tabs>
 
-              {/* Module Lessons List - Mobile Only */}
+              {/* Comments Section */}
+              <div className="mb-8">
+                <LessonComments
+                  lessonId={lesson.id}
+                  studentEmail={studentEmail}
+                  studentName={studentName}
+                  memberAreaId={memberArea.id}
+                />
+              </div>
               <div className="lg:hidden bg-white/5 rounded-2xl border border-white/10 overflow-hidden">
                 <button 
                   onClick={() => setShowLessonList(!showLessonList)} 
