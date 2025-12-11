@@ -266,6 +266,7 @@ export function NetflixMembersHome({
           memberArea={memberArea}
           featuredLesson={nextLesson}
           totalLessons={totalLessons}
+          totalModules={modules.length}
           completedLessons={completedLessons}
           lastWatchedProgress={nextLesson ? lessonProgress[nextLesson.id]?.progress_percentage : 0}
           onPlay={handlePlay}
