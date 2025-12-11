@@ -325,7 +325,7 @@ export function NetflixHeader({
               <Search className="w-4 h-4 text-amber-200/50 mr-3" />
               <input
                 type="text"
-                placeholder="Search app"
+                placeholder="Pesquisar aulas..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="bg-transparent border-none outline-none text-amber-100 text-sm placeholder:text-stone-400 w-full"
@@ -521,7 +521,7 @@ export function NetflixHeader({
             <Search className="w-4 h-4 text-amber-200/50 mr-2" />
             <input
               type="text"
-              placeholder="Buscar..."
+              placeholder="Pesquisar aulas..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="bg-transparent border-none outline-none text-amber-100 text-sm placeholder:text-stone-400 w-full"

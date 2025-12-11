@@ -103,6 +103,15 @@ export function NetflixMembersHome({
     return grouped;
   }, [modules, lessons]);
 
+  // Filter lessons based on search query
+  const filteredLessons = useMemo(() => {
+    if (!searchQuery.trim()) return null;
+    return lessons.filter(lesson => 
+      lesson.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      lesson.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [lessons, searchQuery]);
+
   // Get newly added lessons (last 10 published)
   const newLessons = useMemo(() => {
     return [...lessons]
@@ -206,8 +215,34 @@ export function NetflixMembersHome({
 
         {/* Carousels */}
         <div className="relative z-10 pt-8 md:pt-12 pb-20 space-y-4">
+          {/* Search Results */}
+          {filteredLessons && (
+            <NetflixCarousel 
+              title={`Resultados para "${searchQuery}"`} 
+              subtitle={`${filteredLessons.length} aula${filteredLessons.length !== 1 ? 's' : ''} encontrada${filteredLessons.length !== 1 ? 's' : ''}`}
+            >
+              {filteredLessons.length > 0 ? (
+                filteredLessons.map(lesson => (
+                  <NetflixCourseCard
+                    key={lesson.id}
+                    id={lesson.id}
+                    title={lesson.title}
+                    thumbnail={getLessonThumbnail(lesson)}
+                    duration={lesson.duration}
+                    isCompleted={lessonProgress[lesson.id]?.completed}
+                    progress={lessonProgress[lesson.id]?.progress_percentage}
+                    moduleTitle={getModuleTitle(lesson.module_id)}
+                    onClick={() => onLessonSelect(lesson)}
+                  />
+                ))
+              ) : (
+                <div className="text-stone-400 px-4 py-8">Nenhuma aula encontrada</div>
+              )}
+            </NetflixCarousel>
+          )}
+
           {/* Continue Watching */}
-          {continueWatchingLessons.length > 0 && (
+          {!filteredLessons && continueWatchingLessons.length > 0 && (
             <NetflixCarousel title="Continuar a Assistir" subtitle={`${continueWatchingLessons.length} em progresso`}>
               {continueWatchingLessons.map(lesson => (
                 <NetflixCourseCard
@@ -225,6 +260,7 @@ export function NetflixMembersHome({
           )}
 
           {/* Todos os Módulos */}
+          {!filteredLessons && (
           <div id="modules-section">
           {modules.length > 0 && (
             <NetflixCarousel 
@@ -249,8 +285,10 @@ export function NetflixMembersHome({
             </NetflixCarousel>
           )}
           </div>
+          )}
 
           {/* New Lessons */}
+          {!filteredLessons && (
           <div id="community-section">
           {newLessons.length > 0 && (
             <NetflixCarousel title="Adicionados Recentemente" showSeeAll>
@@ -270,6 +308,7 @@ export function NetflixMembersHome({
             </NetflixCarousel>
           )}
           </div>
+          )}
         </div>
       </main>
 
