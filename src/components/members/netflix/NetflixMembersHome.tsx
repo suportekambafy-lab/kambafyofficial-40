@@ -136,10 +136,11 @@ export function NetflixMembersHome({
 
   return (
     <div 
-      className="min-h-screen relative"
+      className="min-h-screen relative netflix-member-area"
+      data-netflix-member-area="true"
       style={{ 
-        background: 'linear-gradient(180deg, hsl(30 25% 18%) 0%, hsl(30 20% 12%) 100%)',
-        color: 'hsl(var(--netflix-text))'
+        background: 'hsl(30 20% 12%)',
+        color: 'hsl(40 20% 95%)'
       }}
     >
       {/* Warm ambient background effect */}
