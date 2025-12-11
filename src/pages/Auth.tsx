@@ -84,13 +84,18 @@ const Auth = () => {
   }, [mode, userTypeParam]);
 
   useEffect(() => {
+    // Não redirecionar se estiver em processo de 2FA (já fez login mas precisa verificar)
+    if (currentView === '2fa-verification' || pending2FAData) {
+      return;
+    }
+    
     if (user) {
       const userType = localStorage.getItem('userType') || 'business';
       const redirectPath = userType === 'customer' ? '/meus-acessos' : '/vendedor';
       
       navigate(redirectPath, { replace: true });
     }
-  }, [user, navigate]);
+  }, [user, navigate, currentView, pending2FAData]);
 
   const handleUserTypeSelect = (type: 'customer' | 'seller' | null) => {
     setSelectedUserType(type);
