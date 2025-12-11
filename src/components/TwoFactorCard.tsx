@@ -60,11 +60,6 @@ export function TwoFactorCard({
   return (
     <div className="rounded-3xl p-6 md:p-8 w-full max-w-sm relative overflow-hidden bg-card border border-border shadow-lg mx-auto">
       <div className="relative z-10">
-        {/* Logo */}
-        <div className="flex justify-center mb-6">
-          <LogoIcon />
-        </div>
-
         {/* Title */}
         <h1 className="text-xl md:text-2xl font-semibold text-center text-foreground mb-2">
           {title || getDefaultTitle()}
