@@ -73,7 +73,7 @@ const Index = () => {
             mobileTitle="Nova Área de Membros"
             action={{
               label: "Conheça Agora",
-              onClick: () => navigate('/auth')
+              onClick: () => navigate('/nova-area-membros')
             }}
           />
         </div>
