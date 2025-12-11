@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { NetflixHeader } from './NetflixHeader';
 import { NetflixHeroBanner } from './NetflixHeroBanner';
@@ -52,6 +52,18 @@ export function NetflixMembersHome({
 }: NetflixMembersHomeProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Force dark background on body when this component is mounted
+  useEffect(() => {
+    const originalBg = document.body.style.backgroundColor;
+    document.body.style.backgroundColor = 'hsl(30, 20%, 12%)';
+    document.documentElement.style.backgroundColor = 'hsl(30, 20%, 12%)';
+    
+    return () => {
+      document.body.style.backgroundColor = originalBg;
+      document.documentElement.style.backgroundColor = '';
+    };
+  }, []);
 
   // Calculate course stats
   const completedLessons = useMemo(() => {
