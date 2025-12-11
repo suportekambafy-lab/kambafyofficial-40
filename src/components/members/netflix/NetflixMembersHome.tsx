@@ -7,7 +7,7 @@ import { NetflixCourseCard } from './NetflixCourseCard';
 import { NetflixModuleSidebar } from './NetflixModuleSidebar';
 import { NetflixProgressPanel } from './NetflixProgressPanel';
 import { Lesson, Module } from '@/types/memberArea';
-import { MembersThemeProvider, useMembersTheme, membersThemeColors } from '@/hooks/useMembersTheme';
+import { membersThemeColors } from '@/hooks/useMembersTheme';
 
 interface MemberArea {
   id: string;
@@ -56,24 +56,24 @@ function NetflixMembersHomeContent({
   onLessonSelect,
   onLogout,
 }: NetflixMembersHomeProps) {
-  const { isDark, theme } = useMembersTheme();
-  const colors = membersThemeColors[theme];
+  // Always use dark theme - pure black like login page
+  const colors = membersThemeColors.dark;
   
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isProgressPanelOpen, setIsProgressPanelOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Apply theme background on body when this component is mounted
+  // Apply dark background on body when this component is mounted
   useEffect(() => {
     const originalBg = document.body.style.backgroundColor;
-    document.body.style.backgroundColor = colors.background;
-    document.documentElement.style.backgroundColor = colors.background;
+    document.body.style.backgroundColor = '#000000';
+    document.documentElement.style.backgroundColor = '#000000';
     
     return () => {
       document.body.style.backgroundColor = originalBg;
       document.documentElement.style.backgroundColor = '';
     };
-  }, [colors.background]);
+  }, []);
 
   // Calculate course stats
   const completedLessons = useMemo(() => {
@@ -415,11 +415,7 @@ function NetflixMembersHomeContent({
   );
 }
 
-// Wrapper component with theme provider
+// Export the component directly (no theme provider needed - always dark)
 export function NetflixMembersHome(props: NetflixMembersHomeProps) {
-  return (
-    <MembersThemeProvider defaultTheme="dark">
-      <NetflixMembersHomeContent {...props} />
-    </MembersThemeProvider>
-  );
+  return <NetflixMembersHomeContent {...props} />;
 }
