@@ -73,7 +73,7 @@ export function NetflixHeader({
       className={cn(
         'fixed top-0 left-0 right-0 z-50 transition-all duration-500',
         isScrolled 
-          ? 'bg-[hsl(var(--netflix-bg))]/90 backdrop-blur-xl' 
+          ? 'bg-black/40 backdrop-blur-2xl' 
           : 'bg-transparent'
       )}
       initial={{ y: -100 }}
@@ -99,15 +99,15 @@ export function NetflixHeader({
 
           {/* Desktop Navigation - Netflix Style Pills */}
           <nav className="hidden md:flex items-center">
-            <div className="flex items-center bg-white/10 backdrop-blur-sm rounded-full p-1">
+            <div className="flex items-center bg-black/30 backdrop-blur-xl rounded-full p-1.5">
               {navItems.map((item) => (
                 <button
                   key={item.id}
                   className={cn(
-                    'px-5 py-2 rounded-full text-sm font-medium transition-all duration-300',
+                    'px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300',
                     activeTab === item.id
-                      ? 'bg-white/20 text-white shadow-sm'
-                      : 'text-white/70 hover:text-white'
+                      ? 'bg-white/20 text-white'
+                      : 'text-white/60 hover:text-white'
                   )}
                 >
                   {item.label}
@@ -121,8 +121,8 @@ export function NetflixHeader({
         <div className="flex items-center gap-4">
           {/* Search Bar - Netflix Style */}
           <div className="hidden md:block relative">
-            <div className="flex items-center bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 w-[200px] lg:w-[280px]">
-              <Search className="w-4 h-4 text-white/50 mr-2" />
+            <div className="flex items-center bg-black/30 backdrop-blur-xl rounded-full px-4 py-2.5 w-[200px] lg:w-[280px]">
+              <Search className="w-4 h-4 text-white/40 mr-3" />
               <input
                 type="text"
                 placeholder="Search app"
