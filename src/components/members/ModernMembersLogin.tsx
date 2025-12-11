@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { LogIn, Mail, BookOpen, Shield, Sparkles } from 'lucide-react';
+import { LogIn, Mail, BookOpen, Shield } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useCustomToast } from '@/hooks/useCustomToast';
 import { useDebounced } from '@/hooks/useDebounced';
@@ -569,13 +569,13 @@ export default function ModernMembersLogin() {
               color: 'white',
               boxShadow: `0 10px 30px -10px ${primaryColor}60`
             }} disabled={isSubmitting || !email}>
-                {isSubmitting ? <motion.div animate={{
+                {isSubmitting && <motion.div animate={{
                 rotate: 360
               }} transition={{
                 duration: 1,
                 repeat: Infinity,
                 ease: "linear"
-              }} className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full mr-2" /> : <Sparkles className="h-5 w-5 mr-2" />}
+              }} className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full mr-2" />}
                 {isSubmitting ? 'Verificando...' : 'Acessar Conteúdo'}
               </Button>
             </motion.div>
