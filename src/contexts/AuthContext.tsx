@@ -159,6 +159,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         
         if (event === 'SIGNED_OUT' || !session) {
+          // Se estamos na página de auth, apenas limpar o estado sem fazer nada especial
+          // (o processo de 2FA pode ter feito logout propositalmente)
+          if (window.location.pathname === '/auth') {
+            console.log('👋 Logout na página de auth - apenas limpando estado');
+            setUser(null);
+            setSession(null);
+            setLoading(false);
+            return;
+          }
+          
           console.log('👋 Usuário desconectado');
           clearAuth();
           setLoading(false);
