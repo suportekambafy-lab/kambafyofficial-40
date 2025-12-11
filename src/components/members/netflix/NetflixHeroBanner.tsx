@@ -174,6 +174,8 @@ export function NetflixHeroBanner({
                 PREMIUM
               </Badge>
               <span>{totalModules} Módulos</span>
+              <span>·</span>
+              <span>{totalLessons} Aulas</span>
               {featuredLesson?.duration && (
                 <span className="flex items-center gap-1">
                   <Clock className="w-3 h-3 md:w-3.5 md:h-3.5" />
