@@ -7,6 +7,7 @@ import { useState } from "react";
 import memberAreaLogin from "@/assets/member-area-login.png";
 import memberAreaHero from "@/assets/member-area-hero.png";
 import memberAreaModules from "@/assets/member-area-modules.png";
+import memberAreaLessons from "@/assets/member-area-lessons.png";
 import memberAreaPlayer from "@/assets/member-area-player.png";
 
 const NewMemberAreaLanding = () => {
@@ -60,16 +61,22 @@ const NewMemberAreaLanding = () => {
       objectFit: "cover" as const
     },
     {
-      title: "Módulos do Curso",
-      description: "Visualização de módulos com capas atrativas e progresso visual",
+      title: "Continuar Assistindo",
+      description: "Seção de progresso com aulas em andamento e módulos organizados",
       image: memberAreaModules,
-      objectFit: "contain" as const
+      objectFit: "cover" as const
+    },
+    {
+      title: "Todos os Módulos",
+      description: "Visualização completa dos módulos com capas atrativas e aulas recentes",
+      image: memberAreaLessons,
+      objectFit: "cover" as const
     },
     {
       title: "Player de Vídeo",
       description: "Player profissional com controles avançados e lista de aulas",
       image: memberAreaPlayer,
-      objectFit: "contain" as const
+      objectFit: "cover" as const
     }
   ];
 
@@ -168,7 +175,7 @@ const NewMemberAreaLanding = () => {
                     key={index}
                     src={screenshot.image}
                     alt={screenshot.title}
-                    className={`absolute inset-0 w-full h-full ${screenshot.objectFit === 'contain' ? 'object-contain' : 'object-cover object-top'}`}
+                    className={`absolute inset-0 w-full h-full object-cover object-top`}
                     initial={{ opacity: 0 }}
                     animate={{ 
                       opacity: activeScreenshot === index ? 1 : 0,
