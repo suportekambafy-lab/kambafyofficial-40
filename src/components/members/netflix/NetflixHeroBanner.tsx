@@ -112,28 +112,29 @@ export function NetflixHeroBanner({
           </div>
         )}
 
-        {/* Gradient Overlays - More cinematic */}
+        {/* Gradient Overlays - Lighter on mobile */}
         <div 
           className="absolute inset-0"
           style={{
-            background: 'linear-gradient(180deg, transparent 0%, transparent 30%, rgba(0, 0, 0, 0.4) 60%, rgba(0, 0, 0, 0.85) 100%)'
+            background: 'linear-gradient(180deg, transparent 0%, transparent 50%, rgba(0, 0, 0, 0.3) 70%, rgba(0, 0, 0, 0.9) 100%)'
           }}
         />
         <div 
-          className="absolute inset-0"
+          className="absolute inset-0 hidden md:block"
           style={{
-            background: 'linear-gradient(90deg, rgba(0, 0, 0, 0.6) 0%, transparent 40%, transparent 100%)'
+            background: 'linear-gradient(90deg, rgba(0, 0, 0, 0.5) 0%, transparent 40%, transparent 100%)'
           }}
         />
 
-        {/* Content */}
-        <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-10 lg:p-12">
-          <div className="max-w-2xl space-y-4">
-            {/* Course Logo */}
+        {/* Content - More compact on mobile */}
+        <div className="absolute inset-x-0 bottom-0 p-4 md:p-10 lg:p-12">
+          <div className="max-w-2xl space-y-2 md:space-y-4">
+            {/* Course Logo - Smaller on mobile */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
+              className="hidden md:block"
             >
               {memberArea.logo_url ? (
                 <img src={memberArea.logo_url} alt={memberArea.name} className="h-16 max-w-[280px] object-contain" />
@@ -142,12 +143,12 @@ export function NetflixHeroBanner({
               )}
             </motion.div>
 
-            {/* Title - Large stylized */}
+            {/* Title - Smaller on mobile */}
             <motion.h1
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[0.9] uppercase"
+              className="text-2xl md:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[0.95] uppercase"
               style={{ 
                 textShadow: '0 4px 30px rgba(0, 0, 0, 0.5)',
                 fontFamily: 'Inter, SF Pro, sans-serif',
@@ -157,12 +158,12 @@ export function NetflixHeroBanner({
               {memberArea.hero_title || memberArea.name}
             </motion.h1>
 
-            {/* Meta Info - Year, Rating, Modules, Duration */}
+            {/* Meta Info - Hidden on mobile */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="flex flex-wrap items-center gap-3 text-sm text-white/90"
+              className="hidden md:flex flex-wrap items-center gap-3 text-sm text-white/90"
             >
               <span className="font-medium">2024</span>
               <Badge 
@@ -180,19 +181,19 @@ export function NetflixHeroBanner({
               )}
             </motion.div>
 
-            {/* Description */}
+            {/* Description - Hidden on mobile */}
             {(memberArea.hero_description || memberArea.description) && (
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
-                className="text-sm md:text-base text-white/70 max-w-lg line-clamp-3 leading-relaxed"
+                className="hidden md:block text-sm md:text-base text-white/70 max-w-lg line-clamp-3 leading-relaxed"
               >
                 {memberArea.hero_description || memberArea.description}
               </motion.p>
             )}
 
-            {/* Progress Bar (if in progress) */}
+            {/* Progress Bar - Compact on mobile */}
             {hasProgress && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -204,37 +205,37 @@ export function NetflixHeroBanner({
                   value={progressPercentage} 
                   className="h-1 bg-white/20"
                 />
-                <p className="text-xs text-white/50 mt-1.5">
+                <p className="text-xs text-white/50 mt-1">
                   {progressPercentage}% concluído
                 </p>
               </motion.div>
             )}
 
-            {/* Action Buttons - Netflix Style */}
+            {/* Action Buttons - Smaller on mobile */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
-              className="flex flex-wrap items-center gap-3 pt-2"
+              className="flex items-center gap-2 md:gap-3 pt-1 md:pt-2"
             >
-              {/* Play Button - White filled */}
+              {/* Play Button */}
               <Button
                 onClick={onPlay}
-                size="lg"
-                className="bg-white hover:bg-white/90 text-black font-bold px-6 md:px-8 h-12 rounded-lg gap-2 transition-all hover:scale-105 shadow-xl"
+                size="default"
+                className="bg-white hover:bg-white/90 text-black font-bold px-4 md:px-8 h-10 md:h-12 rounded-lg gap-2 transition-all hover:scale-105 shadow-xl text-sm md:text-base"
               >
-                <Play className="w-5 h-5 fill-black" />
+                <Play className="w-4 h-4 md:w-5 md:h-5 fill-black" />
                 Play
               </Button>
 
-              {/* Watch Together / Curriculum Button - Accent colored */}
+              {/* Curriculum Button */}
               <Button
                 onClick={onViewCurriculum}
-                size="lg"
-                className="bg-netflix-red hover:bg-netflix-red/90 text-white font-bold px-6 md:px-8 h-12 rounded-lg gap-2 transition-all"
+                size="default"
+                className="bg-netflix-red hover:bg-netflix-red/90 text-white font-bold px-4 md:px-8 h-10 md:h-12 rounded-lg gap-2 transition-all text-sm md:text-base"
               >
-                <Users2 className="w-5 h-5" />
-                Ver Currículo
+                <Users2 className="w-4 h-4 md:w-5 md:h-5" />
+                <span className="hidden sm:inline">Ver</span> Currículo
               </Button>
             </motion.div>
           </div>
