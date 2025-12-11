@@ -194,14 +194,14 @@ export function NetflixLessonViewer({
         {/* Video Section */}
         <div className="relative w-full bg-black">
           {isNotYetReleased ? (
-            <div className="aspect-video">
+            <div className="aspect-video lg:aspect-[21/9] xl:aspect-[2.4/1] 2xl:h-[70vh] 2xl:aspect-auto">
               <LessonReleaseTimer 
                 releaseDate={new Date(lesson.scheduled_at!)} 
                 lessonTitle={lesson.title}
               />
             </div>
           ) : hlsUrl || lesson.video_url || lesson.bunny_embed_url ? (
-            <div className="w-full aspect-video relative">
+            <div className="w-full aspect-video lg:aspect-[21/9] xl:aspect-[2.4/1] 2xl:h-[70vh] 2xl:aspect-auto relative">
               <VideoPlayer
                 key={`${lesson.id}-${videoKey}`}
                 hlsUrl={hlsUrl || undefined}

@@ -742,8 +742,8 @@ const VideoPlayer = ({
   // Error display with ISP/DNS help
   if (shouldShowError) {
     return (
-      <div className="relative w-full max-w-4xl mx-auto bg-black rounded-lg overflow-hidden">
-        <div className="w-full aspect-video flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800">
+      <div className="relative w-full h-full bg-black rounded-lg overflow-hidden">
+        <div className="w-full h-full min-h-[300px] flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800">
           <div className="text-center text-white p-8 max-w-lg">
             <Play className="h-16 w-16 mx-auto mb-4 text-red-400" />
             <h3 className="text-xl font-semibold mb-2">Problema ao carregar vídeo</h3>
@@ -822,7 +822,7 @@ const VideoPlayer = ({
     return (
       <div
         ref={containerRef}
-        className="relative w-full max-w-4xl mx-auto bg-black rounded-card overflow-hidden group"
+        className="relative w-full h-full bg-black rounded-card overflow-hidden group"
         onMouseMove={handleMouseMove}
         onMouseLeave={() => isPlaying && setShowControls(false)}
         tabIndex={0}
@@ -1098,7 +1098,7 @@ const VideoPlayer = ({
     
     return (
       <motion.div 
-        className="relative w-full overflow-hidden bg-black"
+        className="relative w-full h-full overflow-hidden bg-black"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -1115,7 +1115,7 @@ const VideoPlayer = ({
         <iframe
           ref={iframeRef}
           src={processedEmbedUrl}
-          className="w-full aspect-video border-0"
+          className="w-full h-full min-h-[300px] border-0"
           frameBorder="0"
           allowFullScreen
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
@@ -1139,7 +1139,7 @@ const VideoPlayer = ({
     return (
       <div
         ref={containerRef}
-        className="relative w-full max-w-4xl mx-auto bg-black rounded-card overflow-hidden group"
+        className="relative w-full h-full bg-black rounded-card overflow-hidden group"
         onMouseMove={handleMouseMove}
         onMouseLeave={() => isPlaying && setShowControls(false)}
         tabIndex={0}
@@ -1308,8 +1308,8 @@ const VideoPlayer = ({
 
   // No valid source
   return (
-    <div className="relative w-full max-w-4xl mx-auto bg-black rounded-lg overflow-hidden">
-      <div className="w-full aspect-video flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800">
+    <div className="relative w-full h-full bg-black rounded-lg overflow-hidden">
+      <div className="w-full h-full min-h-[300px] flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800">
         <div className="text-center text-white p-8">
           <Play className="h-16 w-16 mx-auto mb-4 text-gray-400" />
           <h3 className="text-xl font-semibold mb-2">Vídeo não disponível</h3>
