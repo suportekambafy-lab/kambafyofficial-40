@@ -259,7 +259,7 @@ export function NetflixHeader({
   const navItems = [
     { id: 'home', label: 'Home', icon: Home },
     { id: 'modules', label: 'Módulos', icon: PlayCircle },
-    { id: 'community', label: 'Comunidade', icon: Users },
+    { id: 'offers', label: 'Ofertas', icon: Users },
   ];
 
   const handleNavClick = (itemId: string) => {
@@ -268,10 +268,10 @@ export function NetflixHeader({
       if (modulesSection) {
         modulesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
-    } else if (itemId === 'community') {
-      const communitySection = document.getElementById('community-section');
-      if (communitySection) {
-        communitySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else if (itemId === 'offers') {
+      const offersSection = document.getElementById('offers-section');
+      if (offersSection) {
+        offersSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     }
   };
