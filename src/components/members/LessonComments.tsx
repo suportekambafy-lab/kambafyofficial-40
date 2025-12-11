@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -363,22 +362,22 @@ export function LessonComments({
   };
 
   const renderComment = (comment: Comment, isReply = false) => (
-    <div key={comment.id} className={`p-3 sm:p-4 bg-gray-800/50 rounded-lg border border-gray-700/50 ${isReply ? 'ml-4 sm:ml-8 mt-2' : ''} ${selectedComments.has(comment.id) ? 'ring-2 ring-emerald-500' : ''}`}>
+    <div key={comment.id} className={`p-3 sm:p-4 bg-white/5 rounded-2xl border border-white/10 ${isReply ? 'ml-4 sm:ml-8 mt-2' : ''} ${selectedComments.has(comment.id) ? 'ring-2 ring-netflix-green' : ''}`}>
       <div className="flex gap-2 sm:gap-3">
         {isAreaOwner && (
           <div className="flex-shrink-0 pt-1">
             <Checkbox
               checked={selectedComments.has(comment.id)}
               onCheckedChange={() => toggleCommentSelection(comment.id)}
-              className="data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
+              className="data-[state=checked]:bg-netflix-green data-[state=checked]:border-netflix-green"
             />
           </div>
         )}
-        <Avatar className="h-8 w-8 sm:h-10 sm:w-10 ring-2 ring-gray-700 flex-shrink-0">
+        <Avatar className="h-8 w-8 sm:h-10 sm:w-10 ring-2 ring-white/20 flex-shrink-0">
           {comment.avatar_url && (
             <AvatarImage src={comment.avatar_url} alt={comment.user_name} />
           )}
-          <AvatarFallback className="bg-emerald-600 text-white text-xs sm:text-sm">
+          <AvatarFallback className="bg-netflix-green text-black text-xs sm:text-sm font-bold">
             {getInitials(comment.user_name)}
           </AvatarFallback>
         </Avatar>
@@ -396,12 +395,12 @@ export function LessonComments({
             )}
           </div>
           
-          <p className="text-xs text-gray-400 flex items-center gap-1">
+          <p className="text-xs text-white/50 flex items-center gap-1">
             <Clock className="h-3 w-3 flex-shrink-0" />
             <span className="truncate">{formatDate(comment.created_at)}</span>
           </p>
           
-          <p className="text-sm sm:text-base text-gray-300 leading-relaxed break-words overflow-wrap-anywhere whitespace-pre-wrap">{comment.comment}</p>
+          <p className="text-sm sm:text-base text-white/80 leading-relaxed break-words overflow-wrap-anywhere whitespace-pre-wrap">{comment.comment}</p>
           
           <div className="flex gap-2 mt-2">
             {!isReply && (
@@ -409,7 +408,7 @@ export function LessonComments({
                 variant="ghost"
                 size="sm"
                 onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
-                className="text-xs text-emerald-400 hover:text-emerald-300 h-7 px-2"
+                className="text-xs text-netflix-green hover:text-netflix-green/80 h-7 px-2"
               >
                 {replyingTo === comment.id ? 'Cancelar' : 'Responder'}
               </Button>
@@ -445,7 +444,7 @@ export function LessonComments({
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}
                 rows={2}
-                className="border-gray-700 text-white placeholder-gray-400 resize-none bg-zinc-900 text-sm w-full"
+                className="border-white/10 text-white placeholder-white/40 resize-none bg-white/5 text-sm w-full rounded-xl"
               />
               <div className="flex flex-col sm:flex-row justify-end gap-2">
                 <Button
@@ -463,7 +462,7 @@ export function LessonComments({
                   onClick={() => handleSubmitComment(comment.id)}
                   disabled={!replyText.trim() || isSubmitting}
                   size="sm"
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs w-full sm:w-auto"
+                  className="bg-netflix-green hover:bg-netflix-green/90 text-black font-bold text-xs w-full sm:w-auto"
                 >
                   Responder
                 </Button>
@@ -484,26 +483,24 @@ export function LessonComments({
   // Se comentários estão desabilitados, mostrar mensagem
   if (!commentsEnabled) {
     return (
-      <Card className="mt-6 bg-zinc-950 border-0 mx-0 sm:mx-0">
-        <CardContent className="py-8">
-          <div className="text-center">
-            <MessageCircle className="h-12 w-12 text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-400 text-base font-medium">Comentários desativados</p>
-            <p className="text-gray-500 text-sm mt-2">O instrutor desativou os comentários para esta área de membros</p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="mt-8 bg-white/5 rounded-2xl border border-white/10 p-8">
+        <div className="text-center">
+          <MessageCircle className="h-12 w-12 text-white/30 mx-auto mb-4" />
+          <p className="text-white/70 text-base font-medium">Comentários desativados</p>
+          <p className="text-white/40 text-sm mt-2">O instrutor desativou os comentários para esta área de membros</p>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card className="mt-6 bg-zinc-950 border-0 mx-0 sm:mx-0">
-      <CardHeader className="px-3 sm:px-6">
+    <div className="mt-8 bg-white/5 rounded-2xl border border-white/10 overflow-hidden">
+      <div className="px-4 sm:px-6 py-4 border-b border-white/10">
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-white text-base sm:text-lg">
+          <h3 className="flex items-center gap-2 text-white font-semibold text-base sm:text-lg">
             <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
             <span className="truncate">Comentários ({comments.reduce((count, comment) => count + 1 + (comment.replies?.length || 0), 0)})</span>
-          </CardTitle>
+          </h3>
           
           {isAreaOwner && comments.length > 0 && (
             <div className="flex items-center gap-2">
@@ -511,17 +508,17 @@ export function LessonComments({
                 variant="ghost"
                 size="sm"
                 onClick={toggleSelectAll}
-                className="text-xs text-gray-400 hover:text-white"
+                className="text-xs text-white/50 hover:text-white"
               >
                 {selectedComments.size === getAllCommentIds().length ? (
                   <>
                     <CheckSquare className="h-4 w-4 mr-1" />
-                    Desselecionar Todos
+                    Desselecionar
                   </>
                 ) : (
                   <>
                     <Square className="h-4 w-4 mr-1" />
-                    Selecionar Todos
+                    Selecionar
                   </>
                 )}
               </Button>
@@ -550,25 +547,25 @@ export function LessonComments({
             </div>
           )}
         </div>
-      </CardHeader>
-      <CardContent className="space-y-6 px-3 sm:px-6">
+      </div>
+      <div className="p-4 sm:p-6 space-y-6">
         <div className="space-y-3">
           <Textarea 
             placeholder="Deixe seu comentário sobre esta aula..." 
             value={newComment} 
             onChange={(e) => setNewComment(e.target.value)} 
             rows={3} 
-            className="border-gray-700 text-sm sm:text-base text-white placeholder-gray-400 resize-none bg-zinc-950 w-full" 
+            className="border-white/10 text-sm sm:text-base text-white placeholder-white/40 resize-none bg-white/5 w-full rounded-xl" 
           />
           <div className="flex justify-end">
             <Button 
               onClick={() => handleSubmitComment()} 
               disabled={!newComment.trim() || isSubmitting} 
-              className="bg-emerald-600 hover:bg-emerald-700 text-white w-full sm:w-auto text-sm"
+              className="bg-netflix-green hover:bg-netflix-green/90 text-black font-bold w-full sm:w-auto text-sm"
             >
               {isSubmitting ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                  <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin mr-2" />
                   Enviando...
                 </>
               ) : (
@@ -584,19 +581,19 @@ export function LessonComments({
         <div className="space-y-4">
           {isLoading ? (
             <div className="text-center py-8">
-              <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-              <p className="text-gray-400">Carregando comentários...</p>
+              <div className="w-8 h-8 border-2 border-netflix-green border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+              <p className="text-white/50">Carregando comentários...</p>
             </div>
           ) : comments.length === 0 ? (
             <div className="text-center py-8">
-              <MessageCircle className="h-12 w-12 text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-400">Seja o primeiro a comentar nesta aula!</p>
+              <MessageCircle className="h-12 w-12 text-white/20 mx-auto mb-4" />
+              <p className="text-white/50">Seja o primeiro a comentar nesta aula!</p>
             </div>
           ) : (
             comments.map(comment => renderComment(comment))
           )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
