@@ -125,7 +125,7 @@ export function NetflixProgressPanel({
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent 
         side="right" 
-        className="w-full sm:max-w-lg bg-gradient-to-b from-stone-900 via-stone-900 to-black border-l border-white/10 p-0"
+        className="w-full sm:max-w-lg bg-gradient-to-b from-stone-900 via-stone-900 to-black border-l border-white/10 p-0 z-[100]"
       >
         <div className="h-full flex flex-col">
           {/* Header */}
