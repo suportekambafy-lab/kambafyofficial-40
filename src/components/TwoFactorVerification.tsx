@@ -313,56 +313,85 @@ const TwoFactorVerification = ({
         return 'Verificação de Segurança';
     }
   };
+  // Verificar se é contexto de member area para aplicar estilo Netflix
+  const isMemberAreaContext = context === 'member_area_login';
+  
   return <div className="w-full max-w-md space-y-6">
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-white">
+        <h1 className="text-2xl font-bold" style={{ color: isMemberAreaContext ? 'hsl(40, 20%, 95%)' : 'white' }}>
           {getContextTitle()}
         </h1>
-        <p className="text-muted-foreground mt-2">
+        <p className="mt-2" style={{ color: isMemberAreaContext ? 'hsl(30, 10%, 60%)' : 'hsl(var(--muted-foreground))' }}>
           {codeAlreadySent ? "Digite o código de 6 dígitos enviado para" : "Enviamos um código de 6 dígitos para"}
         </p>
-        <p className="font-medium text-checkout-green">
+        <p className="font-medium" style={{ color: isMemberAreaContext ? 'hsl(94, 55%, 50%)' : 'hsl(var(--checkout-green))' }}>
           {email}
         </p>
       </div>
 
       <div className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="verification-code" className="text-white">Código de Verificação</Label>
+          <Label htmlFor="verification-code" style={{ color: isMemberAreaContext ? 'hsl(40, 15%, 80%)' : 'white' }}>
+            Código de Verificação
+          </Label>
           <div className="flex justify-center">
             <InputOTP maxLength={6} value={code} onChange={value => setCode(value)}>
               <InputOTPGroup>
-                <InputOTPSlot index={0} />
-                <InputOTPSlot index={1} />
-                <InputOTPSlot index={2} />
-                <InputOTPSlot index={3} />
-                <InputOTPSlot index={4} />
-                <InputOTPSlot index={5} />
+                <InputOTPSlot index={0} className={isMemberAreaContext ? "border-[hsl(30,10%,30%)] bg-[hsl(30,15%,18%)] text-white" : ""} />
+                <InputOTPSlot index={1} className={isMemberAreaContext ? "border-[hsl(30,10%,30%)] bg-[hsl(30,15%,18%)] text-white" : ""} />
+                <InputOTPSlot index={2} className={isMemberAreaContext ? "border-[hsl(30,10%,30%)] bg-[hsl(30,15%,18%)] text-white" : ""} />
+                <InputOTPSlot index={3} className={isMemberAreaContext ? "border-[hsl(30,10%,30%)] bg-[hsl(30,15%,18%)] text-white" : ""} />
+                <InputOTPSlot index={4} className={isMemberAreaContext ? "border-[hsl(30,10%,30%)] bg-[hsl(30,15%,18%)] text-white" : ""} />
+                <InputOTPSlot index={5} className={isMemberAreaContext ? "border-[hsl(30,10%,30%)] bg-[hsl(30,15%,18%)] text-white" : ""} />
               </InputOTPGroup>
             </InputOTP>
           </div>
         </div>
 
-        <div className="text-center text-sm text-muted-foreground">
+        <div className="text-center text-sm" style={{ color: isMemberAreaContext ? 'hsl(30, 10%, 55%)' : 'hsl(var(--muted-foreground))' }}>
           {timeLeft > 0 ? <p>Código expira em: <span className="font-mono">{formatTime(timeLeft)}</span></p> : <p className="text-destructive">Código expirado</p>}
         </div>
 
-        <Button onClick={verifyCode} className="w-full bg-checkout-green hover:bg-checkout-green/90" disabled={loading || code.length !== 6}>
+        <Button 
+          onClick={verifyCode} 
+          className="w-full text-white font-semibold"
+          style={isMemberAreaContext ? {
+            background: 'linear-gradient(135deg, hsl(0, 70%, 50%), hsl(0, 60%, 40%))',
+            boxShadow: '0 10px 30px -10px hsla(0, 70%, 40%, 0.5)'
+          } : {}}
+          disabled={loading || code.length !== 6}
+        >
           {loading ? <LoadingSpinner size="sm" /> : 'Verificar Código'}
         </Button>
 
         <div className="space-y-2">
-          <Button onClick={sendVerificationCode} variant="outline" className="w-full" disabled={resendLoading || timeLeft > 240} // Pode reenviar após 1 minuto
-        >
+          <Button 
+            onClick={sendVerificationCode} 
+            variant="outline" 
+            className="w-full"
+            style={isMemberAreaContext ? {
+              backgroundColor: 'transparent',
+              borderColor: 'hsl(30, 10%, 35%)',
+              color: 'hsl(40, 15%, 80%)'
+            } : {}}
+            disabled={resendLoading || timeLeft > 240}
+          >
             {resendLoading ? <LoadingSpinner size="sm" /> : codeAlreadySent ? 'Reenviar Código' : 'Enviar Código'}
           </Button>
           
-          {timeLeft > 240 && <p className="text-xs text-center text-muted-foreground">
+          {timeLeft > 240 && <p className="text-xs text-center" style={{ color: isMemberAreaContext ? 'hsl(30, 10%, 50%)' : 'hsl(var(--muted-foreground))' }}>
               Aguarde {formatTime(timeLeft - 240)} para reenviar
             </p>}
         </div>
 
-        <Button onClick={handleBackClick} variant="ghost" className="w-full">
+        <Button 
+          onClick={handleBackClick} 
+          variant="ghost" 
+          className="w-full"
+          style={isMemberAreaContext ? {
+            color: 'hsl(30, 10%, 55%)'
+          } : {}}
+        >
           Cancelar
         </Button>
       </div>
