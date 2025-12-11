@@ -68,6 +68,7 @@ const KambaPay = createLazyWithRetry(() => import('@/pages/KambaPay'), "KambaPay
 const MarketplacePage = createLazyWithRetry(() => import('@/pages/MarketplacePage'), "MarketplacePage");
 const SellerCommunity = createLazyWithRetry(() => import('@/pages/SellerCommunity'), "SellerCommunity");
 const NewMemberAreaLanding = createLazyWithRetry(() => import('@/pages/NewMemberAreaLanding'), "NewMemberAreaLanding");
+const Verify2FA = createLazyWithRetry(() => import('@/pages/Verify2FA'), "Verify2FA");
 
 
 // Nova estrutura moderna de área de membros
@@ -182,6 +183,7 @@ export const OptimizedRoutes = {
   MarketplacePage: withLazyLoading(MarketplacePage),
   SellerCommunity: withLazyLoading(SellerCommunity),
   NewMemberAreaLanding: withLazyLoading(NewMemberAreaLanding),
+  Verify2FA: withLazyLoading(Verify2FA, 'settings'),
   
   
   SellerDashboard: withLazyLoading(SellerDashboard, 'dashboard'),

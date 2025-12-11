@@ -10,10 +10,15 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  requires2FA: boolean;
+  verified2FA: boolean;
+  pending2FAEmail: string | null;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error?: AuthError }>;
   signIn: (email: string, password: string) => Promise<{ error?: AuthError }>;
   signOut: () => Promise<{ error?: AuthError }>;
   resetPassword: (email: string) => Promise<{ error?: AuthError }>;
+  set2FARequired: (required: boolean, email?: string) => void;
+  verify2FA: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -25,6 +30,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isBanned, setIsBanned] = useState(false);
   const [banReason, setBanReason] = useState('');
   const [userProfile, setUserProfile] = useState<any>(null);
+  
+  // Estados para 2FA
+  const [requires2FA, setRequires2FA] = useState(false);
+  const [verified2FA, setVerified2FA] = useState(false);
+  const [pending2FAEmail, setPending2FAEmail] = useState<string | null>(null);
 
   // Função para validar se um usuário é válido
   const isValidUser = (user: User | null): boolean => {
@@ -80,6 +90,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsBanned(false);
     setBanReason('');
     setUserProfile(null);
+    setRequires2FA(false);
+    setVerified2FA(false);
+    setPending2FAEmail(null);
+  };
+
+  // Funções para controle de 2FA
+  const set2FARequired = (required: boolean, email?: string) => {
+    console.log('🔐 set2FARequired:', required, email);
+    setRequires2FA(required);
+    setPending2FAEmail(email || null);
+    if (!required) {
+      setVerified2FA(false);
+    }
+  };
+
+  const verify2FA = () => {
+    console.log('✅ 2FA verificado com sucesso');
+    setVerified2FA(true);
+    setRequires2FA(false);
+    setPending2FAEmail(null);
   };
 
   useEffect(() => {
@@ -527,10 +557,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user,
     session,
     loading,
+    requires2FA,
+    verified2FA,
+    pending2FAEmail,
     signUp,
     signIn,
     signOut,
     resetPassword,
+    set2FARequired,
+    verify2FA,
   };
 
   console.log('🔍 AuthContext render:', { isBanned, userProfile, user: !!user });
