@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Bell, User, ChevronDown, Menu, X, LogOut, Settings, BookOpen } from 'lucide-react';
+import { Search, Bell, User, ChevronDown, Menu, X, LogOut, Settings, BookOpen, Home, PlayCircle, Users } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,6 +23,7 @@ interface NetflixHeaderProps {
   onProfileClick?: () => void;
   onNotificationsClick?: () => void;
   notificationCount?: number;
+  activeTab?: 'home' | 'courses' | 'community';
 }
 
 export function NetflixHeader({
@@ -35,6 +36,7 @@ export function NetflixHeader({
   onProfileClick,
   onNotificationsClick,
   notificationCount = 0,
+  activeTab = 'home',
 }: NetflixHeaderProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -60,107 +62,97 @@ export function NetflixHeader({
     return 'U';
   };
 
+  const navItems = [
+    { id: 'home', label: 'Home', icon: Home },
+    { id: 'courses', label: 'Meus Cursos', icon: PlayCircle },
+    { id: 'community', label: 'Comunidade', icon: Users },
+  ];
+
   return (
     <motion.header
       className={cn(
-        'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
+        'fixed top-0 left-0 right-0 z-50 transition-all duration-500',
         isScrolled 
-          ? 'bg-[hsl(var(--netflix-bg))]/95 backdrop-blur-md shadow-lg' 
-          : 'bg-gradient-to-b from-black/80 to-transparent'
+          ? 'bg-[hsl(var(--netflix-bg))]/90 backdrop-blur-xl' 
+          : 'bg-transparent'
       )}
       initial={{ y: -100 }}
       animate={{ y: 0 }}
-      transition={{ duration: 0.3 }}
+      transition={{ duration: 0.4, ease: 'easeOut' }}
     >
-      <div className="flex items-center justify-between h-16 md:h-20 px-4 md:px-12 lg:px-16">
-        {/* Left: Logo & Nav */}
-        <div className="flex items-center gap-6 md:gap-10">
-          {/* Logo */}
-          <div className="flex items-center gap-3">
-            {logoUrl ? (
-              <img 
-                src={logoUrl} 
-                alt="Logo" 
-                className="h-8 md:h-10 w-auto object-contain"
-              />
-            ) : (
-              <div className="flex items-center gap-2">
-                <BookOpen className="w-7 h-7 text-primary" />
-                <span className="text-xl font-bold text-white hidden md:inline">Academy</span>
-              </div>
-            )}
-          </div>
+      <div className="flex items-center justify-between h-20 md:h-24 px-6 md:px-12 lg:px-16">
+        {/* Left: Logo */}
+        <div className="flex items-center gap-8">
+          {logoUrl ? (
+            <img 
+              src={logoUrl} 
+              alt="Logo" 
+              className="h-8 md:h-10 w-auto object-contain"
+            />
+          ) : (
+            <div className="flex items-center gap-2">
+              <span className="text-2xl md:text-3xl font-black text-netflix-red tracking-tight" style={{ fontFamily: 'Inter, sans-serif' }}>
+                KAMBAFY
+              </span>
+            </div>
+          )}
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-6">
-            <button className="text-white font-medium text-sm hover:text-white/80 transition-colors">
-              Home
-            </button>
-            <button className="text-white/70 text-sm hover:text-white transition-colors">
-              Meus Cursos
-            </button>
-            <button className="text-white/70 text-sm hover:text-white transition-colors">
-              Comunidade
-            </button>
+          {/* Desktop Navigation - Netflix Style Pills */}
+          <nav className="hidden md:flex items-center">
+            <div className="flex items-center bg-white/10 backdrop-blur-sm rounded-full p-1">
+              {navItems.map((item) => (
+                <button
+                  key={item.id}
+                  className={cn(
+                    'px-5 py-2 rounded-full text-sm font-medium transition-all duration-300',
+                    activeTab === item.id
+                      ? 'bg-white/20 text-white shadow-sm'
+                      : 'text-white/70 hover:text-white'
+                  )}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
           </nav>
         </div>
 
         {/* Right: Search, Notifications, Profile */}
-        <div className="flex items-center gap-3 md:gap-5">
-          {/* Search */}
-          <div className="relative">
-            {isSearchOpen ? (
-              <motion.form
-                initial={{ width: 0, opacity: 0 }}
-                animate={{ width: 200, opacity: 1 }}
-                exit={{ width: 0, opacity: 0 }}
-                onSubmit={handleSearchSubmit}
-                className="flex items-center"
-              >
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
-                  <Input
-                    type="text"
-                    placeholder="Buscar..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9 pr-8 h-9 bg-black/60 border-white/30 text-white placeholder:text-white/40 text-sm w-[200px]"
-                    autoFocus
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsSearchOpen(false);
-                      setSearchQuery('');
-                    }}
-                    className="absolute right-2 top-1/2 -translate-y-1/2"
-                  >
-                    <X className="w-4 h-4 text-white/50 hover:text-white" />
-                  </button>
-                </div>
-              </motion.form>
-            ) : (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsSearchOpen(true)}
-                className="text-white/70 hover:text-white hover:bg-transparent"
-              >
-                <Search className="w-5 h-5" />
-              </Button>
-            )}
+        <div className="flex items-center gap-4">
+          {/* Search Bar - Netflix Style */}
+          <div className="hidden md:block relative">
+            <div className="flex items-center bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 w-[200px] lg:w-[280px]">
+              <Search className="w-4 h-4 text-white/50 mr-2" />
+              <input
+                type="text"
+                placeholder="Search app"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="bg-transparent border-none outline-none text-white text-sm placeholder:text-white/40 w-full"
+              />
+            </div>
           </div>
+
+          {/* Mobile Search */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsSearchOpen(!isSearchOpen)}
+            className="md:hidden text-white/70 hover:text-white hover:bg-white/10 rounded-full"
+          >
+            <Search className="w-5 h-5" />
+          </Button>
 
           {/* Notifications */}
           <Button
             variant="ghost"
             size="icon"
             onClick={onNotificationsClick}
-            className="relative text-white/70 hover:text-white hover:bg-transparent"
+            className="relative text-white/70 hover:text-white hover:bg-white/10 rounded-full w-10 h-10"
           >
             <Bell className="w-5 h-5" />
             {notificationCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[10px] font-bold flex items-center justify-center">
+              <span className="absolute top-1 right-1 w-4 h-4 bg-netflix-red rounded-full text-[10px] font-bold flex items-center justify-center text-white">
                 {notificationCount > 9 ? '9+' : notificationCount}
               </span>
             )}
@@ -169,41 +161,40 @@ export function NetflixHeader({
           {/* Profile Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                <Avatar className="w-8 h-8 border-2 border-transparent hover:border-white/50 transition-colors">
+              <button className="flex items-center gap-2 hover:opacity-80 transition-opacity p-1 rounded-full hover:bg-white/10">
+                <Avatar className="w-9 h-9 ring-2 ring-white/20 ring-offset-1 ring-offset-transparent">
                   <AvatarImage src={userAvatar} />
-                  <AvatarFallback className="bg-primary text-white text-xs">
+                  <AvatarFallback className="bg-gradient-to-br from-netflix-red to-orange-600 text-white text-sm font-semibold">
                     {getInitials(userName, userEmail)}
                   </AvatarFallback>
                 </Avatar>
-                <ChevronDown className="w-4 h-4 text-white/70 hidden md:block" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent 
               align="end" 
-              className="w-48 bg-[hsl(var(--netflix-surface))] border-[hsl(var(--netflix-border))] text-white"
+              className="w-52 bg-[hsl(var(--netflix-surface))]/95 backdrop-blur-xl border-white/10 text-white rounded-xl p-1 mt-2"
             >
-              <div className="px-3 py-2 border-b border-[hsl(var(--netflix-border))]">
-                <p className="font-medium text-sm">{userName || 'Usuário'}</p>
-                <p className="text-xs text-white/50 truncate">{userEmail}</p>
+              <div className="px-3 py-3 border-b border-white/10">
+                <p className="font-semibold text-sm">{userName || 'Usuário'}</p>
+                <p className="text-xs text-white/50 truncate mt-0.5">{userEmail}</p>
               </div>
               <DropdownMenuItem 
                 onClick={onProfileClick}
-                className="cursor-pointer hover:bg-white/10"
+                className="cursor-pointer hover:bg-white/10 rounded-lg m-1"
               >
-                <User className="w-4 h-4 mr-2" />
+                <User className="w-4 h-4 mr-3" />
                 Meu Perfil
               </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer hover:bg-white/10">
-                <Settings className="w-4 h-4 mr-2" />
+              <DropdownMenuItem className="cursor-pointer hover:bg-white/10 rounded-lg m-1">
+                <Settings className="w-4 h-4 mr-3" />
                 Configurações
               </DropdownMenuItem>
-              <DropdownMenuSeparator className="bg-[hsl(var(--netflix-border))]" />
+              <DropdownMenuSeparator className="bg-white/10 my-1" />
               <DropdownMenuItem 
                 onClick={onLogout}
-                className="cursor-pointer hover:bg-white/10 text-red-400"
+                className="cursor-pointer hover:bg-red-500/20 text-red-400 rounded-lg m-1"
               >
-                <LogOut className="w-4 h-4 mr-2" />
+                <LogOut className="w-4 h-4 mr-3" />
                 Sair
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -214,12 +205,37 @@ export function NetflixHeader({
             variant="ghost"
             size="icon"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden text-white/70 hover:text-white hover:bg-transparent"
+            className="md:hidden text-white/70 hover:text-white hover:bg-white/10 rounded-full"
           >
             {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </Button>
         </div>
       </div>
+
+      {/* Mobile Search Bar */}
+      {isSearchOpen && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          exit={{ opacity: 0, height: 0 }}
+          className="md:hidden px-6 pb-4"
+        >
+          <div className="flex items-center bg-white/10 backdrop-blur-sm rounded-full px-4 py-2">
+            <Search className="w-4 h-4 text-white/50 mr-2" />
+            <input
+              type="text"
+              placeholder="Buscar..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="bg-transparent border-none outline-none text-white text-sm placeholder:text-white/40 w-full"
+              autoFocus
+            />
+            <button onClick={() => setIsSearchOpen(false)}>
+              <X className="w-4 h-4 text-white/50" />
+            </button>
+          </div>
+        </motion.div>
+      )}
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
@@ -227,12 +243,23 @@ export function NetflixHeader({
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           exit={{ opacity: 0, height: 0 }}
-          className="md:hidden bg-[hsl(var(--netflix-bg))]/95 backdrop-blur-md border-t border-white/10"
+          className="md:hidden bg-[hsl(var(--netflix-bg))]/95 backdrop-blur-xl border-t border-white/10"
         >
-          <nav className="flex flex-col p-4 gap-3">
-            <button className="text-white font-medium text-left py-2">Home</button>
-            <button className="text-white/70 text-left py-2">Meus Cursos</button>
-            <button className="text-white/70 text-left py-2">Comunidade</button>
+          <nav className="flex flex-col p-4 gap-1">
+            {navItems.map((item) => (
+              <button
+                key={item.id}
+                className={cn(
+                  'flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors',
+                  activeTab === item.id
+                    ? 'bg-white/10 text-white font-medium'
+                    : 'text-white/70 hover:bg-white/5'
+                )}
+              >
+                <item.icon className="w-5 h-5" />
+                {item.label}
+              </button>
+            ))}
           </nav>
         </motion.div>
       )}

@@ -46,139 +46,113 @@ export function NetflixCourseCard({
   };
 
   const cardSizes = {
-    default: 'w-[260px] aspect-video',
-    featured: 'w-[320px] aspect-video',
-    compact: 'w-[180px] aspect-video',
+    default: 'w-[220px] md:w-[260px]',
+    featured: 'w-[280px] md:w-[320px]',
+    compact: 'w-[160px] md:w-[180px]',
   };
 
   return (
     <motion.div
       className={cn(
-        'relative flex-shrink-0 rounded-lg overflow-hidden cursor-pointer group',
+        'relative flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer group',
         cardSizes[variant],
         isLocked && 'opacity-60'
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={!isLocked ? onClick : undefined}
-      whileHover={{ scale: 1.05, zIndex: 10 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+      whileHover={{ scale: 1.03, y: -4 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
     >
-      {/* Thumbnail */}
-      <div className="absolute inset-0 bg-[hsl(var(--netflix-card))]">
-        {thumbnail ? (
-          <img
-            src={thumbnail}
-            alt={title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[hsl(var(--netflix-card))] to-[hsl(var(--netflix-surface))]">
-            <BookOpen className="w-12 h-12 text-white/30" />
-          </div>
-        )}
-      </div>
-
-      {/* Gradient Overlay */}
-      <div 
-        className={cn(
-          'absolute inset-0 transition-opacity duration-300',
-          isHovered ? 'opacity-100' : 'opacity-70'
-        )}
-        style={{
-          background: 'linear-gradient(180deg, transparent 30%, rgba(0, 0, 0, 0.9) 100%)'
-        }}
-      />
-
-      {/* Lock Overlay */}
-      {isLocked && (
-        <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-10">
-          <Lock className="w-8 h-8 text-white/70" />
-        </div>
-      )}
-
-      {/* Duration Badge */}
-      {duration && !isLocked && (
-        <div className="absolute top-2 right-2 z-10">
-          <Badge 
-            variant="secondary" 
-            className="bg-black/70 text-white/90 text-xs font-medium backdrop-blur-sm border-0"
-          >
-            {formatDuration(duration)}
-          </Badge>
-        </div>
-      )}
-
-      {/* Completed Badge */}
-      {isCompleted && !isLocked && (
-        <div className="absolute top-2 left-2 z-10">
-          <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
-            <CheckCircle2 className="w-4 h-4 text-white" />
-          </div>
-        </div>
-      )}
-
-      {/* Content */}
-      <div className="absolute bottom-0 left-0 right-0 p-3 z-10">
-        {/* Tags */}
-        {tags.length > 0 && (
-          <div className="flex gap-1.5 mb-2 flex-wrap">
-            {tags.slice(0, 2).map((tag, i) => (
-              <Badge 
-                key={i}
-                variant="outline"
-                className="text-[10px] px-1.5 py-0 h-4 bg-white/10 border-white/20 text-white/80"
-              >
-                {tag}
-              </Badge>
-            ))}
-          </div>
-        )}
-
-        {/* Module Title */}
-        {moduleTitle && (
-          <p className="text-[10px] text-white/50 uppercase tracking-wider mb-0.5">
-            {moduleTitle}
-          </p>
-        )}
-
-        {/* Title */}
-        <h3 className="text-sm font-semibold text-white line-clamp-2 leading-tight">
-          {title}
-        </h3>
-
-        {/* Progress Bar */}
-        {progress > 0 && !isCompleted && (
-          <div className="mt-2">
-            <Progress 
-              value={progress} 
-              className="h-1 bg-white/20"
+      {/* Card Container with aspect ratio */}
+      <div className="relative aspect-[4/3]">
+        {/* Thumbnail */}
+        <div className="absolute inset-0 bg-gradient-to-br from-stone-700 to-stone-900">
+          {thumbnail ? (
+            <img
+              src={thumbnail}
+              alt={title}
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
             />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <BookOpen className="w-12 h-12 text-white/20" />
+            </div>
+          )}
+        </div>
+
+        {/* Gradient Overlay - Stronger at bottom */}
+        <div 
+          className="absolute inset-0 transition-opacity duration-300"
+          style={{
+            background: 'linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.95) 100%)'
+          }}
+        />
+
+        {/* Lock Overlay */}
+        {isLocked && (
+          <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-10 backdrop-blur-sm">
+            <Lock className="w-8 h-8 text-white/70" />
           </div>
         )}
 
-        {/* Lessons Count */}
-        {totalLessons !== undefined && (
-          <p className="text-[10px] text-white/50 mt-1.5">
-            {completedLessons || 0} de {totalLessons} aulas
-          </p>
+        {/* Completed Badge */}
+        {isCompleted && !isLocked && (
+          <div className="absolute top-3 right-3 z-10">
+            <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center shadow-lg">
+              <CheckCircle2 className="w-4 h-4 text-white" />
+            </div>
+          </div>
         )}
-      </div>
 
-      {/* Play Button on Hover */}
-      <motion.div
-        className="absolute inset-0 flex items-center justify-center z-20"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: isHovered && !isLocked ? 1 : 0 }}
-      >
-        <motion.button
-          className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-lg"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <Play className="w-6 h-6 text-black fill-black ml-0.5" />
-        </motion.button>
-      </motion.div>
+        {/* Content - Bottom aligned */}
+        <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
+          {/* Tags Row */}
+          {tags.length > 0 && (
+            <div className="flex gap-1.5 mb-2 flex-wrap">
+              {tags.slice(0, 2).map((tag, i) => (
+                <Badge 
+                  key={i}
+                  variant="secondary"
+                  className="text-[10px] px-2 py-0.5 bg-white/20 backdrop-blur-sm border-0 text-white/90 rounded-md font-medium"
+                >
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          )}
+
+          {/* Title Row with Play button */}
+          <div className="flex items-end justify-between gap-2">
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm md:text-base font-bold text-white line-clamp-2 leading-tight">
+                {title}
+              </h3>
+            </div>
+            
+            {/* Play Button - Always visible, Netflix style */}
+            {!isLocked && (
+              <motion.button
+                className="flex-shrink-0 w-9 h-9 rounded-full bg-primary flex items-center justify-center shadow-lg"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Play className="w-4 h-4 text-white fill-white ml-0.5" />
+              </motion.button>
+            )}
+          </div>
+
+          {/* Progress Bar */}
+          {progress > 0 && !isCompleted && (
+            <div className="mt-2">
+              <Progress 
+                value={progress} 
+                className="h-1 bg-white/20"
+              />
+            </div>
+          )}
+        </div>
+      </div>
     </motion.div>
   );
 }

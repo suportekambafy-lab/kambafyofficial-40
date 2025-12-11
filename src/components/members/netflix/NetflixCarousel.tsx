@@ -16,7 +16,7 @@ export function NetflixCarousel({
   title,
   subtitle,
   children,
-  showSeeAll = false,
+  showSeeAll = true,
   onSeeAllClick,
 }: NetflixCarouselProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -40,15 +40,15 @@ export function NetflixCarousel({
   };
 
   return (
-    <div className="relative w-full py-4 md:py-6 group/carousel">
+    <div className="relative w-full py-6 md:py-8 group/carousel">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 md:px-12 lg:px-16 mb-3 md:mb-4">
+      <div className="flex items-center justify-between px-6 md:px-12 lg:px-16 mb-4 md:mb-5">
         <div className="flex items-baseline gap-3">
-          <h2 className="text-lg md:text-xl lg:text-2xl font-semibold text-white">
+          <h2 className="text-base md:text-lg font-medium text-white/90">
             {title}
           </h2>
           {subtitle && (
-            <span className="text-sm text-white/50 hidden md:inline">
+            <span className="text-sm text-white/40 hidden md:inline">
               {subtitle}
             </span>
           )}
@@ -56,10 +56,9 @@ export function NetflixCarousel({
         {showSeeAll && (
           <button
             onClick={onSeeAllClick}
-            className="text-sm text-white/60 hover:text-white transition-colors flex items-center gap-1"
+            className="text-sm text-white/50 hover:text-white transition-colors"
           >
-            Ver tudo
-            <ChevronRight className="w-4 h-4" />
+            See More
           </button>
         )}
       </div>
@@ -69,29 +68,27 @@ export function NetflixCarousel({
         {/* Left Arrow */}
         <motion.div
           className={cn(
-            'absolute left-0 top-0 bottom-0 z-20 flex items-center',
+            'absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-20',
             'opacity-0 group-hover/carousel:opacity-100 transition-opacity duration-300',
             !canScrollLeft && 'hidden'
           )}
           initial={false}
         >
-          <div className="h-full w-12 md:w-16 bg-gradient-to-r from-[hsl(var(--netflix-bg))] to-transparent flex items-center justify-start pl-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => scroll('left')}
-              className="w-10 h-10 rounded-full bg-black/50 hover:bg-black/70 text-white border border-white/20"
-            >
-              <ChevronLeft className="w-6 h-6" />
-            </Button>
-          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => scroll('left')}
+            className="w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-sm"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </Button>
         </motion.div>
 
         {/* Scrollable Content */}
         <div
           ref={scrollRef}
           onScroll={checkScroll}
-          className="flex gap-3 md:gap-4 overflow-x-auto scrollbar-hide px-6 md:px-12 lg:px-16 scroll-smooth"
+          className="flex gap-4 md:gap-5 overflow-x-auto scrollbar-hide px-6 md:px-12 lg:px-16 scroll-smooth pb-2"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {children}
@@ -100,22 +97,20 @@ export function NetflixCarousel({
         {/* Right Arrow */}
         <motion.div
           className={cn(
-            'absolute right-0 top-0 bottom-0 z-20 flex items-center',
+            'absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-20',
             'opacity-0 group-hover/carousel:opacity-100 transition-opacity duration-300',
             !canScrollRight && 'hidden'
           )}
           initial={false}
         >
-          <div className="h-full w-12 md:w-16 bg-gradient-to-l from-[hsl(var(--netflix-bg))] to-transparent flex items-center justify-end pr-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => scroll('right')}
-              className="w-10 h-10 rounded-full bg-black/50 hover:bg-black/70 text-white border border-white/20"
-            >
-              <ChevronRight className="w-6 h-6" />
-            </Button>
-          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => scroll('right')}
+            className="w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-sm"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </Button>
         </motion.div>
       </div>
     </div>
