@@ -340,7 +340,7 @@ export default function ModernMembersLogin() {
       }} transition={{
         duration: 0.5
       }} className="mb-8 relative z-10">
-          <img src={kambafyLogo} alt="Kambafy" className="h-16 w-auto opacity-50" />
+          <img src={kambafyLogo} alt="Kambafy" className="h-16 w-auto" style={{ filter: 'brightness(0) saturate(100%) invert(65%) sepia(52%) saturate(456%) hue-rotate(63deg) brightness(95%) contrast(87%)' }} />
         </motion.div>
 
         <motion.div initial={{
@@ -446,7 +446,7 @@ export default function ModernMembersLogin() {
       duration: 0.6,
       ease: "easeOut"
     }} className="mb-10 relative z-10">
-        <img src={kambafyLogo} alt="Kambafy" className="h-14 w-auto opacity-40 hover:opacity-60 transition-opacity duration-300" />
+        <img src={kambafyLogo} alt="Kambafy" className="h-14 w-auto hover:opacity-80 transition-opacity duration-300" style={{ filter: 'brightness(0) saturate(100%) invert(65%) sepia(52%) saturate(456%) hue-rotate(63deg) brightness(95%) contrast(87%)' }} />
       </motion.div>
 
       <motion.div initial={{
