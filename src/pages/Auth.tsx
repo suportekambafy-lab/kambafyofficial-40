@@ -155,9 +155,7 @@ const Auth = () => {
         if (check2FA.requires2FA && check2FA.reason) {
           console.log('🔐 2FA necessário:', check2FA.reason);
           
-          // Fazer logout temporário para forçar 2FA
-          await supabase.auth.signOut();
-          
+          // IMPORTANTE: Definir estados ANTES do logout para evitar race condition
           setPending2FAData({
             email: check2FA.userEmail,
             userId: check2FA.userId,
@@ -166,6 +164,9 @@ const Auth = () => {
           });
           setCurrentView('2fa-verification');
           setLoading(false);
+          
+          // Fazer logout DEPOIS de definir os estados
+          await supabase.auth.signOut();
           return;
         }
         
