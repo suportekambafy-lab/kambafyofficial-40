@@ -73,6 +73,7 @@ export default function AdminIdentityVerification() {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('todos');
   const [countryFilter, setCountryFilter] = useState<string>('todos');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedVerification, setSelectedVerification] = useState<IdentityVerification | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [documentModal, setDocumentModal] = useState<{isOpen: boolean, imageUrl: string, title: string, verification?: IdentityVerification}>({
@@ -190,10 +191,20 @@ export default function AdminIdentityVerification() {
         }
 
         // Combine data
-        const verificationsWithProfiles = filteredVerifications.map(verification => ({
+        let verificationsWithProfiles = filteredVerifications.map(verification => ({
           ...verification,
           profiles: profiles?.find(p => p.user_id === verification.user_id)
         }));
+
+        // Apply search filter on name and email after combining with profiles
+        if (searchQuery.trim()) {
+          const query = searchQuery.toLowerCase().trim();
+          verificationsWithProfiles = verificationsWithProfiles.filter(v => 
+            v.full_name?.toLowerCase().includes(query) ||
+            v.profiles?.full_name?.toLowerCase().includes(query) ||
+            v.profiles?.email?.toLowerCase().includes(query)
+          );
+        }
 
         setVerifications(verificationsWithProfiles as IdentityVerification[]);
       } else {
@@ -215,7 +226,7 @@ export default function AdminIdentityVerification() {
     if (admin) {
       loadVerifications();
     }
-  }, [admin, statusFilter, countryFilter]);
+  }, [admin, statusFilter, countryFilter, searchQuery]);
 
   const updateVerificationStatus = async (id: string, newStatus: 'aprovado' | 'rejeitado', reason?: string) => {
     try {
@@ -541,7 +552,19 @@ export default function AdminIdentityVerification() {
     <AdminLayout title="Verificação de Identidade" description="Gerencie verificações KYC dos vendedores">
       <SEO title="Kambafy Admin – KYC" description="Aprovar ou reprovar verificações de identidade" canonical="https://kambafy.com/admin/identity" noIndex />
         {/* Filters - Responsivo */}
-        <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-end gap-3">
+        <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-end gap-3 flex-wrap">
+          <div className="flex-1 min-w-[200px]">
+            <Label htmlFor="search-filter" className="text-xs sm:text-sm">Pesquisar por Nome ou Email</Label>
+            <Input
+              id="search-filter"
+              type="text"
+              placeholder="Digite nome ou email..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full"
+            />
+          </div>
+          
           <div>
             <Label htmlFor="status-filter" className="text-xs sm:text-sm">Filtrar por Status</Label>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
