@@ -72,6 +72,7 @@ export default function AdminIdentityVerification() {
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('todos');
+  const [countryFilter, setCountryFilter] = useState<string>('todos');
   const [selectedVerification, setSelectedVerification] = useState<IdentityVerification | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [documentModal, setDocumentModal] = useState<{isOpen: boolean, imageUrl: string, title: string, verification?: IdentityVerification}>({
@@ -164,10 +165,13 @@ export default function AdminIdentityVerification() {
         throw verificationsError;
       }
 
-      // Filter by status if needed
+      // Filter by status and country if needed
       let filteredVerifications = verifications || [];
       if (statusFilter !== 'todos') {
         filteredVerifications = filteredVerifications.filter(v => v.status === statusFilter);
+      }
+      if (countryFilter !== 'todos') {
+        filteredVerifications = filteredVerifications.filter(v => v.country === countryFilter);
       }
 
       console.log('✅ Total de verificações após filtro:', filteredVerifications.length);
@@ -211,7 +215,7 @@ export default function AdminIdentityVerification() {
     if (admin) {
       loadVerifications();
     }
-  }, [admin, statusFilter]);
+  }, [admin, statusFilter, countryFilter]);
 
   const updateVerificationStatus = async (id: string, newStatus: 'aprovado' | 'rejeitado', reason?: string) => {
     try {
@@ -549,6 +553,21 @@ export default function AdminIdentityVerification() {
                 <SelectItem value="pendente">Pendente</SelectItem>
                 <SelectItem value="aprovado">Aprovado</SelectItem>
                 <SelectItem value="rejeitado">Rejeitado</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div>
+            <Label htmlFor="country-filter" className="text-xs sm:text-sm">Filtrar por País</Label>
+            <Select value={countryFilter} onValueChange={setCountryFilter}>
+              <SelectTrigger className="w-full sm:w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos os Países</SelectItem>
+                {Object.entries(COUNTRY_NAMES).map(([code, name]) => (
+                  <SelectItem key={code} value={code}>{name}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
