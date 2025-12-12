@@ -18,10 +18,12 @@ interface UserReport {
     created_at: string;
     banned: boolean;
     is_creator: boolean;
+    avatar_url?: string;
   };
   totalSales: number;
   totalRevenue: number;
   totalWithdrawals: number;
+  currentBalance: number;
   activeProducts: number;
   bannedProducts: number;
 }
@@ -46,7 +48,7 @@ export default function AdminSellers() {
       // Buscar TODOS os perfis de usuários
       const { data: profiles, error: profileError } = await supabase
         .from('profiles')
-        .select('user_id, full_name, email, created_at, banned, is_creator')
+        .select('user_id, full_name, email, created_at, banned, is_creator, avatar_url')
         .order('created_at', { ascending: false });
 
       if (profileError) {
@@ -59,40 +61,86 @@ export default function AdminSellers() {
         return;
       }
 
+      // Buscar todos os produtos de uma vez
+      const { data: allProducts } = await supabase
+        .from('products')
+        .select('id, user_id, status, admin_approved');
+
+      // Buscar todas as vendas de uma vez (orders pelos product_id dos produtos)
+      const productIds = allProducts?.map(p => p.id) || [];
+      const { data: allOrders } = await supabase
+        .from('orders')
+        .select('product_id, amount, status')
+        .in('product_id', productIds)
+        .eq('status', 'completed');
+
+      // Buscar todos os saques de uma vez
+      const { data: allWithdrawals } = await supabase
+        .from('withdrawal_requests')
+        .select('user_id, amount, status');
+
+      // Buscar todos os saldos de uma vez
+      const { data: allBalances } = await supabase
+        .from('customer_balances')
+        .select('user_id, balance');
+
+      // Criar mapas para acesso rápido
+      const productsByUser = new Map<string, typeof allProducts>();
+      allProducts?.forEach(product => {
+        const userId = product.user_id;
+        if (!productsByUser.has(userId)) {
+          productsByUser.set(userId, []);
+        }
+        productsByUser.get(userId)!.push(product);
+      });
+
+      const ordersByProduct = new Map<string, typeof allOrders>();
+      allOrders?.forEach(order => {
+        const productId = order.product_id;
+        if (!ordersByProduct.has(productId)) {
+          ordersByProduct.set(productId, []);
+        }
+        ordersByProduct.get(productId)!.push(order);
+      });
+
+      const withdrawalsByUser = new Map<string, number>();
+      allWithdrawals?.forEach(w => {
+        if (w.status === 'aprovado') {
+          const current = withdrawalsByUser.get(w.user_id) || 0;
+          withdrawalsByUser.set(w.user_id, current + parseFloat(w.amount.toString()));
+        }
+      });
+
+      const balanceByUser = new Map<string, number>();
+      allBalances?.forEach(b => {
+        if (b.user_id) {
+          balanceByUser.set(b.user_id, b.balance);
+        }
+      });
+
       const usersData: UserReport[] = [];
 
       for (const profile of profiles || []) {
-        // Buscar vendas do usuário
-        const { data: orders } = await supabase
-          .from('orders')
-          .select('amount')
-          .eq('user_id', profile.user_id)
-          .eq('status', 'completed');
-
-        // Buscar produtos do usuário
-        const { data: products } = await supabase
-          .from('products')
-          .select('status, admin_approved')
-          .eq('user_id', profile.user_id);
-
-        // Buscar saques do usuário
-        const { data: withdrawals } = await supabase
-          .from('withdrawal_requests')
-          .select('amount, status')
-          .eq('user_id', profile.user_id);
-
-        const totalSales = orders?.length || 0;
-        const totalRevenue = orders?.reduce((sum, order) => 
-          sum + parseFloat(order.amount), 0) || 0;
+        const userProducts = productsByUser.get(profile.user_id) || [];
         
-        const activeProducts = products?.filter(p => 
-          p.status === 'Ativo' && p.admin_approved).length || 0;
-        const bannedProducts = products?.filter(p => 
-          p.status === 'Banido').length || 0;
+        // Calcular vendas e receita baseado nos PRODUTOS do vendedor
+        let totalSales = 0;
+        let totalRevenue = 0;
         
-        const totalWithdrawals = withdrawals?.filter(w => 
-          w.status === 'aprovado').reduce((sum, w) => 
-          sum + parseFloat(w.amount.toString()), 0) || 0;
+        userProducts.forEach(product => {
+          const productOrders = ordersByProduct.get(product.id) || [];
+          totalSales += productOrders.length;
+          totalRevenue += productOrders.reduce((sum, order) => 
+            sum + parseFloat(order.amount || '0'), 0);
+        });
+
+        const activeProducts = userProducts.filter(p => 
+          p.status === 'Ativo' && p.admin_approved).length;
+        const bannedProducts = userProducts.filter(p => 
+          p.status === 'Banido').length;
+        
+        const totalWithdrawals = withdrawalsByUser.get(profile.user_id) || 0;
+        const currentBalance = balanceByUser.get(profile.user_id) || 0;
 
         usersData.push({
           user_id: profile.user_id,
@@ -101,11 +149,13 @@ export default function AdminSellers() {
             email: profile.email,
             created_at: profile.created_at,
             banned: profile.banned || false,
-            is_creator: profile.is_creator || false
+            is_creator: profile.is_creator || false,
+            avatar_url: profile.avatar_url
           },
           totalSales,
           totalRevenue,
           totalWithdrawals,
+          currentBalance,
           activeProducts,
           bannedProducts
         });
@@ -242,21 +292,28 @@ export default function AdminSellers() {
               </CardHeader>
 
               <CardContent className="p-4 sm:p-6">
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+                <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
                   <div className="text-center p-3 sm:p-4 bg-blue-50 rounded-lg">
                     <p className="text-xl sm:text-2xl font-bold text-blue-600">{user.totalSales}</p>
                     <p className="text-xs sm:text-sm text-blue-800">Vendas</p>
                   </div>
                   
                   <div className="text-center p-3 sm:p-4 bg-green-50 rounded-lg">
-                    <p className="text-base sm:text-2xl font-bold text-green-600">
+                    <p className="text-base sm:text-xl font-bold text-green-600">
                       {user.totalRevenue.toLocaleString('pt-AO')} KZ
                     </p>
                     <p className="text-xs sm:text-sm text-green-800">Receita</p>
                   </div>
                   
+                  <div className="text-center p-3 sm:p-4 bg-emerald-50 rounded-lg">
+                    <p className="text-base sm:text-xl font-bold text-emerald-600">
+                      {user.currentBalance.toLocaleString('pt-AO')} KZ
+                    </p>
+                    <p className="text-xs sm:text-sm text-emerald-800">Saldo</p>
+                  </div>
+                  
                   <div className="text-center p-3 sm:p-4 bg-yellow-50 rounded-lg">
-                    <p className="text-base sm:text-2xl font-bold text-yellow-600">
+                    <p className="text-base sm:text-xl font-bold text-yellow-600">
                       {user.totalWithdrawals.toLocaleString('pt-AO')} KZ
                     </p>
                     <p className="text-xs sm:text-sm text-yellow-800">Sacado</p>
@@ -264,9 +321,9 @@ export default function AdminSellers() {
                   
                   <div className="text-center p-3 sm:p-4 bg-purple-50 rounded-lg">
                     <p className="text-xl sm:text-2xl font-bold text-purple-600">
-                      {((user.totalWithdrawals / user.totalRevenue) * 100 || 0).toFixed(1)}%
+                      {user.activeProducts}
                     </p>
-                    <p className="text-xs sm:text-sm text-purple-800">Taxa</p>
+                    <p className="text-xs sm:text-sm text-purple-800">Produtos</p>
                   </div>
                 </div>
               </CardContent>
