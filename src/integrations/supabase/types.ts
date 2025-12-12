@@ -4352,6 +4352,10 @@ export type Database = {
         Args: { p_order_id: string; p_reason: string }
         Returns: string
       }
+      safe_recalculate_balance: {
+        Args: { target_user_id: string }
+        Returns: Json
+      }
       seller_process_refund: {
         Args: { p_action: string; p_comment?: string; p_refund_id: string }
         Returns: Json
