@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Users, TrendingUp, DollarSign, FileText, ArrowLeft, Search } from 'lucide-react';
+import { Users, TrendingUp, DollarSign, FileText, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -35,16 +34,6 @@ export default function AdminSellers() {
   const { toast } = useToast();
   const [users, setUsers] = useState<UserReport[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-
-  const filteredUsers = useMemo(() => {
-    if (!searchTerm.trim()) return users;
-    const term = searchTerm.toLowerCase();
-    return users.filter(user => 
-      user.profile.full_name?.toLowerCase().includes(term) ||
-      user.profile.email?.toLowerCase().includes(term)
-    );
-  }, [users, searchTerm]);
 
   useEffect(() => {
     if (admin) {
@@ -199,24 +188,6 @@ export default function AdminSellers() {
   return (
     <AdminLayout title="Todos os Usuários" description={`${users.length} ${users.length === 1 ? 'usuário cadastrado' : 'usuários cadastrados'}`}>
 
-        {/* Filtro por nome/email */}
-        <div className="mb-6">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Pesquisar por nome ou email..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          {searchTerm && (
-            <p className="text-sm text-muted-foreground mt-2">
-              {filteredUsers.length} resultado(s) encontrado(s)
-            </p>
-          )}
-        </div>
-
         {/* Resumo Geral - Responsivo */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
           <Card>
@@ -276,7 +247,7 @@ export default function AdminSellers() {
 
         {/* Lista de Usuários - Responsivo */}
         <div className="space-y-4 sm:space-y-6">
-          {filteredUsers.map((user, index) => (
+          {users.map((user, index) => (
             <Card key={user.user_id} className="shadow-lg border bg-white hover:shadow-xl transition-shadow">
               <CardHeader className="pb-3 sm:pb-4 p-4 sm:p-6">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
@@ -359,14 +330,12 @@ export default function AdminSellers() {
             </Card>
           ))}
           
-          {filteredUsers.length === 0 && (
+          {users.length === 0 && (
             <Card className="shadow-lg border bg-white">
               <CardContent className="text-center py-12 sm:py-16">
                 <Users className="h-12 w-12 sm:h-16 sm:w-16 text-slate-300 mx-auto mb-4" />
                 <h3 className="text-base sm:text-lg font-medium text-slate-900 mb-2">Nenhum usuário encontrado</h3>
-                <p className="text-sm sm:text-base text-slate-600">
-                  {searchTerm ? 'Nenhum resultado para a pesquisa.' : 'Não há usuários cadastrados no sistema.'}
-                </p>
+                <p className="text-sm sm:text-base text-slate-600">Não há usuários cadastrados no sistema.</p>
               </CardContent>
             </Card>
         )}
