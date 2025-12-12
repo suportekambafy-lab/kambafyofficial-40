@@ -492,7 +492,49 @@ const handler = async (req: Request): Promise<Response> => {
             console.log('[APPYPAY-WEBHOOK] Webhooks triggered successfully');
           }
 
-          // Se for produto de assinatura, disparar webhook específico de assinatura
+          // 📊 ENVIAR CONVERSÃO PARA O FACEBOOK
+          try {
+            console.log('[APPYPAY-WEBHOOK] 📊 Sending Facebook Conversion event...');
+            
+            // Gerar eventId único para deduplicação
+            const eventId = `appypay_${order.order_id}_${Date.now()}`;
+            
+            // Extrair primeiro e último nome
+            const nameParts = (order.customer_name || '').trim().split(' ');
+            const firstName = nameParts[0] || '';
+            const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+            
+            const fbConversionPayload = {
+              productId: order.product_id,
+              userId: product?.user_id,
+              eventId: eventId,
+              eventName: 'Purchase',
+              value: parseFloat(order.amount) || 0,
+              currency: order.currency || 'KZ',
+              orderId: order.order_id,
+              customer: {
+                email: order.customer_email,
+                phone: order.customer_phone || '',
+                firstName: firstName,
+                lastName: lastName
+              },
+              eventSourceUrl: `https://kambafy.com/checkout/${order.product_id}`
+            };
+            
+            console.log('[APPYPAY-WEBHOOK] 📊 FB Conversion payload:', JSON.stringify(fbConversionPayload));
+            
+            const { data: fbResult, error: fbError } = await supabase.functions.invoke('send-facebook-conversion', {
+              body: fbConversionPayload
+            });
+            
+            if (fbError) {
+              console.error('[APPYPAY-WEBHOOK] ❌ Error sending Facebook conversion:', fbError);
+            } else {
+              console.log('[APPYPAY-WEBHOOK] ✅ Facebook conversion sent successfully:', fbResult);
+            }
+          } catch (fbConversionError) {
+            console.error('[APPYPAY-WEBHOOK] ❌ Error in Facebook conversion process:', fbConversionError);
+          }
           if (product?.subscription_config?.is_subscription) {
             console.log('[APPYPAY-WEBHOOK] 📢 Triggering subscription.paid webhook...');
             

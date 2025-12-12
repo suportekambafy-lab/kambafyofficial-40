@@ -741,6 +741,53 @@ serve(async (req) => {
               } catch (emailError) {
                 console.error('❌ Error in email sending process:', emailError);
               }
+
+              // 📊 ENVIAR CONVERSÃO PARA O FACEBOOK
+              try {
+                console.log('📊 Sending Facebook Conversion event...');
+                
+                // Gerar eventId único para deduplicação
+                const eventId = `stripe_${orderId}_${Date.now()}`;
+                
+                // Extrair primeiro e último nome
+                const nameParts = (order.customer_name || '').trim().split(' ');
+                const firstName = nameParts[0] || '';
+                const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+                
+                // Buscar telefone do cliente na order se disponível
+                const customerPhone = order.customer_phone || paymentIntent.metadata.customer_phone || '';
+                
+                const fbConversionPayload = {
+                  productId: order.product_id,
+                  userId: product?.user_id,
+                  eventId: eventId,
+                  eventName: 'Purchase',
+                  value: parseFloat(paymentIntent.metadata.original_amount || (paymentIntent.amount / 100).toString()),
+                  currency: paymentIntent.metadata.original_currency || paymentIntent.currency.toUpperCase(),
+                  orderId: orderId,
+                  customer: {
+                    email: order.customer_email,
+                    phone: customerPhone,
+                    firstName: firstName,
+                    lastName: lastName
+                  },
+                  eventSourceUrl: `https://kambafy.com/checkout/${order.product_id}`
+                };
+                
+                console.log('📊 FB Conversion payload:', JSON.stringify(fbConversionPayload));
+                
+                const { data: fbResult, error: fbError } = await supabase.functions.invoke('send-facebook-conversion', {
+                  body: fbConversionPayload
+                });
+                
+                if (fbError) {
+                  console.error('❌ Error sending Facebook conversion:', fbError);
+                } else {
+                  console.log('✅ Facebook conversion sent successfully:', fbResult);
+                }
+              } catch (fbConversionError) {
+                console.error('❌ Error in Facebook conversion process:', fbConversionError);
+              }
               
               // 📧 ENVIAR EMAIL DE NOTIFICAÇÃO PARA O VENDEDOR
               try {
