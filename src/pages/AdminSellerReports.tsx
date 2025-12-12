@@ -211,15 +211,21 @@ export default function AdminSellerReports() {
 
       // Organizar saldos por usuário
       allBalances?.forEach(balance => {
-        balanceByUser.set(balance.user_id, balance.balance);
+        if (balance.user_id) {
+          balanceByUser.set(balance.user_id, Number(balance.balance) || 0);
+        }
       });
+      
+      // Log para debug
+      console.log('📊 Saldos carregados no mapa:', balanceByUser.size);
+      console.log('📊 Exemplo de saldo:', Array.from(balanceByUser.entries()).slice(0, 3));
 
       // Processar dados de cada vendedor
       // O profile.user_id é o ID real do usuário (referência para auth.users)
       // O profile.id é o ID do próprio registro do perfil
       const sellersData = allProfiles.map(profile => {
         // Usar user_id para buscar produtos, saques e saldos
-        const realUserId = profile.user_id || profile.id;
+        const realUserId = profile.user_id;
         const userProducts = productsByUser.get(realUserId) || [];
         const activeProducts = userProducts.filter(p => p.status === 'Ativo').length;
         const bannedProducts = userProducts.filter(p => p.status === 'Banido').length;
@@ -238,6 +244,17 @@ export default function AdminSellerReports() {
 
         const totalWithdrawals = withdrawalsByUser.get(realUserId) || 0;
         const availableBalance = balanceByUser.get(realUserId) || 0;
+        
+        // Debug para usuários com receita alta
+        if (totalRevenue > 1000000 && availableBalance === 0) {
+          console.log('⚠️ Usuário com receita alta mas saldo 0:', {
+            name: profile.full_name,
+            realUserId,
+            hasBalance: balanceByUser.has(realUserId),
+            balance: balanceByUser.get(realUserId)
+          });
+        }
+        
         const totalFees = totalRevenue * 0.0899;
 
         return {
