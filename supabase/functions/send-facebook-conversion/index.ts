@@ -173,17 +173,22 @@ Deno.serve(async (req) => {
       console.error('❌ [FB CAPI] Error fetching pixel settings:', pixelError);
     }
 
-    const pixelIds = (pixelSettings || []).map(p => p.pixel_id).filter(Boolean);
+    const pixelIds = (pixelSettings || [])
+      .map(p => p.pixel_id)
+      .filter(Boolean)
+      // Filtrar apenas Pixel IDs válidos (15-16 dígitos numéricos)
+      .filter(pixelId => /^\d{15,16}$/.test(pixelId.trim()));
 
     if (pixelIds.length === 0) {
-      console.log('⚠️ [FB CAPI] No active pixels found for product:', productId);
+      console.log('⚠️ [FB CAPI] No valid pixels found for product:', productId);
+      console.log('⚠️ [FB CAPI] Raw pixels from DB:', pixelSettings?.map(p => p.pixel_id));
       return new Response(
-        JSON.stringify({ error: 'No active pixels configured for this product' }),
+        JSON.stringify({ error: 'No valid pixels configured. Pixel ID must be 15-16 digits.' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
       );
     }
 
-    console.log(`✅ [FB CAPI] Found ${pixelIds.length} pixel(s):`, pixelIds);
+    console.log(`✅ [FB CAPI] Found ${pixelIds.length} valid pixel(s):`, pixelIds);
 
     // ========== PREPARAR DADOS DO USUÁRIO (HASHED) ==========
     
