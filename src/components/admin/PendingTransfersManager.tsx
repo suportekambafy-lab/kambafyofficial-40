@@ -7,7 +7,8 @@ import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CheckCircle, XCircle, Download, Eye, FileText, AlertTriangle, ArrowDown, Filter } from 'lucide-react';
+import { CheckCircle, XCircle, Download, Eye, FileText, AlertTriangle, ArrowDown, Filter, Search } from 'lucide-react';
+import { Input } from "@/components/ui/input";
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
@@ -76,8 +77,9 @@ export function PendingTransfersManager() {
   const [showScrollButton, setShowScrollButton] = useState(false);
   const scrollPositionRef = useRef<number>(0);
   
-  // Estado para filtro de produtos
+  // Estado para filtros
   const [selectedProductFilter, setSelectedProductFilter] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   
   // Extrair produtos únicos das transferências
   const uniqueProducts = useMemo(() => {
@@ -90,13 +92,26 @@ export function PendingTransfersManager() {
     return Array.from(productsMap.entries()).map(([id, name]) => ({ id, name }));
   }, [pendingTransfers]);
   
-  // Filtrar transferências pelo produto selecionado
+  // Filtrar transferências pelo produto e busca
   const filteredTransfers = useMemo(() => {
-    if (selectedProductFilter === 'all') {
-      return pendingTransfers;
+    let result = pendingTransfers;
+    
+    // Filtro por produto
+    if (selectedProductFilter !== 'all') {
+      result = result.filter(t => t.product_id === selectedProductFilter);
     }
-    return pendingTransfers.filter(t => t.product_id === selectedProductFilter);
-  }, [pendingTransfers, selectedProductFilter]);
+    
+    // Filtro por busca (nome ou email)
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      result = result.filter(t => 
+        t.customer_name.toLowerCase().includes(query) ||
+        t.customer_email.toLowerCase().includes(query)
+      );
+    }
+    
+    return result;
+  }, [pendingTransfers, selectedProductFilter, searchQuery]);
 
   useEffect(() => {
     if (admin) {
@@ -948,39 +963,55 @@ export function PendingTransfersManager() {
               </div>
             </div>
             
-            {/* Filtro de Produtos */}
-            {uniqueProducts.length > 1 && (
-              <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-muted-foreground" />
-                <Select value={selectedProductFilter} onValueChange={setSelectedProductFilter}>
-                  <SelectTrigger className="w-full sm:w-[300px]">
-                    <SelectValue placeholder="Filtrar por produto" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os produtos ({pendingTransfers.length})</SelectItem>
-                    {uniqueProducts.map(product => {
-                      const count = pendingTransfers.filter(t => t.product_id === product.id).length;
-                      return (
-                        <SelectItem key={product.id} value={product.id}>
-                          {product.name} ({count})
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
-                {selectedProductFilter !== 'all' && (
-                  <Badge variant="outline" className="text-xs">
-                    {filteredTransfers.length} resultado(s)
-                  </Badge>
-                )}
+            {/* Filtros */}
+            <div className="flex flex-col sm:flex-row gap-2">
+              {/* Busca por nome/email */}
+              <div className="relative flex-1">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por nome ou email..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-8 w-full"
+                />
               </div>
-            )}
+              
+              {/* Filtro de Produtos */}
+              {uniqueProducts.length > 1 && (
+                <div className="flex items-center gap-2">
+                  <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <Select value={selectedProductFilter} onValueChange={setSelectedProductFilter}>
+                    <SelectTrigger className="w-full sm:w-[250px]">
+                      <SelectValue placeholder="Filtrar por produto" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os produtos ({pendingTransfers.length})</SelectItem>
+                      {uniqueProducts.map(product => {
+                        const count = pendingTransfers.filter(t => t.product_id === product.id).length;
+                        return (
+                          <SelectItem key={product.id} value={product.id}>
+                            {product.name} ({count})
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              
+              {/* Badge de resultados filtrados */}
+              {(selectedProductFilter !== 'all' || searchQuery.trim()) && (
+                <Badge variant="outline" className="self-center text-xs whitespace-nowrap">
+                  {filteredTransfers.length} resultado(s)
+                </Badge>
+              )}
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
           {filteredTransfers.length === 0 ? (
             <div className="text-center text-muted-foreground py-8">
-              <p>{selectedProductFilter !== 'all' ? 'Nenhuma transferência pendente para este produto' : 'Nenhuma transferência pendente para aprovação'}</p>
+              <p>{(selectedProductFilter !== 'all' || searchQuery.trim()) ? 'Nenhuma transferência encontrada com os filtros aplicados' : 'Nenhuma transferência pendente para aprovação'}</p>
             </div>
           ) : (
             <div className="space-y-4">
