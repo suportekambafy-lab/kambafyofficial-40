@@ -74,6 +74,8 @@ export default function AdminIdentityVerification() {
   const [statusFilter, setStatusFilter] = useState<string>('todos');
   const [countryFilter, setCountryFilter] = useState<string>('todos');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [sortOrder, setSortOrder] = useState<string>('recente');
+  const [periodFilter, setPeriodFilter] = useState<string>('todos');
   const [selectedVerification, setSelectedVerification] = useState<IdentityVerification | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [documentModal, setDocumentModal] = useState<{isOpen: boolean, imageUrl: string, title: string, verification?: IdentityVerification}>({
@@ -206,6 +208,40 @@ export default function AdminIdentityVerification() {
           );
         }
 
+        // Apply period filter
+        if (periodFilter !== 'todos') {
+          const now = new Date();
+          let startDate: Date;
+          
+          switch (periodFilter) {
+            case 'hoje':
+              startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+              break;
+            case '7dias':
+              startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+              break;
+            case '30dias':
+              startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+              break;
+            case '90dias':
+              startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+              break;
+            default:
+              startDate = new Date(0);
+          }
+          
+          verificationsWithProfiles = verificationsWithProfiles.filter(v => 
+            new Date(v.created_at) >= startDate
+          );
+        }
+
+        // Apply sort order
+        verificationsWithProfiles.sort((a, b) => {
+          const dateA = new Date(a.created_at).getTime();
+          const dateB = new Date(b.created_at).getTime();
+          return sortOrder === 'recente' ? dateB - dateA : dateA - dateB;
+        });
+
         setVerifications(verificationsWithProfiles as IdentityVerification[]);
       } else {
         setVerifications([]);
@@ -226,7 +262,7 @@ export default function AdminIdentityVerification() {
     if (admin) {
       loadVerifications();
     }
-  }, [admin, statusFilter, countryFilter, searchQuery]);
+  }, [admin, statusFilter, countryFilter, searchQuery, sortOrder, periodFilter]);
 
   const updateVerificationStatus = async (id: string, newStatus: 'aprovado' | 'rejeitado', reason?: string) => {
     try {
@@ -591,6 +627,35 @@ export default function AdminIdentityVerification() {
                 {Object.entries(COUNTRY_NAMES).map(([code, name]) => (
                   <SelectItem key={code} value={code}>{name}</SelectItem>
                 ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div>
+            <Label htmlFor="period-filter" className="text-xs sm:text-sm">Período</Label>
+            <Select value={periodFilter} onValueChange={setPeriodFilter}>
+              <SelectTrigger className="w-full sm:w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todo período</SelectItem>
+                <SelectItem value="hoje">Hoje</SelectItem>
+                <SelectItem value="7dias">Últimos 7 dias</SelectItem>
+                <SelectItem value="30dias">Últimos 30 dias</SelectItem>
+                <SelectItem value="90dias">Últimos 90 dias</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div>
+            <Label htmlFor="sort-order" className="text-xs sm:text-sm">Ordenar</Label>
+            <Select value={sortOrder} onValueChange={setSortOrder}>
+              <SelectTrigger className="w-full sm:w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="recente">Mais recente</SelectItem>
+                <SelectItem value="antigo">Mais antigo</SelectItem>
               </SelectContent>
             </Select>
           </div>
