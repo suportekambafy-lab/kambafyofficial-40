@@ -4,7 +4,8 @@ export const useCurrencyToCountry = () => {
       'KZ': { country: 'AO', flag: '🇦🇴', name: 'Angola' },
       'EUR': { country: 'PT', flag: '🇵🇹', name: 'Portugal' },
       'MZN': { country: 'MZ', flag: '🇲🇿', name: 'Moçambique' },
-      'GBP': { country: 'GB', flag: '🇬🇧', name: 'Reino Unido' }
+      'GBP': { country: 'GB', flag: '🇬🇧', name: 'Reino Unido' },
+      'USD': { country: 'US', flag: '🇺🇸', name: 'Estados Unidos' }
     };
 
     return currencyMap[currency.toUpperCase()] || { 

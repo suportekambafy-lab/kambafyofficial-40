@@ -15,7 +15,8 @@ const allCountries = [
   { code: 'AO', name: 'Angola', currency: 'KZ', flag: '🇦🇴' },
   { code: 'PT', name: 'Portugal', currency: 'EUR', flag: '🇵🇹' },
   { code: 'MZ', name: 'Moçambique', currency: 'MZN', flag: '🇲🇿' },
-  { code: 'GB', name: 'Reino Unido', currency: 'GBP', flag: '🇬🇧' }
+  { code: 'GB', name: 'Reino Unido', currency: 'GBP', flag: '🇬🇧' },
+  { code: 'US', name: 'Estados Unidos', currency: 'USD', flag: '🇺🇸' }
 ];
 
 // Filtrar Angola (moeda base) das opções de preços personalizados
@@ -73,11 +74,13 @@ export default function CountryPriceConfig({
   const getExchangeRates = () => {
     const basePriceNumber = parseFloat(basePrice) || 0;
     const gbpValue = basePriceNumber * 0.0008;
+    const usdValue = basePriceNumber * 0.0011;
     return {
       'AO': basePriceNumber, // Base é KZ
       'PT': (basePriceNumber * 0.00095).toFixed(2), // KZ para EUR
       'MZ': (basePriceNumber * 0.0722).toFixed(2), // KZ para MZN
-      'GB': (gbpValue < 1 ? 1 : gbpValue).toFixed(2) // KZ para GBP (mínimo £1)
+      'GB': (gbpValue < 1 ? 1 : gbpValue).toFixed(2), // KZ para GBP (mínimo £1)
+      'US': (usdValue < 1 ? 1 : usdValue).toFixed(2) // KZ para USD (mínimo $1)
     };
   };
 
