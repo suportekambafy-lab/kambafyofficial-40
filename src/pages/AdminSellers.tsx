@@ -74,15 +74,19 @@ export default function AdminSellers() {
         .in('product_id', productIds)
         .eq('status', 'completed');
 
-      // Buscar todos os saques de uma vez
+      // Buscar todos os saques de uma vez usando RPC (bypassa RLS)
       const { data: allWithdrawals } = await supabase
-        .from('withdrawal_requests')
-        .select('user_id, amount, status');
+        .rpc('admin_get_all_withdrawals');
 
-      // Buscar todos os saldos de uma vez
-      const { data: allBalances } = await supabase
-        .from('customer_balances')
-        .select('user_id, balance');
+      // Buscar todos os saldos de uma vez usando RPC (bypassa RLS)
+      const { data: allBalances, error: balancesError } = await supabase
+        .rpc('admin_get_all_balances');
+      
+      if (balancesError) {
+        console.error('Erro ao buscar saldos:', balancesError);
+      }
+      
+      console.log('📊 Saldos carregados:', allBalances?.length);
 
       // Criar mapas para acesso rápido
       const productsByUser = new Map<string, typeof allProducts>();
@@ -103,20 +107,22 @@ export default function AdminSellers() {
         ordersByProduct.get(productId)!.push(order);
       });
 
+      // Processar saques (RPC retorna user_id e amount para saques aprovados)
       const withdrawalsByUser = new Map<string, number>();
       allWithdrawals?.forEach(w => {
-        if (w.status === 'aprovado') {
-          const current = withdrawalsByUser.get(w.user_id) || 0;
-          withdrawalsByUser.set(w.user_id, current + parseFloat(w.amount.toString()));
-        }
+        const current = withdrawalsByUser.get(w.user_id) || 0;
+        withdrawalsByUser.set(w.user_id, current + Number(w.amount || 0));
       });
 
+      // Processar saldos
       const balanceByUser = new Map<string, number>();
       allBalances?.forEach(b => {
         if (b.user_id) {
-          balanceByUser.set(b.user_id, b.balance);
+          balanceByUser.set(b.user_id, Number(b.balance) || 0);
         }
       });
+      
+      console.log('📊 Mapa de saldos:', balanceByUser.size, 'usuários');
 
       const usersData: UserReport[] = [];
 
