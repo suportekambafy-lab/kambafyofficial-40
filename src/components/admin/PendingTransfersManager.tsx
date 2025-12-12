@@ -938,75 +938,71 @@ export function PendingTransfersManager() {
   return (
     <>
       <Card>
-        <CardHeader>
-          <CardTitle className="flex flex-col gap-3">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <span className="text-lg sm:text-xl">Aprovar Pagamentos - Transferências</span>
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary">{pendingTransfers.length} pendentes</Badge>
-                {filteredTransfers.length > 0 && (
-                  <Button
-                    onClick={() => {
-                      if (window.confirm(`Tem certeza que deseja REJEITAR TODOS os ${filteredTransfers.length} pagamentos ${selectedProductFilter !== 'all' ? 'filtrados' : 'pendentes'}?`)) {
-                        handleBulkReject(filteredTransfers.map(t => t.id));
-                      }
-                    }}
-                    disabled={processingId !== null}
-                    size="sm"
-                    variant="destructive"
-                    className="flex items-center gap-2"
-                  >
-                    <XCircle className="h-4 w-4" />
-                    <span className="text-xs sm:text-sm">Rejeitar Todos</span>
-                  </Button>
-                )}
-              </div>
+        <CardHeader className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <CardTitle className="text-lg sm:text-xl">Aprovar Pagamentos - Transferências</CardTitle>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary">{pendingTransfers.length} pendentes</Badge>
+              {filteredTransfers.length > 0 && (
+                <Button
+                  onClick={() => {
+                    if (window.confirm(`Tem certeza que deseja REJEITAR TODOS os ${filteredTransfers.length} pagamentos ${selectedProductFilter !== 'all' ? 'filtrados' : 'pendentes'}?`)) {
+                      handleBulkReject(filteredTransfers.map(t => t.id));
+                    }
+                  }}
+                  disabled={processingId !== null}
+                  size="sm"
+                  variant="destructive"
+                  className="flex items-center gap-2"
+                >
+                  <XCircle className="h-4 w-4" />
+                  <span className="text-xs sm:text-sm">Rejeitar Todos</span>
+                </Button>
+              )}
+            </div>
+          </div>
+          
+          {/* Filtros */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            {/* Busca por nome/email */}
+            <div className="relative flex-1 min-w-0">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nome ou email..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 w-full"
+              />
             </div>
             
-            {/* Filtros */}
-            <div className="flex flex-col sm:flex-row gap-2">
-              {/* Busca por nome/email */}
-              <div className="relative flex-1">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar por nome ou email..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8 w-full"
-                />
-              </div>
-              
-              {/* Filtro de Produtos */}
-              {uniqueProducts.length > 1 && (
-                <div className="flex items-center gap-2">
-                  <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <Select value={selectedProductFilter} onValueChange={setSelectedProductFilter}>
-                    <SelectTrigger className="w-full sm:w-[250px]">
-                      <SelectValue placeholder="Filtrar por produto" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos os produtos ({pendingTransfers.length})</SelectItem>
-                      {uniqueProducts.map(product => {
-                        const count = pendingTransfers.filter(t => t.product_id === product.id).length;
-                        return (
-                          <SelectItem key={product.id} value={product.id}>
-                            {product.name} ({count})
-                          </SelectItem>
-                        );
-                      })}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-              
-              {/* Badge de resultados filtrados */}
-              {(selectedProductFilter !== 'all' || searchQuery.trim()) && (
-                <Badge variant="outline" className="self-center text-xs whitespace-nowrap">
-                  {filteredTransfers.length} resultado(s)
-                </Badge>
-              )}
+            {/* Filtro de Produtos */}
+            <div className="flex items-center gap-2 shrink-0">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <Select value={selectedProductFilter} onValueChange={setSelectedProductFilter}>
+                <SelectTrigger className="w-full sm:w-[250px]">
+                  <SelectValue placeholder="Filtrar por produto" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os produtos ({pendingTransfers.length})</SelectItem>
+                  {uniqueProducts.map(product => {
+                    const count = pendingTransfers.filter(t => t.product_id === product.id).length;
+                    return (
+                      <SelectItem key={product.id} value={product.id}>
+                        {product.name} ({count})
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
             </div>
-          </CardTitle>
+            
+            {/* Badge de resultados filtrados */}
+            {(selectedProductFilter !== 'all' || searchQuery.trim()) && (
+              <Badge variant="outline" className="self-center text-xs whitespace-nowrap">
+                {filteredTransfers.length} resultado(s)
+              </Badge>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {filteredTransfers.length === 0 ? (
