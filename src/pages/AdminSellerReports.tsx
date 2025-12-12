@@ -172,14 +172,31 @@ export default function AdminSellerReports() {
 
       // Buscar todos os saldos usando RPC (bypassa RLS)
       console.log('🔍 Buscando saldos via RPC...');
-      const { data: allBalances, error: balancesError } = await supabase
+      let allBalances: any[] = [];
+      
+      // Tentar via RPC primeiro
+      const { data: rpcBalances, error: balancesError } = await supabase
         .rpc('admin_get_all_balances');
       
       if (balancesError) {
-        console.error('❌ Erro ao buscar saldos:', balancesError);
-        throw balancesError;
+        console.error('❌ Erro ao buscar saldos via RPC:', balancesError);
+        // Fallback: tentar buscar direto da tabela (se tiver permissão)
+        const { data: directBalances } = await supabase
+          .from('customer_balances')
+          .select('user_id, balance');
+        allBalances = directBalances || [];
+        console.log('📊 Saldos carregados via fallback:', allBalances.length);
+      } else {
+        allBalances = rpcBalances || [];
+        console.log(`✅ ${allBalances.length} saldos carregados via RPC`);
       }
-      console.log(`✅ ${allBalances?.length || 0} saldos carregados`, allBalances?.slice(0, 2));
+      
+      // Debug: mostrar alguns saldos
+      if (allBalances.length > 0) {
+        console.log('📊 Primeiros saldos:', allBalances.slice(0, 5));
+      } else {
+        console.warn('⚠️ Nenhum saldo retornado!');
+      }
 
       // Criar mapas para lookup eficiente
       const productsByUser = new Map<string, any[]>();
@@ -187,12 +204,13 @@ export default function AdminSellerReports() {
       const withdrawalsByUser = new Map<string, number>();
       const balanceByUser = new Map<string, number>();
 
-      // Organizar produtos por usuário
+      // Organizar produtos por usuário (converter user_id para string)
       allProducts?.forEach(product => {
-        if (!productsByUser.has(product.user_id)) {
-          productsByUser.set(product.user_id, []);
+        const userId = String(product.user_id);
+        if (!productsByUser.has(userId)) {
+          productsByUser.set(userId, []);
         }
-        productsByUser.get(product.user_id)!.push(product);
+        productsByUser.get(userId)!.push(product);
       });
 
       // Organizar vendas por produto
@@ -203,29 +221,33 @@ export default function AdminSellerReports() {
         ordersByProduct.get(order.product_id)!.push(order);
       });
 
-      // Organizar saques por usuário
+      // Organizar saques por usuário (converter user_id para string)
       allWithdrawals?.forEach(withdrawal => {
-        const current = withdrawalsByUser.get(withdrawal.user_id) || 0;
-        withdrawalsByUser.set(withdrawal.user_id, current + withdrawal.amount);
+        const userId = String(withdrawal.user_id);
+        const current = withdrawalsByUser.get(userId) || 0;
+        withdrawalsByUser.set(userId, current + Number(withdrawal.amount));
       });
 
       // Organizar saldos por usuário
+      // Organizar saldos por usuário (converter user_id para string para garantir matching correto)
       allBalances?.forEach(balance => {
         if (balance.user_id) {
-          balanceByUser.set(balance.user_id, Number(balance.balance) || 0);
+          const userId = String(balance.user_id);
+          balanceByUser.set(userId, Number(balance.balance) || 0);
         }
       });
       
       // Log para debug
       console.log('📊 Saldos carregados no mapa:', balanceByUser.size);
-      console.log('📊 Exemplo de saldo:', Array.from(balanceByUser.entries()).slice(0, 3));
+      console.log('📊 Exemplo de saldo:', Array.from(balanceByUser.entries()).slice(0, 5));
 
       // Processar dados de cada vendedor
       // O profile.user_id é o ID real do usuário (referência para auth.users)
       // O profile.id é o ID do próprio registro do perfil
       const sellersData = allProfiles.map(profile => {
         // Usar user_id para buscar produtos, saques e saldos
-        const realUserId = profile.user_id;
+        // Converter para string para garantir matching correto no Map
+        const realUserId = String(profile.user_id);
         const userProducts = productsByUser.get(realUserId) || [];
         const activeProducts = userProducts.filter(p => p.status === 'Ativo').length;
         const bannedProducts = userProducts.filter(p => p.status === 'Banido').length;
@@ -246,6 +268,17 @@ export default function AdminSellerReports() {
         const availableBalance = balanceByUser.get(realUserId) || 0;
         
         // Debug para usuários com receita alta
+        if (profile.full_name?.toLowerCase().includes('ravimo')) {
+          console.log('🔍 DEBUG Ravimo:', {
+            profileId: profile.id,
+            profileUserId: profile.user_id,
+            realUserId,
+            hasBalance: balanceByUser.has(realUserId),
+            balance: balanceByUser.get(realUserId),
+            allBalanceKeys: Array.from(balanceByUser.keys()).slice(0, 5)
+          });
+        }
+        
         if (totalRevenue > 1000000 && availableBalance === 0) {
           console.log('⚠️ Usuário com receita alta mas saldo 0:', {
             name: profile.full_name,
