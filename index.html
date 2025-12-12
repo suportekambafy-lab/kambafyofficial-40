@@ -9,7 +9,21 @@
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
     
-    <!-- Script para SEO dinâmico de produtos - DEVE executar PRIMEIRO -->
+    <!-- Facebook Pixel Base Code - DEVE carregar PRIMEIRO -->
+    <script>
+      !function(f,b,e,v,n,t,s)
+      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+      n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t,s)}(window, document,'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+      window._fbPixelsInitialized = window._fbPixelsInitialized || {};
+      window._fbEventsTracked = window._fbEventsTracked || {};
+    </script>
+    
+    <!-- Script para SEO dinâmico de produtos -->
     <script src="/product-seo-loader.js"></script>
     
     <!-- SEO Meta Tags -->
@@ -109,24 +123,8 @@
     }
     </script>
     
-    <!-- Facebook Pixel Base Code -->
-    <script>
-      !function(f,b,e,v,n,t,s)
-      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-      n.queue=[];t=b.createElement(e);t.async=!0;
-      t.src=v;
-      t.onerror=function(){console.error('[FB SDK] Failed to load fbevents.js');};
-      t.onload=function(){console.log('[FB SDK] fbevents.js loaded successfully');};
-      s=b.getElementsByTagName(e)[0];
-      s.parentNode.insertBefore(t,s)}(window, document,'script',
-      'https://connect.facebook.net/en_US/fbevents.js');
-      
-      // Flag para tracking de pixels inicializados
-      window._fbPixelsInitialized = window._fbPixelsInitialized || {};
-    </script>
-    <!-- End Facebook Pixel Base Code -->
+    <!-- Noscript fallback for Facebook Pixel -->
+    <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?ev=PageView&noscript=1"/></noscript>
     
     <meta property="og:title" content="Kambafy - Transforme seu conhecimento em renda">
   <meta name="twitter:title" content="Kambafy - Transforme seu conhecimento em renda">

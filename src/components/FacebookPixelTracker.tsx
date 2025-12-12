@@ -7,6 +7,7 @@ declare global {
     fbq: any;
     _fbq: any;
     _fbPixelsInitialized?: Record<string, boolean>;
+    _fbEventsTracked?: Record<string, boolean>;
   }
 }
 
@@ -26,6 +27,13 @@ interface PurchaseEventDetail {
   };
   orderId?: string;
 }
+
+// Valida se é um Pixel ID válido (15-16 dígitos numéricos)
+const isValidPixelId = (pixelId: string): boolean => {
+  if (!pixelId) return false;
+  const cleaned = String(pixelId).trim();
+  return /^\d{15,16}$/.test(cleaned);
+};
 
 export const FacebookPixelTracker = ({ productId, productUserId }: FacebookPixelTrackerProps) => {
   const pixelIdsRef = useRef<string[]>([]);
@@ -60,9 +68,34 @@ export const FacebookPixelTracker = ({ productId, productUserId }: FacebookPixel
 
   useEffect(() => {
     const initializePixels = async () => {
+      // Evitar inicialização duplicada se o SEO loader já fez
       if (!productId || initializedRef.current) return;
+      
+      // Verificar se já foi inicializado pelo SEO loader
+      if (window._fbPixelsInitialized && Object.keys(window._fbPixelsInitialized).length > 0) {
+        console.log('ℹ️ [FB PIXEL React] Pixels already initialized by SEO loader');
+        initializedRef.current = true;
+        
+        // Ainda precisamos buscar os pixel IDs para o Purchase event
+        const productInfo = await fetchProductInfo();
+        if (!productInfo) return;
 
-      console.log('🔍 [FB PIXEL] Fetching settings for product:', productId);
+        const { productUUID } = productInfo;
+        
+        const { data: pixels } = await supabase
+          .from('facebook_pixel_settings')
+          .select('pixel_id')
+          .eq('product_id', productUUID)
+          .eq('enabled', true);
+
+        pixelIdsRef.current = (pixels || [])
+          .map(p => p.pixel_id)
+          .filter(isValidPixelId);
+        
+        return;
+      }
+
+      console.log('🔍 [FB PIXEL React] Initializing pixels for product:', productId);
 
       const productInfo = await fetchProductInfo();
       if (!productInfo) return;
@@ -82,41 +115,22 @@ export const FacebookPixelTracker = ({ productId, productUserId }: FacebookPixel
           return;
         }
 
-        const pixelIds = (pixels || []).map(p => p.pixel_id).filter(Boolean);
-        pixelIdsRef.current = pixelIds;
+        // Filtrar apenas Pixel IDs válidos
+        const validPixelIds = (pixels || [])
+          .map(p => p.pixel_id)
+          .filter(isValidPixelId);
+        
+        pixelIdsRef.current = validPixelIds;
 
-        if (pixelIds.length === 0) {
-          console.log('ℹ️ [FB PIXEL] No active pixels found for this product');
+        if (validPixelIds.length === 0) {
+          console.log('ℹ️ [FB PIXEL] No valid pixels found for this product');
           return;
         }
 
-        console.log(`✅ [FB PIXEL] ${pixelIds.length} pixel(s) found:`, pixelIds);
+        console.log(`✅ [FB PIXEL] ${validPixelIds.length} valid pixel(s) found:`, validPixelIds);
 
-        // Aguardar fbq estar disponível
-        const waitForFbq = (): Promise<boolean> => {
-          return new Promise((resolve) => {
-            let attempts = 0;
-            const maxAttempts = 50;
-            
-            const check = () => {
-              attempts++;
-              if (typeof window.fbq === 'function') {
-                resolve(true);
-                return;
-              }
-              if (attempts >= maxAttempts) {
-                resolve(false);
-                return;
-              }
-              setTimeout(check, 100);
-            };
-            check();
-          });
-        };
-
-        const fbqReady = await waitForFbq();
-        
-        if (!fbqReady) {
+        // Verificar se fbq está disponível
+        if (typeof window.fbq !== 'function') {
           console.error('❌ [FB PIXEL] fbq not available');
           return;
         }
@@ -128,10 +142,10 @@ export const FacebookPixelTracker = ({ productId, productUserId }: FacebookPixel
         }
 
         // Inicializar cada pixel
-        pixelIds.forEach(pixelId => {
+        validPixelIds.forEach(pixelId => {
           try {
-            if (!window._fbPixelsInitialized[pixelId]) {
-              window._fbPixelsInitialized[pixelId] = true;
+            if (!window._fbPixelsInitialized![pixelId]) {
+              window._fbPixelsInitialized![pixelId] = true;
               window.fbq('init', pixelId);
               console.log('✅ [FB PIXEL] init() called for:', pixelId);
             }
@@ -140,11 +154,11 @@ export const FacebookPixelTracker = ({ productId, productUserId }: FacebookPixel
           }
         });
 
-        // Enviar PageView (vai para todos os pixels inicializados)
+        // Enviar PageView
         try {
           const pageEventId = generateEventId();
           window.fbq('track', 'PageView', {}, { eventID: pageEventId });
-          console.log('✅ [FB PIXEL] PageView tracked');
+          console.log('✅ [FB PIXEL] PageView tracked with eventID:', pageEventId);
         } catch (e) {
           console.error('❌ [FB PIXEL] PageView error:', e);
         }
@@ -158,7 +172,7 @@ export const FacebookPixelTracker = ({ productId, productUserId }: FacebookPixel
               content_ids: [productId],
               content_type: 'product'
             }, { eventID: eventId });
-            console.log('✅ [FB PIXEL] ViewContent tracked');
+            console.log('✅ [FB PIXEL] ViewContent tracked with eventID:', eventId);
           } catch (e) {
             console.error('❌ [FB PIXEL] ViewContent error:', e);
           }
@@ -173,7 +187,7 @@ export const FacebookPixelTracker = ({ productId, productUserId }: FacebookPixel
               content_ids: [productId],
               content_type: 'product'
             }, { eventID: eventId });
-            console.log('✅ [FB PIXEL] InitiateCheckout tracked');
+            console.log('✅ [FB PIXEL] InitiateCheckout tracked with eventID:', eventId);
           } catch (e) {
             console.error('❌ [FB PIXEL] InitiateCheckout error:', e);
           }
@@ -192,7 +206,7 @@ export const FacebookPixelTracker = ({ productId, productUserId }: FacebookPixel
       const { amount, currency, customer, orderId } = event.detail || {};
       const purchaseEventId = generateEventId();
       
-      console.log('🛒 [FB PIXEL] Purchase event:', { amount, currency, orderId });
+      console.log('🛒 [FB PIXEL] Purchase event:', { amount, currency, orderId, pixelCount: pixelIdsRef.current.length });
 
       if (typeof window.fbq === 'function' && pixelIdsRef.current.length > 0) {
         try {
@@ -200,19 +214,23 @@ export const FacebookPixelTracker = ({ productId, productUserId }: FacebookPixel
             content_ids: [productId],
             content_type: 'product',
             value: amount || 0,
-            currency: currency || 'KZ'
+            currency: currency || 'AOA'
           }, { eventID: purchaseEventId });
-          console.log('✅ [FB PIXEL] Purchase tracked');
+          console.log('✅ [FB PIXEL] Purchase tracked with eventID:', purchaseEventId);
         } catch (e) {
           console.error('❌ [FB PIXEL] Purchase error:', e);
         }
       }
 
+      // Enviar também via Conversions API (server-side)
       try {
         const productInfo = await fetchProductInfo();
         const userId = userIdRef.current || productInfo?.userId;
         
-        if (!userId) return;
+        if (!userId) {
+          console.warn('⚠️ [FB PIXEL] No userId for server event');
+          return;
+        }
 
         await supabase.functions.invoke('send-facebook-conversion', {
           body: {
@@ -221,12 +239,12 @@ export const FacebookPixelTracker = ({ productId, productUserId }: FacebookPixel
             eventId: purchaseEventId,
             eventName: 'Purchase',
             value: amount || 0,
-            currency: currency || 'KZ',
+            currency: currency || 'AOA',
             orderId: orderId || null,
             customer: customer || {}
           }
         });
-        console.log('✅ [FB PIXEL] Server event sent');
+        console.log('✅ [FB PIXEL] Server event sent with eventID:', purchaseEventId);
       } catch (err) {
         console.error('❌ [FB PIXEL] Server event error:', err);
       }
