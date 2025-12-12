@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CheckCircle, XCircle, Download, Eye, FileText, AlertTriangle, ArrowDown } from 'lucide-react';
+import { CheckCircle, XCircle, Download, Eye, FileText, AlertTriangle, ArrowDown, Filter } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
@@ -21,6 +21,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { DuplicatesManagementDialog } from './DuplicatesManagementDialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface PendingTransfer {
   id: string;
@@ -68,6 +75,28 @@ export function PendingTransfersManager() {
   // Estado para botão de scroll
   const [showScrollButton, setShowScrollButton] = useState(false);
   const scrollPositionRef = useRef<number>(0);
+  
+  // Estado para filtro de produtos
+  const [selectedProductFilter, setSelectedProductFilter] = useState<string>('all');
+  
+  // Extrair produtos únicos das transferências
+  const uniqueProducts = useMemo(() => {
+    const productsMap = new Map<string, string>();
+    pendingTransfers.forEach(transfer => {
+      if (transfer.product_id && transfer.product_name) {
+        productsMap.set(transfer.product_id, transfer.product_name);
+      }
+    });
+    return Array.from(productsMap.entries()).map(([id, name]) => ({ id, name }));
+  }, [pendingTransfers]);
+  
+  // Filtrar transferências pelo produto selecionado
+  const filteredTransfers = useMemo(() => {
+    if (selectedProductFilter === 'all') {
+      return pendingTransfers;
+    }
+    return pendingTransfers.filter(t => t.product_id === selectedProductFilter);
+  }, [pendingTransfers, selectedProductFilter]);
 
   useEffect(() => {
     if (admin) {
@@ -895,37 +924,67 @@ export function PendingTransfersManager() {
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <span className="text-lg sm:text-xl">Aprovar Pagamentos - Transferências</span>
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary">{pendingTransfers.length} pendentes</Badge>
-              {pendingTransfers.length > 0 && (
-                <Button
-                  onClick={() => {
-                    if (window.confirm(`Tem certeza que deseja REJEITAR TODOS os ${pendingTransfers.length} pagamentos pendentes?`)) {
-                      handleBulkReject(pendingTransfers.map(t => t.id));
-                    }
-                  }}
-                  disabled={processingId !== null}
-                  size="sm"
-                  variant="destructive"
-                  className="flex items-center gap-2"
-                >
-                  <XCircle className="h-4 w-4" />
-                  <span className="text-xs sm:text-sm">Rejeitar Todos</span>
-                </Button>
-              )}
+          <CardTitle className="flex flex-col gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <span className="text-lg sm:text-xl">Aprovar Pagamentos - Transferências</span>
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary">{pendingTransfers.length} pendentes</Badge>
+                {filteredTransfers.length > 0 && (
+                  <Button
+                    onClick={() => {
+                      if (window.confirm(`Tem certeza que deseja REJEITAR TODOS os ${filteredTransfers.length} pagamentos ${selectedProductFilter !== 'all' ? 'filtrados' : 'pendentes'}?`)) {
+                        handleBulkReject(filteredTransfers.map(t => t.id));
+                      }
+                    }}
+                    disabled={processingId !== null}
+                    size="sm"
+                    variant="destructive"
+                    className="flex items-center gap-2"
+                  >
+                    <XCircle className="h-4 w-4" />
+                    <span className="text-xs sm:text-sm">Rejeitar Todos</span>
+                  </Button>
+                )}
+              </div>
             </div>
+            
+            {/* Filtro de Produtos */}
+            {uniqueProducts.length > 1 && (
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <Select value={selectedProductFilter} onValueChange={setSelectedProductFilter}>
+                  <SelectTrigger className="w-full sm:w-[300px]">
+                    <SelectValue placeholder="Filtrar por produto" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os produtos ({pendingTransfers.length})</SelectItem>
+                    {uniqueProducts.map(product => {
+                      const count = pendingTransfers.filter(t => t.product_id === product.id).length;
+                      return (
+                        <SelectItem key={product.id} value={product.id}>
+                          {product.name} ({count})
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+                {selectedProductFilter !== 'all' && (
+                  <Badge variant="outline" className="text-xs">
+                    {filteredTransfers.length} resultado(s)
+                  </Badge>
+                )}
+              </div>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {pendingTransfers.length === 0 ? (
+          {filteredTransfers.length === 0 ? (
             <div className="text-center text-muted-foreground py-8">
-              <p>Nenhuma transferência pendente para aprovação</p>
+              <p>{selectedProductFilter !== 'all' ? 'Nenhuma transferência pendente para este produto' : 'Nenhuma transferência pendente para aprovação'}</p>
             </div>
           ) : (
             <div className="space-y-4">
-              {pendingTransfers.map((transfer) => (
+              {filteredTransfers.map((transfer) => (
                 <div key={transfer.id} className="border rounded-lg p-3 sm:p-4">
                   <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                     <div className="flex-1">
