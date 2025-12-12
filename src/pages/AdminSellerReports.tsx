@@ -97,7 +97,7 @@ export default function AdminSellerReports() {
       while (hasMore) {
         const { data, error } = await supabase
           .from('profiles')
-          .select('user_id, full_name, email, avatar_url, banned, is_creator, balance_retention_percentage, retention_reason, retention_release_date')
+          .select('id, user_id, full_name, email, avatar_url, banned, is_creator, balance_retention_percentage, retention_reason, retention_release_date')
           .range(offset, offset + limit - 1);
 
         if (error) throw error;
@@ -215,8 +215,12 @@ export default function AdminSellerReports() {
       });
 
       // Processar dados de cada vendedor
+      // O profile.user_id é o ID real do usuário (referência para auth.users)
+      // O profile.id é o ID do próprio registro do perfil
       const sellersData = allProfiles.map(profile => {
-        const userProducts = productsByUser.get(profile.user_id) || [];
+        // Usar user_id para buscar produtos, saques e saldos
+        const realUserId = profile.user_id || profile.id;
+        const userProducts = productsByUser.get(realUserId) || [];
         const activeProducts = userProducts.filter(p => p.status === 'Ativo').length;
         const bannedProducts = userProducts.filter(p => p.status === 'Banido').length;
 
@@ -232,12 +236,12 @@ export default function AdminSellerReports() {
           );
         });
 
-        const totalWithdrawals = withdrawalsByUser.get(profile.user_id) || 0;
-        const availableBalance = balanceByUser.get(profile.user_id) || 0;
+        const totalWithdrawals = withdrawalsByUser.get(realUserId) || 0;
+        const availableBalance = balanceByUser.get(realUserId) || 0;
         const totalFees = totalRevenue * 0.0899;
 
         return {
-          user_id: profile.user_id,
+          user_id: realUserId,
           full_name: profile.full_name,
           email: profile.email,
           avatar_url: profile.avatar_url,
