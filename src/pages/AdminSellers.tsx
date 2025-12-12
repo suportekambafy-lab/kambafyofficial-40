@@ -78,20 +78,19 @@ export default function AdminSellers() {
       const { data: allWithdrawals } = await supabase
         .rpc('admin_get_all_withdrawals');
 
-      // Buscar todos os saldos de uma vez usando RPC (bypassa RLS)
+      // Buscar todos os saldos diretamente da tabela customer_balances
       const { data: allBalances, error: balancesError } = await supabase
-        .rpc('admin_get_all_balances');
+        .from('customer_balances')
+        .select('user_id, balance');
       
       if (balancesError) {
         console.error('Erro ao buscar saldos:', balancesError);
       }
-      
-      console.log('📊 Saldos carregados:', allBalances?.length);
 
       // Criar mapas para acesso rápido
       const productsByUser = new Map<string, typeof allProducts>();
       allProducts?.forEach(product => {
-        const userId = product.user_id;
+        const userId = String(product.user_id);
         if (!productsByUser.has(userId)) {
           productsByUser.set(userId, []);
         }
@@ -110,24 +109,26 @@ export default function AdminSellers() {
       // Processar saques (RPC retorna user_id e amount para saques aprovados)
       const withdrawalsByUser = new Map<string, number>();
       allWithdrawals?.forEach(w => {
-        const current = withdrawalsByUser.get(w.user_id) || 0;
-        withdrawalsByUser.set(w.user_id, current + Number(w.amount || 0));
+        const userId = String(w.user_id);
+        const current = withdrawalsByUser.get(userId) || 0;
+        withdrawalsByUser.set(userId, current + Number(w.amount || 0));
       });
 
-      // Processar saldos
+      // Processar saldos - converter user_id para string para garantir match
       const balanceByUser = new Map<string, number>();
       allBalances?.forEach(b => {
         if (b.user_id) {
-          balanceByUser.set(b.user_id, Number(b.balance) || 0);
+          const userId = String(b.user_id);
+          const balance = Number(b.balance) || 0;
+          balanceByUser.set(userId, balance);
         }
       });
-      
-      console.log('📊 Mapa de saldos:', balanceByUser.size, 'usuários');
 
       const usersData: UserReport[] = [];
 
       for (const profile of profiles || []) {
-        const userProducts = productsByUser.get(profile.user_id) || [];
+        const realUserId = String(profile.user_id);
+        const userProducts = productsByUser.get(realUserId) || [];
         
         // Calcular vendas e receita baseado nos PRODUTOS do vendedor
         let totalSales = 0;
@@ -145,8 +146,8 @@ export default function AdminSellers() {
         const bannedProducts = userProducts.filter(p => 
           p.status === 'Banido').length;
         
-        const totalWithdrawals = withdrawalsByUser.get(profile.user_id) || 0;
-        const currentBalance = balanceByUser.get(profile.user_id) || 0;
+        const totalWithdrawals = withdrawalsByUser.get(realUserId) || 0;
+        const currentBalance = balanceByUser.get(realUserId) || 0;
 
         usersData.push({
           user_id: profile.user_id,
