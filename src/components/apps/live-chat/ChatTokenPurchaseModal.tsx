@@ -118,82 +118,45 @@ export function ChatTokenPurchaseModal({
 
       const priceInfo = getDisplayPrice();
 
-      // For Stripe methods (card, klarna, multibanco, mbway in PT/GB/US)
-      if (['card', 'klarna', 'multibanco', 'mbway', 'card_uk', 'klarna_uk', 'card_us'].includes(selectedPaymentMethod)) {
-        const { data, error } = await supabase.functions.invoke('process-stripe-payment', {
-          body: {
-            amount: Math.round(priceInfo.price * 100),
-            currency: priceInfo.currency.toLowerCase(),
-            productName: `Chat Tokens: ${selectedPackage.name}`,
-            productDescription: `${selectedPackage.tokens.toLocaleString()} tokens para Chat IA`,
-            customerEmail: user.email,
-            metadata: {
-              type: 'chat_tokens',
-              package_id: selectedPackage.id,
-              tokens: selectedPackage.tokens,
-              user_id: user.id
-            },
-            paymentMethod: selectedPaymentMethod,
-            successUrl: `${window.location.origin}/vendedor/apps?purchase=success&tokens=${selectedPackage.tokens}`,
-            cancelUrl: `${window.location.origin}/vendedor/apps?purchase=cancelled`
-          }
-        });
-
-        if (error) throw error;
-        if (data?.url) {
-          window.open(data.url, '_blank');
-          onClose();
-          return;
+      const { data, error } = await supabase.functions.invoke('purchase-chat-tokens', {
+        body: {
+          packageId: selectedPackage.id,
+          packageName: selectedPackage.name,
+          tokens: selectedPackage.tokens,
+          amount: Math.round(priceInfo.price * 100),
+          currency: priceInfo.currency.toLowerCase(),
+          paymentMethod: selectedPaymentMethod,
+          successUrl: `${window.location.origin}/vendedor/apps?purchase=success&tokens=${selectedPackage.tokens}`,
+          cancelUrl: `${window.location.origin}/vendedor/apps?purchase=cancelled`
         }
-      }
+      });
 
-      // For Express/Reference (Angola)
-      if (['express', 'reference'].includes(selectedPaymentMethod)) {
-        const { data, error } = await supabase.functions.invoke('process-appypay-payment', {
-          body: {
-            amount: priceInfo.price,
-            currency: 'AOA',
-            paymentMethod: selectedPaymentMethod,
-            customerEmail: user.email,
-            customerName: user.email?.split('@')[0] || 'Cliente',
-            description: `Chat Tokens: ${selectedPackage.name}`,
-            metadata: {
-              type: 'chat_tokens',
-              package_id: selectedPackage.id,
-              tokens: selectedPackage.tokens,
-              user_id: user.id
-            }
-          }
-        });
+      if (error) throw error;
 
-        if (error) throw error;
-
-        if (selectedPaymentMethod === 'express' && data?.payment_url) {
-          window.open(data.payment_url, '_blank');
-        } else if (selectedPaymentMethod === 'reference' && data?.reference) {
-          toast({
-            title: 'Referência gerada!',
-            description: `Entidade: ${data.entity} | Referência: ${data.reference}`
-          });
-        }
-        
+      if (data?.url) {
+        window.open(data.url, '_blank');
         onClose();
         return;
       }
 
-      // For other methods (M-Pesa, e-Mola, transfer) - show instructions
-      toast({
-        title: 'Instruções de Pagamento',
-        description: `Use o método ${selectedPaymentMethod} para pagar ${priceInfo.formatted}. Após confirmação, os tokens serão creditados automaticamente.`
-      });
+      if (data?.pending) {
+        toast({
+          title: 'Pagamento iniciado',
+          description: data.message || 'Aguarde a confirmação do pagamento.'
+        });
+        onClose();
+        return;
+      }
 
-      onClose();
+      if (data?.error) {
+        throw new Error(data.error);
+      }
 
     } catch (error) {
       console.error('Payment error:', error);
       toast({
         title: 'Erro no pagamento',
-        description: 'Não foi possível processar o pagamento. Tente novamente.',
+        description: error instanceof Error ? error.message : 'Não foi possível processar o pagamento.',
         variant: 'destructive'
       });
     } finally {

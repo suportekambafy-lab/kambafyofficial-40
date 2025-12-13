@@ -200,3 +200,6 @@ verify_jwt = false
 
 [functions.chat-support]
 verify_jwt = false
+
+[functions.purchase-chat-tokens]
+verify_jwt = false
