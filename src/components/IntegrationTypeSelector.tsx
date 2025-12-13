@@ -26,7 +26,7 @@ const integrationTypes: IntegrationType[] = [
     name: 'Facebook + Instagram',
     description: 'Configure Pixel ID e API de Conversões',
     icon: ({ className }: { className?: string }) => (
-      <img src={metaLogo} alt="Meta" className="h-8 w-auto object-contain" />
+      <img src={metaLogo} alt="Meta" className="h-12 w-auto object-contain" />
     ),
     color: ''
   },
