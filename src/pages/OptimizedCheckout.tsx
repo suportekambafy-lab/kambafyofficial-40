@@ -33,6 +33,7 @@ import { OptimizedProductImage } from "@/components/checkout/OptimizedProductIma
 import { OptimizedPaymentLogo } from "@/components/checkout/OptimizedPaymentLogo";
 import { usePaymentMethodPrefetch } from "@/hooks/usePaymentMethodPrefetch";
 import { getSubscriptionIntervalText } from "@/utils/priceFormatting";
+import { LiveChatWidget } from "@/components/apps/live-chat/LiveChatWidget";
 
 // Lazy load apenas componentes não-críticos
 const OptimizedCustomBanner = lazy(() => 
@@ -1337,7 +1338,14 @@ const OptimizedCheckout = () => {
         buttonText="Finalizar Compra"
       />
 
-      {/* Apple Pay removido */}
+      {/* Live Chat AI Widget */}
+      {product?.id && (
+        <LiveChatWidget 
+          productId={product.id}
+          customerName={formData.fullName}
+          customerEmail={formData.email}
+        />
+      )}
     </ThemeProvider>
   );
 };
