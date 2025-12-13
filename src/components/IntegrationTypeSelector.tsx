@@ -157,7 +157,7 @@ export function IntegrationTypeSelector({ selectedType, onTypeSelect }: Integrat
 
       <div className="space-y-6">
         <CategorySection
-          title="📊 Rastreamento & Conversões"
+          title="Rastreamento & Conversões"
           description="Pixels, analytics e atribuição de vendas"
           integrations={trackingIntegrations}
           selectedType={selectedType}
