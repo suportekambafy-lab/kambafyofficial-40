@@ -1339,13 +1339,16 @@ const OptimizedCheckout = () => {
       />
 
       {/* Live Chat AI Widget */}
-      {product?.id && (
-        <LiveChatWidget 
-          productId={product.id}
-          customerName={formData.fullName}
-          customerEmail={formData.email}
-        />
-      )}
+      {(() => {
+        console.log('[OptimizedCheckout] LiveChatWidget render check:', { productId: product?.id, hasProduct: !!product });
+        return product?.id ? (
+          <LiveChatWidget 
+            productId={product.id}
+            customerName={formData.fullName}
+            customerEmail={formData.email}
+          />
+        ) : null;
+      })()}
     </ThemeProvider>
   );
 };
