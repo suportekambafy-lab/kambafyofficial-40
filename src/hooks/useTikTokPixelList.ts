@@ -54,7 +54,27 @@ export const useTikTokPixelList = (productId?: string) => {
   const addPixel = async (pixelData: Omit<TikTokPixel, 'id'>) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
+      if (!user) {
+        console.error('User not authenticated');
+        toast({
+          title: "Erro",
+          description: "Você precisa estar logado para adicionar um pixel",
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      if (!productId) {
+        console.error('Product ID is required');
+        toast({
+          title: "Erro",
+          description: "Selecione um produto primeiro",
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      console.log('Adding TikTok pixel:', { userId: user.id, productId, pixelData });
 
       const { data, error } = await supabase
         .from('tiktok_pixel_settings' as any)
@@ -68,7 +88,12 @@ export const useTikTokPixelList = (productId?: string) => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase insert error:', error);
+        throw error;
+      }
+
+      console.log('TikTok pixel added successfully:', data);
 
       toast({
         title: "Pixel adicionado",
@@ -82,11 +107,11 @@ export const useTikTokPixelList = (productId?: string) => {
       }));
 
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding TikTok pixel:', error);
       toast({
         title: "Erro",
-        description: "Falha ao adicionar pixel do TikTok",
+        description: error?.message || "Falha ao adicionar pixel do TikTok",
         variant: "destructive"
       });
       return false;
