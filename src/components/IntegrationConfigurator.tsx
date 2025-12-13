@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { FacebookPixelForm } from '@/components/FacebookPixelForm';
 import { TikTokPixelForm } from '@/components/TikTokPixelForm';
@@ -9,6 +8,7 @@ import { CheckoutCustomizer } from '@/components/checkout/CheckoutCustomizer';
 import { OrderBumpConfigurator } from '@/components/OrderBumpConfigurator';
 import { UpsellConfigurator } from '@/components/UpsellConfigurator';
 import { QuizBuilder } from '@/components/QuizBuilder';
+import { UtmifyForm } from '@/components/UtmifyForm';
 
 import { IntegrationType } from '@/components/IntegrationTypeSelector';
 
@@ -103,9 +103,15 @@ export function IntegrationConfigurator({
         />
       )}
 
-
       {integrationType.id === 'quiz-builder' && (
         <QuizBuilder 
+          productId={product.id}
+          onSaveSuccess={handleSuccess}
+        />
+      )}
+
+      {integrationType.id === 'utmify' && (
+        <UtmifyForm 
           productId={product.id}
           onSaveSuccess={handleSuccess}
         />
