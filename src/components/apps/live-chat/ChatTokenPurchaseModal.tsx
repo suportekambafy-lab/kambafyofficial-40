@@ -373,14 +373,6 @@ export function ChatTokenPurchaseModal({
           {selectedPackage && (
             <div className="relative p-6 pb-8">
               <div className="flex items-center gap-4">
-                <div className="relative">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/25">
-                    {getPackageIcon(selectedPackage.name)}
-                  </div>
-                  <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center">
-                    <Sparkles className="h-3 w-3 text-white" />
-                  </div>
-                </div>
                 <div className="flex-1">
                   <h2 className="text-xl font-bold">{selectedPackage.name}</h2>
                   <p className="text-sm text-muted-foreground">
