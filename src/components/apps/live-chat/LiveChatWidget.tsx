@@ -199,7 +199,7 @@ export function LiveChatWidget({
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
-            className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-[60]"
+            className="fixed bottom-6 right-4 md:right-6 z-[60]"
           >
             <button
               className="rounded-full w-14 h-14 shadow-lg bg-green-600 hover:bg-green-700 flex items-center justify-center transition-colors"
