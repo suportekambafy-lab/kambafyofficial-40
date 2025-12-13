@@ -165,7 +165,7 @@ export function IntegrationTypeSelector({ selectedType, onTypeSelect }: Integrat
         />
 
         <CategorySection
-          title="💰 Vendas & Checkout"
+          title="Vendas & Checkout"
           description="Aumente suas vendas com ofertas e personalização"
           integrations={salesIntegrations}
           selectedType={selectedType}
