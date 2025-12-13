@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Save, Key, ExternalLink, CheckCircle2 } from 'lucide-react';
+import { Loader2, Save, Key, ExternalLink, CheckCircle2, Zap } from 'lucide-react';
 
 interface UtmifyFormProps {
   productId: string;
@@ -24,8 +24,67 @@ export function UtmifyForm({ productId, onSaveSuccess }: UtmifyFormProps) {
   const [enabled, setEnabled] = useState(true);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
   const [existingSetting, setExistingSetting] = useState<UtmifySetting | null>(null);
   const { toast } = useToast();
+
+  const handleTestConnection = async () => {
+    if (!apiToken.trim()) {
+      toast({
+        title: 'Token obrigatório',
+        description: 'Por favor, insira o API Token antes de testar.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setTesting(true);
+    try {
+      // Simula um teste de conexão com a API UTMify
+      const response = await fetch('https://api.utmify.com.br/api/v1/conversions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-token': apiToken.trim(),
+        },
+        body: JSON.stringify({
+          orderId: 'test-connection-' + Date.now(),
+          platform: 'Kambapay',
+          paymentMethod: 'test',
+          status: 'test',
+          value: 0,
+          isTest: true,
+        }),
+      });
+
+      if (response.ok || response.status === 200 || response.status === 201) {
+        toast({
+          title: 'Conexão bem-sucedida!',
+          description: 'O token está funcionando corretamente.',
+        });
+      } else if (response.status === 401 || response.status === 403) {
+        toast({
+          title: 'Token inválido',
+          description: 'Verifique se o token está correto.',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Conexão verificada',
+          description: 'Token parece válido. Salve para começar a enviar conversões.',
+        });
+      }
+    } catch (error: any) {
+      console.error('Error testing UTMify connection:', error);
+      toast({
+        title: 'Erro ao testar',
+        description: 'Não foi possível conectar à API. Verifique o token e tente novamente.',
+        variant: 'destructive',
+      });
+    } finally {
+      setTesting(false);
+    }
+  };
 
   useEffect(() => {
     loadExistingSetting();
@@ -208,20 +267,41 @@ export function UtmifyForm({ productId, onSaveSuccess }: UtmifyFormProps) {
               Ver documentação oficial da UTMify
             </a>
 
-            {/* Submit Button */}
-            <Button type="submit" className="w-full" disabled={saving}>
-              {saving ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Salvando...
-                </>
-              ) : (
-                <>
-                  <Save className="h-4 w-4 mr-2" />
-                  {existingSetting ? 'Atualizar Configuração' : 'Salvar Configuração'}
-                </>
-              )}
-            </Button>
+            {/* Buttons */}
+            <div className="flex gap-3">
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="flex-1" 
+                onClick={handleTestConnection}
+                disabled={testing || !apiToken.trim()}
+              >
+                {testing ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Testando...
+                  </>
+                ) : (
+                  <>
+                    <Zap className="h-4 w-4 mr-2" />
+                    Testar Conexão
+                  </>
+                )}
+              </Button>
+              <Button type="submit" className="flex-1" disabled={saving}>
+                {saving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Salvando...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4 mr-2" />
+                    {existingSetting ? 'Atualizar' : 'Salvar'}
+                  </>
+                )}
+              </Button>
+            </div>
           </form>
         </CardContent>
       </Card>
