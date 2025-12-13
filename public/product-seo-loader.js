@@ -5,11 +5,17 @@
   const checkoutMatch = path.match(/\/checkout\/([a-f0-9-]{36}|[a-zA-Z0-9_-]+)/);
   
   if (checkoutMatch) {
-    const productId = checkoutMatch[1];
-    console.log('🔍 [SEO LOADER] Detected checkout page for product:', productId);
+    const productIdOrSlug = checkoutMatch[1];
+    console.log('🔍 [SEO LOADER] Detected checkout page for product:', productIdOrSlug);
+    
+    // Variável para armazenar o ID real do produto (UUID)
+    let realProductId = null;
     
     // Função para aplicar SEO imediatamente
     const applyProductSEO = (product) => {
+      // Guardar o ID real do produto
+      realProductId = product.id;
+      
       const title = (product.seo_title && product.seo_title.trim()) 
         ? product.seo_title 
         : `${product.name} | Kambafy`;
@@ -97,11 +103,11 @@
       console.log('✅ [SEO LOADER] SEO aplicado para produto:', product.name);
     };
     
-    // Valida se é um Pixel ID válido (15-16 dígitos numéricos)
+    // Valida se é um Pixel ID válido (15-17 dígitos numéricos - inclui Dataset IDs)
     const isValidPixelId = (pixelId) => {
       if (!pixelId) return false;
       const cleaned = String(pixelId).trim();
-      return /^\d{15,16}$/.test(cleaned);
+      return /^\d{15,17}$/.test(cleaned);
     };
     
     // Gera um UUID simples para event_id
@@ -114,15 +120,16 @@
     };
     
     // Função para inicializar Facebook Pixel e disparar eventos
-    const initFacebookPixel = async () => {
+    const initFacebookPixel = async (productUUID) => {
       try {
-        // Buscar pixel settings do produto (por UUID ou slug)
-        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(productId);
-        const query = isUUID 
-          ? `product_id=eq.${productId}` 
-          : `product_id=in.(select id from products where slug=eq.${productId})`;
+        if (!productUUID) {
+          console.log('⚠️ [FB PIXEL] No product UUID available');
+          return;
+        }
         
-        const response = await fetch(`https://hcbkqygdtzpxvctfdqbd.supabase.co/rest/v1/facebook_pixel_settings?${isUUID ? `product_id=eq.${productId}` : ''}&enabled=eq.true&select=pixel_id`, {
+        console.log('🔍 [FB PIXEL] Fetching pixels for product:', productUUID);
+        
+        const response = await fetch(`https://hcbkqygdtzpxvctfdqbd.supabase.co/rest/v1/facebook_pixel_settings?product_id=eq.${productUUID}&enabled=eq.true&select=pixel_id`, {
           headers: {
             'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjYmtxeWdkdHpweHZjdGZkcWJkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1MDExODEsImV4cCI6MjA2NzA3NzE4MX0.RBg9ZnGehO-UWjtlLRdlGB0ELML9DH_ltChu2w9h62A',
             'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjYmtxeWdkdHpweHZjdGZkcWJkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1MDExODEsImV4cCI6MjA2NzA3NzE4MX0.RBg9ZnGehO-UWjtlLRdlGB0ELML9DH_ltChu2w9h62A'
@@ -130,6 +137,7 @@
         });
         
         const pixelSettings = await response.json();
+        console.log('📦 [FB PIXEL] Raw pixel settings:', pixelSettings);
         
         // Filtrar apenas Pixel IDs válidos
         const validPixels = (pixelSettings || [])
@@ -143,9 +151,15 @@
         
         console.log(`✅ [FB PIXEL] ${validPixels.length} valid pixel(s) found:`, validPixels);
         
-        // Aguardar fbq estar disponível (já deve estar pois o script carrega antes)
+        // Aguardar fbq estar disponível
+        let attempts = 0;
+        while (typeof window.fbq !== 'function' && attempts < 50) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+          attempts++;
+        }
+        
         if (typeof window.fbq !== 'function') {
-          console.error('❌ [FB PIXEL] fbq not available');
+          console.error('❌ [FB PIXEL] fbq not available after waiting');
           return;
         }
         
@@ -171,7 +185,7 @@
           if (typeof window.fbq === 'function') {
             const viewContentEventId = generateEventId();
             window.fbq('track', 'ViewContent', {
-              content_ids: [productId],
+              content_ids: [productUUID],
               content_type: 'product'
             }, { eventID: viewContentEventId });
             console.log('✅ [FB PIXEL] ViewContent tracked with eventID:', viewContentEventId);
@@ -183,7 +197,7 @@
           if (typeof window.fbq === 'function') {
             const initiateCheckoutEventId = generateEventId();
             window.fbq('track', 'InitiateCheckout', {
-              content_ids: [productId],
+              content_ids: [productUUID],
               content_type: 'product'
             }, { eventID: initiateCheckoutEventId });
             console.log('✅ [FB PIXEL] InitiateCheckout tracked with eventID:', initiateCheckoutEventId);
@@ -198,8 +212,8 @@
     // Buscar dados do produto via Supabase
     const loadProductSEO = async () => {
       try {
-        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(productId);
-        const queryParam = isUUID ? `id=eq.${productId}` : `slug=eq.${productId}`;
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(productIdOrSlug);
+        const queryParam = isUUID ? `id=eq.${productIdOrSlug}` : `slug=eq.${productIdOrSlug}`;
         
         const response = await fetch(`https://hcbkqygdtzpxvctfdqbd.supabase.co/rest/v1/products?${queryParam}&select=id,name,description,cover,fantasy_name,price,seo_title,seo_description,seo_keywords,tags,slug,image_alt`, {
           headers: {
@@ -211,14 +225,17 @@
         const products = await response.json();
         if (products && products.length > 0) {
           applyProductSEO(products[0]);
+          // Inicializar Facebook Pixel com o UUID real do produto
+          initFacebookPixel(products[0].id);
+        } else {
+          console.warn('⚠️ [SEO LOADER] Produto não encontrado');
         }
       } catch (error) {
         console.error('Erro ao carregar dados do produto para SEO:', error);
       }
     };
     
-    // Executar imediatamente - SEO e Pixel em paralelo
+    // Executar imediatamente
     loadProductSEO();
-    initFacebookPixel();
   }
 })();
