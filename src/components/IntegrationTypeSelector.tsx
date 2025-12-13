@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Facebook, Webhook, Settings, Palette, Plus, HelpCircle, Mail, Construction } from 'lucide-react';
+import { Facebook, Webhook, Settings, Palette, Plus, HelpCircle, Mail, Construction, BarChart3 } from 'lucide-react';
 
 export interface IntegrationType {
   id: string;
@@ -35,6 +35,18 @@ const integrationTypes: IntegrationType[] = [
       </svg>
     ),
     color: 'text-pink-600'
+  },
+  {
+    id: 'google-analytics',
+    name: 'Google Analytics',
+    description: 'Rastreie visitas, conversões e comportamento dos usuários',
+    icon: ({ className }: { className?: string }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="none">
+        <path d="M12 2L2 7l10 5 10-5-10-5z" fill="#F9AB00"/>
+        <path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="#E37400" strokeWidth="2"/>
+      </svg>
+    ),
+    color: 'text-amber-600'
   },
   {
     id: 'webhook',
