@@ -1657,8 +1657,14 @@ const Checkout = () => {
           setProcessing(false);
           return;
         }
-        insertedOrder = appyPayResponse.data;
-        console.log('✅ AppyPay response:', insertedOrder);
+        // Normalizar a resposta do AppyPay para ter um campo 'status' consistente
+        const appyPayData = appyPayResponse.data;
+        insertedOrder = {
+          ...appyPayData,
+          status: appyPayData?.payment_status || appyPayData?.status,
+          order_id: appyPayData?.order_id
+        };
+        console.log('✅ AppyPay response (normalized):', insertedOrder);
       } else {
         // Use create-multibanco-order for other payment methods (transfer, etc.)
         console.log('🏦 Using Multibanco system for payment method:', selectedPayment);
@@ -1865,7 +1871,64 @@ const Checkout = () => {
       // ═══════════════════════════════════════════════════════════════
       
       if (selectedPayment === 'express') {
-        console.log('⏳ Aguardando confirmação do pagamento Express...');
+        console.log('⏳ Verificando status do pagamento Express...');
+        
+        // 🚀 CRITICAL FIX: Verificar se pagamento JÁ FOI APROVADO instantaneamente
+        // Antes de iniciar polling, verificar resposta direta do AppyPay
+        if (insertedOrder?.status === 'completed') {
+          console.log('✅ Pagamento Express aprovado INSTANTANEAMENTE! Redirecionando...');
+          
+          // Mostrar toast de sucesso
+          toast({
+            title: "Pagamento Aprovado!",
+            message: "Seu pagamento foi confirmado com sucesso.",
+            variant: "success",
+            position: "top-center",
+            duration: 3000
+          });
+          
+          // Disparar evento Facebook Pixel
+          window.dispatchEvent(new CustomEvent('purchase-completed', {
+            detail: {
+              productId,
+              orderId,
+              amount: totalAmount,
+              currency: userCountry.currency
+            }
+          }));
+          
+          // Enviar evento para Facebook Conversions API
+          supabase.functions.invoke('send-facebook-conversion', {
+            body: {
+              productId,
+              orderId,
+              amount: totalAmount,
+              currency: userCountry.currency,
+              customerEmail: formData.email,
+              customerName: formData.fullName,
+              customerPhone: expressPhone || formData.phone,
+              eventSourceUrl: window.location.href
+            }
+          }).catch(err => console.error('Error sending Facebook conversion:', err));
+          
+          // Verificar upsell
+          if (checkoutSettings?.upsell?.enabled && checkoutSettings.upsell.link_pagina_upsell?.trim()) {
+            console.log('🎯 Redirecionando para upsell:', checkoutSettings.upsell.link_pagina_upsell);
+            const upsellUrl = new URL(checkoutSettings.upsell.link_pagina_upsell);
+            upsellUrl.searchParams.append('from_order', orderId);
+            upsellUrl.searchParams.append('customer_email', formData.email);
+            upsellUrl.searchParams.append('return_url', `${window.location.origin}/obrigado?${params.toString()}`);
+            window.location.href = upsellUrl.toString();
+          } else {
+            console.log('🚀 Redirect URL (instant):', `/obrigado?${params.toString()}`);
+            navigate(`/obrigado?${params.toString()}`);
+          }
+          
+          setProcessing(false);
+          return; // Sair da função - não precisa de polling
+        }
+        
+        console.log('⏳ Pagamento pendente, iniciando polling...');
         
         // Start polling for payment status
         let pollAttempts = 0;
