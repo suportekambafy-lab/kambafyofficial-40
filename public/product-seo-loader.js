@@ -1,5 +1,7 @@
 // Detecta productId na URL e busca dados do produto imediatamente
 (function() {
+  console.log('🔍 [SEO LOADER] Script iniciado');
+  
   // Verifica se estamos numa página de checkout
   const path = window.location.pathname;
   const checkoutMatch = path.match(/\/checkout\/([a-f0-9-]{36}|[a-zA-Z0-9_-]+)/);
@@ -151,17 +153,23 @@
         
         console.log(`✅ [FB PIXEL] ${validPixels.length} valid pixel(s) found:`, validPixels);
         
-        // Aguardar fbq estar disponível
+        // Aguardar fbq estar disponível (máximo 10 segundos)
         let attempts = 0;
-        while (typeof window.fbq !== 'function' && attempts < 50) {
+        const maxAttempts = 100;
+        while (typeof window.fbq !== 'function' && attempts < maxAttempts) {
           await new Promise(resolve => setTimeout(resolve, 100));
           attempts++;
+          if (attempts % 10 === 0) {
+            console.log(`⏳ [FB PIXEL] Waiting for fbq... attempt ${attempts}/${maxAttempts}`);
+          }
         }
         
         if (typeof window.fbq !== 'function') {
-          console.error('❌ [FB PIXEL] fbq not available after waiting');
+          console.error('❌ [FB PIXEL] fbq not available after waiting 10 seconds. Check if Facebook script is blocked.');
           return;
         }
+        
+        console.log('✅ [FB PIXEL] fbq function available after', attempts, 'attempts');
         
         window._fbPixelsInitialized = window._fbPixelsInitialized || {};
         window._fbEventsTracked = window._fbEventsTracked || {};

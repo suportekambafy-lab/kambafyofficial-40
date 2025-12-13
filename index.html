@@ -19,13 +19,15 @@
       t.src=v;s=b.getElementsByTagName(e)[0];
       s.parentNode.insertBefore(t,s)}(window, document,'script',
       'https://connect.facebook.net/en_US/fbevents.js');
+      // Inicializar arrays para tracking
       window._fbPixelsInitialized = window._fbPixelsInitialized || {};
       window._fbEventsTracked = window._fbEventsTracked || {};
+      console.log('✅ [FB PIXEL] Base script loaded');
     </script>
     <!-- End Facebook Pixel Code -->
     
-    <!-- Script para SEO dinâmico de produtos -->
-    <script src="/product-seo-loader.js"></script>
+    <!-- Script para SEO dinâmico de produtos - defer para garantir que fbq está disponível -->
+    <script src="/product-seo-loader.js" defer></script>
     
     <!-- SEO Meta Tags -->
     <title id="page-title">Kambafy - Transforme seu conhecimento em renda</title>
