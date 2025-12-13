@@ -312,8 +312,9 @@ const ThankYou = () => {
     const orderId = orderDetails.orderId;
     const paymentMethod = orderDetails.paymentMethod;
     
-    if (orderStatus === 'pending' && ['multibanco', 'transfer', 'bank_transfer', 'transferencia', 'reference'].includes(paymentMethod) && orderId) {
-      console.log('🔄 Iniciando verificação periódica do status do pedido...');
+    // Incluir 'express' na lista de métodos que precisam de polling
+    if (orderStatus === 'pending' && ['multibanco', 'transfer', 'bank_transfer', 'transferencia', 'reference', 'express'].includes(paymentMethod) && orderId) {
+      console.log('🔄 Iniciando verificação periódica do status do pedido...', { paymentMethod });
 
       // Verificar imediatamente
       checkOrderStatus();
@@ -481,12 +482,14 @@ const ThankYou = () => {
     }
   };
   const getStatusBadge = () => {
-    if (orderStatus === 'pending' && ['multibanco', 'transfer', 'reference'].includes(orderDetails.paymentMethod)) {
+    // Se status está pendente, mostrar badge pendente
+    if (orderStatus === 'pending') {
       return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
           <Clock className="w-3 h-3 mr-1" />
           Pendente
         </Badge>;
     }
+    // Se status é completed, mostrar badge pago
     return <Badge variant="secondary" className="bg-green-100 text-green-800">
         <CheckCircle className="w-3 h-3 mr-1" />
         Pago
@@ -501,8 +504,8 @@ const ThankYou = () => {
       };
     }
     
-    // Se está pendente
-    if (orderStatus === 'pending' && ['multibanco', 'transfer', 'reference'].includes(orderDetails.paymentMethod)) {
+    // Se está pendente (qualquer método de pagamento)
+    if (orderStatus === 'pending') {
       return {
         title: "Obrigado pelo seu pedido!",
         subtitle: "Por favor, complete o seu pagamento para desbloquear o acesso."
@@ -511,8 +514,8 @@ const ThankYou = () => {
     
     // Fallback
     return {
-      title: "Obrigado pelo seu pedido!",
-      subtitle: "Por favor, complete o seu pagamento para desbloquear o acesso."
+      title: "Obrigado pela sua compra!",
+      subtitle: "Sua compra foi confirmada com sucesso! Você receberá todos os detalhes por e-mail."
     };
   };
   if (loading) {
@@ -797,9 +800,9 @@ const ThankYou = () => {
                 Acesso ao Produto
               </h3>
               
-              {orderStatus === 'pending' && ['multibanco', 'transfer', 'reference'].includes(orderDetails.paymentMethod) ? <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+              {orderStatus === 'pending' ? <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
                   <p className="text-yellow-800 text-sm mb-2">
-                    <strong>Pendente:</strong> O acesso estará disponível assim que a referência de pagamento for confirmada.
+                    <strong>Pendente:</strong> O acesso estará disponível assim que o pagamento for confirmado.
                   </p>
                   <p className="text-yellow-700 text-sm">
                     Você receberá um e-mail de confirmação assim que o pagamento for processado.
@@ -816,7 +819,7 @@ const ThankYou = () => {
                     </p>}
                 </div>}
               
-              <Button onClick={handleAccessProduct} className={`w-full md:w-auto ${orderStatus === 'pending' ? 'bg-gray-400 cursor-not-allowed' : 'bg-checkout-green hover:bg-checkout-green/90'}`} disabled={orderStatus === 'pending' && ['multibanco', 'transfer'].includes(orderDetails.paymentMethod) || isAccessingProduct}>
+              <Button onClick={handleAccessProduct} className={`w-full md:w-auto ${orderStatus === 'pending' ? 'bg-gray-400 cursor-not-allowed' : 'bg-checkout-green hover:bg-checkout-green/90'}`} disabled={orderStatus === 'pending' || isAccessingProduct}>
                 {isAccessingProduct ? <>
                     <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
                     Verificando acesso...
