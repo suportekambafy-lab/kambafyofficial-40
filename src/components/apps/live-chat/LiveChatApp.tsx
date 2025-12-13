@@ -12,6 +12,7 @@ interface LiveChatAppProps {
 
 export function LiveChatApp({ productId, onComplete }: LiveChatAppProps) {
   const [activeTab, setActiveTab] = useState('credits');
+  const [hasCredits, setHasCredits] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -60,14 +61,18 @@ export function LiveChatApp({ productId, onComplete }: LiveChatAppProps) {
             <CreditCard className="h-4 w-4" />
             Tokens & Pacotes
           </TabsTrigger>
-          <TabsTrigger value="config" className="flex items-center gap-2">
+          <TabsTrigger value="config" className="flex items-center gap-2" disabled={!hasCredits}>
             <Settings className="h-4 w-4" />
             Configurar Chat
+            {!hasCredits && <span className="text-xs text-muted-foreground ml-1">(compre tokens)</span>}
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="credits">
-          <ChatCreditsManager onPurchaseComplete={() => setActiveTab('config')} />
+          <ChatCreditsManager 
+            onPurchaseComplete={() => setActiveTab('config')} 
+            onCreditsChange={setHasCredits}
+          />
         </TabsContent>
 
         <TabsContent value="config">

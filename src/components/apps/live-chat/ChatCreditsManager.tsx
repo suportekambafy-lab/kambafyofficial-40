@@ -25,9 +25,10 @@ interface SellerCredits {
 
 interface ChatCreditsManagerProps {
   onPurchaseComplete?: () => void;
+  onCreditsChange?: (hasCredits: boolean) => void;
 }
 
-export function ChatCreditsManager({ onPurchaseComplete }: ChatCreditsManagerProps) {
+export function ChatCreditsManager({ onPurchaseComplete, onCreditsChange }: ChatCreditsManagerProps) {
   const [packages, setPackages] = useState<TokenPackage[]>([]);
   const [credits, setCredits] = useState<SellerCredits | null>(null);
   const [loading, setLoading] = useState(true);
@@ -64,6 +65,7 @@ export function ChatCreditsManager({ onPurchaseComplete }: ChatCreditsManagerPro
 
       if (creditsData) {
         setCredits(creditsData);
+        onCreditsChange?.(creditsData.token_balance > 0);
       } else {
         // Create initial credits record
         const { data: newCredits } = await supabase
@@ -74,6 +76,7 @@ export function ChatCreditsManager({ onPurchaseComplete }: ChatCreditsManagerPro
         
         if (newCredits) {
           setCredits(newCredits);
+          onCreditsChange?.(newCredits.token_balance > 0);
         }
       }
     } catch (error) {
