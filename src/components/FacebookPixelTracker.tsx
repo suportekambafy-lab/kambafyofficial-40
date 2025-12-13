@@ -28,11 +28,11 @@ interface PurchaseEventDetail {
   orderId?: string;
 }
 
-// Valida se é um Pixel ID válido (15-16 dígitos numéricos)
+// Valida se é um Pixel ID válido (15-17 dígitos numéricos - inclui Dataset IDs)
 const isValidPixelId = (pixelId: string): boolean => {
   if (!pixelId) return false;
   const cleaned = String(pixelId).trim();
-  return /^\d{15,16}$/.test(cleaned);
+  return /^\d{15,17}$/.test(cleaned);
 };
 
 export const FacebookPixelTracker = ({ productId, productUserId }: FacebookPixelTrackerProps) => {
