@@ -187,6 +187,20 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     'apps.uninstall': 'Desinstalar',
     'apps.configure': 'Configurar',
 
+    // Coupon
+    'coupon.placeholder': 'Código do cupom',
+    'coupon.apply': 'Aplicar',
+    'coupon.applied': 'Cupom aplicado com sucesso!',
+    'coupon.removed': 'Cupom removido',
+    'coupon.invalid': 'Cupom inválido ou expirado',
+    'coupon.maxUsesReached': 'Este cupom atingiu o limite de usos',
+    'coupon.alreadyUsed': 'Você já usou este cupom',
+    'coupon.minPurchase': 'Compra mínima de',
+    'coupon.error': 'Erro ao validar cupom',
+    'coupon.enterCode': 'Digite um código de cupom',
+    'coupon.subtotal': 'Subtotal',
+    'coupon.discount': 'Desconto',
+
     // Help
     'help.title': 'Ajuda',
     'help.subtitle': 'Central de ajuda e suporte',

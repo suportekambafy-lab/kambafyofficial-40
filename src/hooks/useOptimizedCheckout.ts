@@ -21,6 +21,8 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
   const [accessExtensionBump, setAccessExtensionBump] = useState<any>(null);
   const [selectedOrderBumps, setSelectedOrderBumps] = useState<Map<string, { data: any; price: number }>>(new Map());
   const [accessExtensionPrice, setAccessExtensionPrice] = useState(0);
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+  const [couponDiscount, setCouponDiscount] = useState(0);
 
   // Calculate total order bump price from all selected bumps
   const productExtraPrice = useMemo(() => {
@@ -485,6 +487,13 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
     }
   }, [geoReady, product]);
 
+  // Handler para aplicar cupom
+  const handleCouponApplied = useCallback((coupon: any, discountAmount: number) => {
+    setAppliedCoupon(coupon);
+    setCouponDiscount(discountAmount);
+    console.log('💰 Coupon applied:', { coupon, discountAmount });
+  }, []);
+
   return {
     // Estado
     product,
@@ -498,6 +507,11 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
     accessExtensionPrice,
     selectedOrderBumps,
     formData,
+    
+    // Cupom
+    appliedCoupon,
+    couponDiscount,
+    handleCouponApplied,
     
     // Geolocalização
     userCountry,
