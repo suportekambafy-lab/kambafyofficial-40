@@ -748,16 +748,21 @@ const OptimizedCheckout = () => {
                   />
 
                   {/* Campo de Cupom de Desconto */}
-                  <div className="mb-6">
-                    <CouponInput
-                      productId={product?.id || ''}
-                      customerEmail={formData.email || ''}
-                      totalAmount={parseFloat(product?.price || '0') + productExtraPrice + accessExtensionPrice}
-                      currency={userCountry?.currency || 'EUR'}
-                      onCouponApplied={handleCouponApplied}
-                      t={t}
-                    />
-                  </div>
+                  {product?.id && (
+                    <div className="mb-6">
+                      <Label className="text-sm font-medium mb-2 block">
+                        {t('coupon.title') || 'Cupom de Desconto'}
+                      </Label>
+                      <CouponInput
+                        productId={product.id}
+                        customerEmail={formData.email || ''}
+                        totalAmount={parseFloat(product.price || '0') + productExtraPrice + accessExtensionPrice}
+                        currency={userCountry?.currency || 'KZ'}
+                        onCouponApplied={handleCouponApplied}
+                        t={t}
+                      />
+                    </div>
+                  )}
 
                   {/* Total com desconto */}
                   {couponDiscount > 0 && (
