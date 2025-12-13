@@ -91,7 +91,7 @@ const integrationTypes: IntegrationType[] = [
     id: 'utmify',
     name: 'UTMify',
     description: 'Atribuição de vendas',
-    icon: ({ className }: { className?: string }) => <img src={utmifyLogo} alt="UTMify" className={className} />,
+    icon: ({ className }: { className?: string }) => <img src={utmifyLogo} alt="UTMify" className="h-8 w-auto object-contain" />,
     color: ''
   }
 ];
