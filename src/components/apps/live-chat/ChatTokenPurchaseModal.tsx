@@ -205,42 +205,37 @@ export function ChatTokenPurchaseModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Zap className="h-5 w-5 text-primary" />
-            Comprar Tokens
-          </DialogTitle>
+          <DialogTitle>Comprar Tokens</DialogTitle>
           <DialogDescription>
             Selecione o país e método de pagamento
           </DialogDescription>
         </DialogHeader>
 
         {selectedPackage && (
-          <div className="space-y-6">
+          <div className="space-y-5">
             {/* Package Summary */}
-            <Card className="p-4 bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center text-primary">
                   {getPackageIcon(selectedPackage.name)}
                 </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-lg">{selectedPackage.name}</h3>
-                  <p className="text-sm text-muted-foreground">
+                <div>
+                  <h3 className="font-medium">{selectedPackage.name}</h3>
+                  <p className="text-xs text-muted-foreground">
                     {selectedPackage.tokens.toLocaleString()} tokens
                   </p>
                 </div>
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-primary">
-                    {priceInfo.formatted}
-                  </div>
-                </div>
               </div>
-            </Card>
+              <div className="text-xl font-semibold">
+                {priceInfo.formatted}
+              </div>
+            </div>
 
             {/* Country Selection */}
-            <div className="space-y-2">
-              <Label>País</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">País</Label>
               <Select 
                 value={country} 
                 onValueChange={(value) => {
@@ -248,7 +243,7 @@ export function ChatTokenPurchaseModal({
                   setSelectedPaymentMethod('');
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-10">
                   <SelectValue placeholder="Selecione o país" />
                 </SelectTrigger>
                 <SelectContent>
@@ -265,9 +260,9 @@ export function ChatTokenPurchaseModal({
             </div>
 
             {/* Payment Methods */}
-            <div className="space-y-2">
-              <Label>Método de Pagamento</Label>
-              <div className="grid grid-cols-1 gap-2">
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Método de Pagamento</Label>
+              <div className="space-y-2">
                 {availablePaymentMethods.map((method) => {
                   const isSelected = selectedPaymentMethod === method.id;
                   const image = getPaymentMethodImage(method.id);
@@ -277,26 +272,26 @@ export function ChatTokenPurchaseModal({
                       key={method.id}
                       type="button"
                       onClick={() => setSelectedPaymentMethod(method.id)}
-                      className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-all ${
+                      className={`flex items-center gap-3 w-full p-3 rounded-lg border transition-colors ${
                         isSelected 
                           ? 'border-primary bg-primary/5' 
-                          : 'border-border hover:border-primary/50 hover:bg-muted/50'
+                          : 'border-border hover:border-muted-foreground/50'
                       }`}
                     >
                       {image ? (
                         <img 
                           src={image} 
                           alt={method.name} 
-                          className="h-8 w-12 object-contain"
+                          className="h-6 w-10 object-contain"
                         />
                       ) : (
-                        <div className="h-8 w-12 rounded bg-muted flex items-center justify-center">
-                          <Shield className="h-4 w-4 text-muted-foreground" />
+                        <div className="h-6 w-10 rounded bg-muted flex items-center justify-center">
+                          <Shield className="h-3 w-3 text-muted-foreground" />
                         </div>
                       )}
-                      <span className="flex-1 text-left font-medium">{method.name}</span>
+                      <span className="flex-1 text-left text-sm">{method.name}</span>
                       {isSelected && (
-                        <CheckCircle className="h-5 w-5 text-primary" />
+                        <CheckCircle className="h-4 w-4 text-primary" />
                       )}
                     </button>
                   );
@@ -306,28 +301,24 @@ export function ChatTokenPurchaseModal({
 
             {/* Payment Button */}
             <Button 
-              className="w-full h-12 text-lg"
+              className="w-full"
               onClick={handlePayment}
               disabled={!selectedPaymentMethod || processing}
             >
               {processing ? (
                 <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Processando...
                 </>
               ) : (
-                <>
-                  <Shield className="mr-2 h-5 w-5" />
-                  Pagar {priceInfo.formatted}
-                </>
+                `Pagar ${priceInfo.formatted}`
               )}
             </Button>
 
             {/* Security Notice */}
-            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-              <Shield className="h-3 w-3" />
-              <span>Pagamento seguro e encriptado</span>
-            </div>
+            <p className="text-center text-xs text-muted-foreground">
+              Pagamento seguro e encriptado
+            </p>
           </div>
         )}
       </DialogContent>
