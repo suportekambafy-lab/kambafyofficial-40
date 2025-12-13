@@ -385,6 +385,49 @@ serve(async (req) => {
           }
         }
 
+        // 📊 ENVIAR CONVERSÃO PARA UTMIFY
+        try {
+          console.log('📊 Verificando UTMify para o produto...');
+          
+          // Parse order bump data if exists
+          let orderBumpParsed = null;
+          if (orderData.order_bump_data) {
+            try {
+              orderBumpParsed = JSON.parse(orderData.order_bump_data);
+            } catch (e) {
+              console.log('⚠️ Erro ao parsear order_bump_data');
+            }
+          }
+
+          const utmifyPayload = {
+            orderId: orderData.order_id,
+            orderUuid: orderId,
+            amount: parseFloat(orderData.amount),
+            currency: orderData.currency || 'KZ',
+            customerName: orderData.customer_name,
+            customerEmail: orderData.customer_email,
+            customerPhone: orderData.customer_phone,
+            customerCountry: orderData.customer_country || 'AO',
+            productId: orderData.product_id,
+            productName: product.name,
+            paymentMethod: orderData.payment_method,
+            utmParams: orderData.utm_params || null,
+            orderBumpData: orderBumpParsed
+          };
+
+          const { data: utmifyResult, error: utmifyError } = await supabase.functions.invoke('send-utmify-conversion', {
+            body: utmifyPayload
+          });
+
+          if (utmifyError) {
+            console.error('❌ Erro ao chamar send-utmify-conversion:', utmifyError);
+          } else {
+            console.log('📊 UTMify result:', utmifyResult);
+          }
+        } catch (utmifyErr) {
+          console.error('❌ Erro ao processar UTMify:', utmifyErr instanceof Error ? utmifyErr.message : 'Unknown error');
+        }
+
         // 🔔 ENVIAR NOTIFICAÇÃO ONESIGNAL PARA O VENDEDOR
         try {
           console.log('📱 Preparando notificação OneSignal...');
