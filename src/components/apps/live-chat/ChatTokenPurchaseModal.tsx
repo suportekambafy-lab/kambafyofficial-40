@@ -356,7 +356,7 @@ export function ChatTokenPurchaseModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && !processing && onClose()}>
-      <DialogContent className="w-full h-full max-w-none sm:max-w-none p-0 gap-0 overflow-hidden border-0 bg-gradient-to-b from-background to-muted/30 fixed inset-0 rounded-none">
+      <DialogContent className="w-screen h-screen max-w-none max-h-none p-0 gap-0 overflow-y-auto border-0 bg-gradient-to-b from-background to-muted/30 left-0 top-0 translate-x-0 translate-y-0 rounded-none data-[state=open]:slide-in-from-left-0 data-[state=open]:slide-in-from-top-0 data-[state=closed]:slide-out-to-left-0 data-[state=closed]:slide-out-to-top-0">
         {/* Header with gradient */}
         <div className="relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/10 to-transparent" />
