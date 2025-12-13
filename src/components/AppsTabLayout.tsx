@@ -574,119 +574,46 @@ export function AppsTabLayout() {
             Gerencie suas integrações e automações
           </p>
         </div>
-        <Sheet open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-          <SheetTrigger asChild>
-            <Button className="flex items-center gap-2 w-full xs:w-auto justify-center whitespace-nowrap">
-              <Plus className="w-4 h-4 flex-shrink-0" />
-              <span className="hidden xs:inline">Nova Integração</span>
-              <span className="xs:hidden">Nova</span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent className="w-full sm:max-w-lg md:max-w-xl lg:max-w-2xl overflow-y-auto p-0">
-            <div className="p-4 xs:p-6">
-              <SheetHeader className="space-y-2">
-                <SheetTitle className="text-lg xs:text-xl">Nova Integração</SheetTitle>
-                <SheetDescription className="text-sm xs:text-base">
-                  Configure uma nova integração para automatizar seu negócio
-                </SheetDescription>
-              </SheetHeader>
-              
-              <div className="mt-4 xs:mt-6">
-                {/* Progress Steps */}
-                <div className="flex items-center justify-center mb-6 xs:mb-8 overflow-x-auto pb-2">
-                  <div className="flex items-center space-x-2 xs:space-x-3 min-w-max px-2">
-                    <div className="flex items-center flex-shrink-0">
-                      <div className={`w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-medium ${
-                        currentStep === 'product' || currentStep === 'integration' || currentStep === 'configure'
-                          ? 'bg-primary text-primary-foreground' 
-                          : 'bg-muted text-muted-foreground'
-                      }`}>
-                        1
-                      </div>
-                      <span className={`ml-1 xs:ml-2 text-xs sm:text-sm whitespace-nowrap ${
-                        currentStep === 'product' ? 'text-foreground font-medium' : 'text-muted-foreground'
-                      }`}>
-                        Produto
-                      </span>
-                    </div>
+        <Button 
+          onClick={() => navigate('/vendedor/apps?new=true')}
+          className="flex items-center gap-2 w-full xs:w-auto justify-center whitespace-nowrap"
+        >
+          <Plus className="w-4 h-4 flex-shrink-0" />
+          <span className="hidden xs:inline">Nova Integração</span>
+          <span className="xs:hidden">Nova</span>
+        </Button>
+      </div>
 
-                    <div className="w-4 xs:w-6 sm:w-8 h-px bg-border flex-shrink-0"></div>
-
-                    <div className="flex items-center flex-shrink-0">
-                      <div className={`w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-medium ${
-                        currentStep === 'integration' || currentStep === 'configure'
-                          ? 'bg-primary text-primary-foreground' 
-                          : 'bg-muted text-muted-foreground'
-                      }`}>
-                        2
-                      </div>
-                      <span className={`ml-1 xs:ml-2 text-xs sm:text-sm whitespace-nowrap ${
-                        currentStep === 'integration' ? 'text-orange-600 font-medium' : 'text-muted-foreground'
-                      }`}>
-                        Integração
-                      </span>
-                    </div>
-
-                    <div className="w-4 xs:w-6 sm:w-8 h-px bg-border flex-shrink-0"></div>
-
-                    <div className="flex items-center flex-shrink-0">
-                      <div className={`w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-medium ${
-                        currentStep === 'configure'
-                          ? 'bg-primary text-primary-foreground' 
-                          : 'bg-muted text-muted-foreground'
-                      }`}>
-                        3
-                      </div>
-                      <span className={`ml-1 xs:ml-2 text-xs sm:text-sm whitespace-nowrap ${
-                        currentStep === 'configure' ? 'text-foreground font-medium' : 'text-muted-foreground'
-                      }`}>
-                        Configurar
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="space-y-4">
-                  {currentStep === 'product' && (
-                    <ProductSelector
-                      products={products}
-                      selectedProduct={selectedProduct}
-                      onProductSelect={handleProductSelect}
-                    />
-                  )}
-
-                  {currentStep === 'integration' && (
-                    <div className="space-y-4">
-                      <Button variant="ghost" onClick={() => setCurrentStep('product')} className="mb-4">
-                        ← Voltar
-                      </Button>
-                      <IntegrationTypeSelector
-                        selectedType={selectedIntegrationType}
-                        onTypeSelect={handleIntegrationSelect}
-                      />
-                    </div>
-                  )}
-
-                  {currentStep === 'configure' && selectedProduct && selectedIntegrationType && (
-                    <div className="space-y-4">
-                      <Button variant="ghost" onClick={() => setCurrentStep('integration')} className="mb-4">
-                        ← Voltar
-                      </Button>
-                      <IntegrationConfigurator
-                        product={selectedProduct}
-                        integrationType={selectedIntegrationType}
-                        onBack={() => setCurrentStep('integration')}
-                        onComplete={handleConfigurationComplete}
-                      />
-                    </div>
-                  )}
-                </div>
+      {/* Sheet para edição de integrações existentes */}
+      <Sheet open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <SheetContent className="w-full sm:max-w-lg md:max-w-xl lg:max-w-2xl overflow-y-auto p-0">
+          <div className="p-4 xs:p-6">
+            <SheetHeader className="space-y-2">
+              <SheetTitle className="text-lg xs:text-xl">Configurar Integração</SheetTitle>
+              <SheetDescription className="text-sm xs:text-base">
+                Edite as configurações da sua integração
+              </SheetDescription>
+            </SheetHeader>
+            
+            <div className="mt-4 xs:mt-6">
+              {/* Content */}
+              <div className="space-y-4">
+                {currentStep === 'configure' && selectedProduct && selectedIntegrationType && (
+                  <IntegrationConfigurator
+                    product={selectedProduct}
+                    integrationType={selectedIntegrationType}
+                    onBack={() => {
+                      setIsCreateOpen(false);
+                      handleResetCreate();
+                    }}
+                    onComplete={handleConfigurationComplete}
+                  />
+                )}
               </div>
             </div>
-          </SheetContent>
-        </Sheet>
-      </div>
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* Stats */}
       <IntegrationStats 
@@ -708,14 +635,13 @@ export function AppsTabLayout() {
               <p className="text-sm xs:text-base text-muted-foreground mb-4 px-4">
                 Configure sua primeira integração para começar a automatizar seu negócio
               </p>
-              <Sheet open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-                <SheetTrigger asChild>
-                  <Button className="w-full xs:w-auto">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Criar Primeira Integração
-                  </Button>
-                </SheetTrigger>
-              </Sheet>
+              <Button 
+                onClick={() => navigate('/vendedor/apps?new=true')}
+                className="w-full xs:w-auto"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Criar Primeira Integração
+              </Button>
             </div>
           ) : (
             integrations.map((integration) => (
