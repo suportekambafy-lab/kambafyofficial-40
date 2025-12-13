@@ -19,7 +19,7 @@ interface Product {
   status: string;
 }
 
-type Step = 'product' | 'integration' | 'configure' | 'complete';
+type Step = 'integration' | 'product' | 'configure' | 'complete';
 
 export default function Apps() {
   const { toast } = useToast();
@@ -28,7 +28,7 @@ export default function Apps() {
   const [searchParams, setSearchParams] = useSearchParams();
   const isNew = searchParams.get('new') === 'true';
   const configureType = searchParams.get('configure');
-  const [currentStep, setCurrentStep] = useState<Step>('product');
+  const [currentStep, setCurrentStep] = useState<Step>('integration');
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedIntegrationType, setSelectedIntegrationType] = useState<IntegrationType | null>(null);
@@ -131,13 +131,13 @@ export default function Apps() {
     }
   };
 
-  const handleProductSelect = (product: Product) => {
-    setSelectedProduct(product);
-    setCurrentStep('integration');
-  };
-
   const handleIntegrationSelect = (type: IntegrationType) => {
     setSelectedIntegrationType(type);
+    setCurrentStep('product');
+  };
+
+  const handleProductSelect = (product: Product) => {
+    setSelectedProduct(product);
     setCurrentStep('configure');
   };
 
@@ -157,7 +157,7 @@ export default function Apps() {
   };
 
   const handleReset = () => {
-    setCurrentStep('product');
+    setCurrentStep('integration');
     setSelectedProduct(null);
     setSelectedIntegrationType(null);
     // Remove parâmetros da URL
@@ -174,8 +174,8 @@ export default function Apps() {
 
   const getStepNumber = (step: Step): number => {
     switch (step) {
-      case 'product': return 1;
-      case 'integration': return 2;
+      case 'integration': return 1;
+      case 'product': return 2;
       case 'configure': return 3;
       case 'complete': return 3;
       default: return 1;
@@ -207,11 +207,13 @@ export default function Apps() {
     <div className="p-3 xs:p-4 md:p-6 space-y-4 xs:space-y-6 max-w-6xl mx-auto min-h-screen">
       {/* Header */}
       <div className="flex flex-col xs:flex-row items-start xs:items-center gap-3 xs:gap-4">
-        {(currentStep !== 'product' || configureType) && (
+        {(currentStep !== 'integration' || configureType) && (
           <Button variant="ghost" onClick={() => {
             if (configureType) {
               handleGoBack();
-            } else {
+            } else if (currentStep === 'product') {
+              setCurrentStep('integration');
+            } else if (currentStep === 'configure') {
               setCurrentStep('product');
             }
           }} className="p-2 self-start">
@@ -232,7 +234,7 @@ export default function Apps() {
       {!configureType && (
         <div className="flex items-center justify-center mb-6 xs:mb-8 overflow-x-auto pb-2">
           <div className="flex items-center space-x-3 xs:space-x-4 min-w-max px-2 xs:px-4">
-            {/* Step 1 */}
+            {/* Step 1 - Integração */}
             <div className="flex items-center flex-shrink-0">
               <div className={`w-7 h-7 xs:w-8 xs:h-8 rounded-full flex items-center justify-center text-xs xs:text-sm font-medium ${
                 getStepNumber(currentStep) >= 1 
@@ -240,6 +242,24 @@ export default function Apps() {
                   : 'bg-muted text-muted-foreground'
               }`}>
                 1
+              </div>
+              <span className={`ml-2 text-xs xs:text-sm whitespace-nowrap ${
+                currentStep === 'integration' ? 'text-foreground font-medium' : 'text-muted-foreground'
+              }`}>
+                App
+              </span>
+            </div>
+
+            <div className="w-6 xs:w-8 sm:w-12 h-px bg-border flex-shrink-0"></div>
+
+            {/* Step 2 - Produto */}
+            <div className="flex items-center flex-shrink-0">
+              <div className={`w-7 h-7 xs:w-8 xs:h-8 rounded-full flex items-center justify-center text-xs xs:text-sm font-medium ${
+                getStepNumber(currentStep) >= 2 
+                  ? 'bg-primary text-primary-foreground' 
+                  : 'bg-muted text-muted-foreground'
+              }`}>
+                2
               </div>
               <span className={`ml-2 text-xs xs:text-sm whitespace-nowrap ${
                 currentStep === 'product' ? 'text-foreground font-medium' : 'text-muted-foreground'
@@ -250,25 +270,7 @@ export default function Apps() {
 
             <div className="w-6 xs:w-8 sm:w-12 h-px bg-border flex-shrink-0"></div>
 
-            {/* Step 2 */}
-            <div className="flex items-center flex-shrink-0">
-              <div className={`w-7 h-7 xs:w-8 xs:h-8 rounded-full flex items-center justify-center text-xs xs:text-sm font-medium ${
-                getStepNumber(currentStep) >= 2 
-                  ? 'bg-primary text-primary-foreground' 
-                  : 'bg-muted text-muted-foreground'
-              }`}>
-                2
-              </div>
-              <span className={`ml-2 text-xs xs:text-sm whitespace-nowrap ${
-                currentStep === 'integration' ? 'text-primary font-medium' : 'text-muted-foreground'
-              }`}>
-                Integração
-              </span>
-            </div>
-
-            <div className="w-6 xs:w-8 sm:w-12 h-px bg-border flex-shrink-0"></div>
-
-            {/* Step 3 */}
+            {/* Step 3 - Configurar */}
             <div className="flex items-center flex-shrink-0">
               <div className={`w-7 h-7 xs:w-8 xs:h-8 rounded-full flex items-center justify-center text-xs xs:text-sm font-medium ${
                 getStepNumber(currentStep) >= 3 
@@ -291,18 +293,18 @@ export default function Apps() {
 
       {/* Content */}
       <div className="min-h-[300px] xs:min-h-[400px] w-full">
+        {currentStep === 'integration' && !configureType && (
+          <IntegrationTypeSelector
+            selectedType={selectedIntegrationType}
+            onTypeSelect={handleIntegrationSelect}
+          />
+        )}
+
         {currentStep === 'product' && !configureType && (
           <ProductSelector
             products={products}
             selectedProduct={selectedProduct}
             onProductSelect={handleProductSelect}
-          />
-        )}
-
-        {currentStep === 'integration' && !configureType && (
-          <IntegrationTypeSelector
-            selectedType={selectedIntegrationType}
-            onTypeSelect={handleIntegrationSelect}
           />
         )}
 
@@ -314,7 +316,7 @@ export default function Apps() {
               if (configureType) {
                 handleGoBack();
               } else {
-                setCurrentStep('integration');
+                setCurrentStep('product');
               }
             }}
             onComplete={handleConfigurationComplete}
