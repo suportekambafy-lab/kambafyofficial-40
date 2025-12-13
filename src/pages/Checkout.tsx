@@ -827,7 +827,7 @@ const Checkout = () => {
     // Definir ordem dos métodos por país
     const paymentOrder: Record<string, string[]> = {
       'AO': ['express', 'reference', 'transfer'],
-      'MZ': ['emola', 'mpesa', 'epesa'], // Aceita mpesa e epesa para compatibilidade
+      'MZ': ['emola', 'mpesa', 'epesa'],
       'PT': ['card', 'klarna', 'multibanco', 'mbway'],
       'GB': ['card_uk', 'klarna_uk'],
       'US': ['card_us']
@@ -840,7 +840,7 @@ const Checkout = () => {
         if (userCountry.code === 'AO') {
           return ['express', 'transfer', 'reference'].includes(method.id);
         } else if (userCountry.code === 'MZ') {
-          return ['emola', 'mpesa', 'epesa'].includes(method.id); // Aceita ambos
+          return ['emola', 'mpesa', 'epesa'].includes(method.id);
         } else if (userCountry.code === 'PT') {
           return ['card', 'klarna', 'multibanco', 'mbway'].includes(method.id);
         } else if (userCountry.code === 'GB') {
@@ -850,6 +850,12 @@ const Checkout = () => {
         }
         return false;
       });
+      
+      // Se não encontrou métodos para o país, usar fallback
+      if (countryMethods.length === 0) {
+        console.log('⚠️ No payment methods found for country in product config, using fallback for:', userCountry.code);
+        return getPaymentMethodsByCountry(userCountry.code);
+      }
       
       // Ordenar de acordo com a ordem definida para o país
       const order = paymentOrder[userCountry.code] || [];
