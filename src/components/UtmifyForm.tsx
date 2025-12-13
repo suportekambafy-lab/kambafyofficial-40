@@ -34,28 +34,97 @@ export function UtmifyForm({ productId, onSaveSuccess }: UtmifyFormProps) {
       return;
     }
 
-    setTesting(true);
-    
-    // Simula um pequeno delay para feedback visual
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
     const token = apiToken.trim();
     
-    // Validação do formato do token UTMify
     if (token.length < 10) {
       toast.error('Token muito curto', {
         description: 'O token UTMify parece estar incompleto.',
       });
-      setTesting(false);
       return;
     }
 
-    // Token passou nas validações básicas
-    toast.success('Token validado!', {
-      description: 'O formato do token está correto. Salve a configuração para ativar a integração.',
-    });
+    setTesting(true);
     
-    setTesting(false);
+    try {
+      // Cria um payload de teste real para a API da UTMify
+      const testPayload = {
+        orderId: `TEST-${Date.now()}`,
+        platform: 'kambafy',
+        paymentMethod: 'pix',
+        status: 'paid',
+        createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
+        approvedDate: new Date().toISOString().replace('T', ' ').substring(0, 19),
+        refundedAt: null,
+        customer: {
+          name: 'Teste Kambafy',
+          email: 'teste@kambafy.com',
+          phone: null,
+          document: null,
+          country: 'AO',
+          ip: '127.0.0.1'
+        },
+        products: [{
+          id: 'test-product-001',
+          name: 'Produto de Teste',
+          planId: null,
+          planName: null,
+          quantity: 1,
+          priceInCents: 1000
+        }],
+        trackingParameters: {
+          src: 'test',
+          sck: null,
+          utm_source: 'kambafy_test',
+          utm_campaign: 'connection_test',
+          utm_medium: 'api',
+          utm_content: null,
+          utm_term: null
+        },
+        commission: {
+          totalPriceInCents: 1000,
+          gatewayFeeInCents: 0,
+          userCommissionInCents: 1000,
+          currency: 'USD'
+        },
+        isTest: true // Flag para não salvar na UTMify
+      };
+
+      const response = await fetch('https://api.utmify.com.br/api-credentials/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-token': token
+        },
+        body: JSON.stringify(testPayload)
+      });
+
+      const responseData = await response.json().catch(() => null);
+      
+      if (response.ok) {
+        toast.success('Conexão bem-sucedida!', {
+          description: 'O sinal de teste foi enviado e validado pela UTMify com sucesso.',
+        });
+      } else if (response.status === 401) {
+        toast.error('Token inválido', {
+          description: 'A UTMify rejeitou o token. Verifique se está correto.',
+        });
+      } else if (response.status === 400) {
+        toast.error('Erro de validação', {
+          description: responseData?.message || 'A UTMify retornou um erro de validação.',
+        });
+      } else {
+        toast.error('Erro na conexão', {
+          description: `Erro ${response.status}: ${responseData?.message || 'Erro desconhecido'}`,
+        });
+      }
+    } catch (error: any) {
+      console.error('UTMify test error:', error);
+      toast.error('Erro de conexão', {
+        description: 'Não foi possível conectar à API da UTMify. Verifique sua conexão.',
+      });
+    } finally {
+      setTesting(false);
+    }
   };
 
   useEffect(() => {
