@@ -1,10 +1,15 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+const logStep = (step: string, details?: any) => {
+  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
+  console.log(`[PURCHASE-CHAT-TOKENS] ${step}${detailsStr}`);
 };
 
 serve(async (req) => {
@@ -13,6 +18,8 @@ serve(async (req) => {
   }
 
   try {
+    logStep("Function started");
+    
     const {
       packageId,
       packageName,
@@ -20,11 +27,12 @@ serve(async (req) => {
       amount,
       currency,
       paymentMethod,
+      mbwayPhone,
       successUrl,
       cancelUrl
     } = await req.json();
 
-    console.log('Purchase chat tokens request:', { packageId, packageName, tokens, amount, currency, paymentMethod });
+    logStep('Request received', { packageId, packageName, tokens, amount, currency, paymentMethod });
 
     // Get user from auth header
     const authHeader = req.headers.get('authorization');
@@ -44,19 +52,27 @@ serve(async (req) => {
       throw new Error('User not authenticated');
     }
 
-    console.log('User:', user.email);
+    logStep('User authenticated', { email: user.email });
 
     // For Stripe payments (PT, GB, US)
     if (['card', 'klarna', 'multibanco', 'mbway', 'card_uk', 'klarna_uk', 'card_us'].includes(paymentMethod)) {
       const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
       
       if (!stripeKey) {
-        throw new Error('Stripe not configured');
+        logStep('ERROR: Stripe not configured');
+        return new Response(JSON.stringify({ 
+          error: 'Stripe não configurado. Entre em contato com o suporte.'
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
 
       const stripe = new Stripe(stripeKey, {
         apiVersion: '2023-10-16',
       });
+
+      logStep('Stripe initialized');
 
       // Create or get customer
       const customers = await stripe.customers.list({ email: user.email, limit: 1 });
@@ -64,12 +80,14 @@ serve(async (req) => {
       
       if (customers.data.length > 0) {
         customerId = customers.data[0].id;
+        logStep('Existing customer found', { customerId });
       } else {
         const customer = await stripe.customers.create({
           email: user.email!,
           metadata: { user_id: user.id }
         });
         customerId = customer.id;
+        logStep('New customer created', { customerId });
       }
 
       // Map payment methods to Stripe payment method types
@@ -82,9 +100,12 @@ serve(async (req) => {
       } else if (paymentMethod === 'multibanco') {
         paymentMethodTypes.push('multibanco');
       } else if (paymentMethod === 'mbway') {
-        // MB Way is not directly supported in Stripe Checkout - use card
+        // MB Way needs to be handled differently - not supported in Checkout directly
+        // Use card as fallback for now
         paymentMethodTypes.push('card');
       }
+
+      logStep('Payment method types', { paymentMethodTypes });
 
       // Create checkout session
       const session = await stripe.checkout.sessions.create({
@@ -114,7 +135,7 @@ serve(async (req) => {
         },
       });
 
-      console.log('Stripe session created:', session.id);
+      logStep('Stripe session created', { sessionId: session.id, url: session.url });
 
       return new Response(JSON.stringify({ 
         url: session.url,
@@ -124,71 +145,16 @@ serve(async (req) => {
       });
     }
 
-    // For AppyPay payments (Angola)
-    if (['express', 'reference'].includes(paymentMethod)) {
-      const appyPayApiKey = Deno.env.get('APPYPAY_API_KEY');
-      
-      if (!appyPayApiKey) {
-        // Fallback: Create pending order and return instructions
-        const supabaseAdmin = createClient(
-          Deno.env.get('SUPABASE_URL')!,
-          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-        );
-
-        // Generate order ID
-        const orderId = `CHAT-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
-
-        // Log the pending purchase
-        await supabaseAdmin
-          .from('chat_token_transactions')
-          .insert({
-            user_id: user.id,
-            type: 'pending_purchase',
-            tokens: tokens,
-            balance_after: 0,
-            package_id: packageId,
-            description: `Compra pendente: ${packageName} - ${orderId}`,
-            metadata: {
-              order_id: orderId,
-              payment_method: paymentMethod,
-              amount: amount,
-              currency: currency
-            }
-          });
-
-        return new Response(JSON.stringify({ 
-          pending: true,
-          orderId,
-          message: paymentMethod === 'express' 
-            ? 'Pagamento via Multicaixa Express. Após confirmar, os tokens serão creditados automaticamente.'
-            : 'Pagamento por referência gerado. Os tokens serão creditados após confirmação.',
-          instructions: paymentMethod === 'reference' 
-            ? `Use a referência ${orderId} para efectuar o pagamento.`
-            : null
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-
-      // TODO: Implement AppyPay integration when API key is available
-      return new Response(JSON.stringify({ 
-        error: 'AppyPay integration pending',
-        pending: true
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // For other methods (M-Pesa, e-Mola, transfer)
+    // For unsupported methods
     return new Response(JSON.stringify({ 
-      pending: true,
-      message: `Pagamento via ${paymentMethod}. Entre em contato com o suporte para finalizar a compra.`
+      error: `Método de pagamento ${paymentMethod} não suportado para tokens.`
     }), {
+      status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
-    console.error('Error processing payment:', error);
+    logStep('ERROR', { message: error instanceof Error ? error.message : 'Unknown error' });
     
     return new Response(JSON.stringify({ 
       error: error instanceof Error ? error.message : 'Unknown error'

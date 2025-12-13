@@ -203,3 +203,6 @@ verify_jwt = false
 
 [functions.purchase-chat-tokens]
 verify_jwt = false
+
+[functions.check-appypay-status]
+verify_jwt = false
