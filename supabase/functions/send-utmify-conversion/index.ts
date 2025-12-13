@@ -9,6 +9,93 @@ const corsHeaders = {
 // Taxa de câmbio KZ para USD (aproximada)
 const KZ_TO_USD_RATE = 920; // 1 USD = 920 KZ
 
+// Mapeamento de nomes de países para códigos ISO 2 caracteres
+const countryNameToISO: Record<string, string> = {
+  'angola': 'AO',
+  'portugal': 'PT',
+  'brazil': 'BR',
+  'brasil': 'BR',
+  'mozambique': 'MZ',
+  'moçambique': 'MZ',
+  'united states': 'US',
+  'estados unidos': 'US',
+  'usa': 'US',
+  'spain': 'ES',
+  'espanha': 'ES',
+  'france': 'FR',
+  'frança': 'FR',
+  'germany': 'DE',
+  'alemanha': 'DE',
+  'united kingdom': 'GB',
+  'reino unido': 'GB',
+  'uk': 'GB',
+  'italy': 'IT',
+  'itália': 'IT',
+  'netherlands': 'NL',
+  'holanda': 'NL',
+  'belgium': 'BE',
+  'bélgica': 'BE',
+  'switzerland': 'CH',
+  'suíça': 'CH',
+  'canada': 'CA',
+  'canadá': 'CA',
+  'south africa': 'ZA',
+  'áfrica do sul': 'ZA',
+  'china': 'CN',
+  'japan': 'JP',
+  'japão': 'JP',
+  'australia': 'AU',
+  'austrália': 'AU',
+  'india': 'IN',
+  'índia': 'IN',
+  'russia': 'RU',
+  'rússia': 'RU',
+  'mexico': 'MX',
+  'méxico': 'MX',
+  'argentina': 'AR',
+  'chile': 'CL',
+  'colombia': 'CO',
+  'colômbia': 'CO',
+  'peru': 'PE',
+  'venezuela': 'VE',
+  'cape verde': 'CV',
+  'cabo verde': 'CV',
+  'guinea-bissau': 'GW',
+  'guiné-bissau': 'GW',
+  'são tomé and príncipe': 'ST',
+  'são tomé e príncipe': 'ST',
+  'east timor': 'TL',
+  'timor-leste': 'TL'
+};
+
+// Função para converter nome do país para código ISO
+const getCountryISO = (countryInput: string | undefined): string => {
+  if (!countryInput) return 'AO';
+  
+  // Se já é um código ISO de 2 caracteres, retornar
+  if (countryInput.length === 2 && countryInput === countryInput.toUpperCase()) {
+    return countryInput;
+  }
+  
+  // Buscar no mapeamento
+  const normalized = countryInput.toLowerCase().trim();
+  const isoCode = countryNameToISO[normalized];
+  
+  if (isoCode) {
+    console.log(`🌍 País convertido: "${countryInput}" → "${isoCode}"`);
+    return isoCode;
+  }
+  
+  // Se não encontrou, tentar código de 2 letras em maiúsculo
+  if (countryInput.length === 2) {
+    return countryInput.toUpperCase();
+  }
+  
+  // Fallback para Angola
+  console.log(`⚠️ País não mapeado: "${countryInput}", usando AO como fallback`);
+  return 'AO';
+};
+
 interface OrderData {
   orderId: string;
   orderUuid: string;
@@ -164,7 +251,7 @@ serve(async (req) => {
         email: orderData.customerEmail,
         phone: orderData.customerPhone || null,
         document: null,
-        country: orderData.customerCountry || 'AO'
+        country: getCountryISO(orderData.customerCountry)
       },
       products: products,
       trackingParameters: {
