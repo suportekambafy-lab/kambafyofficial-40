@@ -6,6 +6,7 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Save } from 'lucide-react';
+import googleAdsLogo from '@/assets/google-ads-logo.png';
 
 interface GoogleAdsFormProps {
   productId: string;
@@ -129,6 +130,14 @@ export function GoogleAdsForm({ productId, onSaveSuccess }: GoogleAdsFormProps) 
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="flex items-center gap-3 mb-4">
+        <img 
+          src={googleAdsLogo} 
+          alt="Google Ads" 
+          className="h-10 object-contain"
+        />
+      </div>
+
       <div className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="conversionId">ID de Conversão *</Label>
