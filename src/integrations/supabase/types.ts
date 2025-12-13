@@ -3396,6 +3396,47 @@ export type Database = {
           },
         ]
       }
+      tiktok_pixel_settings: {
+        Row: {
+          created_at: string | null
+          enabled: boolean | null
+          events: string[] | null
+          id: string
+          pixel_id: string
+          product_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          enabled?: boolean | null
+          events?: string[] | null
+          id?: string
+          pixel_id: string
+          product_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          enabled?: boolean | null
+          events?: string[] | null
+          id?: string
+          pixel_id?: string
+          product_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tiktok_pixel_settings_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trusted_devices: {
         Row: {
           created_at: string | null
