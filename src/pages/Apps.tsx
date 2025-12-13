@@ -38,6 +38,15 @@ export default function Apps() {
     fetchProducts();
   }, []);
 
+  // Reset state when navigating to new integration
+  useEffect(() => {
+    if (isNew && !configureType) {
+      setCurrentStep('integration');
+      setSelectedProduct(null);
+      setSelectedIntegrationType(null);
+    }
+  }, [isNew, configureType]);
+
   useEffect(() => {
     // Se há um tipo de configuração específico na URL, pula direto para configuração
     if (configureType && products.length > 0) {
