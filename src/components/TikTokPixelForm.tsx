@@ -26,6 +26,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import tiktokLogo from '@/assets/tiktok-logo.png';
 import {
   Collapsible,
   CollapsibleContent,
@@ -166,11 +167,12 @@ export function TikTokPixelForm({
   return (
     <div className="space-y-6">
       {/* Header com logo TikTok */}
-      <div className="flex items-center justify-center gap-3 py-4">
-        <span className="text-3xl font-bold bg-gradient-to-r from-[#25F4EE] via-[#FE2C55] to-[#000000] bg-clip-text text-transparent" style={{ fontFamily: 'Helvetica Neue, Helvetica, Arial, sans-serif' }}>
-          TikTok
-        </span>
-        <span className="text-lg text-muted-foreground">Pixel</span>
+      <div className="flex items-center justify-center py-4">
+        <img 
+          src={tiktokLogo} 
+          alt="TikTok" 
+          className="h-10 object-contain"
+        />
       </div>
 
       <div className="space-y-4">
@@ -323,10 +325,11 @@ export function TikTokPixelForm({
             <CardContent className="pt-6 space-y-5">
               {/* Header com logo TikTok */}
               <div className="flex items-center gap-2 pb-2">
-                <span className="text-xl font-bold bg-gradient-to-r from-[#25F4EE] via-[#FE2C55] to-[#000000] bg-clip-text text-transparent">
-                  TikTok
-                </span>
-                <span className="text-lg text-muted-foreground">Pixel</span>
+                <img 
+                  src={tiktokLogo} 
+                  alt="TikTok" 
+                  className="h-8 object-contain"
+                />
               </div>
 
               <div className="space-y-2">
