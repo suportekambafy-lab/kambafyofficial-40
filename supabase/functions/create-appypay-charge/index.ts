@@ -574,62 +574,76 @@ Deno.serve(async (req) => {
           logStep("Webhook error", webhookError);
         }
 
-        // 📊 ENVIAR CONVERSÃO PARA UTMIFY
-        try {
-          logStep('📊 Verificando UTMify para o produto...');
-          
-          // Parse order bump data if exists
-          let orderBumpParsed = null;
-          if (orderDataToSave.order_bump_data) {
-            try {
-              orderBumpParsed = typeof orderDataToSave.order_bump_data === 'string' 
-                ? JSON.parse(orderDataToSave.order_bump_data) 
-                : orderDataToSave.order_bump_data;
-            } catch (e) {
-              logStep('⚠️ Erro ao parsear order_bump_data:', e);
+        // 📊 ENVIAR CONVERSÃO PARA UTMIFY (em background para não bloquear)
+        const sendUtmifyInBackground = async () => {
+          try {
+            logStep('📊 [BG] Verificando UTMify para o produto...');
+            
+            // Parse order bump data if exists
+            let orderBumpParsed = null;
+            if (orderDataToSave.order_bump_data) {
+              try {
+                orderBumpParsed = typeof orderDataToSave.order_bump_data === 'string' 
+                  ? JSON.parse(orderDataToSave.order_bump_data) 
+                  : orderDataToSave.order_bump_data;
+              } catch (e) {
+                logStep('⚠️ [BG] Erro ao parsear order_bump_data:', e);
+              }
             }
+
+            // ✅ USAR NOME REAL DO PRODUTO do banco de dados
+            const realProductName = product?.name || productNameToUse || 'Produto';
+            
+            logStep('📊 [BG] Preparando payload UTMify:', {
+              productId,
+              productName: realProductName,
+              amount: orderDataToSave.amount,
+              currency: orderDataToSave.currency
+            });
+
+            const utmifyPayload = {
+              orderId: orderId,
+              orderUuid: orderId,
+              amount: parseFloat(orderDataToSave.amount?.toString() || grossAmount.toString()),
+              currency: orderDataToSave.currency || 'KZ',
+              customerName: customerData.name,
+              customerEmail: customerData.email,
+              customerPhone: phoneNumber || customerData.phone,
+              customerCountry: customerCountry || 'AO',
+              productId: productId,
+              productName: realProductName,
+              paymentMethod: paymentMethod,
+              utmParams: orderDataToSave.utm_params || checkoutOrderData?.utm_params || null,
+              orderBumpData: orderBumpParsed
+            };
+
+            logStep('📤 [BG] Enviando para UTMify:', JSON.stringify(utmifyPayload, null, 2));
+
+            const { data: utmifyResult, error: utmifyError } = await supabase.functions.invoke('send-utmify-conversion', {
+              body: utmifyPayload
+            });
+
+            if (utmifyError) {
+              logStep('❌ [BG] Erro ao chamar send-utmify-conversion:', JSON.stringify(utmifyError));
+            } else {
+              logStep('✅ [BG] UTMify enviado com sucesso:', JSON.stringify(utmifyResult));
+            }
+          } catch (utmifyErr) {
+            const errMessage = utmifyErr instanceof Error ? utmifyErr.message : JSON.stringify(utmifyErr);
+            logStep('⚠️ [BG] Erro ao processar UTMify:', errMessage);
           }
+        };
 
-          // ✅ USAR NOME REAL DO PRODUTO do banco de dados
-          const realProductName = product?.name || productNameToUse || 'Produto';
-          
-          logStep('📊 Preparando payload UTMify:', {
-            productId,
-            productName: realProductName,
-            amount: orderDataToSave.amount,
-            currency: orderDataToSave.currency
-          });
-
-          const utmifyPayload = {
-            orderId: orderId,
-            orderUuid: orderId, // Usar orderId como UUID (já que insert não retorna o ID)
-            amount: parseFloat(orderDataToSave.amount?.toString() || grossAmount.toString()),
-            currency: orderDataToSave.currency || 'KZ',
-            customerName: customerData.name,
-            customerEmail: customerData.email,
-            customerPhone: phoneNumber || customerData.phone,
-            customerCountry: customerCountry || 'AO',
-            productId: productId,
-            productName: realProductName,
-            paymentMethod: paymentMethod,
-            utmParams: orderDataToSave.utm_params || checkoutOrderData?.utm_params || null,
-            orderBumpData: orderBumpParsed
-          };
-
-          logStep('📤 Enviando para UTMify:', JSON.stringify(utmifyPayload, null, 2));
-
-          const { data: utmifyResult, error: utmifyError } = await supabase.functions.invoke('send-utmify-conversion', {
-            body: utmifyPayload
-          });
-
-          if (utmifyError) {
-            logStep('❌ Erro ao chamar send-utmify-conversion:', JSON.stringify(utmifyError));
-          } else {
-            logStep('📊 UTMify result:', JSON.stringify(utmifyResult));
-          }
-        } catch (utmifyErr) {
-          const errMessage = utmifyErr instanceof Error ? utmifyErr.message : JSON.stringify(utmifyErr);
-          logStep('⚠️ Erro ao processar UTMify:', errMessage);
+        // Executar em background usando EdgeRuntime.waitUntil
+        // @ts-ignore - EdgeRuntime está disponível no Deno Deploy
+        if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime.waitUntil) {
+          // @ts-ignore
+          EdgeRuntime.waitUntil(sendUtmifyInBackground());
+          logStep('📊 UTMify agendado para background');
+        } else {
+          // Fallback: executar sem aguardar
+          sendUtmifyInBackground().catch(err => logStep('⚠️ UTMify background error:', err));
+          logStep('📊 UTMify iniciado (fallback)');
         }
         
         // 🔔 ENVIAR NOTIFICAÇÃO ONESIGNAL PARA O VENDEDOR SOBRE VENDA APROVADA
