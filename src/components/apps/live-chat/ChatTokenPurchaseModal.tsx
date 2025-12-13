@@ -365,9 +365,9 @@ export function ChatTokenPurchaseModal({
           <button
             onClick={onClose}
             disabled={processing}
-            className="absolute top-4 right-4 p-2 rounded-full bg-background/50 backdrop-blur-sm hover:bg-background/80 transition-colors z-10"
+            className="absolute top-4 right-4 p-2 rounded-full bg-background border border-border shadow-md hover:bg-muted transition-colors z-50"
           >
-            <X className="h-4 w-4 text-muted-foreground" />
+            <X className="h-5 w-5 text-foreground" />
           </button>
 
           {selectedPackage && (
