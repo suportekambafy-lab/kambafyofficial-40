@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Facebook, Webhook, Palette, Settings, Mail, RotateCcw } from "lucide-react";
+import { Plus, Facebook, Webhook, Palette, Settings, Mail, RotateCcw, MessageSquare } from "lucide-react";
 import utmifyLogo from '@/assets/utmify-logo.png';
 import googleAnalyticsLogo from '@/assets/google-analytics-logo.png';
 import googleAdsLogo from '@/assets/google-ads-logo.png';
@@ -378,6 +378,34 @@ export function AppsTabLayout() {
       }
 
       // Sales Recovery system removed - skipping fetch
+
+      // Fetch Live Chat AI products
+      const { data: chatProducts, error: chatError } = await supabase
+        .from('products')
+        .select('id, name, chat_enabled, chat_config, created_at')
+        .eq('user_id', user.id)
+        .eq('chat_enabled', true);
+
+      if (chatError) {
+        console.error('Error fetching chat products:', chatError);
+      } else {
+        console.log('Chat products:', chatProducts);
+      }
+
+      if (chatProducts && chatProducts.length > 0) {
+        chatProducts.forEach(product => {
+          allIntegrations.push({
+            id: `live-chat-${product.id}`,
+            type: 'live-chat-ai',
+            name: 'Chat ao Vivo IA',
+            active: true,
+            createdAt: new Date(product.created_at || '').toLocaleDateString(),
+            icon: <MessageSquare className="h-5 w-5 text-pink-600" />,
+            productName: product.name || 'Produto não encontrado',
+            productId: product.id
+          });
+        });
+      }
 
       // Fetch Discount Coupons (agrupado por produto)
       const { data: couponsData, error: couponsError } = await supabase
