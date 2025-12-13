@@ -1,8 +1,7 @@
-
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Facebook, Webhook, Settings, Palette, Plus, HelpCircle, Mail, Construction, BarChart3 } from 'lucide-react';
+import { Facebook, Webhook, Settings, Palette, Plus, Construction } from 'lucide-react';
 import utmifyLogo from '@/assets/utmify-logo.png';
 
 export interface IntegrationType {
@@ -21,26 +20,26 @@ interface IntegrationTypeSelectorProps {
 const integrationTypes: IntegrationType[] = [
   {
     id: 'facebook-pixel',
-    name: 'Facebook Pixel',
-    description: 'Configure Pixel ID e API de Conversões em um só lugar',
+    name: 'Facebook + Instagram',
+    description: 'Configure Pixel ID e API de Conversões',
     icon: ({ className }: { className?: string }) => <Facebook className={className} />,
     color: 'text-blue-600'
   },
   {
     id: 'tiktok-pixel',
-    name: 'TikTok Pixel',
-    description: 'Rastreie conversões e otimize campanhas do TikTok Ads',
+    name: 'TikTok',
+    description: 'Rastreie conversões do TikTok Ads',
     icon: ({ className }: { className?: string }) => (
       <svg className={className} viewBox="0 0 24 24" fill="currentColor">
         <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
       </svg>
     ),
-    color: 'text-pink-600'
+    color: 'text-black'
   },
   {
     id: 'google-analytics',
-    name: 'Google Analytics',
-    description: 'Rastreie visitas, conversões e comportamento dos usuários',
+    name: 'Google Analytics 4',
+    description: 'Rastreie visitas e conversões',
     icon: ({ className }: { className?: string }) => (
       <svg className={className} viewBox="0 0 24 24" fill="none">
         <path d="M12 2L2 7l10 5 10-5-10-5z" fill="#F9AB00"/>
@@ -52,7 +51,7 @@ const integrationTypes: IntegrationType[] = [
   {
     id: 'google-ads',
     name: 'Google Ads',
-    description: 'Rastreie conversões e otimize suas campanhas do Google Ads',
+    description: 'Rastreie conversões do Google Ads',
     icon: ({ className }: { className?: string }) => (
       <svg className={className} viewBox="0 0 24 24" fill="currentColor">
         <path d="M12.24 7.79L17.5 2.06 22 6.56l-5.27 5.73-4.49-4.5zm-1.41 1.41L3.06 17.5 7.56 22l7.76-8.27-4.49-4.53zM2.06 7.97l4.5 4.49L3.06 17.5V7.97z" fill="#4285F4"/>
@@ -63,47 +62,37 @@ const integrationTypes: IntegrationType[] = [
   {
     id: 'webhook',
     name: 'Webhook',
-    description: 'Selecione eventos personalizados e receba notificações em tempo real',
+    description: 'Receba notificações em tempo real',
     icon: ({ className }: { className?: string }) => <Webhook className={className} />,
     color: 'text-orange-600'
   },
   {
     id: 'order-bump',
     name: 'Order Bump',
-    description: 'Configure produtos complementares para aumentar o valor médio do pedido',
+    description: 'Produtos complementares',
     icon: ({ className }: { className?: string }) => <Plus className={className} />,
     color: 'text-purple-600'
   },
   {
     id: 'custom-checkout',
     name: 'Checkout Personalizado',
-    description: 'Personalize seu checkout com banners, countdown, avaliações e prova social',
+    description: 'Personalize seu checkout',
     icon: ({ className }: { className?: string }) => <Palette className={className} />,
     color: 'text-green-600'
   },
   {
     id: 'upsell',
     name: 'Upsell Pós-Compra',
-    description: 'Configure ofertas especiais que aparecem após a compra principal',
+    description: 'Ofertas após a compra',
     icon: ({ className }: { className?: string }) => <Settings className={className} />,
     color: 'text-indigo-600'
   },
   {
     id: 'utmify',
     name: 'UTMify',
-    description: 'Atribuição de vendas e rastreamento de conversões via API',
+    description: 'Atribuição de vendas',
     icon: ({ className }: { className?: string }) => <img src={utmifyLogo} alt="UTMify" className={className} />,
     color: ''
-  }
-];
-
-const comingSoonTypes: IntegrationType[] = [
-  {
-    id: 'quiz-builder',
-    name: 'Quiz Builder',
-    description: 'Em breve - Crie páginas de quiz interativas para qualificar leads',
-    icon: ({ className }: { className?: string }) => <Construction className={className} />,
-    color: 'text-gray-500'
   }
 ];
 
@@ -117,82 +106,24 @@ export function IntegrationTypeSelector({ selectedType, onTypeSelect }: Integrat
         </p>
       </div>
 
-      {/* Available Integrations */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
         {integrationTypes.map((type) => (
           <Card
             key={type.id}
-            className={`cursor-pointer transition-all hover:shadow-md ${
+            className={`cursor-pointer transition-all hover:shadow-md p-4 flex flex-col items-center justify-center gap-2 min-h-[100px] ${
               selectedType?.id === type.id
-                ? 'ring-2 ring-primary border-primary'
-                : 'border-border hover:border-primary/50'
+                ? 'ring-2 ring-primary bg-primary/5 border-primary'
+                : 'border-border hover:border-primary/50 bg-card'
             }`}
             onClick={() => onTypeSelect(type)}
           >
-            <CardContent className="p-6">
-              <div className="flex items-start gap-4">
-                <div className={`${type.color}`}>
-                  {type.icon({ className: "w-8 h-8" })}
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <h3 className="font-semibold">{type.name}</h3>
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-3">
-                    {type.description}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                    <span className="text-xs text-muted-foreground">
-                      Disponível
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
+            <div className={type.color}>
+              {type.icon({ className: "w-8 h-8" })}
+            </div>
+            <span className="text-sm font-medium text-center">{type.name}</span>
           </Card>
         ))}
       </div>
-
-      {/* Coming Soon Section */}
-      {comingSoonTypes.length > 0 && (
-        <div className="space-y-4">
-          <div className="text-center">
-            <h3 className="text-lg font-semibold text-muted-foreground">Em Breve</h3>
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {comingSoonTypes.map((type) => (
-              <Card
-                key={type.id}
-                className="opacity-75 cursor-not-allowed border-dashed"
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4">
-                    <div className={`${type.color}`}>
-                      {type.icon({ className: "w-8 h-8" })}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className="font-semibold">{type.name}</h3>
-                        <Badge variant="secondary" className="text-xs">Em Breve</Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground mb-3">
-                        {type.description}
-                      </p>
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-orange-500"></div>
-                        <span className="text-xs text-muted-foreground">
-                          Em desenvolvimento
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
