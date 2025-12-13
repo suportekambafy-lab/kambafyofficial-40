@@ -116,6 +116,8 @@ serve(async (req) => {
     const products = [{
       id: orderData.productId,
       name: orderData.productName,
+      planId: orderData.productId, // Requerido pela UTMify
+      planName: orderData.productName, // Requerido pela UTMify
       quantity: 1,
       priceInCents: amountInCents
     }];
@@ -133,9 +135,12 @@ serve(async (req) => {
       }
 
       if (bumpPriceInCents > 0) {
+        const bumpId = `${orderData.productId}-bump`;
         products.push({
-          id: `${orderData.productId}-bump`,
+          id: bumpId,
           name: orderData.orderBumpData.bump_product_name,
+          planId: bumpId, // Requerido pela UTMify
+          planName: orderData.orderBumpData.bump_product_name, // Requerido pela UTMify
           quantity: 1,
           priceInCents: bumpPriceInCents
         });
