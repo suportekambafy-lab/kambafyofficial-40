@@ -27,6 +27,8 @@ export function LiveChatWidget({
   customerEmail,
   greeting = 'Olá! 👋 Como posso ajudar você hoje?'
 }: LiveChatWidgetProps) {
+  console.log('[LiveChatWidget] Component mounted with productId:', productId);
+  
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
