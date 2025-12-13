@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Facebook, Webhook, Settings, Palette, Plus, HelpCircle, Mail, Construction, BarChart3 } from 'lucide-react';
+import { Facebook, Webhook, Settings, Palette, Plus, HelpCircle, Mail, Construction, BarChart3, Target } from 'lucide-react';
 
 export interface IntegrationType {
   id: string;
@@ -86,6 +86,13 @@ const integrationTypes: IntegrationType[] = [
     description: 'Configure ofertas especiais que aparecem após a compra principal',
     icon: ({ className }: { className?: string }) => <Settings className={className} />,
     color: 'text-indigo-600'
+  },
+  {
+    id: 'utmify',
+    name: 'UTMify',
+    description: 'Atribuição de vendas e rastreamento de conversões via API',
+    icon: ({ className }: { className?: string }) => <Target className={className} />,
+    color: 'text-sky-600'
   }
 ];
 
