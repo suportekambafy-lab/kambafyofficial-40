@@ -2,7 +2,8 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Facebook, Webhook, Settings, Palette, Plus, HelpCircle, Mail, Construction, BarChart3, Target } from 'lucide-react';
+import { Facebook, Webhook, Settings, Palette, Plus, HelpCircle, Mail, Construction, BarChart3 } from 'lucide-react';
+import utmifyLogo from '@/assets/utmify-logo.png';
 
 export interface IntegrationType {
   id: string;
@@ -91,8 +92,8 @@ const integrationTypes: IntegrationType[] = [
     id: 'utmify',
     name: 'UTMify',
     description: 'Atribuição de vendas e rastreamento de conversões via API',
-    icon: ({ className }: { className?: string }) => <Target className={className} />,
-    color: 'text-sky-600'
+    icon: ({ className }: { className?: string }) => <img src={utmifyLogo} alt="UTMify" className={className} />,
+    color: ''
   }
 ];
 
