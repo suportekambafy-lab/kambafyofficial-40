@@ -173,7 +173,7 @@ export function IntegrationTypeSelector({ selectedType, onTypeSelect }: Integrat
         />
 
         <CategorySection
-          title="⚡ Automação"
+          title="Automação"
           description="Conecte com sistemas externos"
           integrations={automationIntegrations}
           selectedType={selectedType}
