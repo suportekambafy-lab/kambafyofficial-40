@@ -2,6 +2,7 @@
 import React from 'react';
 import { FacebookPixelForm } from '@/components/FacebookPixelForm';
 import { TikTokPixelForm } from '@/components/TikTokPixelForm';
+import { GoogleAnalyticsForm } from '@/components/GoogleAnalyticsForm';
 import { WebhookForm } from '@/components/WebhookForm';
 import { CheckoutCustomizer } from '@/components/checkout/CheckoutCustomizer';
 import { OrderBumpConfigurator } from '@/components/OrderBumpConfigurator';
@@ -54,6 +55,13 @@ export function IntegrationConfigurator({
 
       {integrationType.id === 'tiktok-pixel' && (
         <TikTokPixelForm 
+          productId={product.id}
+          onSaveSuccess={handleSuccess}
+        />
+      )}
+
+      {integrationType.id === 'google-analytics' && (
+        <GoogleAnalyticsForm 
           productId={product.id}
           onSaveSuccess={handleSuccess}
         />

@@ -172,6 +172,39 @@ export function AppsTabLayout() {
         });
       }
 
+      // Fetch Google Analytics settings with product name
+      const { data: gaData, error: gaError } = await supabase
+        .from('google_analytics_settings' as any)
+        .select(`
+          *,
+          products!inner(name)
+        `)
+        .eq('user_id', user.id);
+
+      if (gaError) {
+        console.error('Error fetching Google Analytics data:', gaError);
+      }
+
+      if (gaData && gaData.length > 0) {
+        (gaData as any[]).forEach(ga => {
+          allIntegrations.push({
+            id: ga.id,
+            type: 'google-analytics',
+            name: 'Google Analytics',
+            active: ga.enabled || false,
+            createdAt: new Date(ga.created_at || '').toLocaleDateString(),
+            icon: (
+              <svg className="w-5 h-5 text-amber-600" viewBox="0 0 24 24" fill="none">
+                <path d="M12 2L2 7l10 5 10-5-10-5z" fill="#F9AB00"/>
+                <path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="#E37400" strokeWidth="2"/>
+              </svg>
+            ),
+            productName: ga.products?.name || 'Produto não encontrado',
+            productId: ga.product_id
+          });
+        });
+      }
+
       // Fetch Webhook settings - modificada para funcionar sem product_id obrigatório
       const { data: webhookData, error: webhookError } = await supabase
         .from('webhook_settings')
@@ -320,6 +353,12 @@ export function AppsTabLayout() {
           .update({ enabled: active })
           .eq('id', integration.id)
           .select();
+      } else if (integration.type === 'google-analytics') {
+        updateResult = await supabase
+          .from('google_analytics_settings' as any)
+          .update({ enabled: active })
+          .eq('id', integration.id)
+          .select();
       } else if (integration.type === 'webhook') {
         updateResult = await supabase
           .from('webhook_settings')
@@ -409,6 +448,12 @@ export function AppsTabLayout() {
       } else if (integration.type === 'tiktok-pixel') {
         deleteResult = await supabase
           .from('tiktok_pixel_settings' as any)
+          .delete()
+          .eq('id', integration.id)
+          .select();
+      } else if (integration.type === 'google-analytics') {
+        deleteResult = await supabase
+          .from('google_analytics_settings' as any)
           .delete()
           .eq('id', integration.id)
           .select();

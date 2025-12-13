@@ -1164,6 +1164,44 @@ export type Database = {
           },
         ]
       }
+      google_analytics_settings: {
+        Row: {
+          created_at: string | null
+          enabled: boolean | null
+          id: string
+          measurement_id: string
+          product_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          measurement_id: string
+          product_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          measurement_id?: string
+          product_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "google_analytics_settings_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       identity_verification: {
         Row: {
           address_city: string | null
