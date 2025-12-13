@@ -37,17 +37,17 @@ export function UtmifyForm({ productId, onSaveSuccess }: UtmifyFormProps) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data, error } = await supabase
-        .from('utmify_settings')
+      const { data, error } = await (supabase
+        .from('utmify_settings' as any)
         .select('*')
         .eq('product_id', productId)
         .eq('user_id', user.id)
-        .maybeSingle();
+        .maybeSingle() as any);
 
       if (error) throw error;
 
       if (data) {
-        setExistingSetting(data);
+        setExistingSetting(data as UtmifySetting);
         setApiToken(data.api_token);
         setEnabled(data.enabled);
       }
@@ -84,16 +84,16 @@ export function UtmifyForm({ productId, onSaveSuccess }: UtmifyFormProps) {
       };
 
       if (existingSetting) {
-        const { error } = await supabase
-          .from('utmify_settings')
+        const { error } = await (supabase
+          .from('utmify_settings' as any)
           .update(settingData)
-          .eq('id', existingSetting.id);
+          .eq('id', existingSetting.id) as any);
 
         if (error) throw error;
       } else {
-        const { error } = await supabase
-          .from('utmify_settings')
-          .insert(settingData);
+        const { error } = await (supabase
+          .from('utmify_settings' as any)
+          .insert(settingData) as any);
 
         if (error) throw error;
       }
