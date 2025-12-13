@@ -69,7 +69,7 @@ serve(async (req) => {
         userCommissionInCents: 100,
         currency: 'USD'
       },
-      isTest: true
+      isTest: false // Enviar como venda real para aparecer no dashboard
     };
 
     console.log('📤 Enviando payload para UTMify:', JSON.stringify(testPayload, null, 2));
