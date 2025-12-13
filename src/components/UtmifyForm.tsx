@@ -223,39 +223,6 @@ export function UtmifyForm({ productId, onSaveSuccess }: UtmifyFormProps) {
               />
             </div>
 
-            {/* Info Box */}
-            <div className="bg-muted/50 border rounded-lg p-4 space-y-3">
-              <p className="text-sm font-medium">O que será enviado:</p>
-              <ul className="text-sm text-muted-foreground space-y-1">
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-primary" />
-                  Dados do pedido (ID, valor, status)
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-primary" />
-                  Dados do cliente (nome, email, telefone)
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-primary" />
-                  Parâmetros UTM (utm_source, utm_campaign, etc.)
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-primary" />
-                  Parâmetros src e sck da UTMify
-                </li>
-              </ul>
-            </div>
-
-            {/* Documentation Link */}
-            <a
-              href="https://docs.google.com/document/d/1RVpbmUn8EaD7DcO4rNdAnG0T9VEI0qQeGzqTE8t2AAE/mobilebasic"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-sm text-primary hover:underline"
-            >
-              <ExternalLink className="h-4 w-4" />
-              Ver documentação oficial da UTMify
-            </a>
 
             {/* Buttons */}
             <div className="flex gap-3">
