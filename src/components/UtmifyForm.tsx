@@ -29,7 +29,11 @@ export function UtmifyForm({ productId, onSaveSuccess }: UtmifyFormProps) {
   const { toast } = useToast();
 
   const handleTestConnection = async () => {
+    console.log('🔵 handleTestConnection chamado');
+    console.log('🔵 apiToken:', apiToken);
+    
     if (!apiToken.trim()) {
+      console.log('🔴 Token vazio');
       toast({
         title: 'Token obrigatório',
         description: 'Por favor, insira o API Token antes de testar.',
@@ -38,15 +42,18 @@ export function UtmifyForm({ productId, onSaveSuccess }: UtmifyFormProps) {
       return;
     }
 
+    console.log('🔵 Iniciando teste...');
     setTesting(true);
     
     // Simula um pequeno delay para feedback visual
     await new Promise(resolve => setTimeout(resolve, 800));
     
     const token = apiToken.trim();
+    console.log('🔵 Token length:', token.length);
     
     // Validação do formato do token UTMify
     if (token.length < 10) {
+      console.log('🔴 Token muito curto');
       toast({
         title: 'Token muito curto',
         description: 'O token UTMify parece estar incompleto.',
@@ -57,10 +64,12 @@ export function UtmifyForm({ productId, onSaveSuccess }: UtmifyFormProps) {
     }
 
     // Token passou nas validações básicas
+    console.log('🟢 Token validado, mostrando toast...');
     toast({
       title: 'Token validado!',
       description: 'O formato do token está correto. Salve a configuração para ativar a integração.',
     });
+    console.log('🟢 Toast chamado');
     
     setTesting(false);
   };
