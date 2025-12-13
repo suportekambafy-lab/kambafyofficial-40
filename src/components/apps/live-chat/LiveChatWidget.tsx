@@ -41,6 +41,7 @@ export function LiveChatWidget({
   // Check credits before allowing any interaction
   useEffect(() => {
     const checkCredits = async () => {
+      console.log('[LiveChatWidget] Checking credits for product:', productId);
       try {
         const { data, error } = await supabase.functions.invoke('chat-with-credits', {
           body: {
@@ -49,8 +50,10 @@ export function LiveChatWidget({
           }
         });
 
+        console.log('[LiveChatWidget] Credit check response:', { data, error });
+
         if (error) {
-          console.error('Error checking credits:', error);
+          console.error('[LiveChatWidget] Error checking credits:', error);
           setHasCredits(false);
           setChatEnabled(false);
           return;
@@ -58,8 +61,9 @@ export function LiveChatWidget({
 
         setHasCredits(data.hasCredits);
         setChatEnabled(data.chatEnabled);
+        console.log('[LiveChatWidget] Credits status:', { hasCredits: data.hasCredits, chatEnabled: data.chatEnabled });
       } catch (error) {
-        console.error('Error checking credits:', error);
+        console.error('[LiveChatWidget] Error checking credits:', error);
         setHasCredits(false);
         setChatEnabled(false);
       } finally {
@@ -67,7 +71,12 @@ export function LiveChatWidget({
       }
     };
 
-    checkCredits();
+    if (productId) {
+      checkCredits();
+    } else {
+      console.log('[LiveChatWidget] No productId provided');
+      setCheckingCredits(false);
+    }
   }, [productId]);
 
   useEffect(() => {
@@ -167,13 +176,17 @@ export function LiveChatWidget({
 
   // Don't render anything if checking or chat is not available
   if (checkingCredits) {
+    console.log('[LiveChatWidget] Still checking credits...');
     return null;
   }
 
   // Don't show widget if chat is disabled or no credits
   if (!chatEnabled || !hasCredits) {
+    console.log('[LiveChatWidget] Not showing widget:', { chatEnabled, hasCredits });
     return null;
   }
+
+  console.log('[LiveChatWidget] Rendering widget');
 
   return (
     <>
