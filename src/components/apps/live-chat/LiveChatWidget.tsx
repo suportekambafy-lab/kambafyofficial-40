@@ -203,10 +203,10 @@ export function LiveChatWidget({
           >
             <Button
               size="lg"
-              className="rounded-full w-14 h-14 shadow-lg"
+              className="rounded-full w-14 h-14 shadow-lg bg-primary hover:bg-primary/90"
               onClick={() => setIsOpen(true)}
             >
-              <MessageSquare className="h-6 w-6" />
+              <MessageSquare className="h-6 w-6 text-primary-foreground" />
             </Button>
           </motion.div>
         )}
