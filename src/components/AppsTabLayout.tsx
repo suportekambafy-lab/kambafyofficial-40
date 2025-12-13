@@ -777,6 +777,16 @@ export function AppsTabLayout() {
         ),
         color: 'text-blue-500'
       };
+    } else if (integration.type === 'discount-coupons') {
+      integrationType = {
+        id: 'discount-coupons',
+        name: 'Cupons de Desconto',
+        description: 'Crie e gerencie cupons de desconto para seus produtos',
+        icon: ({ className }: { className?: string }) => (
+          <span className={className || "text-lg"}>🎟️</span>
+        ),
+        color: 'text-amber-600'
+      };
     }
     
     if (integrationType) {
