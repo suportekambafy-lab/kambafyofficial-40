@@ -224,17 +224,16 @@ export function ChatTokenPurchaseModal({
       }
 
       if (['card', 'klarna', 'multibanco', 'mbway', 'card_uk', 'klarna_uk', 'card_us'].includes(selectedPaymentMethod)) {
-        const { data, error } = await supabase.functions.invoke('purchase-chat-tokens', {
+        // Usar a mesma função do checkout principal
+        const { data, error } = await supabase.functions.invoke('create-stripe-payment', {
           body: {
-            packageId: selectedPackage.id,
-            packageName: selectedPackage.name,
-            tokens: selectedPackage.tokens,
-            amount: Math.round(priceInfo.price * 100),
-            currency: priceInfo.currency.toLowerCase(),
-            paymentMethod: selectedPaymentMethod,
-            mbwayPhone: selectedPaymentMethod === 'mbway' ? `+351${mbwayPhone.replace(/\s/g, '')}` : undefined,
-            successUrl: `${window.location.origin}/vendedor/apps?purchase=success&tokens=${selectedPackage.tokens}`,
-            cancelUrl: `${window.location.origin}/vendedor/apps?purchase=cancelled`
+            amount: priceInfo.price,
+            currency: priceInfo.currency,
+            productName: `Chat Tokens: ${selectedPackage.name} (${selectedPackage.tokens.toLocaleString()} tokens)`,
+            customerEmail: user.email,
+            customerName: user.user_metadata?.full_name || user.email,
+            productId: `chat-tokens-${selectedPackage.id}`,
+            orderId: `tokens-${Date.now()}`,
           }
         });
 
