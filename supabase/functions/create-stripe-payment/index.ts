@@ -19,7 +19,9 @@ Deno.serve(async (req) => {
       customerName,
       productId,
       orderId,
-      hasCustomPrices = false
+      hasCustomPrices = false,
+      paymentMethod,
+      mbwayPhone
     } = await req.json();
 
     console.log('Creating Stripe payment for:', { 
@@ -28,6 +30,7 @@ Deno.serve(async (req) => {
       customerEmail, 
       productName,
       orderId,
+      paymentMethod,
       amountType: typeof amount,
       currencyType: typeof currency
     });
@@ -40,11 +43,9 @@ Deno.serve(async (req) => {
     let amountInCents;
     const zeroDecimalCurrencies = ['JPY', 'KRW', 'VND', 'CLP'];
     
-    if (zeroDecimalCurrencies.includes(currency)) {
-      // Moedas sem decimais (yen, won, etc.)
+    if (zeroDecimalCurrencies.includes(currency?.toUpperCase())) {
       amountInCents = Math.round(amount);
     } else {
-      // Moedas com decimais (USD, EUR, ARS, etc.)
       amountInCents = Math.round(amount * 100);
     }
 
@@ -61,7 +62,6 @@ Deno.serve(async (req) => {
       customerId = customers.data[0].id;
       console.log('Existing customer found:', customerId);
     } else {
-      // Criar novo cliente
       const customer = await stripe.customers.create({
         email: customerEmail,
         name: customerName,
@@ -70,30 +70,77 @@ Deno.serve(async (req) => {
       console.log('New customer created:', customerId);
     }
 
-    console.log(`Final amount for Stripe: ${amountInCents} cents in ${currency.toLowerCase()}`);
+    console.log(`Final amount for Stripe: ${amountInCents} cents in ${currency?.toLowerCase()}`);
 
-    // Calcular expires_at baseado no método de pagamento
-    // Multibanco: 5 dias | Cartão e outros: 15 minutos
-    const paymentMethodType = req.headers.get('x-payment-method-type') || 'card';
-    const isMultibanco = paymentMethodType === 'multibanco';
+    const origin = req.headers.get("origin") || "https://kambafy.com";
+
+    // Configurar payment method types baseado na seleção
+    let paymentMethodTypes: string[] = ['card'];
     
-    const expirationMinutes = isMultibanco ? (5 * 24 * 60) : 15; // 5 dias ou 15 minutos
+    if (paymentMethod === 'multibanco') {
+      paymentMethodTypes = ['multibanco'];
+    } else if (paymentMethod === 'mbway') {
+      paymentMethodTypes = ['card']; // MBWay usa Payment Intent separado
+    } else if (paymentMethod === 'klarna' || paymentMethod === 'klarna_uk') {
+      paymentMethodTypes = ['klarna'];
+    } else if (paymentMethod === 'card' || paymentMethod === 'card_uk' || paymentMethod === 'card_us') {
+      paymentMethodTypes = ['card'];
+    }
+
+    console.log(`Payment method types: ${paymentMethodTypes.join(', ')}`);
+
+    // Para MBWay, criar Payment Intent diretamente
+    if (paymentMethod === 'mbway' && mbwayPhone) {
+      console.log('Creating MBWay payment for phone:', mbwayPhone);
+      
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amountInCents,
+        currency: 'eur',
+        customer: customerId,
+        payment_method_types: ['card'],
+        metadata: {
+          product_id: productId || '',
+          product_name: productName,
+          order_id: orderId || '',
+          customer_email: customerEmail,
+          payment_method: 'mbway',
+          mbway_phone: mbwayPhone
+        }
+      });
+
+      // MBWay não é suportado diretamente pelo Stripe - usar checkout com cartão
+      console.log('MBWay not directly supported, falling back to card checkout');
+    }
+
+    // Calcular expires_at
+    const isMultibanco = paymentMethod === 'multibanco';
+    const expirationMinutes = isMultibanco ? (5 * 24 * 60) : 30;
     const expiresAt = new Date(Date.now() + expirationMinutes * 60 * 1000).toISOString();
     
-    console.log(`Expiration set: ${isMultibanco ? '5 days' : '15 minutes'} for ${paymentMethodType}`);
+    console.log(`Expiration set: ${isMultibanco ? '5 days' : '30 minutes'} for ${paymentMethod}`);
+
+    // Configurar success e cancel URLs
+    let successUrl = `${origin}/vendedor/apps?purchase=success`;
+    let cancelUrl = `${origin}/vendedor/apps?purchase=cancelled`;
+    
+    if (productId && !productId.startsWith('chat-tokens')) {
+      successUrl = `${origin}/checkout/${productId}/success?session_id={CHECKOUT_SESSION_ID}`;
+      cancelUrl = `${origin}/checkout/${productId}`;
+    }
 
     // Criar sessão de checkout
-    const session = await stripe.checkout.sessions.create({
+    const sessionParams: Stripe.Checkout.SessionCreateParams = {
       customer: customerId,
+      payment_method_types: paymentMethodTypes as Stripe.Checkout.SessionCreateParams.PaymentMethodType[],
       line_items: [
         {
           price_data: {
-            currency: currency.toLowerCase(),
+            currency: (currency || 'eur').toLowerCase(),
             product_data: {
               name: productName,
               metadata: {
-                product_id: productId,
-                order_id: orderId,
+                product_id: productId || '',
+                order_id: orderId || '',
               }
             },
             unit_amount: amountInCents,
@@ -102,33 +149,41 @@ Deno.serve(async (req) => {
         },
       ],
       mode: "payment",
-      success_url: `${req.headers.get("origin")}/checkout/${productId}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${req.headers.get("origin")}/checkout/${productId}`,
+      success_url: successUrl,
+      cancel_url: cancelUrl,
       metadata: {
-        product_id: productId,
+        product_id: productId || '',
         product_name: productName,
-        order_id: orderId,
+        order_id: orderId || '',
         customer_email: customerEmail,
         original_amount: amount.toString(),
-        original_currency: currency.toUpperCase(),
+        original_currency: (currency || 'EUR').toUpperCase(),
         has_custom_prices: hasCustomPrices.toString(),
-        expires_at: expiresAt
+        expires_at: expiresAt,
+        payment_method: paymentMethod || 'card'
       },
       payment_intent_data: {
         metadata: {
-          product_id: productId,
+          product_id: productId || '',
           product_name: productName,
-          order_id: orderId,
+          order_id: orderId || '',
           customer_email: customerEmail,
           original_amount: amount.toString(),
-          original_currency: currency.toUpperCase(),
+          original_currency: (currency || 'EUR').toUpperCase(),
           has_custom_prices: hasCustomPrices.toString(),
-          expires_at: expiresAt
+          expires_at: expiresAt,
+          payment_method: paymentMethod || 'card'
         }
       }
-    });
+    };
 
-    console.log('Checkout session created:', session.id);
+    const session = await stripe.checkout.sessions.create(sessionParams);
+
+    console.log('Checkout session created:', session.id, 'URL:', session.url);
+
+    if (!session.url) {
+      throw new Error('Stripe não retornou URL do checkout');
+    }
 
     return new Response(JSON.stringify({ 
       url: session.url,

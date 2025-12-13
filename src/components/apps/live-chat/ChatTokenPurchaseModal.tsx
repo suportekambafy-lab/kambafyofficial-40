@@ -234,6 +234,8 @@ export function ChatTokenPurchaseModal({
             customerName: user.user_metadata?.full_name || user.email,
             productId: `chat-tokens-${selectedPackage.id}`,
             orderId: `tokens-${Date.now()}`,
+            paymentMethod: selectedPaymentMethod,
+            mbwayPhone: selectedPaymentMethod === 'mbway' ? mbwayPhone : undefined
           }
         });
 
