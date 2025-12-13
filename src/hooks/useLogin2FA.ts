@@ -136,10 +136,10 @@ export const useLogin2FA = () => {
         .maybeSingle();
 
       if (trustedDevice) {
-        // Verificar se o dispositivo ainda é válido
+        // Verificar se o dispositivo ainda é válido (90 dias)
         const expiresAt = new Date(trustedDevice.expires_at);
         if (expiresAt > new Date()) {
-          console.log('✅ Dispositivo confiável encontrado');
+          console.log('✅ Dispositivo confiável encontrado - 2FA não necessário');
           
           // Atualizar last_used
           await supabase
@@ -147,9 +147,33 @@ export const useLogin2FA = () => {
             .update({ last_used: new Date().toISOString() })
             .eq('id', trustedDevice.id);
           
+          // Também garantir que o dispositivo está registrado em user_devices
+          const { data: existingUserDevice } = await supabase
+            .from('user_devices')
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('device_fingerprint', deviceInfo.fingerprint)
+            .maybeSingle();
+            
+          if (!existingUserDevice) {
+            await supabase
+              .from('user_devices')
+              .insert({
+                user_id: user.id,
+                device_fingerprint: deviceInfo.fingerprint,
+                device_info: {
+                  isMobile: deviceInfo.isMobile,
+                  browser: deviceInfo.browser,
+                  os: deviceInfo.os,
+                  ipAddress: deviceInfo.ipAddress,
+                  location: deviceInfo.location
+                }
+              });
+          }
+          
           return defaultResult;
         } else {
-          console.log('⚠️ Dispositivo confiável expirou');
+          console.log('⚠️ Dispositivo confiável expirou após 90 dias');
         }
       }
 
@@ -161,7 +185,11 @@ export const useLogin2FA = () => {
 
       const knownDevice = userDevices?.find(d => d.device_fingerprint === deviceInfo.fingerprint);
       
-      if (!knownDevice) {
+      // Se é um dispositivo conhecido, verificar se precisa de 2FA por outros motivos
+      if (knownDevice) {
+        console.log('✅ Dispositivo conhecido encontrado');
+      } else {
+        // Novo dispositivo detectado - exigir 2FA
         console.log('🔔 Novo dispositivo detectado - 2FA necessário');
         return {
           requires2FA: true,
