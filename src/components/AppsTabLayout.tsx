@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Facebook, Webhook, Palette, Settings, Mail, RotateCcw } from "lucide-react";
+import utmifyLogo from '@/assets/utmify-logo.png';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { IntegrationCard } from "@/components/IntegrationCard";
 import { IntegrationStats } from "@/components/IntegrationStats";
@@ -352,6 +353,36 @@ export function AppsTabLayout() {
         });
       }
 
+      // Fetch UTMify settings with product name
+      const { data: utmifyData, error: utmifyError } = await supabase
+        .from('utmify_settings' as any)
+        .select(`
+          *,
+          products!inner(name)
+        `)
+        .eq('user_id', user.id);
+
+      if (utmifyError) {
+        console.error('Error fetching UTMify data:', utmifyError);
+      } else {
+        console.log('UTMify data:', utmifyData);
+      }
+
+      if (utmifyData && utmifyData.length > 0) {
+        (utmifyData as any[]).forEach(utmify => {
+          allIntegrations.push({
+            id: utmify.id,
+            type: 'utmify',
+            name: 'UTMify',
+            active: utmify.enabled || false,
+            createdAt: new Date(utmify.created_at || '').toLocaleDateString(),
+            icon: <img src={utmifyLogo} alt="UTMify" className="h-5 w-auto object-contain" />,
+            productName: utmify.products?.name || 'Produto não encontrado',
+            productId: utmify.product_id
+          });
+        });
+      }
+
       // Sales Recovery system removed - skipping fetch
 
       console.log('All integrations loaded:', allIntegrations);
@@ -440,6 +471,12 @@ export function AppsTabLayout() {
             .eq('id', realId)
             .select();
         }
+      } else if (integration.type === 'utmify') {
+        updateResult = await supabase
+          .from('utmify_settings' as any)
+          .update({ enabled: active })
+          .eq('id', integration.id)
+          .select();
       }
 
       if (updateResult?.error) {
@@ -538,6 +575,12 @@ export function AppsTabLayout() {
             .eq('id', realId)
             .select();
         }
+      } else if (integration.type === 'utmify') {
+        deleteResult = await supabase
+          .from('utmify_settings' as any)
+          .delete()
+          .eq('id', integration.id)
+          .select();
       }
 
       if (deleteResult?.error) {
