@@ -5,7 +5,7 @@ import utmifyLogo from '@/assets/utmify-logo.png';
 import googleAnalyticsLogo from '@/assets/google-analytics-logo.png';
 import googleAdsLogo from '@/assets/google-ads-logo.png';
 import metaLogo from '@/assets/meta-logo.png';
-import tiktokLogo from '@/assets/tiktok-logo.png';
+
 
 export interface IntegrationType {
   id: string;
@@ -35,7 +35,11 @@ const trackingIntegrations: IntegrationType[] = [
     name: 'TikTok',
     description: 'Rastreie conversões do TikTok Ads',
     icon: () => (
-      <img src={tiktokLogo} alt="TikTok" className="h-8 w-auto object-contain" />
+      <svg viewBox="0 0 48 48" className="h-8 w-auto">
+        <path d="M38.39,13.09a9.77,9.77,0,0,1-5.71-5.75,9.61,9.61,0,0,1-.52-3.14H25.7V31.27a5.83,5.83,0,1,1-4-5.52V19.21a12.29,12.29,0,1,0,10.48,12.18c0-.27,0-.54,0-.81V19.94a16.1,16.1,0,0,0,9.42,3V16.56A9.85,9.85,0,0,1,38.39,13.09Z" fill="#000"/>
+        <path d="M36.39,11.09a9.77,9.77,0,0,1-5.71-5.75,9.61,9.61,0,0,1-.52-3.14H23.7V29.27a5.83,5.83,0,1,1-4-5.52V17.21a12.29,12.29,0,1,0,10.48,12.18c0-.27,0-.54,0-.81V17.94a16.1,16.1,0,0,0,9.42,3V14.56A9.85,9.85,0,0,1,36.39,11.09Z" fill="#25F4EE"/>
+        <path d="M37.39,12.09a9.77,9.77,0,0,1-5.71-5.75,9.61,9.61,0,0,1-.52-3.14H24.7V30.27a5.83,5.83,0,1,1-4-5.52V18.21a12.29,12.29,0,1,0,10.48,12.18c0-.27,0-.54,0-.81V18.94a16.1,16.1,0,0,0,9.42,3V15.56A9.85,9.85,0,0,1,37.39,12.09Z" fill="#FE2C55"/>
+      </svg>
     ),
     color: ''
   },
