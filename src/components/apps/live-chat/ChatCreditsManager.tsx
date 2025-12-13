@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { MessageSquare, Zap, TrendingUp, Crown, Loader2, Check } from 'lucide-react';
+import { MessageSquare, Zap, TrendingUp, Crown, Loader2, ShoppingCart } from 'lucide-react';
 import { formatPrice } from '@/utils/priceFormatting';
+import { ChatTokenPurchaseModal } from './ChatTokenPurchaseModal';
 
 interface TokenPackage {
   id: string;
@@ -30,7 +31,8 @@ export function ChatCreditsManager({ onPurchaseComplete }: ChatCreditsManagerPro
   const [packages, setPackages] = useState<TokenPackage[]>([]);
   const [credits, setCredits] = useState<SellerCredits | null>(null);
   const [loading, setLoading] = useState(true);
-  const [purchasing, setPurchasing] = useState<string | null>(null);
+  const [selectedPackage, setSelectedPackage] = useState<TokenPackage | null>(null);
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -81,98 +83,16 @@ export function ChatCreditsManager({ onPurchaseComplete }: ChatCreditsManagerPro
     }
   };
 
-  const handlePurchase = async (pkg: TokenPackage) => {
-    setPurchasing(pkg.id);
-    
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Não autenticado');
+  const handleOpenPurchaseModal = (pkg: TokenPackage) => {
+    setSelectedPackage(pkg);
+    setShowPurchaseModal(true);
+  };
 
-      // Check seller balance
-      const { data: balance } = await supabase
-        .from('customer_balances')
-        .select('balance')
-        .eq('user_id', user.id)
-        .single();
-
-      if (!balance || balance.balance < pkg.price_kz) {
-        toast({
-          title: 'Saldo insuficiente',
-          description: `Você precisa de ${formatPrice(pkg.price_kz)} KZ para comprar este pacote.`,
-          variant: 'destructive'
-        });
-        return;
-      }
-
-      // Debit from seller balance
-      const { error: debitError } = await supabase
-        .from('balance_transactions')
-        .insert({
-          user_id: user.id,
-          type: 'debit',
-          amount: -pkg.price_kz,
-          description: `Compra de pacote de tokens: ${pkg.name}`,
-          currency: 'KZ'
-        });
-
-      if (debitError) throw debitError;
-
-      // Update seller balance
-      await supabase
-        .from('customer_balances')
-        .update({ 
-          balance: balance.balance - pkg.price_kz,
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', user.id);
-
-      // Add tokens to seller chat credits
-      const currentTokens = credits?.token_balance || 0;
-      const currentPurchased = credits?.total_tokens_purchased || 0;
-      const newBalance = currentTokens + pkg.tokens;
-
-      const { error: creditError } = await supabase
-        .from('seller_chat_credits')
-        .upsert({
-          user_id: user.id,
-          token_balance: newBalance,
-          total_tokens_purchased: currentPurchased + pkg.tokens,
-          updated_at: new Date().toISOString()
-        });
-
-      if (creditError) throw creditError;
-
-      // Log transaction
-      await supabase
-        .from('chat_token_transactions')
-        .insert({
-          user_id: user.id,
-          type: 'purchase',
-          tokens: pkg.tokens,
-          balance_after: newBalance,
-          package_id: pkg.id,
-          description: `Compra do pacote ${pkg.name}`
-        });
-
-      toast({
-        title: 'Compra realizada!',
-        description: `${pkg.tokens.toLocaleString()} tokens adicionados à sua conta.`
-      });
-
-      // Refresh data
-      fetchData();
-      onPurchaseComplete?.();
-
-    } catch (error) {
-      console.error('Error purchasing package:', error);
-      toast({
-        title: 'Erro na compra',
-        description: 'Não foi possível processar a compra. Tente novamente.',
-        variant: 'destructive'
-      });
-    } finally {
-      setPurchasing(null);
-    }
+  const handlePurchaseComplete = () => {
+    setShowPurchaseModal(false);
+    setSelectedPackage(null);
+    fetchData();
+    onPurchaseComplete?.();
   };
 
   const getPackageIcon = (name: string) => {
@@ -231,10 +151,9 @@ export function ChatCreditsManager({ onPurchaseComplete }: ChatCreditsManagerPro
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {packages.map((pkg) => {
             const isPopular = pkg.name.toLowerCase() === 'pro';
-            const isPurchasing = purchasing === pkg.id;
             
             return (
-              <Card 
+              <Card
                 key={pkg.id} 
                 className={`relative transition-all hover:shadow-lg ${
                   isPopular ? 'border-primary ring-1 ring-primary/20' : ''
@@ -271,20 +190,10 @@ export function ChatCreditsManager({ onPurchaseComplete }: ChatCreditsManagerPro
                   <Button 
                     className="w-full" 
                     variant={isPopular ? 'default' : 'outline'}
-                    onClick={() => handlePurchase(pkg)}
-                    disabled={isPurchasing}
+                    onClick={() => handleOpenPurchaseModal(pkg)}
                   >
-                    {isPurchasing ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Processando...
-                      </>
-                    ) : (
-                      <>
-                        <Check className="mr-2 h-4 w-4" />
-                        Comprar
-                      </>
-                    )}
+                    <ShoppingCart className="mr-2 h-4 w-4" />
+                    Comprar
                   </Button>
                 </CardContent>
               </Card>
@@ -323,6 +232,14 @@ export function ChatCreditsManager({ onPurchaseComplete }: ChatCreditsManagerPro
           </CardContent>
         </Card>
       )}
+
+      {/* Purchase Modal */}
+      <ChatTokenPurchaseModal
+        isOpen={showPurchaseModal}
+        onClose={() => setShowPurchaseModal(false)}
+        selectedPackage={selectedPackage}
+        onPurchaseComplete={handlePurchaseComplete}
+      />
     </div>
   );
 }
