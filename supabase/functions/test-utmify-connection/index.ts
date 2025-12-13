@@ -12,11 +12,17 @@ serve(async (req) => {
   }
 
   try {
-    const { apiToken } = await req.json();
+    const body = await req.json();
+    console.log('📦 Body recebido:', JSON.stringify(body));
+    
+    const apiToken = body?.apiToken;
+    console.log('🔑 Token recebido:', apiToken ? `${apiToken.substring(0, 5)}...${apiToken.substring(apiToken.length - 5)}` : 'VAZIO');
+    console.log('📏 Token length:', apiToken?.length || 0);
 
     if (!apiToken || apiToken.trim().length < 10) {
+      console.log('❌ Token inválido - length:', apiToken?.length || 0);
       return new Response(
-        JSON.stringify({ success: false, error: 'Token inválido ou muito curto' }),
+        JSON.stringify({ success: false, error: 'Token inválido ou muito curto', receivedLength: apiToken?.length || 0 }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
