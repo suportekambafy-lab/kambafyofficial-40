@@ -676,6 +676,52 @@ export function AppsTabLayout() {
         icon: ({ className }: { className?: string }) => <Mail className={className || "w-6 h-6"} />,
         color: 'text-indigo-600'
       };
+    } else if (integration.type === 'tiktok-pixel') {
+      integrationType = {
+        id: 'tiktok-pixel',
+        name: 'TikTok Pixel',
+        description: 'Rastreie conversões e otimize campanhas do TikTok',
+        icon: ({ className }: { className?: string }) => (
+          <svg className={className || "w-6 h-6"} viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+          </svg>
+        ),
+        color: 'text-pink-600'
+      };
+    } else if (integration.type === 'google-analytics') {
+      integrationType = {
+        id: 'google-analytics',
+        name: 'Google Analytics',
+        description: 'Analise o comportamento dos visitantes e conversões',
+        icon: ({ className }: { className?: string }) => (
+          <svg className={className || "w-6 h-6"} viewBox="0 0 24 24" fill="currentColor">
+            <path d="M22.84 2.998V21c0 1.1-.9 2-2 2h-4V7.998l6-5zM12.84 22.998h-4V12l4-3.5v14.498zM6.84 22.998h-4c-1.1 0-2-.9-2-2V16l6-5.25v12.248z"/>
+          </svg>
+        ),
+        color: 'text-yellow-600'
+      };
+    } else if (integration.type === 'google-ads') {
+      integrationType = {
+        id: 'google-ads',
+        name: 'Google Ads',
+        description: 'Rastreie conversões de campanhas do Google Ads',
+        icon: ({ className }: { className?: string }) => (
+          <svg className={className || "w-6 h-6"} viewBox="0 0 24 24" fill="currentColor">
+            <path d="M3.002 7.5v9l6-4.5-6-4.5zm7.998 0v9l6-4.5-6-4.5zm7.998 0v9l2.002-1.5V9l-2.002-1.5z"/>
+          </svg>
+        ),
+        color: 'text-green-600'
+      };
+    } else if (integration.type === 'utmify') {
+      integrationType = {
+        id: 'utmify',
+        name: 'UTMify',
+        description: 'Envie conversões automaticamente para rastreamento UTM avançado',
+        icon: ({ className }: { className?: string }) => (
+          <img src={utmifyLogo} alt="UTMify" className={className || "h-6 w-auto"} />
+        ),
+        color: 'text-blue-500'
+      };
     }
     
     if (integrationType) {
