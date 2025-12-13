@@ -7,6 +7,7 @@ import { Plus, Facebook, Webhook, Palette, Settings, Mail, RotateCcw } from "luc
 import utmifyLogo from '@/assets/utmify-logo.png';
 import googleAnalyticsLogo from '@/assets/google-analytics-logo.png';
 import googleAdsLogo from '@/assets/google-ads-logo.png';
+import metaLogo from '@/assets/meta-logo.png';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { IntegrationCard } from "@/components/IntegrationCard";
 import { IntegrationStats } from "@/components/IntegrationStats";
@@ -134,7 +135,7 @@ export function AppsTabLayout() {
             name: 'Facebook Pixel',
             active: pixel.enabled || false,
             createdAt: new Date(pixel.created_at || '').toLocaleDateString(),
-            icon: <Facebook className="w-5 h-5 text-blue-600" />,
+            icon: <img src={metaLogo} alt="Meta" className="h-5 w-auto object-contain" />,
             productName: pixel.products?.name || 'Produto não encontrado',
             productId: pixel.product_id
           });

@@ -5,6 +5,7 @@ import { Facebook, Webhook, Settings, Palette, Plus, Construction } from 'lucide
 import utmifyLogo from '@/assets/utmify-logo.png';
 import googleAnalyticsLogo from '@/assets/google-analytics-logo.png';
 import googleAdsLogo from '@/assets/google-ads-logo.png';
+import metaLogo from '@/assets/meta-logo.png';
 
 export interface IntegrationType {
   id: string;
@@ -24,8 +25,10 @@ const integrationTypes: IntegrationType[] = [
     id: 'facebook-pixel',
     name: 'Facebook + Instagram',
     description: 'Configure Pixel ID e API de Conversões',
-    icon: ({ className }: { className?: string }) => <Facebook className={className} />,
-    color: 'text-blue-600'
+    icon: ({ className }: { className?: string }) => (
+      <img src={metaLogo} alt="Meta" className="h-8 w-auto object-contain" />
+    ),
+    color: ''
   },
   {
     id: 'tiktok-pixel',
