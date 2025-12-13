@@ -5,7 +5,8 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Shield, CheckCircle, Zap, MessageSquare, TrendingUp, Crown, Smartphone, Phone, AlertCircle, Sparkles, X, ChevronRight } from 'lucide-react';
+import { useOptimizedPayment } from '@/hooks/useOptimizedPayment';
+import { Loader2, Shield, CheckCircle, Zap, MessageSquare, TrendingUp, Crown, Smartphone, Phone, AlertCircle, Sparkles, X, ChevronRight, Copy, Check } from 'lucide-react';
 import { formatPrice } from '@/utils/priceFormatting';
 import { getPaymentMethodsByCountry, PaymentMethod } from '@/utils/paymentMethods';
 import { getPaymentMethodImage } from '@/utils/paymentMethodImages';
@@ -25,6 +26,13 @@ interface ChatTokenPurchaseModalProps {
   onClose: () => void;
   selectedPackage: TokenPackage | null;
   onPurchaseComplete: () => void;
+}
+
+interface ReferenceData {
+  entity: string;
+  reference: string;
+  amount: number;
+  expiresAt?: string;
 }
 
 const supportedCountries = {
@@ -49,7 +57,11 @@ export function ChatTokenPurchaseModal({
   const [waitingForConfirmation, setWaitingForConfirmation] = useState(false);
   const [countdown, setCountdown] = useState(90);
   const [paymentError, setPaymentError] = useState('');
+  const [referenceData, setReferenceData] = useState<ReferenceData | null>(null);
+  const [copiedEntity, setCopiedEntity] = useState(false);
+  const [copiedReference, setCopiedReference] = useState(false);
   const { toast } = useToast();
+  const { processStripePayment, isProcessing: stripeProcessing } = useOptimizedPayment();
 
   useEffect(() => {
     if (!isOpen) {
@@ -58,6 +70,7 @@ export function ChatTokenPurchaseModal({
       setExpressPhone('');
       setMbwayPhone('');
       setPaymentError('');
+      setReferenceData(null);
     }
   }, [isOpen]);
 
@@ -139,6 +152,17 @@ export function ChatTokenPurchaseModal({
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const copyToClipboard = (text: string, type: 'entity' | 'reference') => {
+    navigator.clipboard.writeText(text);
+    if (type === 'entity') {
+      setCopiedEntity(true);
+      setTimeout(() => setCopiedEntity(false), 2000);
+    } else {
+      setCopiedReference(true);
+      setTimeout(() => setCopiedReference(false), 2000);
+    }
+  };
+
   const handlePayment = async () => {
     if (!selectedPackage || !selectedPaymentMethod) {
       toast({
@@ -172,7 +196,9 @@ export function ChatTokenPurchaseModal({
       if (!user) throw new Error('Não autenticado');
 
       const priceInfo = getDisplayPrice();
+      const orderId = `tokens-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
+      // Angola payments (Express and Reference)
       if (country === 'AO' && (selectedPaymentMethod === 'express' || selectedPaymentMethod === 'reference')) {
         const cleanPhone = expressPhone.replace(/\D/g, '');
         
@@ -213,62 +239,64 @@ export function ChatTokenPurchaseModal({
           if (transactionId) {
             pollPaymentStatus(transactionId, selectedPackage.tokens);
           }
-        } else {
-          toast({
-            title: 'Referência gerada',
-            description: `Use a referência ${data?.orderId || 'gerada'} para efetuar o pagamento.`
-          });
-          onClose();
+        } else if (selectedPaymentMethod === 'reference') {
+          // Show reference data UI
+          if (data?.entity && data?.reference) {
+            setReferenceData({
+              entity: data.entity,
+              reference: data.reference,
+              amount: priceInfo.price,
+              expiresAt: data.expiresAt
+            });
+            toast({
+              title: 'Referência gerada com sucesso',
+              description: 'Use os dados abaixo para efetuar o pagamento.'
+            });
+          } else {
+            throw new Error('Dados da referência não recebidos');
+          }
         }
+        setProcessing(false);
         return;
       }
 
+      // Stripe payments (card, multibanco, klarna, mbway)
       if (['card', 'klarna', 'multibanco', 'mbway', 'card_uk', 'klarna_uk', 'card_us'].includes(selectedPaymentMethod)) {
-        // Usar a mesma função do checkout principal
-        const { data, error } = await supabase.functions.invoke('create-stripe-payment', {
-          body: {
-            amount: priceInfo.price,
-            currency: priceInfo.currency,
-            productName: `Chat Tokens: ${selectedPackage.name} (${selectedPackage.tokens.toLocaleString()} tokens)`,
-            customerEmail: user.email,
-            customerName: user.user_metadata?.full_name || user.email,
-            productId: `chat-tokens-${selectedPackage.id}`,
-            orderId: `tokens-${Date.now()}`,
-            paymentMethod: selectedPaymentMethod,
-            mbwayPhone: selectedPaymentMethod === 'mbway' ? mbwayPhone : undefined
+        await processStripePayment({
+          amount: priceInfo.price,
+          currency: priceInfo.currency,
+          productName: `Chat Tokens: ${selectedPackage.name} (${selectedPackage.tokens.toLocaleString()} tokens)`,
+          customerEmail: user.email || '',
+          customerName: user.user_metadata?.full_name || user.email || '',
+          productId: `chat-tokens-${selectedPackage.id}`,
+          orderId: orderId
+        }, {
+          onSuccess: () => {
+            onClose();
+          },
+          onError: (error) => {
+            setPaymentError(error);
           }
         });
-
-        if (error) throw error;
-
-        if (data?.url) {
-          window.open(data.url, '_blank');
-          onClose();
-          return;
-        }
-
-        if (data?.error) {
-          throw new Error(data.error);
-        }
+        setProcessing(false);
+        return;
       }
 
+      // Mozambique payments
       if (country === 'MZ' && (selectedPaymentMethod === 'mpesa' || selectedPaymentMethod === 'emola')) {
         toast({
           title: 'Pagamento pendente',
           description: `Pagamento via ${selectedPaymentMethod === 'mpesa' ? 'M-Pesa' : 'e-Mola'} ainda não disponível. Entre em contato com o suporte.`,
           variant: 'default'
         });
-        onClose();
+        setProcessing(false);
         return;
       }
 
     } catch (error) {
       console.error('Payment error:', error);
       setPaymentError(error instanceof Error ? error.message : 'Não foi possível processar o pagamento.');
-    } finally {
-      if (!waitingForConfirmation) {
-        setProcessing(false);
-      }
+      setProcessing(false);
     }
   };
 
@@ -284,7 +312,7 @@ export function ChatTokenPurchaseModal({
       }
 
       try {
-        const { data, error } = await supabase.functions.invoke('check-appypay-status', {
+        const { data } = await supabase.functions.invoke('check-appypay-status', {
           body: { transactionId }
         });
 
@@ -407,7 +435,90 @@ export function ChatTokenPurchaseModal({
             )}
           </AnimatePresence>
 
-          {!waitingForConfirmation && (
+          {/* Reference Payment Data Display */}
+          <AnimatePresence mode="wait">
+            {referenceData && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border border-emerald-500/20 rounded-2xl p-5 space-y-4"
+              >
+                <div className="flex items-center justify-center mb-2">
+                  <div className="w-12 h-12 bg-emerald-500 rounded-full flex items-center justify-center">
+                    <Check className="h-6 w-6 text-white" />
+                  </div>
+                </div>
+                
+                <div className="text-center mb-4">
+                  <h3 className="font-semibold text-emerald-700 dark:text-emerald-300">
+                    Referência gerada com sucesso!
+                  </h3>
+                  <p className="text-sm text-emerald-600/80 dark:text-emerald-400/80">
+                    Use os dados abaixo para efetuar o pagamento
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="bg-background/50 rounded-xl p-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-muted-foreground">Entidade:</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-bold text-lg">{referenceData.entity}</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => copyToClipboard(referenceData.entity, 'entity')}
+                          className="h-8 w-8 p-0"
+                        >
+                          {copiedEntity ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-background/50 rounded-xl p-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-muted-foreground">Referência:</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-bold text-lg">{referenceData.reference}</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => copyToClipboard(referenceData.reference, 'reference')}
+                          className="h-8 w-8 p-0"
+                        >
+                          {copiedReference ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-background/50 rounded-xl p-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-muted-foreground">Montante:</span>
+                      <span className="font-mono font-bold text-lg">{formatPrice(referenceData.amount)} KZ</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <Button
+                    className="w-full"
+                    variant="outline"
+                    onClick={() => {
+                      setReferenceData(null);
+                      onClose();
+                    }}
+                  >
+                    Fechar
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {!waitingForConfirmation && !referenceData && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -588,14 +699,14 @@ export function ChatTokenPurchaseModal({
         </div>
 
         {/* Footer */}
-        {!waitingForConfirmation && (
+        {!waitingForConfirmation && !referenceData && (
           <div className="p-6 pt-0 space-y-3">
             <Button 
               className="w-full h-12 text-base font-semibold rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-shadow"
               onClick={handlePayment}
-              disabled={!selectedPaymentMethod || processing}
+              disabled={!selectedPaymentMethod || processing || stripeProcessing}
             >
-              {processing ? (
+              {processing || stripeProcessing ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                   Processando...
