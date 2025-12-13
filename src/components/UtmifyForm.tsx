@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Save, Key, ExternalLink, CheckCircle2, Zap } from 'lucide-react';
 
@@ -26,50 +26,34 @@ export function UtmifyForm({ productId, onSaveSuccess }: UtmifyFormProps) {
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
   const [existingSetting, setExistingSetting] = useState<UtmifySetting | null>(null);
-  const { toast } = useToast();
-
   const handleTestConnection = async () => {
-    console.log('🔵 handleTestConnection chamado');
-    console.log('🔵 apiToken:', apiToken);
-    
     if (!apiToken.trim()) {
-      console.log('🔴 Token vazio');
-      toast({
-        title: 'Token obrigatório',
+      toast.error('Token obrigatório', {
         description: 'Por favor, insira o API Token antes de testar.',
-        variant: 'destructive',
       });
       return;
     }
 
-    console.log('🔵 Iniciando teste...');
     setTesting(true);
     
     // Simula um pequeno delay para feedback visual
     await new Promise(resolve => setTimeout(resolve, 800));
     
     const token = apiToken.trim();
-    console.log('🔵 Token length:', token.length);
     
     // Validação do formato do token UTMify
     if (token.length < 10) {
-      console.log('🔴 Token muito curto');
-      toast({
-        title: 'Token muito curto',
+      toast.error('Token muito curto', {
         description: 'O token UTMify parece estar incompleto.',
-        variant: 'destructive',
       });
       setTesting(false);
       return;
     }
 
     // Token passou nas validações básicas
-    console.log('🟢 Token validado, mostrando toast...');
-    toast({
-      title: 'Token validado!',
+    toast.success('Token validado!', {
       description: 'O formato do token está correto. Salve a configuração para ativar a integração.',
     });
-    console.log('🟢 Toast chamado');
     
     setTesting(false);
   };
@@ -109,10 +93,8 @@ export function UtmifyForm({ productId, onSaveSuccess }: UtmifyFormProps) {
     e.preventDefault();
     
     if (!apiToken.trim()) {
-      toast({
-        title: 'Token obrigatório',
+      toast.error('Token obrigatório', {
         description: 'Por favor, insira o API Token da UTMify.',
-        variant: 'destructive',
       });
       return;
     }
@@ -145,18 +127,15 @@ export function UtmifyForm({ productId, onSaveSuccess }: UtmifyFormProps) {
         if (error) throw error;
       }
 
-      toast({
-        title: 'Sucesso!',
+      toast.success('Sucesso!', {
         description: 'Configurações da UTMify salvas com sucesso.',
       });
 
       onSaveSuccess();
     } catch (error: any) {
       console.error('Error saving UTMify settings:', error);
-      toast({
-        title: 'Erro ao salvar',
+      toast.error('Erro ao salvar', {
         description: error.message || 'Ocorreu um erro ao salvar as configurações.',
-        variant: 'destructive',
       });
     } finally {
       setSaving(false);
