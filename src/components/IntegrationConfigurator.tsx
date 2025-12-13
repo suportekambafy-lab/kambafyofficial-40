@@ -9,7 +9,7 @@ import { OrderBumpConfigurator } from '@/components/OrderBumpConfigurator';
 import { UpsellConfigurator } from '@/components/UpsellConfigurator';
 import { QuizBuilder } from '@/components/QuizBuilder';
 import { UtmifyForm } from '@/components/UtmifyForm';
-
+import { DiscountCouponsForm } from '@/components/DiscountCouponsForm';
 import { IntegrationType } from '@/components/IntegrationTypeSelector';
 
 interface Product {
@@ -112,6 +112,13 @@ export function IntegrationConfigurator({
 
       {integrationType.id === 'utmify' && (
         <UtmifyForm 
+          productId={product.id}
+          onSaveSuccess={handleSuccess}
+        />
+      )}
+
+      {integrationType.id === 'discount-coupons' && (
+        <DiscountCouponsForm 
           productId={product.id}
           onSaveSuccess={handleSuccess}
         />

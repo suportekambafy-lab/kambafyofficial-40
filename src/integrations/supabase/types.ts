@@ -800,6 +800,48 @@ export type Database = {
         }
         Relationships: []
       }
+      coupon_uses: {
+        Row: {
+          coupon_id: string
+          customer_email: string
+          discount_applied: number
+          id: string
+          order_id: string | null
+          used_at: string
+        }
+        Insert: {
+          coupon_id: string
+          customer_email: string
+          discount_applied: number
+          id?: string
+          order_id?: string | null
+          used_at?: string
+        }
+        Update: {
+          coupon_id?: string
+          customer_email?: string
+          discount_applied?: number
+          id?: string
+          order_id?: string | null
+          used_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupon_uses_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "discount_coupons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupon_uses_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_access: {
         Row: {
           access_expires_at: string | null
@@ -953,6 +995,71 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "customer_subscriptions_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discount_coupons: {
+        Row: {
+          code: string
+          created_at: string
+          currency: string | null
+          current_uses: number | null
+          discount_type: string
+          discount_value: number
+          id: string
+          is_active: boolean | null
+          max_uses: number | null
+          min_purchase_amount: number | null
+          product_id: string | null
+          updated_at: string
+          user_id: string
+          uses_per_customer: number | null
+          valid_from: string | null
+          valid_until: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          currency?: string | null
+          current_uses?: number | null
+          discount_type: string
+          discount_value: number
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          min_purchase_amount?: number | null
+          product_id?: string | null
+          updated_at?: string
+          user_id: string
+          uses_per_customer?: number | null
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          currency?: string | null
+          current_uses?: number | null
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          min_purchase_amount?: number | null
+          product_id?: string | null
+          updated_at?: string
+          user_id?: string
+          uses_per_customer?: number | null
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discount_coupons_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
