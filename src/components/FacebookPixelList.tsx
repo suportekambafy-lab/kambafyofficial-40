@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Plus, 
   Trash2, 
@@ -13,7 +14,9 @@ import {
   ChevronUp,
   MoreVertical,
   ExternalLink,
-  Monitor
+  Monitor,
+  ArrowLeft,
+  ArrowRight
 } from 'lucide-react';
 import { useFacebookPixelList } from '@/hooks/useFacebookPixelList';
 import { toast } from 'sonner';
@@ -34,11 +37,39 @@ interface FacebookPixelListProps {
   onSaveSuccess: () => void;
 }
 
+interface PixelEvent {
+  id: string;
+  name: string;
+  description: string;
+  highlight?: string;
+}
+
+const PIXEL_EVENTS: PixelEvent[] = [
+  {
+    id: 'purchase',
+    name: 'Vendas realizadas',
+    description: 'Saiba quantas pessoas finalizaram a compra e chegaram até a',
+    highlight: 'Página de obrigado'
+  },
+  {
+    id: 'initiate_checkout',
+    name: 'Visitas na Página de pagamento',
+    description: 'Saiba quantas pessoas visitaram a sua Página de pagamento.'
+  },
+  {
+    id: 'view_content',
+    name: 'Visitas na Página de produto',
+    description: 'Saiba quantas pessoas visitaram a sua Página de produto.'
+  }
+];
+
 // Validar se o Pixel ID é válido (apenas números, 15-17 dígitos)
 const isValidPixelId = (pixelId: string): boolean => {
   const cleanId = pixelId.trim();
   return /^\d{15,17}$/.test(cleanId);
 };
+
+type AddStep = 'pixel-id' | 'events';
 
 export function FacebookPixelList({
   productId,
@@ -53,8 +84,10 @@ export function FacebookPixelList({
   } = useFacebookPixelList(productId);
   const [newPixelId, setNewPixelId] = useState('');
   const [isAdding, setIsAdding] = useState(false);
+  const [addStep, setAddStep] = useState<AddStep>('pixel-id');
   const [pixelError, setPixelError] = useState('');
   const [expandedPixel, setExpandedPixel] = useState<string | null>(null);
+  const [selectedEvents, setSelectedEvents] = useState<string[]>(['purchase', 'initiate_checkout', 'view_content']);
 
   const handlePixelIdChange = (value: string) => {
     const numericValue = value.replace(/\D/g, '');
@@ -62,7 +95,7 @@ export function FacebookPixelList({
     if (pixelError) setPixelError('');
   };
 
-  const handleAddPixel = async () => {
+  const handleContinueToEvents = () => {
     if (!newPixelId.trim()) {
       setPixelError('Digite o ID do Pixel');
       return;
@@ -76,6 +109,10 @@ export function FacebookPixelList({
       return;
     }
     
+    setAddStep('events');
+  };
+
+  const handleAddPixel = async () => {
     const success = await addPixel({
       pixelId: newPixelId.trim(),
       enabled: true
@@ -83,10 +120,23 @@ export function FacebookPixelList({
     if (success) {
       setNewPixelId('');
       setIsAdding(false);
+      setAddStep('pixel-id');
       setPixelError('');
       onSaveSuccess();
       toast.success('Pixel adicionado com sucesso!');
     }
+  };
+
+  const handleToggleEvent = (eventId: string) => {
+    setSelectedEvents(prev => 
+      prev.includes(eventId) 
+        ? prev.filter(id => id !== eventId)
+        : [...prev, eventId]
+    );
+  };
+
+  const handleBackToPixelId = () => {
+    setAddStep('pixel-id');
   };
 
   const handleTogglePixel = async (pixelId: string, enabled: boolean, pixelIdValue: string) => {
@@ -245,8 +295,8 @@ export function FacebookPixelList({
         </Card>
       )}
 
-      {/* Formulário para adicionar novo pixel */}
-      {isAdding && (
+      {/* Formulário para adicionar novo pixel - Step 1: Pixel ID */}
+      {isAdding && addStep === 'pixel-id' && (
         <Card className="border-2 border-primary/50 shadow-lg shadow-primary/5">
           <CardContent className="pt-6 space-y-5">
             {/* Header com logos */}
@@ -298,21 +348,93 @@ export function FacebookPixelList({
                   setIsAdding(false);
                   setNewPixelId('');
                   setPixelError('');
+                  setAddStep('pixel-id');
                 }} 
                 className="flex-1"
               >
                 Cancelar
               </Button>
               <Button 
-                onClick={handleAddPixel} 
+                onClick={handleContinueToEvents} 
                 className="flex-1 bg-primary hover:bg-primary/90"
                 disabled={!newPixelId || newPixelId.length < 15}
               >
                 Continuar
+                <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Formulário para adicionar novo pixel - Step 2: Eventos */}
+      {isAdding && addStep === 'events' && (
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-lg font-semibold text-foreground mb-1">
+              Quais eventos você quer receber?
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Pixel ID: <span className="font-mono font-medium">{newPixelId}</span>
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            {PIXEL_EVENTS.map((event) => (
+              <Card 
+                key={event.id}
+                className={`cursor-pointer transition-all border-2 ${
+                  selectedEvents.includes(event.id) 
+                    ? 'border-primary bg-primary/5' 
+                    : 'border-border hover:border-border/80'
+                }`}
+                onClick={() => handleToggleEvent(event.id)}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <Checkbox 
+                      checked={selectedEvents.includes(event.id)}
+                      onCheckedChange={() => handleToggleEvent(event.id)}
+                      className="mt-0.5"
+                    />
+                    <div className="flex-1">
+                      <h4 className="font-medium text-foreground">
+                        {event.name}
+                      </h4>
+                      <p className="text-sm text-muted-foreground mt-0.5">
+                        {event.description}
+                        {event.highlight && (
+                          <span className="font-semibold text-foreground"> {event.highlight}</span>
+                        )}
+                        {!event.highlight && '.'}
+                        {event.highlight && ' do seu produto.'}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <Button 
+              variant="outline" 
+              onClick={handleBackToPixelId} 
+              className="flex-1"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Voltar
+            </Button>
+            <Button 
+              onClick={handleAddPixel} 
+              className="flex-1 bg-primary hover:bg-primary/90"
+              disabled={selectedEvents.length === 0}
+            >
+              Continuar
+              <ArrowRight className="h-4 w-4 ml-2" />
+            </Button>
+          </div>
+        </div>
       )}
 
       {/* Botão para adicionar mais pixels */}
