@@ -6,7 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Save, Key, ExternalLink, CheckCircle2, Zap } from 'lucide-react';
+import { Loader2, Save, Key, Zap } from 'lucide-react';
+import utmifyLogo from '@/assets/utmify-logo.png';
 
 interface UtmifyFormProps {
   productId: string;
@@ -177,9 +178,11 @@ export function UtmifyForm({ productId, onSaveSuccess }: UtmifyFormProps) {
     <div className="space-y-6">
       {/* Header UTMify */}
       <div className="flex items-center justify-center py-4">
-        <span className="text-2xl font-bold text-[#3B82F6]">
-          UTMify
-        </span>
+        <img 
+          src={utmifyLogo} 
+          alt="UTMify" 
+          className="h-10 object-contain"
+        />
       </div>
 
       <Card>

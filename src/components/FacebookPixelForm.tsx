@@ -3,6 +3,7 @@ import { FacebookPixelList } from './FacebookPixelList';
 import { FacebookApiList } from './FacebookApiList';
 import { Monitor, Server, CheckCircle2, ArrowRight, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import metaLogo from '@/assets/meta-logo.png';
 
 interface FacebookPixelFormProps {
   onSaveSuccess: () => void;
@@ -35,14 +36,12 @@ export function FacebookPixelForm({ onSaveSuccess, productId }: FacebookPixelFor
   return (
     <div className="space-y-6">
       {/* Header com logos Facebook + Instagram */}
-      <div className="flex items-center justify-center gap-3 py-4">
-        <span className="text-3xl font-bold text-[#1877F2]" style={{ fontFamily: 'Helvetica Neue, Helvetica, Arial, sans-serif' }}>
-          facebook
-        </span>
-        <span className="text-2xl text-muted-foreground">+</span>
-        <span className="text-3xl font-semibold bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#F77737] bg-clip-text text-transparent" style={{ fontFamily: 'Billabong, cursive, sans-serif' }}>
-          Instagram
-        </span>
+      <div className="flex items-center justify-center py-4">
+        <img 
+          src={metaLogo} 
+          alt="Meta" 
+          className="h-12 object-contain"
+        />
       </div>
 
       {/* Step Indicator */}
