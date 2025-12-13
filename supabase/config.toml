@@ -194,3 +194,9 @@ verify_jwt = false
 
 [functions.create-test-user]
 verify_jwt = false
+
+[functions.chat-with-credits]
+verify_jwt = false
+
+[functions.chat-support]
+verify_jwt = false
