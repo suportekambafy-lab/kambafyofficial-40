@@ -1,0 +1,336 @@
+import { useState, useMemo } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { Loader2, Shield, CheckCircle, Zap, MessageSquare, TrendingUp, Crown } from 'lucide-react';
+import { formatPrice } from '@/utils/priceFormatting';
+import { getPaymentMethodsByCountry, PaymentMethod } from '@/utils/paymentMethods';
+import { getPaymentMethodImage } from '@/utils/paymentMethodImages';
+
+interface TokenPackage {
+  id: string;
+  name: string;
+  description: string;
+  tokens: number;
+  price_kz: number;
+}
+
+interface ChatTokenPurchaseModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  selectedPackage: TokenPackage | null;
+  onPurchaseComplete: () => void;
+}
+
+const supportedCountries = {
+  AO: { code: 'AO', name: 'Angola', flag: '🇦🇴', currency: 'KZ', rate: 1 },
+  MZ: { code: 'MZ', name: 'Moçambique', flag: '🇲🇿', currency: 'MZN', rate: 0.15 },
+  PT: { code: 'PT', name: 'Portugal', flag: '🇵🇹', currency: 'EUR', rate: 0.0011 },
+  GB: { code: 'GB', name: 'Reino Unido', flag: '🇬🇧', currency: 'GBP', rate: 0.00094 },
+  US: { code: 'US', name: 'Estados Unidos', flag: '🇺🇸', currency: 'USD', rate: 0.0012 }
+};
+
+export function ChatTokenPurchaseModal({ 
+  isOpen, 
+  onClose, 
+  selectedPackage,
+  onPurchaseComplete 
+}: ChatTokenPurchaseModalProps) {
+  const [country, setCountry] = useState('AO');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
+  const [processing, setProcessing] = useState(false);
+  const { toast } = useToast();
+
+  const availablePaymentMethods = useMemo(() => {
+    const methods = getPaymentMethodsByCountry(country);
+    
+    // Add Stripe methods for supported countries
+    if (country === 'PT') {
+      const stripeMethods = [
+        { id: 'card', name: 'Cartão de Crédito/Débito', enabled: true, isPortugal: true },
+        { id: 'klarna', name: 'Klarna', enabled: true, isPortugal: true },
+        { id: 'multibanco', name: 'Multibanco', enabled: true, isPortugal: true },
+        { id: 'mbway', name: 'MB Way', enabled: true, isPortugal: true }
+      ];
+      stripeMethods.forEach(stripeMethod => {
+        if (!methods.find(m => m.id === stripeMethod.id)) {
+          methods.push(stripeMethod as PaymentMethod);
+        }
+      });
+    }
+    
+    return methods;
+  }, [country]);
+
+  const getDisplayPrice = () => {
+    if (!selectedPackage) return { price: 0, formatted: '0', currency: 'KZ' };
+    
+    const countryData = supportedCountries[country as keyof typeof supportedCountries];
+    const convertedPrice = selectedPackage.price_kz * countryData.rate;
+    
+    if (country === 'AO') {
+      return { 
+        price: selectedPackage.price_kz, 
+        formatted: formatPrice(selectedPackage.price_kz),
+        currency: 'KZ'
+      };
+    }
+    
+    return { 
+      price: convertedPrice, 
+      formatted: new Intl.NumberFormat('pt-PT', { 
+        style: 'currency', 
+        currency: countryData.currency 
+      }).format(convertedPrice),
+      currency: countryData.currency
+    };
+  };
+
+  const getPackageIcon = (name: string) => {
+    switch (name?.toLowerCase()) {
+      case 'starter': return <MessageSquare className="h-5 w-5" />;
+      case 'básico': return <Zap className="h-5 w-5" />;
+      case 'pro': return <TrendingUp className="h-5 w-5" />;
+      case 'business': return <Crown className="h-5 w-5" />;
+      default: return <MessageSquare className="h-5 w-5" />;
+    }
+  };
+
+  const handlePayment = async () => {
+    if (!selectedPackage || !selectedPaymentMethod) {
+      toast({
+        title: 'Selecione um método de pagamento',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setProcessing(true);
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Não autenticado');
+
+      const priceInfo = getDisplayPrice();
+
+      // For Stripe methods (card, klarna, multibanco, mbway in PT/GB/US)
+      if (['card', 'klarna', 'multibanco', 'mbway', 'card_uk', 'klarna_uk', 'card_us'].includes(selectedPaymentMethod)) {
+        const { data, error } = await supabase.functions.invoke('process-stripe-payment', {
+          body: {
+            amount: Math.round(priceInfo.price * 100),
+            currency: priceInfo.currency.toLowerCase(),
+            productName: `Chat Tokens: ${selectedPackage.name}`,
+            productDescription: `${selectedPackage.tokens.toLocaleString()} tokens para Chat IA`,
+            customerEmail: user.email,
+            metadata: {
+              type: 'chat_tokens',
+              package_id: selectedPackage.id,
+              tokens: selectedPackage.tokens,
+              user_id: user.id
+            },
+            paymentMethod: selectedPaymentMethod,
+            successUrl: `${window.location.origin}/vendedor/apps?purchase=success&tokens=${selectedPackage.tokens}`,
+            cancelUrl: `${window.location.origin}/vendedor/apps?purchase=cancelled`
+          }
+        });
+
+        if (error) throw error;
+        if (data?.url) {
+          window.open(data.url, '_blank');
+          onClose();
+          return;
+        }
+      }
+
+      // For Express/Reference (Angola)
+      if (['express', 'reference'].includes(selectedPaymentMethod)) {
+        const { data, error } = await supabase.functions.invoke('process-appypay-payment', {
+          body: {
+            amount: priceInfo.price,
+            currency: 'AOA',
+            paymentMethod: selectedPaymentMethod,
+            customerEmail: user.email,
+            customerName: user.email?.split('@')[0] || 'Cliente',
+            description: `Chat Tokens: ${selectedPackage.name}`,
+            metadata: {
+              type: 'chat_tokens',
+              package_id: selectedPackage.id,
+              tokens: selectedPackage.tokens,
+              user_id: user.id
+            }
+          }
+        });
+
+        if (error) throw error;
+
+        if (selectedPaymentMethod === 'express' && data?.payment_url) {
+          window.open(data.payment_url, '_blank');
+        } else if (selectedPaymentMethod === 'reference' && data?.reference) {
+          toast({
+            title: 'Referência gerada!',
+            description: `Entidade: ${data.entity} | Referência: ${data.reference}`
+          });
+        }
+        
+        onClose();
+        return;
+      }
+
+      // For other methods (M-Pesa, e-Mola, transfer) - show instructions
+      toast({
+        title: 'Instruções de Pagamento',
+        description: `Use o método ${selectedPaymentMethod} para pagar ${priceInfo.formatted}. Após confirmação, os tokens serão creditados automaticamente.`
+      });
+
+      onClose();
+
+    } catch (error) {
+      console.error('Payment error:', error);
+      toast({
+        title: 'Erro no pagamento',
+        description: 'Não foi possível processar o pagamento. Tente novamente.',
+        variant: 'destructive'
+      });
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const priceInfo = getDisplayPrice();
+
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Zap className="h-5 w-5 text-primary" />
+            Comprar Tokens
+          </DialogTitle>
+          <DialogDescription>
+            Selecione o país e método de pagamento
+          </DialogDescription>
+        </DialogHeader>
+
+        {selectedPackage && (
+          <div className="space-y-6">
+            {/* Package Summary */}
+            <Card className="p-4 bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+                  {getPackageIcon(selectedPackage.name)}
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-lg">{selectedPackage.name}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedPackage.tokens.toLocaleString()} tokens
+                  </p>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl font-bold text-primary">
+                    {priceInfo.formatted}
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            {/* Country Selection */}
+            <div className="space-y-2">
+              <Label>País</Label>
+              <Select 
+                value={country} 
+                onValueChange={(value) => {
+                  setCountry(value);
+                  setSelectedPaymentMethod('');
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o país" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.values(supportedCountries).map((c) => (
+                    <SelectItem key={c.code} value={c.code}>
+                      <div className="flex items-center gap-2">
+                        <span>{c.flag}</span>
+                        <span>{c.name}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Payment Methods */}
+            <div className="space-y-2">
+              <Label>Método de Pagamento</Label>
+              <div className="grid grid-cols-1 gap-2">
+                {availablePaymentMethods.map((method) => {
+                  const isSelected = selectedPaymentMethod === method.id;
+                  const image = getPaymentMethodImage(method.id);
+                  
+                  return (
+                    <button
+                      key={method.id}
+                      type="button"
+                      onClick={() => setSelectedPaymentMethod(method.id)}
+                      className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-all ${
+                        isSelected 
+                          ? 'border-primary bg-primary/5' 
+                          : 'border-border hover:border-primary/50 hover:bg-muted/50'
+                      }`}
+                    >
+                      {image ? (
+                        <img 
+                          src={image} 
+                          alt={method.name} 
+                          className="h-8 w-12 object-contain"
+                        />
+                      ) : (
+                        <div className="h-8 w-12 rounded bg-muted flex items-center justify-center">
+                          <Shield className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                      )}
+                      <span className="flex-1 text-left font-medium">{method.name}</span>
+                      {isSelected && (
+                        <CheckCircle className="h-5 w-5 text-primary" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Payment Button */}
+            <Button 
+              className="w-full h-12 text-lg"
+              onClick={handlePayment}
+              disabled={!selectedPaymentMethod || processing}
+            >
+              {processing ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Processando...
+                </>
+              ) : (
+                <>
+                  <Shield className="mr-2 h-5 w-5" />
+                  Pagar {priceInfo.formatted}
+                </>
+              )}
+            </Button>
+
+            {/* Security Notice */}
+            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+              <Shield className="h-3 w-3" />
+              <span>Pagamento seguro e encriptado</span>
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
