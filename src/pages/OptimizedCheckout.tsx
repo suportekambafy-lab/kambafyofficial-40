@@ -506,6 +506,9 @@ const OptimizedCheckout = () => {
     );
   }
 
+  // DEBUG: Log antes do return principal
+  console.log('[OptimizedCheckout] Main return - product:', { id: product?.id, name: product?.name, hasProduct: !!product });
+
   return (
     <ThemeProvider forceLightMode={true}>
       <div className="min-h-screen bg-gray-50">
@@ -1339,16 +1342,13 @@ const OptimizedCheckout = () => {
       />
 
       {/* Live Chat AI Widget */}
-      {(() => {
-        console.log('[OptimizedCheckout] LiveChatWidget render check:', { productId: product?.id, hasProduct: !!product });
-        return product?.id ? (
-          <LiveChatWidget 
-            productId={product.id}
-            customerName={formData.fullName}
-            customerEmail={formData.email}
-          />
-        ) : null;
-      })()}
+      {product?.id && (
+        <LiveChatWidget 
+          productId={product.id}
+          customerName={formData.fullName}
+          customerEmail={formData.email}
+        />
+      )}
     </ThemeProvider>
   );
 };
