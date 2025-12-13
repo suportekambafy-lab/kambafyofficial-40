@@ -32,6 +32,7 @@ import { PrivacyModal } from "@/components/checkout/PrivacyModal";
 import { RefundPolicyModal } from "@/components/checkout/RefundPolicyModal";
 import { countTotalSales } from "@/utils/orderUtils";
 import { CouponInput } from "@/components/checkout/CouponInput";
+import { LiveChatWidget } from "@/components/apps/live-chat/LiveChatWidget";
 
 // Importar componentes otimizados
 import { OptimizedCustomBanner, OptimizedCountdownTimer, OptimizedFakeReviews, OptimizedSocialProof, OptimizedSpotsCounter, OptimizedOrderBump, OptimizedStripeCardPayment } from '@/components/checkout/OptimizedCheckoutComponents';
@@ -2834,6 +2835,14 @@ const Checkout = () => {
         </div>
       </div>
       
+      {/* Live Chat AI Widget */}
+      {product?.id && (
+        <LiveChatWidget 
+          productId={product.id}
+          customerName={formData.fullName}
+          customerEmail={formData.email}
+        />
+      )}
     </ThemeProvider>
 };
 export default Checkout;
