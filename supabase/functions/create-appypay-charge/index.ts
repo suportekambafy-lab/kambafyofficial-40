@@ -573,6 +573,53 @@ Deno.serve(async (req) => {
           console.error("Webhook error details:", webhookError);
           logStep("Webhook error", webhookError);
         }
+
+        // 📊 ENVIAR CONVERSÃO PARA UTMIFY
+        try {
+          logStep('📊 Verificando UTMify para o produto...');
+          
+          // Parse order bump data if exists
+          let orderBumpParsed = null;
+          if (orderDataToSave.order_bump_data) {
+            try {
+              orderBumpParsed = typeof orderDataToSave.order_bump_data === 'string' 
+                ? JSON.parse(orderDataToSave.order_bump_data) 
+                : orderDataToSave.order_bump_data;
+            } catch (e) {
+              logStep('⚠️ Erro ao parsear order_bump_data');
+            }
+          }
+
+          const utmifyPayload = {
+            orderId: orderId,
+            orderUuid: insertedOrder?.id || orderId,
+            amount: parseFloat(orderDataToSave.amount?.toString() || grossAmount.toString()),
+            currency: orderDataToSave.currency || 'KZ',
+            customerName: customerData.name,
+            customerEmail: customerData.email,
+            customerPhone: phoneNumber || customerData.phone,
+            customerCountry: customerCountry || 'AO',
+            productId: productId,
+            productName: productNameToUse || product?.name || '',
+            paymentMethod: paymentMethod,
+            utmParams: orderDataToSave.utm_params || checkoutOrderData?.utm_params || null,
+            orderBumpData: orderBumpParsed
+          };
+
+          logStep('📤 Enviando para UTMify:', JSON.stringify(utmifyPayload));
+
+          const { data: utmifyResult, error: utmifyError } = await supabase.functions.invoke('send-utmify-conversion', {
+            body: utmifyPayload
+          });
+
+          if (utmifyError) {
+            logStep('❌ Erro ao chamar send-utmify-conversion:', utmifyError);
+          } else {
+            logStep('📊 UTMify result:', utmifyResult);
+          }
+        } catch (utmifyErr) {
+          logStep('⚠️ Erro ao processar UTMify:', utmifyErr);
+        }
         
         // 🔔 ENVIAR NOTIFICAÇÃO ONESIGNAL PARA O VENDEDOR SOBRE VENDA APROVADA
         if (product?.user_id) {
