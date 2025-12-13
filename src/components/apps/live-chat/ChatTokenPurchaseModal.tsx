@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useOptimizedPayment } from '@/hooks/useOptimizedPayment';
-import { Loader2, Shield, CheckCircle, Zap, MessageSquare, TrendingUp, Crown, Smartphone, Phone, AlertCircle, Sparkles, X, ChevronRight, Copy, Check } from 'lucide-react';
+import { Loader2, Shield, CheckCircle, Zap, MessageSquare, TrendingUp, Crown, Smartphone, Phone, AlertCircle, Sparkles, X, ChevronRight, ChevronLeft, Copy, Check } from 'lucide-react';
 import { formatPrice } from '@/utils/priceFormatting';
 import { getPaymentMethodsByCountry, PaymentMethod } from '@/utils/paymentMethods';
 import { getPaymentMethodImage } from '@/utils/paymentMethodImages';
@@ -357,24 +357,26 @@ export function ChatTokenPurchaseModal({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && !processing && onClose()}>
       <DialogContent className="w-screen h-screen max-w-none max-h-none p-0 gap-0 overflow-y-auto border-0 bg-gradient-to-b from-background to-muted/30 left-0 top-0 translate-x-0 translate-y-0 rounded-none data-[state=open]:slide-in-from-left-0 data-[state=open]:slide-in-from-top-0 data-[state=closed]:slide-out-to-left-0 data-[state=closed]:slide-out-to-top-0">
-        {/* Fixed close button at top */}
-        <button
-          onClick={onClose}
-          disabled={processing}
-          className="fixed top-4 right-4 p-2 rounded-full bg-background border border-border shadow-md hover:bg-muted transition-colors z-50"
-        >
-          <X className="h-5 w-5 text-foreground" />
-        </button>
-
-        {/* Header with gradient */}
+        {/* Header with back button and title */}
         <div className="relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/10 to-transparent" />
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+          
+          <div className="relative p-4 flex items-center gap-3">
+            <button
+              onClick={onClose}
+              disabled={processing}
+              className="w-10 h-10 rounded-full bg-background/80 backdrop-blur-sm border border-border flex items-center justify-center hover:bg-muted transition-colors"
+            >
+              <ChevronLeft className="h-5 w-5 text-foreground" />
+            </button>
+            <h2 className="text-lg font-semibold">Comprar Tokens</h2>
+          </div>
 
           {selectedPackage && (
-            <div className="relative p-6 pb-8">
+            <div className="relative px-6 pb-6">
               <div className="flex flex-col gap-1">
-                <h2 className="text-xl font-bold">{selectedPackage.name}</h2>
+                <h3 className="text-xl font-bold">{selectedPackage.name}</h3>
                 <p className="text-sm text-muted-foreground">
                   {selectedPackage.tokens.toLocaleString()} tokens inclusos
                 </p>
