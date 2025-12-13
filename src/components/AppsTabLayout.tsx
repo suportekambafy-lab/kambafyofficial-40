@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Facebook, Webhook, Palette, Settings, Mail, RotateCcw } from "lucide-react";
 import utmifyLogo from '@/assets/utmify-logo.png';
+import googleAnalyticsLogo from '@/assets/google-analytics-logo.png';
+import googleAdsLogo from '@/assets/google-ads-logo.png';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { IntegrationCard } from "@/components/IntegrationCard";
 import { IntegrationStats } from "@/components/IntegrationStats";
@@ -194,12 +196,7 @@ export function AppsTabLayout() {
             name: 'Google Analytics',
             active: ga.enabled || false,
             createdAt: new Date(ga.created_at || '').toLocaleDateString(),
-            icon: (
-              <svg className="w-5 h-5 text-amber-600" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2L2 7l10 5 10-5-10-5z" fill="#F9AB00"/>
-                <path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="#E37400" strokeWidth="2"/>
-              </svg>
-            ),
+            icon: <img src={googleAnalyticsLogo} alt="Google Analytics" className="h-5 w-auto object-contain" />,
             productName: ga.products?.name || 'Produto não encontrado',
             productId: ga.product_id
           });
@@ -227,11 +224,7 @@ export function AppsTabLayout() {
             name: 'Google Ads',
             active: gads.enabled || false,
             createdAt: new Date(gads.created_at || '').toLocaleDateString(),
-            icon: (
-              <svg className="w-5 h-5 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12.24 7.79L17.5 2.06 22 6.56l-5.27 5.73-4.49-4.5zm-1.41 1.41L3.06 17.5 7.56 22l7.76-8.27-4.49-4.53zM2.06 7.97l4.5 4.49L3.06 17.5V7.97z" fill="#4285F4"/>
-              </svg>
-            ),
+            icon: <img src={googleAdsLogo} alt="Google Ads" className="h-5 w-auto object-contain" />,
             productName: gads.products?.name || 'Produto não encontrado',
             productId: gads.product_id
           });
