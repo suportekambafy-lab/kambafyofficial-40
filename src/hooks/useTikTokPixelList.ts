@@ -24,7 +24,7 @@ export const useTikTokPixelList = (productId?: string) => {
       }
 
       const { data, error } = await supabase
-        .from('tiktok_pixel_settings')
+        .from('tiktok_pixel_settings' as any)
         .select('*')
         .eq('user_id', user.id)
         .eq('product_id', productId)
@@ -32,7 +32,8 @@ export const useTikTokPixelList = (productId?: string) => {
 
       if (error) throw error;
 
-      setPixels((data || []).map(item => ({
+      const items = data as any[] || [];
+      setPixels(items.map((item: any) => ({
         id: item.id,
         pixelId: item.pixel_id,
         enabled: item.enabled,
@@ -56,7 +57,7 @@ export const useTikTokPixelList = (productId?: string) => {
       if (!user) throw new Error('User not authenticated');
 
       const { data, error } = await supabase
-        .from('tiktok_pixel_settings')
+        .from('tiktok_pixel_settings' as any)
         .insert({
           user_id: user.id,
           pixel_id: pixelData.pixelId,
@@ -95,7 +96,7 @@ export const useTikTokPixelList = (productId?: string) => {
   const updatePixel = async (pixelId: string, pixelData: Partial<TikTokPixel>) => {
     try {
       const { error } = await supabase
-        .from('tiktok_pixel_settings')
+        .from('tiktok_pixel_settings' as any)
         .update({
           pixel_id: pixelData.pixelId,
           enabled: pixelData.enabled,
@@ -126,7 +127,7 @@ export const useTikTokPixelList = (productId?: string) => {
   const deletePixel = async (pixelId: string) => {
     try {
       const { error } = await supabase
-        .from('tiktok_pixel_settings')
+        .from('tiktok_pixel_settings' as any)
         .delete()
         .eq('id', pixelId);
 
