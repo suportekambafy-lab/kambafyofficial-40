@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import googleAnalyticsLogo from '@/assets/google-analytics-logo.png';
 
 interface GoogleAnalyticsFormProps {
   productId: string;
@@ -67,16 +68,11 @@ export function GoogleAnalyticsForm({ productId, onSaveSuccess }: GoogleAnalytic
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="flex items-center gap-3 mb-4">
-        <div className="flex items-center gap-2">
-          <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none">
-            <path d="M12 2L2 7l10 5 10-5-10-5z" fill="#F9AB00"/>
-            <path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="#E37400" strokeWidth="2"/>
-          </svg>
-          <div>
-            <h3 className="font-semibold text-lg">Google Analytics 4</h3>
-            <p className="text-sm text-muted-foreground">App + Web</p>
-          </div>
-        </div>
+        <img 
+          src={googleAnalyticsLogo} 
+          alt="Google Analytics" 
+          className="h-10 object-contain"
+        />
       </div>
 
       <div className="space-y-2">
