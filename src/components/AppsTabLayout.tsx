@@ -205,6 +205,38 @@ export function AppsTabLayout() {
         });
       }
 
+      // Fetch Google Ads settings with product name
+      const { data: gadsData, error: gadsError } = await supabase
+        .from('google_ads_settings' as any)
+        .select(`
+          *,
+          products!inner(name)
+        `)
+        .eq('user_id', user.id);
+
+      if (gadsError) {
+        console.error('Error fetching Google Ads data:', gadsError);
+      }
+
+      if (gadsData && gadsData.length > 0) {
+        (gadsData as any[]).forEach(gads => {
+          allIntegrations.push({
+            id: gads.id,
+            type: 'google-ads',
+            name: 'Google Ads',
+            active: gads.enabled || false,
+            createdAt: new Date(gads.created_at || '').toLocaleDateString(),
+            icon: (
+              <svg className="w-5 h-5 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12.24 7.79L17.5 2.06 22 6.56l-5.27 5.73-4.49-4.5zm-1.41 1.41L3.06 17.5 7.56 22l7.76-8.27-4.49-4.53zM2.06 7.97l4.5 4.49L3.06 17.5V7.97z" fill="#4285F4"/>
+              </svg>
+            ),
+            productName: gads.products?.name || 'Produto não encontrado',
+            productId: gads.product_id
+          });
+        });
+      }
+
       // Fetch Webhook settings - modificada para funcionar sem product_id obrigatório
       const { data: webhookData, error: webhookError } = await supabase
         .from('webhook_settings')
@@ -359,6 +391,12 @@ export function AppsTabLayout() {
           .update({ enabled: active })
           .eq('id', integration.id)
           .select();
+      } else if (integration.type === 'google-ads') {
+        updateResult = await supabase
+          .from('google_ads_settings' as any)
+          .update({ enabled: active })
+          .eq('id', integration.id)
+          .select();
       } else if (integration.type === 'webhook') {
         updateResult = await supabase
           .from('webhook_settings')
@@ -454,6 +492,12 @@ export function AppsTabLayout() {
       } else if (integration.type === 'google-analytics') {
         deleteResult = await supabase
           .from('google_analytics_settings' as any)
+          .delete()
+          .eq('id', integration.id)
+          .select();
+      } else if (integration.type === 'google-ads') {
+        deleteResult = await supabase
+          .from('google_ads_settings' as any)
           .delete()
           .eq('id', integration.id)
           .select();

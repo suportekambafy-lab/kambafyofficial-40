@@ -1164,6 +1164,47 @@ export type Database = {
           },
         ]
       }
+      google_ads_settings: {
+        Row: {
+          conversion_id: string
+          conversion_label: string | null
+          created_at: string | null
+          enabled: boolean | null
+          id: string
+          product_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          conversion_id: string
+          conversion_label?: string | null
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          product_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          conversion_id?: string
+          conversion_label?: string | null
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          product_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "google_ads_settings_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       google_analytics_settings: {
         Row: {
           created_at: string | null

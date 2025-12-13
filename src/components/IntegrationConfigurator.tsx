@@ -3,6 +3,7 @@ import React from 'react';
 import { FacebookPixelForm } from '@/components/FacebookPixelForm';
 import { TikTokPixelForm } from '@/components/TikTokPixelForm';
 import { GoogleAnalyticsForm } from '@/components/GoogleAnalyticsForm';
+import { GoogleAdsForm } from '@/components/GoogleAdsForm';
 import { WebhookForm } from '@/components/WebhookForm';
 import { CheckoutCustomizer } from '@/components/checkout/CheckoutCustomizer';
 import { OrderBumpConfigurator } from '@/components/OrderBumpConfigurator';
@@ -62,6 +63,13 @@ export function IntegrationConfigurator({
 
       {integrationType.id === 'google-analytics' && (
         <GoogleAnalyticsForm 
+          productId={product.id}
+          onSaveSuccess={handleSuccess}
+        />
+      )}
+
+      {integrationType.id === 'google-ads' && (
+        <GoogleAdsForm 
           productId={product.id}
           onSaveSuccess={handleSuccess}
         />
