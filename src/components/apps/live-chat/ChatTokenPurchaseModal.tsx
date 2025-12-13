@@ -373,17 +373,13 @@ export function ChatTokenPurchaseModal({
 
           {selectedPackage && (
             <div className="relative p-6 pb-8">
-              <div className="flex items-center gap-4">
-                <div className="flex-1">
-                  <h2 className="text-xl font-bold">{selectedPackage.name}</h2>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedPackage.tokens.toLocaleString()} tokens inclusos
-                  </p>
-                </div>
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-primary">
-                    {priceInfo.formatted}
-                  </div>
+              <div className="flex flex-col gap-1">
+                <h2 className="text-xl font-bold">{selectedPackage.name}</h2>
+                <p className="text-sm text-muted-foreground">
+                  {selectedPackage.tokens.toLocaleString()} tokens inclusos
+                </p>
+                <div className="text-2xl font-bold text-primary mt-2">
+                  {priceInfo.formatted}
                 </div>
               </div>
             </div>
