@@ -3,6 +3,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useOptimizedPayment } from '@/hooks/useOptimizedPayment';
@@ -529,37 +530,42 @@ export function ChatTokenPurchaseModal({
                 <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   Selecione o país
                 </Label>
-                <div className="grid grid-cols-5 gap-2">
-                  {Object.values(supportedCountries).map((c) => {
-                    const isSelected = country === c.code;
-                    return (
-                      <button
-                        key={c.code}
-                        type="button"
-                        onClick={() => {
-                          setCountry(c.code);
-                          setSelectedPaymentMethod('');
-                          setPaymentError('');
-                        }}
-                        disabled={processing}
-                        className={`relative flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all ${
-                          isSelected 
-                            ? 'border-primary bg-primary/5 shadow-sm' 
-                            : 'border-transparent bg-muted/50 hover:bg-muted'
-                        } ${processing ? 'opacity-50 cursor-not-allowed' : ''}`}
-                      >
-                        <span className="text-2xl">{c.flag}</span>
-                        <span className="text-[10px] font-medium text-muted-foreground">{c.code}</span>
-                        {isSelected && (
-                          <motion.div
-                            layoutId="country-indicator"
-                            className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-6 h-1 bg-primary rounded-full"
-                          />
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
+                <Select 
+                  value={country} 
+                  onValueChange={(value) => {
+                    setCountry(value);
+                    setSelectedPaymentMethod('');
+                    setPaymentError('');
+                  }}
+                  disabled={processing}
+                >
+                  <SelectTrigger className="w-full h-12 rounded-xl border-2 border-border/50 bg-background hover:border-border transition-colors">
+                    <SelectValue>
+                      <div className="flex items-center gap-3">
+                        <span className="text-xl">{supportedCountries[country as keyof typeof supportedCountries]?.flag}</span>
+                        <span className="font-medium">{supportedCountries[country as keyof typeof supportedCountries]?.name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          ({supportedCountries[country as keyof typeof supportedCountries]?.currency})
+                        </span>
+                      </div>
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border border-border rounded-xl shadow-lg z-50">
+                    {Object.values(supportedCountries).map((c) => (
+                      <SelectItem key={c.code} value={c.code} className="cursor-pointer py-3">
+                        <div className="flex items-center gap-3">
+                          <span className="text-xl">{c.flag}</span>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{c.name}</span>
+                            <span className="text-xs text-muted-foreground">
+                              Moeda: {c.currency}
+                            </span>
+                          </div>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Payment Methods */}
