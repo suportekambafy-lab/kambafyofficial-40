@@ -201,13 +201,12 @@ export function LiveChatWidget({
             exit={{ scale: 0, opacity: 0 }}
             className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-[60]"
           >
-            <Button
-              size="lg"
-              className="rounded-full w-14 h-14 shadow-lg bg-green-600 hover:bg-green-700"
+            <button
+              className="rounded-full w-14 h-14 shadow-lg bg-green-600 hover:bg-green-700 flex items-center justify-center transition-colors"
               onClick={() => setIsOpen(true)}
             >
               <MessageSquare className="h-6 w-6 text-white" />
-            </Button>
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
