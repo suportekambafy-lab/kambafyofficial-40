@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
-import { Webhook, Palette, Plus, Settings, Ticket } from 'lucide-react';
+import { Webhook, Palette, Plus, Settings, Ticket, MessageSquare } from 'lucide-react';
 import utmifyLogo from '@/assets/utmify-logo.png';
 import googleAnalyticsLogo from '@/assets/google-analytics-logo.png';
 import googleAdsLogo from '@/assets/google-ads-logo.png';
@@ -71,6 +71,13 @@ const trackingIntegrations: IntegrationType[] = [
 ];
 
 const salesIntegrations: IntegrationType[] = [
+  {
+    id: 'live-chat-ai',
+    name: 'Chat ao Vivo IA',
+    description: 'Atenda clientes com IA 24/7',
+    icon: ({ className }: { className?: string }) => <MessageSquare className={className} />,
+    color: 'text-pink-600'
+  },
   {
     id: 'discount-coupons',
     name: 'Cupons de Desconto',

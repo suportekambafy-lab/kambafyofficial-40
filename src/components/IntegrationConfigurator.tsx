@@ -10,6 +10,7 @@ import { UpsellConfigurator } from '@/components/UpsellConfigurator';
 import { QuizBuilder } from '@/components/QuizBuilder';
 import { UtmifyForm } from '@/components/UtmifyForm';
 import { DiscountCouponsForm } from '@/components/DiscountCouponsForm';
+import { LiveChatApp } from '@/components/apps/live-chat/LiveChatApp';
 import { IntegrationType } from '@/components/IntegrationTypeSelector';
 
 interface Product {
@@ -121,6 +122,13 @@ export function IntegrationConfigurator({
         <DiscountCouponsForm 
           productId={product.id}
           onSaveSuccess={handleSuccess}
+        />
+      )}
+
+      {integrationType.id === 'live-chat-ai' && (
+        <LiveChatApp 
+          productId={product.id}
+          onComplete={handleSuccess}
         />
       )}
     </div>

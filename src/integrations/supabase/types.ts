@@ -599,6 +599,93 @@ export type Database = {
           },
         ]
       }
+      chat_token_packages: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          price_kz: number
+          sort_order: number
+          tokens: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          price_kz: number
+          sort_order?: number
+          tokens: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          price_kz?: number
+          sort_order?: number
+          tokens?: number
+        }
+        Relationships: []
+      }
+      chat_token_transactions: {
+        Row: {
+          balance_after: number
+          conversation_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          metadata: Json | null
+          package_id: string | null
+          tokens: number
+          type: string
+          user_id: string
+        }
+        Insert: {
+          balance_after: number
+          conversation_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          package_id?: string | null
+          tokens: number
+          type: string
+          user_id: string
+        }
+        Update: {
+          balance_after?: number
+          conversation_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          package_id?: string | null
+          tokens?: number
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_token_transactions_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "chat_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_token_transactions_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "chat_token_packages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       checkout_customizations: {
         Row: {
           created_at: string | null
@@ -2682,6 +2769,8 @@ export type Database = {
           allow_custom_price: boolean | null
           ban_reason: string | null
           category: string | null
+          chat_config: Json | null
+          chat_enabled: boolean | null
           commission: string | null
           compare_at_price: string | null
           cover: string | null
@@ -2727,6 +2816,8 @@ export type Database = {
           allow_custom_price?: boolean | null
           ban_reason?: string | null
           category?: string | null
+          chat_config?: Json | null
+          chat_enabled?: boolean | null
           commission?: string | null
           compare_at_price?: string | null
           cover?: string | null
@@ -2772,6 +2863,8 @@ export type Database = {
           allow_custom_price?: boolean | null
           ban_reason?: string | null
           category?: string | null
+          chat_config?: Json | null
+          chat_enabled?: boolean | null
           commission?: string | null
           compare_at_price?: string | null
           cover?: string | null
@@ -3387,6 +3480,36 @@ export type Database = {
           requires_2fa?: boolean | null
           user_id?: string
           verified_at?: string | null
+        }
+        Relationships: []
+      }
+      seller_chat_credits: {
+        Row: {
+          created_at: string
+          id: string
+          token_balance: number
+          total_tokens_purchased: number
+          total_tokens_used: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          token_balance?: number
+          total_tokens_purchased?: number
+          total_tokens_used?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          token_balance?: number
+          total_tokens_purchased?: number
+          total_tokens_used?: number
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
