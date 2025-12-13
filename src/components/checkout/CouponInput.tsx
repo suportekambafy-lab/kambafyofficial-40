@@ -48,24 +48,38 @@ export const CouponInput = memo(({
     setIsValidating(true);
     
     try {
-      // Buscar cupom válido
+      // Buscar cupom válido - query simplificada para evitar problemas com datas nulas
       const { data: coupons, error } = await supabase
         .from('discount_coupons')
         .select('*')
         .eq('code', couponCode.toUpperCase().trim())
         .eq('is_active', true)
-        .or(`product_id.is.null,product_id.eq.${productId}`)
-        .gte('valid_until', new Date().toISOString())
-        .lte('valid_from', new Date().toISOString());
+        .or(`product_id.is.null,product_id.eq.${productId}`);
 
       if (error) throw error;
 
       if (!coupons || coupons.length === 0) {
-        toast.error(t('coupon.invalid') || 'Cupom inválido ou expirado');
+        toast.error('Cupom inválido ou expirado');
         return;
       }
 
-      const coupon = coupons[0] as unknown as CouponData;
+      // Filtrar cupons válidos por data
+      const now = new Date();
+      const validCoupons = coupons.filter(c => {
+        const validFrom = c.valid_from ? new Date(c.valid_from) : null;
+        const validUntil = c.valid_until ? new Date(c.valid_until) : null;
+        
+        if (validFrom && now < validFrom) return false;
+        if (validUntil && now > validUntil) return false;
+        return true;
+      });
+
+      if (validCoupons.length === 0) {
+        toast.error('Cupom expirado');
+        return;
+      }
+
+      const coupon = validCoupons[0] as unknown as CouponData;
 
       // Verificar limite de usos total
       if (coupon.max_uses !== null && coupon.current_uses >= coupon.max_uses) {
