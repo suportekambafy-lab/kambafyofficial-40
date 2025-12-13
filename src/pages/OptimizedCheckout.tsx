@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { PhoneInput } from "@/components/PhoneInput";
 import { SEO } from "@/components/SEO";
 import { BankTransferForm } from "@/components/checkout/BankTransferForm";
+import { CouponInput } from "@/components/checkout/CouponInput";
 import { StripePaymentForm } from "@/components/checkout/StripePaymentForm";
 import { useOptimizedCheckout } from "@/hooks/useOptimizedCheckout";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -241,6 +242,9 @@ const OptimizedCheckout = () => {
     markAsInvalidAffiliate,
     clearAffiliateCode,
     availablePaymentMethods: productPaymentMethods,
+    appliedCoupon,
+    couponDiscount,
+    handleCouponApplied,
     handleInputChange,
     handleCountryChange,
     handlePhoneCountryChange,
@@ -394,9 +398,9 @@ const OptimizedCheckout = () => {
   // Mostrar skeleton checkout enquanto carrega - sem tela branca
   const showingSkeleton = loading || !product;
 
-  // Calculate total price
+  // Calculate total price (with coupon discount)
   const totalPrice = formatPrice(
-    parseFloat(product?.price || '0') + productExtraPrice + accessExtensionPrice,
+    Math.max(0, parseFloat(product?.price || '0') + productExtraPrice + accessExtensionPrice - couponDiscount),
     userCountry,
     product?.custom_prices
   );
@@ -742,6 +746,42 @@ const OptimizedCheckout = () => {
                     t={t}
                     isTranslationReady={isTranslationReady}
                   />
+
+                  {/* Campo de Cupom de Desconto */}
+                  <div className="mb-6">
+                    <CouponInput
+                      productId={product?.id || ''}
+                      customerEmail={formData.email || ''}
+                      totalAmount={parseFloat(product?.price || '0') + productExtraPrice + accessExtensionPrice}
+                      currency={userCountry?.currency || 'EUR'}
+                      onCouponApplied={handleCouponApplied}
+                      t={t}
+                    />
+                  </div>
+
+                  {/* Total com desconto */}
+                  {couponDiscount > 0 && (
+                    <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="flex justify-between items-center mb-2 text-sm">
+                        <span className="text-muted-foreground">{t('coupon.subtotal') || 'Subtotal'}:</span>
+                        <span className="text-muted-foreground line-through">
+                          {formatPrice(parseFloat(product?.price || '0') + productExtraPrice + accessExtensionPrice, userCountry, product?.custom_prices)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center mb-2 text-sm">
+                        <span className="text-green-600 font-medium">{t('coupon.discount') || 'Desconto'}:</span>
+                        <span className="text-green-600 font-medium">
+                          -{formatPrice(couponDiscount, userCountry)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center pt-2 border-t border-green-200">
+                        <span className="font-semibold">Total:</span>
+                        <span className="text-xl font-bold text-primary">
+                          {formatPrice(Math.max(0, parseFloat(product?.price || '0') + productExtraPrice + accessExtensionPrice - couponDiscount), userCountry, product?.custom_prices)}
+                        </span>
+                      </div>
+                    </div>
+                  )}
                   
                   {/* DEBUG: Mostrar info dos métodos - SEMPRE VISÍVEL */}
                   <div className="bg-yellow-100 p-4 text-sm mt-4 rounded border-2 border-yellow-400">

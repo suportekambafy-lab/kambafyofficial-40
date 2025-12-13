@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PhoneInput } from '@/components/PhoneInput';
+import { CouponInput } from './CouponInput';
 import professionalManImage from '@/assets/professional-man.jpg';
 
 // Lazy load apenas componentes pesados que podem não ser necessários
@@ -263,6 +264,8 @@ export const OptimizedPaymentMethods = memo(({
   includeAccessExtension,
   setIncludeAccessExtension,
   checkoutCustomizations,
+  appliedDiscount,
+  onCouponApplied,
   t
 }: any) => {
   const availablePaymentMethods = product?.payment_methods || [];
@@ -284,6 +287,21 @@ export const OptimizedPaymentMethods = memo(({
   };
 
   const calculateTotal = () => {
+    let total = parseFloat(product?.price || '0');
+    if (includeProductExtra && productExtraBump?.bump_product_price) {
+      total += parseFloat(productExtraBump.bump_product_price);
+    }
+    if (includeAccessExtension && accessExtensionBump?.bump_product_price) {
+      total += parseFloat(accessExtensionBump.bump_product_price);
+    }
+    // Aplicar desconto do cupom
+    if (appliedDiscount && appliedDiscount > 0) {
+      total = Math.max(0, total - appliedDiscount);
+    }
+    return total;
+  };
+
+  const calculateSubtotal = () => {
     let total = parseFloat(product?.price || '0');
     if (includeProductExtra && productExtraBump?.bump_product_price) {
       total += parseFloat(productExtraBump.bump_product_price);
@@ -384,8 +402,36 @@ export const OptimizedPaymentMethods = memo(({
           </div>
         </div>
 
+        {/* Coupon Input */}
+        <div className="mb-4">
+          <CouponInput
+            productId={product?.id || ''}
+            customerEmail={customerInfo.email || ''}
+            totalAmount={calculateSubtotal()}
+            currency={product?.currency || 'EUR'}
+            onCouponApplied={onCouponApplied}
+            t={t}
+          />
+        </div>
+
         {/* Total and Submit */}
         <div className="border-t pt-4">
+          {appliedDiscount > 0 && (
+            <div className="flex justify-between items-center mb-2 text-sm">
+              <span className="text-muted-foreground">{t('coupon.subtotal') || 'Subtotal'}:</span>
+              <span className="text-muted-foreground line-through">
+                {formatPrice(calculateSubtotal())}
+              </span>
+            </div>
+          )}
+          {appliedDiscount > 0 && (
+            <div className="flex justify-between items-center mb-2 text-sm">
+              <span className="text-green-600">{t('coupon.discount') || 'Desconto'}:</span>
+              <span className="text-green-600">
+                -{formatPrice(appliedDiscount)}
+              </span>
+            </div>
+          )}
           <div className="flex justify-between items-center mb-4">
             <span className="text-lg font-semibold">Total:</span>
             <span className="text-2xl font-bold text-primary">
