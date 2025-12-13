@@ -3,6 +3,8 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Facebook, Webhook, Settings, Palette, Plus, Construction } from 'lucide-react';
 import utmifyLogo from '@/assets/utmify-logo.png';
+import googleAnalyticsLogo from '@/assets/google-analytics-logo.png';
+import googleAdsLogo from '@/assets/google-ads-logo.png';
 
 export interface IntegrationType {
   id: string;
@@ -41,23 +43,18 @@ const integrationTypes: IntegrationType[] = [
     name: 'Google Analytics 4',
     description: 'Rastreie visitas e conversões',
     icon: ({ className }: { className?: string }) => (
-      <svg className={className} viewBox="0 0 24 24" fill="none">
-        <path d="M12 2L2 7l10 5 10-5-10-5z" fill="#F9AB00"/>
-        <path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="#E37400" strokeWidth="2"/>
-      </svg>
+      <img src={googleAnalyticsLogo} alt="Google Analytics" className="h-8 w-auto object-contain" />
     ),
-    color: 'text-amber-600'
+    color: ''
   },
   {
     id: 'google-ads',
     name: 'Google Ads',
     description: 'Rastreie conversões do Google Ads',
     icon: ({ className }: { className?: string }) => (
-      <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12.24 7.79L17.5 2.06 22 6.56l-5.27 5.73-4.49-4.5zm-1.41 1.41L3.06 17.5 7.56 22l7.76-8.27-4.49-4.53zM2.06 7.97l4.5 4.49L3.06 17.5V7.97z" fill="#4285F4"/>
-      </svg>
+      <img src={googleAdsLogo} alt="Google Ads" className="h-8 w-auto object-contain" />
     ),
-    color: 'text-blue-500'
+    color: ''
   },
   {
     id: 'webhook',
