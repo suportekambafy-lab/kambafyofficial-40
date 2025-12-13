@@ -586,13 +586,23 @@ Deno.serve(async (req) => {
                 ? JSON.parse(orderDataToSave.order_bump_data) 
                 : orderDataToSave.order_bump_data;
             } catch (e) {
-              logStep('⚠️ Erro ao parsear order_bump_data');
+              logStep('⚠️ Erro ao parsear order_bump_data:', e);
             }
           }
 
+          // ✅ USAR NOME REAL DO PRODUTO do banco de dados
+          const realProductName = product?.name || productNameToUse || 'Produto';
+          
+          logStep('📊 Preparando payload UTMify:', {
+            productId,
+            productName: realProductName,
+            amount: orderDataToSave.amount,
+            currency: orderDataToSave.currency
+          });
+
           const utmifyPayload = {
             orderId: orderId,
-            orderUuid: insertedOrder?.id || orderId,
+            orderUuid: orderId, // Usar orderId como UUID (já que insert não retorna o ID)
             amount: parseFloat(orderDataToSave.amount?.toString() || grossAmount.toString()),
             currency: orderDataToSave.currency || 'KZ',
             customerName: customerData.name,
@@ -600,25 +610,26 @@ Deno.serve(async (req) => {
             customerPhone: phoneNumber || customerData.phone,
             customerCountry: customerCountry || 'AO',
             productId: productId,
-            productName: productNameToUse || product?.name || '',
+            productName: realProductName,
             paymentMethod: paymentMethod,
             utmParams: orderDataToSave.utm_params || checkoutOrderData?.utm_params || null,
             orderBumpData: orderBumpParsed
           };
 
-          logStep('📤 Enviando para UTMify:', JSON.stringify(utmifyPayload));
+          logStep('📤 Enviando para UTMify:', JSON.stringify(utmifyPayload, null, 2));
 
           const { data: utmifyResult, error: utmifyError } = await supabase.functions.invoke('send-utmify-conversion', {
             body: utmifyPayload
           });
 
           if (utmifyError) {
-            logStep('❌ Erro ao chamar send-utmify-conversion:', utmifyError);
+            logStep('❌ Erro ao chamar send-utmify-conversion:', JSON.stringify(utmifyError));
           } else {
-            logStep('📊 UTMify result:', utmifyResult);
+            logStep('📊 UTMify result:', JSON.stringify(utmifyResult));
           }
         } catch (utmifyErr) {
-          logStep('⚠️ Erro ao processar UTMify:', utmifyErr);
+          const errMessage = utmifyErr instanceof Error ? utmifyErr.message : JSON.stringify(utmifyErr);
+          logStep('⚠️ Erro ao processar UTMify:', errMessage);
         }
         
         // 🔔 ENVIAR NOTIFICAÇÃO ONESIGNAL PARA O VENDEDOR SOBRE VENDA APROVADA
