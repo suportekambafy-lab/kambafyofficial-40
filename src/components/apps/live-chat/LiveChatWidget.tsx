@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
-import { MessageSquare, X, Send, Loader2, MinusCircle } from 'lucide-react';
+import { MessageSquare, X, Send, Loader2, MinusCircle, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Message {
@@ -33,12 +33,45 @@ export function LiveChatWidget({
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
-  const [hasCredits, setHasCredits] = useState(true);
+  const [hasCredits, setHasCredits] = useState<boolean | null>(null);
+  const [chatEnabled, setChatEnabled] = useState<boolean | null>(null);
+  const [checkingCredits, setCheckingCredits] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Check credits before allowing any interaction
   useEffect(() => {
-    if (isOpen && messages.length === 0) {
-      // Add greeting message
+    const checkCredits = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('chat-with-credits', {
+          body: {
+            action: 'check-credits',
+            productId
+          }
+        });
+
+        if (error) {
+          console.error('Error checking credits:', error);
+          setHasCredits(false);
+          setChatEnabled(false);
+          return;
+        }
+
+        setHasCredits(data.hasCredits);
+        setChatEnabled(data.chatEnabled);
+      } catch (error) {
+        console.error('Error checking credits:', error);
+        setHasCredits(false);
+        setChatEnabled(false);
+      } finally {
+        setCheckingCredits(false);
+      }
+    };
+
+    checkCredits();
+  }, [productId]);
+
+  useEffect(() => {
+    if (isOpen && messages.length === 0 && hasCredits) {
       setMessages([{
         id: 'greeting',
         role: 'assistant',
@@ -46,17 +79,16 @@ export function LiveChatWidget({
         timestamp: new Date()
       }]);
     }
-  }, [isOpen, greeting]);
+  }, [isOpen, greeting, hasCredits]);
 
   useEffect(() => {
-    // Scroll to bottom when new messages arrive
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
 
   const sendMessage = async () => {
-    if (!input.trim() || isLoading) return;
+    if (!input.trim() || isLoading || !hasCredits) return;
 
     const userMessage: Message = {
       id: `user-${Date.now()}`,
@@ -82,8 +114,18 @@ export function LiveChatWidget({
 
       if (error) throw error;
 
-      if (data.noCredits) {
+      // Handle no credits response
+      if (data.noCredits || data.chatDisabled) {
         setHasCredits(false);
+        if (data.reply) {
+          setMessages(prev => [...prev, {
+            id: `assistant-${Date.now()}`,
+            role: 'assistant',
+            content: data.reply,
+            timestamp: new Date()
+          }]);
+        }
+        return;
       }
 
       if (data.conversationId) {
@@ -98,6 +140,11 @@ export function LiveChatWidget({
       };
 
       setMessages(prev => [...prev, assistantMessage]);
+
+      // Update credits status based on response
+      if (data.noCredits === true) {
+        setHasCredits(false);
+      }
     } catch (error) {
       console.error('Error sending message:', error);
       setMessages(prev => [...prev, {
@@ -117,6 +164,16 @@ export function LiveChatWidget({
       sendMessage();
     }
   };
+
+  // Don't render anything if checking or chat is not available
+  if (checkingCredits) {
+    return null;
+  }
+
+  // Don't show widget if chat is disabled or no credits
+  if (!chatEnabled || !hasCredits) {
+    return null;
+  }
 
   return (
     <>
@@ -244,9 +301,10 @@ export function LiveChatWidget({
                         </Button>
                       </div>
                     ) : (
-                      <p className="text-sm text-center text-muted-foreground">
-                        Chat indisponível no momento.
-                      </p>
+                      <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                        <AlertCircle className="h-4 w-4" />
+                        <p>Chat temporariamente indisponível.</p>
+                      </div>
                     )}
                   </div>
                 </CardContent>

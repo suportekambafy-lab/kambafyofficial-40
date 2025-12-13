@@ -1,8 +1,7 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
@@ -10,6 +9,8 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+const MIN_TOKENS_REQUIRED = 500; // Minimum tokens to allow chat
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -20,6 +21,7 @@ serve(async (req) => {
 
   try {
     const { 
+      action,
       message, 
       conversationId, 
       productId, 
@@ -27,8 +29,58 @@ serve(async (req) => {
       customerEmail 
     } = await req.json();
 
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key not configured');
+    // Handle credit check action
+    if (action === 'check-credits') {
+      console.log('Checking credits for product:', productId);
+      
+      const { data: product, error: productError } = await supabase
+        .from('products')
+        .select('user_id, chat_enabled')
+        .eq('id', productId)
+        .single();
+
+      if (productError || !product) {
+        return new Response(JSON.stringify({ 
+          hasCredits: false,
+          chatEnabled: false,
+          error: 'Product not found'
+        }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      if (!product.chat_enabled) {
+        return new Response(JSON.stringify({ 
+          hasCredits: false,
+          chatEnabled: false
+        }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const { data: credits } = await supabase
+        .from('seller_chat_credits')
+        .select('token_balance')
+        .eq('user_id', product.user_id)
+        .single();
+
+      const hasCredits = credits && credits.token_balance >= MIN_TOKENS_REQUIRED;
+
+      return new Response(JSON.stringify({ 
+        hasCredits,
+        chatEnabled: true,
+        balance: credits?.token_balance || 0
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Chat message handling
+    if (!LOVABLE_API_KEY) {
+      throw new Error('LOVABLE_API_KEY is not configured');
     }
 
     if (!message || !productId) {
@@ -38,7 +90,7 @@ serve(async (req) => {
     console.log('Chat with credits - Product:', productId);
     console.log('Message:', message.substring(0, 100));
 
-    // Buscar produto e verificar se chat está ativado
+    // Fetch product and verify chat is enabled
     const { data: product, error: productError } = await supabase
       .from('products')
       .select('id, name, description, user_id, chat_enabled, chat_config')
@@ -52,7 +104,8 @@ serve(async (req) => {
     if (!product.chat_enabled) {
       return new Response(JSON.stringify({ 
         error: 'Chat not enabled for this product',
-        chatDisabled: true
+        chatDisabled: true,
+        noCredits: true
       }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -61,19 +114,20 @@ serve(async (req) => {
 
     const sellerId = product.user_id;
 
-    // Verificar saldo de tokens do vendedor
+    // CRITICAL: Verify seller has sufficient tokens BEFORE processing
     const { data: credits, error: creditsError } = await supabase
       .from('seller_chat_credits')
       .select('*')
       .eq('user_id', sellerId)
       .single();
 
-    if (creditsError || !credits || credits.token_balance < 500) {
-      console.log('Insufficient credits for seller:', sellerId);
+    if (creditsError || !credits || credits.token_balance < MIN_TOKENS_REQUIRED) {
+      console.log('Insufficient credits for seller:', sellerId, 'Balance:', credits?.token_balance || 0);
       return new Response(JSON.stringify({ 
         error: 'Seller has insufficient chat credits',
         noCredits: true,
-        reply: 'Desculpe, o chat está temporariamente indisponível. Por favor, entre em contato pelo WhatsApp.'
+        chatDisabled: true,
+        reply: 'O chat está temporariamente indisponível. Por favor, entre em contato pelo WhatsApp ou aguarde o vendedor recarregar os créditos.'
       }), {
         status: 402,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -107,7 +161,8 @@ serve(async (req) => {
       .from('chat_messages')
       .select('*')
       .eq('conversation_id', activeConversationId)
-      .order('created_at', { ascending: true });
+      .order('created_at', { ascending: true })
+      .limit(20);
 
     const conversationHistory = (messageHistory || []).map(msg => ({
       role: msg.sender_type === 'customer' ? 'user' : 'assistant',
@@ -143,16 +198,14 @@ ${product.description || 'Produto digital de alta qualidade.'}
 
 SEU ESTILO:
 - Seja ${toneDescriptions[tone] || 'amigável e prestativo'}
-- Use respostas concisas mas completas
+- Use respostas concisas mas completas (máximo 3 parágrafos)
 - Ajude com dúvidas sobre o produto, pagamento e acesso
 - Se não souber algo específico, oriente o cliente a entrar em contato pelo WhatsApp
-
-MENSAGEM DE BOAS-VINDAS: ${greeting}
 
 IMPORTANTE:
 - Nunca invente informações sobre o produto
 - Seja proativo em ajudar
-- Use emojis moderadamente para tornar a conversa mais amigável`;
+- Use emojis moderadamente`;
 
     const messages = [
       { role: 'system', content: systemPrompt },
@@ -160,34 +213,42 @@ IMPORTANTE:
       { role: 'user', content: message }
     ];
 
-    // Calculate input tokens (rough estimate: 4 chars = 1 token)
-    const inputTokensEstimate = Math.ceil(JSON.stringify(messages).length / 4);
+    console.log('Calling Lovable AI Gateway...');
 
-    console.log('Calling OpenAI...');
-
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'google/gemini-2.5-flash',
         messages: messages,
-        max_tokens: 500,
+        max_tokens: 400,
         temperature: 0.7,
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('OpenAI API error:', response.status, errorText);
-      throw new Error(`OpenAI API error: ${response.status}`);
+      console.error('AI Gateway error:', response.status, errorText);
+      
+      if (response.status === 429) {
+        return new Response(JSON.stringify({ 
+          error: 'Rate limit exceeded',
+          reply: 'O sistema está ocupado. Por favor, aguarde um momento e tente novamente.'
+        }), {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      throw new Error(`AI Gateway error: ${response.status}`);
     }
 
     const data = await response.json();
     const reply = data.choices[0].message.content;
-    const usage = data.usage;
+    const usage = data.usage || { prompt_tokens: 200, completion_tokens: 100 };
     
     const totalTokensUsed = usage.prompt_tokens + usage.completion_tokens;
 
@@ -209,7 +270,7 @@ IMPORTANTE:
     await supabase
       .from('seller_chat_credits')
       .update({
-        token_balance: newBalance,
+        token_balance: Math.max(0, newBalance), // Never go below 0
         total_tokens_used: credits.total_tokens_used + totalTokensUsed,
         updated_at: new Date().toISOString()
       })
@@ -222,7 +283,7 @@ IMPORTANTE:
         user_id: sellerId,
         type: 'usage',
         tokens: -totalTokensUsed,
-        balance_after: newBalance,
+        balance_after: Math.max(0, newBalance),
         conversation_id: activeConversationId,
         description: `Chat com cliente - ${customerName || 'Anônimo'}`,
         metadata: {
@@ -232,11 +293,15 @@ IMPORTANTE:
         }
       });
 
+    // Check if credits are now low and should disable chat
+    const creditsRemaining = newBalance >= MIN_TOKENS_REQUIRED;
+
     return new Response(JSON.stringify({ 
       reply,
       conversationId: activeConversationId,
       tokensUsed: totalTokensUsed,
-      sellerBalance: newBalance
+      sellerBalance: newBalance,
+      noCredits: !creditsRemaining
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
