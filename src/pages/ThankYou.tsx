@@ -37,14 +37,26 @@ const ThankYou = () => {
   useEffect(() => {
     setTheme('light');
   }, [setTheme]);
+  // 🎯 Métodos de pagamento INSTANTÂNEOS - se chegou aqui, já está pago
+  const INSTANT_PAYMENT_METHODS = ['express', 'stripe', 'card', 'klarna', 'mbway', 'paypal', 'googlepay', 'applepay'];
+  
+  // 🎯 Métodos que precisam de confirmação via webhook/polling
+  const DELAYED_PAYMENT_METHODS = ['multibanco', 'transfer', 'bank_transfer', 'transferencia', 'reference'];
+  
   const orderDetails = useMemo(() => {
+    const paymentMethod = searchParams.get('payment_method') || '';
     const urlStatus = searchParams.get('status') || 'pending';
     
-    // Não confiar mais em URL parameters, validação será feita via check-order-status
-    const finalStatus = urlStatus;
+    // 🚨 LÓGICA SIMPLIFICADA:
+    // - Métodos instantâneos: se chegou aqui, JÁ ESTÁ PAGO (só redireciona após pagamento)
+    // - Métodos com referência/transferência: pode estar pendente
+    const isInstantPayment = INSTANT_PAYMENT_METHODS.includes(paymentMethod);
+    const finalStatus = isInstantPayment ? 'completed' : urlStatus;
     
     console.log('🔍 ThankYou URL Params:', {
+      paymentMethod,
       urlStatus,
+      isInstantPayment,
       finalStatus,
       allParams: Object.fromEntries(searchParams.entries())
     });
@@ -60,9 +72,10 @@ const ThankYou = () => {
       convertedCurrency: searchParams.get('converted_currency') || '',
       productId: searchParams.get('product_id') || '',
       sellerId: searchParams.get('seller_id') || '',
-      paymentMethod: searchParams.get('payment_method') || '',
+      paymentMethod: paymentMethod,
       paymentIntentId: searchParams.get('payment_intent_id') || '',
       status: finalStatus,
+      isInstantPayment: isInstantPayment,
       baseProductPrice: searchParams.get('base_product_price') || searchParams.get('amount') || '0',
       // Order Bump data
       orderBumpName: searchParams.get('order_bump_name') || '',
@@ -164,19 +177,26 @@ const ThankYou = () => {
     const loadProduct = async () => {
       console.log('🔍 ThankYou: ==> CARREGANDO PRODUTO <==');
       console.log('📋 Detalhes do pedido:', orderDetails);
-      console.log('📊 URL Status:', orderDetails.status);
+      console.log('📊 Status inicial:', orderDetails.status);
+      console.log('⚡ Pagamento instantâneo?', orderDetails.isInstantPayment);
 
-      // 🚨 CRÍTICO: Buscar status REAL do banco de dados, não confiar na URL
-      if (orderDetails.orderId) {
+      // 🎯 LÓGICA SIMPLIFICADA:
+      // - Pagamentos instantâneos: já definir como 'completed' direto (não precisa verificar banco)
+      // - Pagamentos com referência/transferência: verificar no banco e fazer polling
+      if (orderDetails.isInstantPayment) {
+        console.log('✅ Pagamento instantâneo - definindo como completed');
+        setOrderStatus('completed');
+      } else if (orderDetails.orderId) {
+        // Só precisa verificar banco para métodos que podem estar pendentes
         try {
-          console.log('🔍 Buscando status real do banco de dados...');
+          console.log('🔍 Buscando status do banco para pagamento por referência/transferência...');
           const {
             data: orderData,
             error: orderError
           } = await supabase.from('orders').select('status, customer_name, customer_email').eq('order_id', orderDetails.orderId).single();
           
           if (orderData && !orderError) {
-            console.log('✅ Status real do banco:', orderData.status);
+            console.log('✅ Status do banco:', orderData.status);
             setOrderStatus(orderData.status);
           } else {
             console.log('⚠️ Usando status da URL como fallback:', orderDetails.status);
@@ -312,14 +332,15 @@ const ThankYou = () => {
     }
   }, []); // Remove todas as dependências - só executa no mount
 
-  // Verificar o status do pedido periodicamente para pagamentos pendentes
+  // Verificar o status do pedido periodicamente APENAS para pagamentos com referência/transferência
   useEffect(() => {
     const orderId = orderDetails.orderId;
     const paymentMethod = orderDetails.paymentMethod;
     
-    // Incluir 'express' na lista de métodos que precisam de polling
-    if (orderStatus === 'pending' && ['multibanco', 'transfer', 'bank_transfer', 'transferencia', 'reference', 'express'].includes(paymentMethod) && orderId) {
-      console.log('🔄 Iniciando verificação periódica do status do pedido...', { paymentMethod });
+    // 🎯 SÓ fazer polling para métodos que precisam de confirmação via webhook
+    // Métodos instantâneos (express, cartão, etc) NÃO precisam de polling
+    if (orderStatus === 'pending' && DELAYED_PAYMENT_METHODS.includes(paymentMethod) && orderId) {
+      console.log('🔄 Iniciando verificação periódica para pagamento por referência/transferência...', { paymentMethod });
 
       // Verificar imediatamente
       checkOrderStatus();
