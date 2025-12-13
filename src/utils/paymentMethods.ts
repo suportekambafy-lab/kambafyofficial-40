@@ -35,15 +35,7 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
     countryFlag: "🇦🇴",
     countryName: "Angola"
   },
-  {
-    id: "transfer",
-    name: "Transferência Bancária",
-    image: getPaymentMethodImage("transfer"),
-    enabled: true,
-    isAngola: true,
-    countryFlag: "🇦🇴",
-    countryName: "Angola"
-  },
+  // Transferência bancária removida
   {
     id: "emola",
     name: "e-Mola",
@@ -133,7 +125,6 @@ export const getCountryByPaymentMethod = (paymentMethod: string) => {
     // Angola
     'express': { code: 'AO', name: 'Angola', flag: '🇦🇴' },
     'reference': { code: 'AO', name: 'Angola', flag: '🇦🇴' },
-    'transfer': { code: 'AO', name: 'Angola', flag: '🇦🇴' },
     
     // Portugal  
     'card': { code: 'PT', name: 'Portugal', flag: '🇵🇹' },
