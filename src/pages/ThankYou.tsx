@@ -164,25 +164,30 @@ const ThankYou = () => {
     const loadProduct = async () => {
       console.log('🔍 ThankYou: ==> CARREGANDO PRODUTO <==');
       console.log('📋 Detalhes do pedido:', orderDetails);
-      console.log('📊 Final Status:', orderDetails.status);
+      console.log('📊 URL Status:', orderDetails.status);
 
-      // Definir status inicial baseado nos parâmetros da URL
-      setOrderStatus(orderDetails.status);
-
-      // Se não temos customer_name nos parâmetros, buscar do banco usando order_id
-      if (orderDetails.customerName === 'Cliente' && orderDetails.orderId) {
+      // 🚨 CRÍTICO: Buscar status REAL do banco de dados, não confiar na URL
+      if (orderDetails.orderId) {
         try {
-          console.log('🔍 Buscando nome do cliente do banco de dados...');
+          console.log('🔍 Buscando status real do banco de dados...');
           const {
             data: orderData,
             error: orderError
-          } = await supabase.from('orders').select('customer_name, customer_email').eq('order_id', orderDetails.orderId).single();
+          } = await supabase.from('orders').select('status, customer_name, customer_email').eq('order_id', orderDetails.orderId).single();
+          
           if (orderData && !orderError) {
-            console.log('✅ Nome do cliente encontrado:', orderData.customer_name);
+            console.log('✅ Status real do banco:', orderData.status);
+            setOrderStatus(orderData.status);
+          } else {
+            console.log('⚠️ Usando status da URL como fallback:', orderDetails.status);
+            setOrderStatus(orderDetails.status);
           }
         } catch (error) {
-          console.error('❌ Erro ao buscar nome do cliente:', error);
+          console.error('❌ Erro ao buscar status do banco:', error);
+          setOrderStatus(orderDetails.status);
         }
+      } else {
+        setOrderStatus(orderDetails.status);
       }
       
       if (!orderDetails.productId) {
