@@ -379,6 +379,48 @@ export function AppsTabLayout() {
 
       // Sales Recovery system removed - skipping fetch
 
+      // Fetch Discount Coupons (agrupado por produto)
+      const { data: couponsData, error: couponsError } = await supabase
+        .from('discount_coupons')
+        .select(`
+          *,
+          products(name)
+        `)
+        .eq('user_id', user.id);
+
+      if (couponsError) {
+        console.error('Error fetching coupons data:', couponsError);
+      } else {
+        console.log('Coupons data:', couponsData);
+      }
+
+      if (couponsData && couponsData.length > 0) {
+        // Agrupar cupons por produto para mostrar uma integração por produto
+        const couponsByProduct = new Map<string, any[]>();
+        couponsData.forEach(coupon => {
+          const productId = coupon.product_id || 'global';
+          if (!couponsByProduct.has(productId)) {
+            couponsByProduct.set(productId, []);
+          }
+          couponsByProduct.get(productId)!.push(coupon);
+        });
+
+        couponsByProduct.forEach((coupons, productId) => {
+          const hasActiveCoupons = coupons.some(c => c.is_active);
+          const firstCoupon = coupons[0];
+          allIntegrations.push({
+            id: productId === 'global' ? 'discount-coupons-global' : `discount-coupons-${productId}`,
+            type: 'discount-coupons',
+            name: 'Cupons de Desconto',
+            active: hasActiveCoupons,
+            createdAt: new Date(firstCoupon.created_at || '').toLocaleDateString(),
+            icon: <span className="text-lg">🎟️</span>,
+            productName: firstCoupon.products?.name || 'Todos os Produtos',
+            productId: productId === 'global' ? undefined : productId
+          });
+        });
+      }
+
       console.log('All integrations loaded:', allIntegrations);
       setIntegrations(allIntegrations);
     } catch (error) {
@@ -471,6 +513,25 @@ export function AppsTabLayout() {
           .update({ enabled: active })
           .eq('id', integration.id)
           .select();
+      } else if (integration.type === 'discount-coupons') {
+        // Toggle all coupons for this product
+        const productId = integration.productId;
+        if (productId) {
+          updateResult = await supabase
+            .from('discount_coupons')
+            .update({ is_active: active })
+            .eq('product_id', productId)
+            .eq('user_id', user?.id)
+            .select();
+        } else {
+          // Global coupons (no product_id)
+          updateResult = await supabase
+            .from('discount_coupons')
+            .update({ is_active: active })
+            .is('product_id', null)
+            .eq('user_id', user?.id)
+            .select();
+        }
       }
 
       if (updateResult?.error) {

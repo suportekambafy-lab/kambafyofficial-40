@@ -166,6 +166,10 @@ export function DiscountCouponsForm({ productId, onSaveSuccess }: DiscountCoupon
       setIsAdding(false);
       
       loadCoupons();
+      
+      // Dispatch event to update integrations list
+      window.dispatchEvent(new CustomEvent('integrationCreated'));
+      
       onSaveSuccess();
     } catch (error: any) {
       console.error('Error creating coupon:', error);
