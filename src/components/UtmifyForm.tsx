@@ -39,49 +39,30 @@ export function UtmifyForm({ productId, onSaveSuccess }: UtmifyFormProps) {
     }
 
     setTesting(true);
-    try {
-      // Validação do formato do token UTMify
-      // Tokens UTMify geralmente têm formato alfanumérico com 30+ caracteres
-      const token = apiToken.trim();
-      
-      if (token.length < 20) {
-        toast({
-          title: 'Token muito curto',
-          description: 'O token UTMify deve ter pelo menos 20 caracteres.',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      // Verifica se contém apenas caracteres válidos (alfanuméricos)
-      const validTokenPattern = /^[a-zA-Z0-9]+$/;
-      if (!validTokenPattern.test(token)) {
-        toast({
-          title: 'Formato inválido',
-          description: 'O token deve conter apenas letras e números.',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      // Token passou nas validações básicas
-      // Simula um pequeno delay para feedback visual
-      await new Promise(resolve => setTimeout(resolve, 800));
-
+    
+    // Simula um pequeno delay para feedback visual
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    const token = apiToken.trim();
+    
+    // Validação do formato do token UTMify
+    if (token.length < 10) {
       toast({
-        title: 'Token validado!',
-        description: 'O formato do token está correto. Salve a configuração para ativar a integração.',
-      });
-    } catch (error: any) {
-      console.error('Error testing UTMify connection:', error);
-      toast({
-        title: 'Erro ao validar',
-        description: 'Ocorreu um erro ao validar o token.',
+        title: 'Token muito curto',
+        description: 'O token UTMify parece estar incompleto.',
         variant: 'destructive',
       });
-    } finally {
       setTesting(false);
+      return;
     }
+
+    // Token passou nas validações básicas
+    toast({
+      title: 'Token validado!',
+      description: 'O formato do token está correto. Salve a configuração para ativar a integração.',
+    });
+    
+    setTesting(false);
   };
 
   useEffect(() => {
