@@ -31,6 +31,7 @@ import { TermsModal } from "@/components/checkout/TermsModal";
 import { PrivacyModal } from "@/components/checkout/PrivacyModal";
 import { RefundPolicyModal } from "@/components/checkout/RefundPolicyModal";
 import { countTotalSales } from "@/utils/orderUtils";
+import { CouponInput } from "@/components/checkout/CouponInput";
 
 // Importar componentes otimizados
 import { OptimizedCustomBanner, OptimizedCountdownTimer, OptimizedFakeReviews, OptimizedSocialProof, OptimizedSpotsCounter, OptimizedOrderBump, OptimizedStripeCardPayment } from '@/components/checkout/OptimizedCheckoutComponents';
@@ -132,8 +133,17 @@ const Checkout = () => {
   const [cohortId, setCohortId] = useState<string | null>(null);
   const [cohort, setCohort] = useState<any>(null);
   const [cohortLoading, setCohortLoading] = useState(false);
+  
+  // Coupon state
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+  const [couponDiscount, setCouponDiscount] = useState(0);
 
-  // Calculate total order bump price from all selected bumps
+  const handleCouponApplied = useCallback((coupon: any, discountAmount: number) => {
+    setAppliedCoupon(coupon);
+    setCouponDiscount(discountAmount);
+    console.log('💰 Coupon applied:', { coupon, discountAmount });
+  }, []);
+
   const totalOrderBumpPrice = useMemo(() => {
     const allPrices = Array.from(selectedOrderBumps.values());
     const total = allPrices.reduce((sum, {
@@ -2251,9 +2261,9 @@ const Checkout = () => {
   console.log(`- Preço final calculado: ${finalProductPrice} ${userCountry?.currency}`);
   console.log(`- Preço order bump: ${totalOrderBumpPrice} ${userCountry?.currency}`);
 
-  // 🔥 CALCULAR TOTAL CORRETO (ambos na mesma moeda final)
-  const totalPrice = finalProductPrice + totalOrderBumpPrice;
-  console.log(`🚨 TOTAL FINAL: ${totalPrice} ${userCountry?.currency}`);
+  // 🔥 CALCULAR TOTAL CORRETO (ambos na mesma moeda final) - incluindo desconto de cupom
+  const totalPrice = Math.max(0, finalProductPrice + totalOrderBumpPrice - couponDiscount);
+  console.log(`🚨 TOTAL FINAL: ${totalPrice} ${userCountry?.currency} (desconto cupom: ${couponDiscount})`);
   console.log(`Display price: ${getDisplayPrice(originalPriceKZ)}`);
 
   // Para compatibilidade com variáveis existentes
@@ -2447,6 +2457,35 @@ const Checkout = () => {
                 </div>}
 
               <OptimizedOrderBump productId={productId || ''} position="after_payment_method" onToggle={handleOrderBumpToggle} userCountry={userCountry} formatPrice={formatPrice} resetSelection={resetOrderBumps} />
+
+              {/* Campo de Cupom de Desconto */}
+              {product?.id && (
+                <div className="mt-4 mb-4">
+                  <Label className="text-sm font-medium mb-2 block text-gray-700">
+                    Cupom de Desconto
+                  </Label>
+                  <CouponInput
+                    productId={product.id}
+                    customerEmail={formData.email || ''}
+                    totalAmount={finalProductPrice + totalOrderBumpPrice}
+                    currency={userCountry?.currency || 'KZ'}
+                    onCouponApplied={handleCouponApplied}
+                    t={(key: string) => key}
+                  />
+                </div>
+              )}
+
+              {/* Mostrar desconto aplicado */}
+              {couponDiscount > 0 && (
+                <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-green-700 font-medium">Desconto aplicado:</span>
+                    <span className="text-green-700 font-bold">
+                      -{formatPrice(couponDiscount)}
+                    </span>
+                  </div>
+                </div>
+              )}
 
               {/* Apple Pay removido */}
 
