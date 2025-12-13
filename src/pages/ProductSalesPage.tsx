@@ -174,7 +174,9 @@ export default function ProductSalesPage() {
 
   const handleGoToCheckout = () => {
     if (product) {
-      navigate(`/checkout/${product.id}`);
+      // Preservar UTM params e outros parâmetros da URL (ex: src, sck da UTMify)
+      const currentParams = window.location.search;
+      navigate(`/checkout/${product.id}${currentParams}`);
     }
   };
 
