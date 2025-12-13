@@ -1912,6 +1912,10 @@ const Checkout = () => {
           }).catch(err => console.error('Error sending Facebook conversion:', err));
           
           // Verificar upsell
+          // 🚨 IMPORTANTE: Adicionar status=completed ao redirect
+          params.append('status', 'completed');
+          params.append('payment_method', 'express');
+          
           if (checkoutSettings?.upsell?.enabled && checkoutSettings.upsell.link_pagina_upsell?.trim()) {
             console.log('🎯 Redirecionando para upsell:', checkoutSettings.upsell.link_pagina_upsell);
             const upsellUrl = new URL(checkoutSettings.upsell.link_pagina_upsell);
@@ -1996,6 +2000,10 @@ const Checkout = () => {
                   eventSourceUrl: window.location.href
                 }
               }).catch(err => console.error('Error sending Facebook conversion:', err));
+              
+              // 🚨 IMPORTANTE: Adicionar status=completed ao redirect após polling
+              params.append('status', 'completed');
+              params.append('payment_method', 'express');
               
               // 🎯 AGORA SIM: Verificar upsell APÓS confirmar pagamento
               if (checkoutSettings?.upsell?.enabled && checkoutSettings.upsell.link_pagina_upsell?.trim()) {
