@@ -10,7 +10,7 @@ import { motion } from 'framer-motion';
 
 const Verify2FA = () => {
   const { user, requires2FA, verified2FA, pending2FAEmail, verify2FA, signOut } = useAuth();
-  const { registerSuccessfulLogin } = useLogin2FA();
+  const { registerSuccessfulLogin, deviceInfo } = useLogin2FA();
   const navigate = useNavigate();
   
   // Determinar tipo de usuário para mensagens personalizadas
@@ -33,15 +33,25 @@ const Verify2FA = () => {
 
   const handleVerificationSuccess = async () => {
     if (user) {
-      // Registrar o dispositivo como confiável
+      console.log('🔐 2FA verificado, registrando dispositivo como confiável...');
+      console.log('📱 DeviceInfo disponível:', !!deviceInfo);
+      
+      // Aguardar um pouco se deviceInfo ainda não carregou
+      if (!deviceInfo) {
+        console.log('⏳ Aguardando deviceInfo carregar...');
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+      
+      // Registrar o dispositivo como confiável (90 dias)
       await registerSuccessfulLogin(user.id, true);
+      console.log('✅ Dispositivo registrado como confiável');
     }
     
     verify2FA();
     
     toast({
       title: "Verificação concluída!",
-      description: "Seu dispositivo foi verificado com sucesso.",
+      description: "Seu dispositivo foi verificado com sucesso. Não pediremos 2FA neste dispositivo por 90 dias.",
     });
 
     const redirectPath = isCustomer ? '/meus-acessos' : '/vendedor';
