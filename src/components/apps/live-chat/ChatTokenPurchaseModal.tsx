@@ -1,16 +1,16 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Shield, CheckCircle, Zap, MessageSquare, TrendingUp, Crown, Smartphone, Phone, AlertCircle } from 'lucide-react';
+import { Loader2, Shield, CheckCircle, Zap, MessageSquare, TrendingUp, Crown, Smartphone, Phone, AlertCircle, Sparkles, X, ChevronRight } from 'lucide-react';
 import { formatPrice } from '@/utils/priceFormatting';
 import { getPaymentMethodsByCountry, PaymentMethod } from '@/utils/paymentMethods';
 import { getPaymentMethodImage } from '@/utils/paymentMethodImages';
 import { PhoneInput } from '@/components/PhoneInput';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface TokenPackage {
   id: string;
@@ -51,7 +51,6 @@ export function ChatTokenPurchaseModal({
   const [paymentError, setPaymentError] = useState('');
   const { toast } = useToast();
 
-  // Reset state when modal closes
   useEffect(() => {
     if (!isOpen) {
       setWaitingForConfirmation(false);
@@ -62,7 +61,6 @@ export function ChatTokenPurchaseModal({
     }
   }, [isOpen]);
 
-  // Countdown timer for Express payment
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (waitingForConfirmation && countdown > 0) {
@@ -84,7 +82,6 @@ export function ChatTokenPurchaseModal({
   const availablePaymentMethods = useMemo(() => {
     const methods = getPaymentMethodsByCountry(country);
     
-    // Add Stripe methods for supported countries
     if (country === 'PT') {
       const stripeMethods = [
         { id: 'card', name: 'Cartão de Crédito/Débito', enabled: true, isPortugal: true },
@@ -128,11 +125,11 @@ export function ChatTokenPurchaseModal({
 
   const getPackageIcon = (name: string) => {
     switch (name?.toLowerCase()) {
-      case 'starter': return <MessageSquare className="h-5 w-5" />;
-      case 'básico': return <Zap className="h-5 w-5" />;
-      case 'pro': return <TrendingUp className="h-5 w-5" />;
-      case 'business': return <Crown className="h-5 w-5" />;
-      default: return <MessageSquare className="h-5 w-5" />;
+      case 'starter': return <MessageSquare className="h-6 w-6" />;
+      case 'básico': return <Zap className="h-6 w-6" />;
+      case 'pro': return <TrendingUp className="h-6 w-6" />;
+      case 'business': return <Crown className="h-6 w-6" />;
+      default: return <MessageSquare className="h-6 w-6" />;
     }
   };
 
@@ -151,7 +148,6 @@ export function ChatTokenPurchaseModal({
       return;
     }
 
-    // Validate phone number for Express
     if (selectedPaymentMethod === 'express') {
       const cleanPhone = expressPhone.replace(/\D/g, '');
       if (cleanPhone.length !== 9) {
@@ -160,7 +156,6 @@ export function ChatTokenPurchaseModal({
       }
     }
 
-    // Validate phone number for MBWay
     if (selectedPaymentMethod === 'mbway') {
       const cleanPhone = mbwayPhone.replace(/\s/g, '');
       if (cleanPhone.length < 9) {
@@ -178,7 +173,6 @@ export function ChatTokenPurchaseModal({
 
       const priceInfo = getDisplayPrice();
 
-      // Handle Angola payments via AppyPay
       if (country === 'AO' && (selectedPaymentMethod === 'express' || selectedPaymentMethod === 'reference')) {
         const cleanPhone = expressPhone.replace(/\D/g, '');
         
@@ -196,7 +190,7 @@ export function ChatTokenPurchaseModal({
             originalCurrency: 'AOA',
             paymentMethod: selectedPaymentMethod,
             phoneNumber: cleanPhone,
-            skipOrderSave: true // Don't save to orders table
+            skipOrderSave: true
           }
         });
 
@@ -207,7 +201,6 @@ export function ChatTokenPurchaseModal({
         }
 
         if (selectedPaymentMethod === 'express') {
-          // Start countdown for Express confirmation
           setWaitingForConfirmation(true);
           setCountdown(90);
           
@@ -216,13 +209,11 @@ export function ChatTokenPurchaseModal({
             description: 'Verifique o app Multicaixa Express e confirme a operação.'
           });
           
-          // Poll for payment status
           const transactionId = data?.id || data?.merchantTransactionId;
           if (transactionId) {
             pollPaymentStatus(transactionId, selectedPackage.tokens);
           }
         } else {
-          // Reference payment
           toast({
             title: 'Referência gerada',
             description: `Use a referência ${data?.orderId || 'gerada'} para efetuar o pagamento.`
@@ -232,7 +223,6 @@ export function ChatTokenPurchaseModal({
         return;
       }
 
-      // Handle Stripe payments (PT, GB, US, MZ)
       if (['card', 'klarna', 'multibanco', 'mbway', 'card_uk', 'klarna_uk', 'card_us'].includes(selectedPaymentMethod)) {
         const { data, error } = await supabase.functions.invoke('purchase-chat-tokens', {
           body: {
@@ -261,7 +251,6 @@ export function ChatTokenPurchaseModal({
         }
       }
 
-      // Handle Mozambique payments
       if (country === 'MZ' && (selectedPaymentMethod === 'mpesa' || selectedPaymentMethod === 'emola')) {
         toast({
           title: 'Pagamento pendente',
@@ -284,7 +273,7 @@ export function ChatTokenPurchaseModal({
 
   const pollPaymentStatus = async (transactionId: string, tokens: number) => {
     let attempts = 0;
-    const maxAttempts = 18; // 90 seconds / 5 second intervals
+    const maxAttempts = 18;
 
     const checkStatus = async () => {
       if (attempts >= maxAttempts) {
@@ -337,135 +326,197 @@ export function ChatTokenPurchaseModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && !processing && onClose()}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Comprar Tokens</DialogTitle>
-          <DialogDescription>
-            Selecione o país e método de pagamento
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden border-0 bg-gradient-to-b from-background to-muted/30">
+        {/* Header with gradient */}
+        <div className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/10 to-transparent" />
+          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+          
+          <button
+            onClick={onClose}
+            disabled={processing}
+            className="absolute top-4 right-4 p-2 rounded-full bg-background/50 backdrop-blur-sm hover:bg-background/80 transition-colors z-10"
+          >
+            <X className="h-4 w-4 text-muted-foreground" />
+          </button>
 
-        {selectedPackage && (
-          <div className="space-y-5">
-            {/* Package Summary */}
-            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center text-primary">
-                  {getPackageIcon(selectedPackage.name)}
+          {selectedPackage && (
+            <div className="relative p-6 pb-8">
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/25">
+                    {getPackageIcon(selectedPackage.name)}
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center">
+                    <Sparkles className="h-3 w-3 text-white" />
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-medium">{selectedPackage.name}</h3>
-                  <p className="text-xs text-muted-foreground">
-                    {selectedPackage.tokens.toLocaleString()} tokens
+                <div className="flex-1">
+                  <h2 className="text-xl font-bold">{selectedPackage.name}</h2>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedPackage.tokens.toLocaleString()} tokens inclusos
                   </p>
                 </div>
-              </div>
-              <div className="text-xl font-semibold">
-                {priceInfo.formatted}
+                <div className="text-right">
+                  <div className="text-2xl font-bold text-primary">
+                    {priceInfo.formatted}
+                  </div>
+                </div>
               </div>
             </div>
+          )}
+        </div>
 
-            {/* Waiting for Express Confirmation */}
+        <div className="p-6 pt-0 space-y-5 max-h-[60vh] overflow-y-auto">
+          {/* Waiting for Express Confirmation */}
+          <AnimatePresence mode="wait">
             {waitingForConfirmation && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
-                <div className="flex items-center gap-2">
-                  <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
-                  <span className="font-medium text-blue-800">Aguardando confirmação...</span>
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20 rounded-2xl p-5 space-y-4"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
+                    <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-blue-700 dark:text-blue-300">Aguardando confirmação</h3>
+                    <p className="text-sm text-blue-600/80 dark:text-blue-400/80">
+                      Tempo restante: <span className="font-mono font-bold">{formatTime(countdown)}</span>
+                    </p>
+                  </div>
                 </div>
-                <div className="text-sm text-blue-700 space-y-2">
-                  <p className="font-medium">
-                    ⏰ Você tem {formatTime(countdown)} para confirmar o pagamento
+                <div className="space-y-2 text-sm text-blue-700/90 dark:text-blue-300/90">
+                  <p className="flex items-start gap-2">
+                    <span className="shrink-0 w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center text-xs font-bold">1</span>
+                    Abra o app <strong>Multicaixa Express</strong>
                   </p>
-                  <p>
-                    → Abra o aplicativo <strong>Multicaixa Express</strong> e procure por <span className="text-red-600 font-bold">"Operação por Autorizar"</span>
+                  <p className="flex items-start gap-2">
+                    <span className="shrink-0 w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center text-xs font-bold">2</span>
+                    Procure por <strong className="text-red-500">"Operação por Autorizar"</strong>
                   </p>
-                  <p>
-                    → Selecione o pagamento pendente e <strong>confirme a transação</strong>
+                  <p className="flex items-start gap-2">
+                    <span className="shrink-0 w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center text-xs font-bold">3</span>
+                    Confirme a transação
                   </p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {!waitingForConfirmation && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="space-y-5"
+            >
+              {/* Country Selection */}
+              <div className="space-y-2">
+                <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  Selecione o país
+                </Label>
+                <div className="grid grid-cols-5 gap-2">
+                  {Object.values(supportedCountries).map((c) => {
+                    const isSelected = country === c.code;
+                    return (
+                      <button
+                        key={c.code}
+                        type="button"
+                        onClick={() => {
+                          setCountry(c.code);
+                          setSelectedPaymentMethod('');
+                          setPaymentError('');
+                        }}
+                        disabled={processing}
+                        className={`relative flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all ${
+                          isSelected 
+                            ? 'border-primary bg-primary/5 shadow-sm' 
+                            : 'border-transparent bg-muted/50 hover:bg-muted'
+                        } ${processing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      >
+                        <span className="text-2xl">{c.flag}</span>
+                        <span className="text-[10px] font-medium text-muted-foreground">{c.code}</span>
+                        {isSelected && (
+                          <motion.div
+                            layoutId="country-indicator"
+                            className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-6 h-1 bg-primary rounded-full"
+                          />
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
-            )}
 
-            {!waitingForConfirmation && (
-              <>
-                {/* Country Selection */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">País</Label>
-                  <Select 
-                    value={country} 
-                    onValueChange={(value) => {
-                      setCountry(value);
-                      setSelectedPaymentMethod('');
-                      setPaymentError('');
-                    }}
-                    disabled={processing}
-                  >
-                    <SelectTrigger className="h-10">
-                      <SelectValue placeholder="Selecione o país" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.values(supportedCountries).map((c) => (
-                        <SelectItem key={c.code} value={c.code}>
-                          <div className="flex items-center gap-2">
-                            <span>{c.flag}</span>
-                            <span>{c.name}</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Payment Methods */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Método de Pagamento</Label>
-                  <div className="space-y-2">
-                    {availablePaymentMethods.map((method) => {
-                      const isSelected = selectedPaymentMethod === method.id;
-                      const image = getPaymentMethodImage(method.id);
-                      
-                      return (
-                        <button
-                          key={method.id}
-                          type="button"
-                          onClick={() => {
-                            setSelectedPaymentMethod(method.id);
-                            setPaymentError('');
-                          }}
-                          disabled={processing}
-                          className={`flex items-center gap-3 w-full p-3 rounded-lg border transition-colors ${
-                            isSelected 
-                              ? 'border-primary bg-primary/5' 
-                              : 'border-border hover:border-muted-foreground/50'
-                          } ${processing ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        >
+              {/* Payment Methods */}
+              <div className="space-y-2">
+                <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  Método de pagamento
+                </Label>
+                <div className="space-y-2">
+                  {availablePaymentMethods.map((method, index) => {
+                    const isSelected = selectedPaymentMethod === method.id;
+                    const image = getPaymentMethodImage(method.id);
+                    
+                    return (
+                      <motion.button
+                        key={method.id}
+                        type="button"
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        onClick={() => {
+                          setSelectedPaymentMethod(method.id);
+                          setPaymentError('');
+                        }}
+                        disabled={processing}
+                        className={`group flex items-center gap-4 w-full p-4 rounded-xl border-2 transition-all ${
+                          isSelected 
+                            ? 'border-primary bg-primary/5 shadow-sm' 
+                            : 'border-border/50 hover:border-border hover:bg-muted/50'
+                        } ${processing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      >
+                        <div className={`w-12 h-8 rounded-lg flex items-center justify-center overflow-hidden ${
+                          isSelected ? 'bg-white' : 'bg-muted'
+                        }`}>
                           {image ? (
                             <img 
                               src={image} 
                               alt={method.name} 
-                              className="h-6 w-10 object-contain"
+                              className="h-5 w-auto object-contain"
                             />
                           ) : (
-                            <div className="h-6 w-10 rounded bg-muted flex items-center justify-center">
-                              <Shield className="h-3 w-3 text-muted-foreground" />
-                            </div>
+                            <Shield className="h-4 w-4 text-muted-foreground" />
                           )}
-                          <span className="flex-1 text-left text-sm">{method.name}</span>
-                          {isSelected && (
-                            <CheckCircle className="h-4 w-4 text-primary" />
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
+                        </div>
+                        <span className="flex-1 text-left font-medium">{method.name}</span>
+                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                          isSelected 
+                            ? 'border-primary bg-primary' 
+                            : 'border-muted-foreground/30 group-hover:border-muted-foreground/50'
+                        }`}>
+                          {isSelected && <CheckCircle className="h-4 w-4 text-primary-foreground" />}
+                        </div>
+                      </motion.button>
+                    );
+                  })}
                 </div>
+              </div>
 
-                {/* Express Phone Input */}
+              {/* Express Phone Input */}
+              <AnimatePresence>
                 {selectedPaymentMethod === 'express' && (
-                  <div className="space-y-2">
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="space-y-2 overflow-hidden"
+                  >
                     <Label className="text-sm font-medium flex items-center gap-2">
-                      <Phone className="h-4 w-4" />
-                      Número de telefone Multicaixa Express
+                      <Phone className="h-4 w-4 text-primary" />
+                      Número Multicaixa Express
                     </Label>
                     <PhoneInput 
                       value={expressPhone} 
@@ -478,20 +529,27 @@ export function ChatTokenPurchaseModal({
                       disabled={processing}
                     />
                     <p className="text-xs text-muted-foreground">
-                      Insira o número de telefone ativo no Multicaixa Express
+                      Insira o número ativo no Multicaixa Express
                     </p>
-                  </div>
+                  </motion.div>
                 )}
+              </AnimatePresence>
 
-                {/* MBWay Phone Input */}
+              {/* MBWay Phone Input */}
+              <AnimatePresence>
                 {selectedPaymentMethod === 'mbway' && (
-                  <div className="space-y-2">
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="space-y-2 overflow-hidden"
+                  >
                     <Label className="text-sm font-medium flex items-center gap-2">
-                      <Smartphone className="h-4 w-4" />
-                      Número de telemóvel MB Way
+                      <Smartphone className="h-4 w-4 text-primary" />
+                      Número MB Way
                     </Label>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground bg-muted px-3 py-2 rounded-l-md border border-r-0 border-input">
+                    <div className="flex items-center">
+                      <span className="text-sm text-muted-foreground bg-muted px-4 py-2.5 rounded-l-xl border border-r-0 border-input font-medium">
                         +351
                       </span>
                       <Input
@@ -499,46 +557,60 @@ export function ChatTokenPurchaseModal({
                         placeholder="912 345 678"
                         value={mbwayPhone}
                         onChange={(e) => setMbwayPhone(e.target.value)}
-                        className="rounded-l-none"
+                        className="rounded-l-none rounded-r-xl"
                         disabled={processing}
                       />
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Receberá uma notificação no seu telemóvel para confirmar
+                      Receberá uma notificação para confirmar
                     </p>
-                  </div>
+                  </motion.div>
                 )}
+              </AnimatePresence>
 
-                {/* Error Message */}
+              {/* Error Message */}
+              <AnimatePresence>
                 {paymentError && (
-                  <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 p-3 rounded-lg">
-                    <AlertCircle className="h-4 w-4 shrink-0" />
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="flex items-center gap-3 text-sm text-destructive bg-destructive/10 p-4 rounded-xl border border-destructive/20"
+                  >
+                    <AlertCircle className="h-5 w-5 shrink-0" />
                     <span>{paymentError}</span>
-                  </div>
+                  </motion.div>
                 )}
+              </AnimatePresence>
+            </motion.div>
+          )}
+        </div>
 
-                {/* Payment Button */}
-                <Button 
-                  className="w-full"
-                  onClick={handlePayment}
-                  disabled={!selectedPaymentMethod || processing}
-                >
-                  {processing ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Processando...
-                    </>
-                  ) : (
-                    `Pagar ${priceInfo.formatted}`
-                  )}
-                </Button>
+        {/* Footer */}
+        {!waitingForConfirmation && (
+          <div className="p-6 pt-0 space-y-3">
+            <Button 
+              className="w-full h-12 text-base font-semibold rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-shadow"
+              onClick={handlePayment}
+              disabled={!selectedPaymentMethod || processing}
+            >
+              {processing ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Processando...
+                </>
+              ) : (
+                <>
+                  Pagar {priceInfo.formatted}
+                  <ChevronRight className="ml-2 h-5 w-5" />
+                </>
+              )}
+            </Button>
 
-                {/* Security Notice */}
-                <p className="text-center text-xs text-muted-foreground">
-                  Pagamento seguro e encriptado
-                </p>
-              </>
-            )}
+            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+              <Shield className="h-3.5 w-3.5" />
+              <span>Pagamento seguro e encriptado</span>
+            </div>
           </div>
         )}
       </DialogContent>
