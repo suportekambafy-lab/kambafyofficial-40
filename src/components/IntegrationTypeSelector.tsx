@@ -49,6 +49,17 @@ const integrationTypes: IntegrationType[] = [
     color: 'text-amber-600'
   },
   {
+    id: 'google-ads',
+    name: 'Google Ads',
+    description: 'Rastreie conversões e otimize suas campanhas do Google Ads',
+    icon: ({ className }: { className?: string }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12.24 7.79L17.5 2.06 22 6.56l-5.27 5.73-4.49-4.5zm-1.41 1.41L3.06 17.5 7.56 22l7.76-8.27-4.49-4.53zM2.06 7.97l4.5 4.49L3.06 17.5V7.97z" fill="#4285F4"/>
+      </svg>
+    ),
+    color: 'text-blue-500'
+  },
+  {
     id: 'webhook',
     name: 'Webhook',
     description: 'Selecione eventos personalizados e receba notificações em tempo real',
