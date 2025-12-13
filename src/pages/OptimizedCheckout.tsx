@@ -198,6 +198,9 @@ const PaymentMethods = memo(({
 
 // Componente principal otimizado
 const OptimizedCheckout = () => {
+  // DEBUG: Log no início absoluto do componente
+  console.log('[OptimizedCheckout] COMPONENT START');
+  
   const { productId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
