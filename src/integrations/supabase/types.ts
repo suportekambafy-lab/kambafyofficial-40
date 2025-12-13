@@ -2321,6 +2321,7 @@ export type Database = {
           stripe_session_id: string | null
           updated_at: string
           user_id: string | null
+          utm_params: Json | null
         }
         Insert: {
           affiliate_code?: string | null
@@ -2353,6 +2354,7 @@ export type Database = {
           stripe_session_id?: string | null
           updated_at?: string
           user_id?: string | null
+          utm_params?: Json | null
         }
         Update: {
           affiliate_code?: string | null
@@ -2385,6 +2387,7 @@ export type Database = {
           stripe_session_id?: string | null
           updated_at?: string
           user_id?: string | null
+          utm_params?: Json | null
         }
         Relationships: [
           {

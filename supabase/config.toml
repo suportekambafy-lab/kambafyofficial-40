@@ -188,3 +188,6 @@ verify_jwt = false
 
 [functions.test-utmify-connection]
 verify_jwt = false
+
+[functions.send-utmify-conversion]
+verify_jwt = false
