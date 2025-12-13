@@ -120,83 +120,80 @@ export function ChatCreditsManager({ onPurchaseComplete }: ChatCreditsManagerPro
   return (
     <div className="space-y-6">
       {/* Current Balance */}
-      <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg flex items-center gap-2">
+      <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
             <Zap className="h-5 w-5 text-primary" />
-            Seu Saldo de Tokens
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-bold text-primary">
-              {(credits?.token_balance || 0).toLocaleString()}
-            </span>
-            <span className="text-muted-foreground">tokens</span>
           </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            ≈ {getEstimatedMessages(credits?.token_balance || 0).toLocaleString()} mensagens disponíveis
+          <div>
+            <p className="text-sm text-muted-foreground">Saldo atual</p>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-2xl font-semibold">
+                {(credits?.token_balance || 0).toLocaleString()}
+              </span>
+              <span className="text-sm text-muted-foreground">tokens</span>
+            </div>
+          </div>
+        </div>
+        <div className="text-right">
+          <p className="text-sm text-muted-foreground">
+            ≈ {getEstimatedMessages(credits?.token_balance || 0).toLocaleString()} mensagens
           </p>
           {(credits?.token_balance || 0) < 5000 && (
-            <Badge variant="destructive" className="mt-2">
-              Saldo baixo - Recarregue para continuar
+            <Badge variant="outline" className="mt-1 text-destructive border-destructive/50">
+              Saldo baixo
             </Badge>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Packages */}
       <div>
-        <h3 className="text-lg font-semibold mb-4">Pacotes de Tokens</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <h3 className="text-sm font-medium text-muted-foreground mb-3">Pacotes disponíveis</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {packages.map((pkg) => {
             const isPopular = pkg.name.toLowerCase() === 'pro';
             
             return (
-              <Card
+              <div
                 key={pkg.id} 
-                className={`relative transition-all hover:shadow-lg ${
-                  isPopular ? 'border-primary ring-1 ring-primary/20' : ''
+                className={`relative p-4 rounded-lg border bg-card transition-all hover:border-primary/50 ${
+                  isPopular ? 'border-primary' : 'border-border'
                 }`}
               >
                 {isPopular && (
-                  <Badge className="absolute -top-2 left-1/2 -translate-x-1/2 bg-primary">
-                    Mais Popular
+                  <Badge variant="secondary" className="absolute -top-2 right-3 text-xs">
+                    Popular
                   </Badge>
                 )}
-                <CardHeader className="text-center pb-2">
-                  <div className={`mx-auto w-12 h-12 rounded-full flex items-center justify-center mb-2 ${
+                
+                <div className="flex items-center gap-2 mb-3">
+                  <div className={`w-8 h-8 rounded-md flex items-center justify-center ${
                     isPopular ? 'bg-primary text-primary-foreground' : 'bg-muted'
                   }`}>
                     {getPackageIcon(pkg.name)}
                   </div>
-                  <CardTitle className="text-xl">{pkg.name}</CardTitle>
-                  <CardDescription>{pkg.description}</CardDescription>
-                </CardHeader>
-                <CardContent className="text-center space-y-4">
-                  <div>
-                    <div className="text-3xl font-bold">
-                      {formatPrice(pkg.price_kz)}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      {pkg.tokens.toLocaleString()} tokens
-                    </div>
-                  </div>
-                  
-                  <div className="text-sm text-muted-foreground">
-                    ≈ {getEstimatedMessages(pkg.tokens).toLocaleString()} mensagens
-                  </div>
+                  <span className="font-medium">{pkg.name}</span>
+                </div>
 
-                  <Button 
-                    className="w-full" 
-                    variant={isPopular ? 'default' : 'outline'}
-                    onClick={() => handleOpenPurchaseModal(pkg)}
-                  >
-                    <ShoppingCart className="mr-2 h-4 w-4" />
-                    Comprar
-                  </Button>
-                </CardContent>
-              </Card>
+                <div className="mb-3">
+                  <div className="text-2xl font-semibold">
+                    {formatPrice(pkg.price_kz)}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {pkg.tokens.toLocaleString()} tokens • ~{getEstimatedMessages(pkg.tokens)} msgs
+                  </div>
+                </div>
+
+                <Button 
+                  className="w-full" 
+                  variant={isPopular ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => handleOpenPurchaseModal(pkg)}
+                >
+                  Comprar
+                </Button>
+              </div>
             );
           })}
         </div>
@@ -204,33 +201,26 @@ export function ChatCreditsManager({ onPurchaseComplete }: ChatCreditsManagerPro
 
       {/* Usage Stats */}
       {credits && credits.total_tokens_used > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Estatísticas de Uso</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-3 gap-4 text-center">
-              <div>
-                <div className="text-2xl font-bold text-primary">
-                  {credits.total_tokens_purchased.toLocaleString()}
-                </div>
-                <div className="text-sm text-muted-foreground">Tokens comprados</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-orange-500">
-                  {credits.total_tokens_used.toLocaleString()}
-                </div>
-                <div className="text-sm text-muted-foreground">Tokens usados</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-green-500">
-                  {getEstimatedMessages(credits.total_tokens_used).toLocaleString()}
-                </div>
-                <div className="text-sm text-muted-foreground">Mensagens trocadas</div>
-              </div>
+        <div className="grid grid-cols-3 gap-4 p-4 bg-muted/30 rounded-lg">
+          <div className="text-center">
+            <div className="text-lg font-semibold">
+              {credits.total_tokens_purchased.toLocaleString()}
             </div>
-          </CardContent>
-        </Card>
+            <div className="text-xs text-muted-foreground">Comprados</div>
+          </div>
+          <div className="text-center border-x border-border">
+            <div className="text-lg font-semibold">
+              {credits.total_tokens_used.toLocaleString()}
+            </div>
+            <div className="text-xs text-muted-foreground">Usados</div>
+          </div>
+          <div className="text-center">
+            <div className="text-lg font-semibold">
+              {getEstimatedMessages(credits.total_tokens_used).toLocaleString()}
+            </div>
+            <div className="text-xs text-muted-foreground">Mensagens</div>
+          </div>
+        </div>
       )}
 
       {/* Purchase Modal */}
