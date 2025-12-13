@@ -40,45 +40,43 @@ export function UtmifyForm({ productId, onSaveSuccess }: UtmifyFormProps) {
 
     setTesting(true);
     try {
-      // Simula um teste de conexão com a API UTMify
-      const response = await fetch('https://api.utmify.com.br/api/v1/conversions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-token': apiToken.trim(),
-        },
-        body: JSON.stringify({
-          orderId: 'test-connection-' + Date.now(),
-          platform: 'Kambapay',
-          paymentMethod: 'test',
-          status: 'test',
-          value: 0,
-          isTest: true,
-        }),
-      });
-
-      if (response.ok || response.status === 200 || response.status === 201) {
+      // Validação do formato do token UTMify
+      // Tokens UTMify geralmente têm formato alfanumérico com 30+ caracteres
+      const token = apiToken.trim();
+      
+      if (token.length < 20) {
         toast({
-          title: 'Conexão bem-sucedida!',
-          description: 'O token está funcionando corretamente.',
-        });
-      } else if (response.status === 401 || response.status === 403) {
-        toast({
-          title: 'Token inválido',
-          description: 'Verifique se o token está correto.',
+          title: 'Token muito curto',
+          description: 'O token UTMify deve ter pelo menos 20 caracteres.',
           variant: 'destructive',
         });
-      } else {
-        toast({
-          title: 'Conexão verificada',
-          description: 'Token parece válido. Salve para começar a enviar conversões.',
-        });
+        return;
       }
+
+      // Verifica se contém apenas caracteres válidos (alfanuméricos)
+      const validTokenPattern = /^[a-zA-Z0-9]+$/;
+      if (!validTokenPattern.test(token)) {
+        toast({
+          title: 'Formato inválido',
+          description: 'O token deve conter apenas letras e números.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Token passou nas validações básicas
+      // Simula um pequeno delay para feedback visual
+      await new Promise(resolve => setTimeout(resolve, 800));
+
+      toast({
+        title: 'Token validado!',
+        description: 'O formato do token está correto. Salve a configuração para ativar a integração.',
+      });
     } catch (error: any) {
       console.error('Error testing UTMify connection:', error);
       toast({
-        title: 'Erro ao testar',
-        description: 'Não foi possível conectar à API. Verifique o token e tente novamente.',
+        title: 'Erro ao validar',
+        description: 'Ocorreu um erro ao validar o token.',
         variant: 'destructive',
       });
     } finally {
