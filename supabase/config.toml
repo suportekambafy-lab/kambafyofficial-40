@@ -185,3 +185,6 @@ verify_jwt = false
 
 [functions.onesignal-set-external-id]
 verify_jwt = false
+
+[functions.test-utmify-connection]
+verify_jwt = false
