@@ -183,6 +183,7 @@ serve(async (req) => {
     const chatConfig = product.chat_config || {};
     const greeting = chatConfig.greeting || 'Olá! Como posso ajudar?';
     const tone = chatConfig.tone || 'friendly';
+    const trainingText = chatConfig.training_text || '';
     
     const toneDescriptions: Record<string, string> = {
       friendly: 'amigável e acolhedor',
@@ -191,10 +192,15 @@ serve(async (req) => {
       formal: 'formal e respeitoso'
     };
 
+    // Build training knowledge section if available
+    const trainingSection = trainingText 
+      ? `\n\nCONHECIMENTO ADICIONAL DO VENDEDOR:\n${trainingText}\n\nUse essas informações para responder as perguntas dos clientes de forma precisa.`
+      : '';
+
     const systemPrompt = `Você é um assistente de atendimento ao cliente para o produto "${product.name}".
 
 SOBRE O PRODUTO:
-${product.description || 'Produto digital de alta qualidade.'}
+${product.description || 'Produto digital de alta qualidade.'}${trainingSection}
 
 SEU ESTILO:
 - Seja ${toneDescriptions[tone] || 'amigável e prestativo'}
@@ -204,6 +210,7 @@ SEU ESTILO:
 
 IMPORTANTE:
 - Nunca invente informações sobre o produto
+- Priorize as informações do "CONHECIMENTO ADICIONAL" quando disponíveis
 - Seja proativo em ajudar
 - Use emojis moderadamente`;
 

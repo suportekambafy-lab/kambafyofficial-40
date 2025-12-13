@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, MessageSquare, Save } from 'lucide-react';
+import { Loader2, MessageSquare, Save, Upload, FileText, X, Brain } from 'lucide-react';
 
 interface LiveChatConfigFormProps {
   productId: string;
@@ -18,6 +18,7 @@ interface LiveChatConfigFormProps {
 interface ChatConfig {
   greeting: string;
   tone: string;
+  training_text: string;
 }
 
 export function LiveChatConfigForm({ productId, onSaveSuccess }: LiveChatConfigFormProps) {
@@ -26,9 +27,13 @@ export function LiveChatConfigForm({ productId, onSaveSuccess }: LiveChatConfigF
   const [enabled, setEnabled] = useState(false);
   const [config, setConfig] = useState<ChatConfig>({
     greeting: 'Olá! 👋 Como posso ajudar você hoje?',
-    tone: 'friendly'
+    tone: 'friendly',
+    training_text: ''
   });
   const [productName, setProductName] = useState('');
+  const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+  const [isProcessingFile, setIsProcessingFile] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -52,7 +57,8 @@ export function LiveChatConfigForm({ productId, onSaveSuccess }: LiveChatConfigF
           const chatConfig = product.chat_config as Record<string, unknown>;
           setConfig({
             greeting: (chatConfig.greeting as string) || 'Olá! 👋 Como posso ajudar você hoje?',
-            tone: (chatConfig.tone as string) || 'friendly'
+            tone: (chatConfig.tone as string) || 'friendly',
+            training_text: (chatConfig.training_text as string) || ''
           });
         }
       }
@@ -172,6 +178,126 @@ export function LiveChatConfigForm({ productId, onSaveSuccess }: LiveChatConfigF
             <p className="text-xs text-muted-foreground">
               Define como a IA vai se comunicar com seus clientes.
             </p>
+          </div>
+
+          {/* AI Training Section */}
+          <div className="space-y-3 border-t pt-6">
+            <div className="flex items-center gap-2">
+              <Brain className="h-5 w-5 text-primary" />
+              <Label className="text-base font-medium">Treinamento da IA</Label>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Adicione informações que a IA deve saber sobre seu produto. Pode ser FAQ, detalhes técnicos, políticas, etc.
+            </p>
+            
+            <Textarea
+              value={config.training_text}
+              onChange={(e) => setConfig({ ...config, training_text: e.target.value })}
+              placeholder="Ex: O curso tem 10 módulos e 50 aulas. O acesso é vitalício. Oferecemos garantia de 7 dias. O suporte funciona das 9h às 18h..."
+              rows={6}
+              className="font-mono text-sm"
+            />
+            
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">ou</span>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept=".txt,.pdf,.doc,.docx"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  
+                  setIsProcessingFile(true);
+                  
+                  try {
+                    if (file.type === 'text/plain') {
+                      const text = await file.text();
+                      setConfig(prev => ({
+                        ...prev,
+                        training_text: prev.training_text 
+                          ? prev.training_text + '\n\n--- Conteúdo do arquivo: ' + file.name + ' ---\n\n' + text 
+                          : text
+                      }));
+                      setUploadedFileName(file.name);
+                      toast({
+                        title: 'Arquivo carregado!',
+                        description: `O conteúdo de "${file.name}" foi adicionado ao treinamento.`
+                      });
+                    } else {
+                      toast({
+                        title: 'Formato não suportado',
+                        description: 'Por enquanto, apenas arquivos .txt são suportados. Copie e cole o conteúdo do documento manualmente.',
+                        variant: 'destructive'
+                      });
+                    }
+                  } catch (error) {
+                    console.error('Error reading file:', error);
+                    toast({
+                      title: 'Erro ao ler arquivo',
+                      description: 'Não foi possível processar o arquivo.',
+                      variant: 'destructive'
+                    });
+                  } finally {
+                    setIsProcessingFile(false);
+                    if (fileInputRef.current) {
+                      fileInputRef.current.value = '';
+                    }
+                  }
+                }}
+                className="hidden"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isProcessingFile}
+              >
+                {isProcessingFile ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Upload className="mr-2 h-4 w-4" />
+                )}
+                Upload de Documento
+              </Button>
+              
+              {uploadedFileName && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted px-3 py-1.5 rounded-md">
+                  <FileText className="h-4 w-4" />
+                  <span>{uploadedFileName}</span>
+                  <button
+                    type="button"
+                    onClick={() => setUploadedFileName(null)}
+                    className="hover:text-foreground"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              )}
+            </div>
+            
+            <p className="text-xs text-muted-foreground">
+              Formatos aceitos: .txt (PDF e Word em breve). O conteúdo será usado para treinar a IA a responder melhor.
+            </p>
+            
+            {config.training_text && (
+              <div className="flex items-center justify-between text-xs text-muted-foreground bg-muted/50 px-3 py-2 rounded-md">
+                <span>{config.training_text.length} caracteres de treinamento</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setConfig({ ...config, training_text: '' });
+                    setUploadedFileName(null);
+                  }}
+                  className="text-destructive hover:underline"
+                >
+                  Limpar tudo
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Preview */}
