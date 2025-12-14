@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { User, Calendar, DollarSign, CheckCircle, XCircle, CreditCard, AlertTriangle, Wallet } from 'lucide-react';
+import { User, Calendar, DollarSign, CheckCircle, XCircle, CreditCard } from 'lucide-react';
 
 interface WithdrawalWithProfile {
   id: string;
@@ -14,7 +14,6 @@ interface WithdrawalWithProfile {
   created_at: string;
   admin_notes: string | null;
   admin_processed_by: string | null;
-  seller_balance?: number;
   profiles?: {
     full_name: string;
     email: string;
@@ -57,11 +56,6 @@ export function WithdrawalRequestCard({
   onProcess
 }: WithdrawalRequestCardProps) {
   console.log('🃏 Card render - Request:', request.id, 'Status:', request.status, 'Index:', index);
-  
-  // Verificar se saldo é insuficiente
-  const sellerBalance = request.seller_balance ?? 0;
-  const isBalanceInsufficient = sellerBalance < request.amount;
-  const isBalanceNegative = sellerBalance < 0;
   
   return (
     <Card className="shadow-lg border bg-white hover:shadow-xl transition-shadow">
@@ -121,46 +115,6 @@ export function WithdrawalRequestCard({
 
         {request.status === 'pendente' && (
           <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
-            {/* Alerta de saldo do vendedor */}
-            <div className={`p-3 rounded-lg border flex items-center gap-3 ${
-              isBalanceNegative 
-                ? 'bg-red-100 border-red-300' 
-                : isBalanceInsufficient 
-                  ? 'bg-amber-100 border-amber-300' 
-                  : 'bg-green-100 border-green-300'
-            }`}>
-              <Wallet className={`h-5 w-5 ${
-                isBalanceNegative 
-                  ? 'text-red-600' 
-                  : isBalanceInsufficient 
-                    ? 'text-amber-600' 
-                    : 'text-green-600'
-              }`} />
-              <div className="flex-1">
-                <p className={`text-sm font-medium ${
-                  isBalanceNegative 
-                    ? 'text-red-800' 
-                    : isBalanceInsufficient 
-                      ? 'text-amber-800' 
-                      : 'text-green-800'
-                }`}>
-                  Saldo do vendedor: {Number(sellerBalance).toLocaleString('pt-AO')} KZ
-                </p>
-                {isBalanceNegative && (
-                  <p className="text-xs text-red-600 flex items-center gap-1 mt-1">
-                    <AlertTriangle className="h-3 w-3" />
-                    ⚠️ SALDO NEGATIVO - Aprovação bloqueada pelo sistema
-                  </p>
-                )}
-                {!isBalanceNegative && isBalanceInsufficient && (
-                  <p className="text-xs text-amber-600 flex items-center gap-1 mt-1">
-                    <AlertTriangle className="h-3 w-3" />
-                    ⚠️ Saldo insuficiente para este saque - Aprovação bloqueada
-                  </p>
-                )}
-              </div>
-            </div>
-
             <div>
               <label className="block text-sm font-medium mb-2 text-gray-900">
                 Observações (opcional)
@@ -176,13 +130,8 @@ export function WithdrawalRequestCard({
             <div className="flex gap-3">
               <Button
                 onClick={() => onProcess(request.id, 'aprovado')}
-                disabled={processingId === request.id || isBalanceInsufficient || isBalanceNegative}
-                className={`flex items-center gap-2 border-0 shadow-sm ${
-                  isBalanceInsufficient || isBalanceNegative
-                    ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700'
-                }`}
-                title={isBalanceInsufficient ? 'Saldo insuficiente para aprovar' : ''}
+                disabled={processingId === request.id}
+                className="flex items-center gap-2 border-0 shadow-sm bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
               >
                 <CheckCircle className="h-4 w-4" />
                 {processingId === request.id ? 'Aprovando...' : 'Aprovar'}
