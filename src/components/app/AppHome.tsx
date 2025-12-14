@@ -1509,10 +1509,6 @@ export function AppHome() {
       {/* Withdrawal Modal */}
       <WithdrawalModal open={showWithdrawalModal} onOpenChange={setShowWithdrawalModal} availableBalance={financialData.availableBalance} onWithdrawalSuccess={() => {
         loadStats();
-        toast({
-          title: "Saque Solicitado",
-          description: "Sua solicitação de saque está sendo processada"
-        });
       }} />
 
       {/* Course Viewer */}

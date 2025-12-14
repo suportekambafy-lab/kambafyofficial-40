@@ -422,12 +422,7 @@ export default function Financial() {
       </div>
 
       <WithdrawalModal open={withdrawalModalOpen} onOpenChange={setWithdrawalModalOpen} availableBalance={financialData.availableBalance} onWithdrawalSuccess={() => {
-      loadFinancialData();
-      toast({
-        title: "Saque solicitado",
-        message: "Sua solicitação de saque foi enviada com sucesso.",
-        variant: "success"
-      });
-    }} />
+        loadFinancialData();
+      }} />
     </>;
 }
