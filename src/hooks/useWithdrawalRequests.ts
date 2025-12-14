@@ -11,6 +11,7 @@ interface WithdrawalWithProfile {
   created_at: string;
   admin_notes: string | null;
   admin_processed_by: string | null;
+  seller_balance?: number;
   profiles?: {
     full_name: string;
     email: string;
@@ -55,25 +56,42 @@ export function useWithdrawalRequests() {
         const userIds = withdrawals.map(w => w.user_id);
         console.log('👥 IDs dos usuários:', userIds);
 
-        const { data: profiles, error: profileError } = await supabase
-          .from('profiles')
-          .select('user_id, full_name, email, iban, account_holder')
-          .in('user_id', userIds);
+        // Buscar perfis E saldos em paralelo
+        const [profilesResult, balancesResult] = await Promise.all([
+          supabase
+            .from('profiles')
+            .select('user_id, full_name, email, iban, account_holder')
+            .in('user_id', userIds),
+          supabase
+            .from('customer_balances')
+            .select('user_id, balance')
+            .in('user_id', userIds)
+        ]);
+
+        const { data: profiles, error: profileError } = profilesResult;
+        const { data: balances, error: balanceError } = balancesResult;
 
         console.log('👤 Perfis encontrados:', profiles);
+        console.log('💰 Saldos encontrados:', balances);
         console.log('❌ Erro nos perfis:', profileError);
+        console.log('❌ Erro nos saldos:', balanceError);
 
         if (profileError) {
           console.warn('⚠️ Erro ao carregar perfis:', profileError);
         }
 
-        // Combinar os dados
+        if (balanceError) {
+          console.warn('⚠️ Erro ao carregar saldos:', balanceError);
+        }
+
+        // Combinar os dados incluindo saldo
         const requestsWithProfiles = withdrawals.map(withdrawal => ({
           ...withdrawal,
-          profiles: profiles?.find(p => p.user_id === withdrawal.user_id) || null
+          profiles: profiles?.find(p => p.user_id === withdrawal.user_id) || null,
+          seller_balance: balances?.find(b => b.user_id === withdrawal.user_id)?.balance ?? 0
         }));
 
-        console.log('🔗 Resultado final combinado:', requestsWithProfiles);
+        console.log('🔗 Resultado final combinado com saldos:', requestsWithProfiles);
         setRequests(requestsWithProfiles);
       } else {
         console.log('📭 Nenhuma solicitação de saque encontrada');
