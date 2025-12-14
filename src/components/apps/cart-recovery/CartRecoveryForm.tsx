@@ -43,7 +43,7 @@ const emailSchema = z.string().email({ message: "Email inválido" });
 
 const defaultTemplate1 = `Olá {customer_name},
 
-Notamos que você deixou alguns itens no carrinho. Seu produto "{product_name}" está esperando por você!
+Notamos que você não finalizou sua compra. Seu produto "{product_name}" está esperando por você!
 
 Valor: {amount}
 
