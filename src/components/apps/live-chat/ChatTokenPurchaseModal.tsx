@@ -259,11 +259,16 @@ export function ChatTokenPurchaseModal({
             pollPaymentStatus(transactionId, selectedPackage.tokens, selectedPackage.id, selectedPackage.name, priceInfo.price);
           }
         } else if (selectedPaymentMethod === 'reference') {
-          // Show reference data UI
-          if (data?.entity && data?.reference) {
+          // AppyPay returns reference as object: {referenceNumber, dueDate, entity}
+          // or as separate fields: reference_number, entity
+          const referenceNumber = data.reference_number || data.reference?.referenceNumber;
+          const entity = data.entity || data.reference?.entity;
+          const dueDate = data.due_date || data.reference?.dueDate;
+          
+          if (entity && referenceNumber) {
             // Save pending payment for reference (will be credited via webhook)
             setPendingPaymentData({
-              transactionId: data.merchantTransactionId || `ref-${Date.now()}`,
+              transactionId: data.merchantTransactionId || data.merchant_transaction_id || `ref-${Date.now()}`,
               tokens: selectedPackage.tokens,
               packageId: selectedPackage.id,
               packageName: selectedPackage.name,
@@ -279,9 +284,9 @@ export function ChatTokenPurchaseModal({
                   packageId: selectedPackage.id,
                   packageName: selectedPackage.name,
                   amount: priceInfo.price,
-                  referenceNumber: data.reference,
-                  entity: data.entity,
-                  transactionId: data.merchantTransactionId
+                  referenceNumber: referenceNumber,
+                  entity: entity,
+                  transactionId: data.merchantTransactionId || data.merchant_transaction_id
                 }
               });
             } catch (e) {
@@ -289,10 +294,10 @@ export function ChatTokenPurchaseModal({
             }
             
             setReferenceData({
-              entity: data.entity,
-              reference: data.reference,
+              entity: entity,
+              reference: referenceNumber,
               amount: priceInfo.price,
-              expiresAt: data.expiresAt
+              expiresAt: dueDate
             });
             toast({
               title: 'Referência gerada com sucesso',
