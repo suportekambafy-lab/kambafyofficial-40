@@ -79,26 +79,18 @@ export const useOptimizedPayment = () => {
       onProgress?.('redirecting', 80);
 
       if (data?.url) {
-        // Open checkout in new tab with immediate feedback
-        const newWindow = window.open(data.url, '_blank', 'noopener,noreferrer');
-        
-        if (!newWindow) {
-          throw new Error('Pop-up bloqueado. Por favor, permita pop-ups e tente novamente.');
-        }
-
         onProgress?.('redirecting', 90);
+        onProgress?.('complete', 100);
+        
+        toast({
+          title: "Redirecionando para pagamento",
+          description: "Você será redirecionado para a página de pagamento seguro.",
+        });
 
-        // Stage 4: Complete (90-100%)
-        setTimeout(() => {
-          onProgress?.('complete', 100);
-          
-          toast({
-            title: "Redirecionamento concluído",
-            description: "Finalize seu pagamento na nova aba aberta",
-          });
-
-          onSuccess?.(data);
-        }, 500);
+        onSuccess?.(data);
+        
+        // Redirect in same window to avoid popup blockers
+        window.location.href = data.url;
 
       } else {
         throw new Error('URL de checkout não recebida do servidor');
