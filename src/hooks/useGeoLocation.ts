@@ -63,23 +63,20 @@ const getInitialCountry = (): CountryInfo => {
     const storedCountry = localStorage.getItem('userCountry');
     const lastIpDetection = localStorage.getItem('lastIpDetection');
     const now = Date.now();
-    const oneHour = 60 * 60 * 1000;
-    const hasRecentDetection = lastIpDetection && (now - parseInt(lastIpDetection)) < oneHour;
+    const twentyFourHours = 24 * 60 * 60 * 1000;
+    const hasRecentDetection = lastIpDetection && (now - parseInt(lastIpDetection)) < twentyFourHours;
     
-    // Só usar cache se foi detectado recentemente (menos de 1 hora)
+    // Usar cache se foi detectado nas últimas 24 horas
     if (storedCountry && SUPPORTED_COUNTRIES[storedCountry] && hasRecentDetection) {
+      console.log('🌍 Using cached country:', storedCountry);
       return SUPPORTED_COUNTRIES[storedCountry];
-    }
-    
-    // Limpar cache antigo para forçar nova detecção
-    if (storedCountry && !hasRecentDetection) {
-      localStorage.removeItem('userCountry');
     }
   } catch {
     // localStorage indisponível
   }
-  // Retornar US como fallback temporário até detectar IP
-  return SUPPORTED_COUNTRIES.US;
+  // Retornar null - será definido pela detecção de IP
+  // Usar AO temporariamente enquanto carrega (será sobrescrito)
+  return SUPPORTED_COUNTRIES.AO;
 };
 
 // Função para obter taxas iniciais do cache
@@ -360,17 +357,18 @@ export const useGeoLocation = () => {
       
       const now = Date.now();
       const oneHour = 60 * 60 * 1000;
+      const twentyFourHours = 24 * 60 * 60 * 1000;
       const hasRecentRates = lastUpdate && (now - parseInt(lastUpdate)) < oneHour;
-      const hasRecentIpDetection = lastIpDetection && (now - parseInt(lastIpDetection)) < oneHour;
+      const hasRecentIpDetection = lastIpDetection && (now - parseInt(lastIpDetection)) < twentyFourHours;
       
-      // Se já temos país guardado E foi detectado recentemente (menos de 1 hora)
+      // Se já temos país guardado E foi detectado nas últimas 24 horas
       if (storedCountry && SUPPORTED_COUNTRIES[storedCountry] && hasRecentIpDetection) {
-        console.log('🌍 Using cached country (recent):', storedCountry);
+        console.log('🌍 Using cached country (recent 24h):', storedCountry);
         setUserCountry(SUPPORTED_COUNTRIES[storedCountry]);
         setIsReady(true);
         setLoading(false);
         
-        const language = COUNTRY_LANGUAGES[storedCountry] || 'en';
+        const language = COUNTRY_LANGUAGES[storedCountry] || 'pt';
         setDetectedLanguage(language);
         applyLanguage(language);
         
@@ -382,8 +380,8 @@ export const useGeoLocation = () => {
         return;
       }
       
-      // Detectar país por IP (primeira visita ou cache expirado)
-      console.log('🌍 Detecting country by IP...');
+      // Detectar país por IP (primeira visita ou cache expirado após 24h)
+      console.log('🌍 Detecting country by IP (no recent cache)...');
       await detectCountryByIP();
       localStorage.setItem('lastIpDetection', now.toString());
       fetchExchangeRates();
