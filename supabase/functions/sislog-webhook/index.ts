@@ -158,7 +158,7 @@ serve(async (req) => {
       console.error('⚠️ Error in customer access creation:', accessErr);
     }
 
-    // Credit seller balance
+    // Credit seller balance - handled by database trigger
     try {
       const { data: sellerProfile } = await supabaseAdmin
         .from('profiles')
@@ -167,24 +167,10 @@ serve(async (req) => {
         .single();
 
       if (sellerProfile) {
-        // Create balance transaction for seller
-        const { error: balanceError } = await supabaseAdmin
-          .from('balance_transactions')
-          .insert({
-            user_id: product.user_id,
-            email: sellerProfile.email,
-            amount: sellerCommission,
-            type: 'sale_revenue',
-            description: `Venda do produto ${product.name} - Pedido ${order.order_id}`,
-            order_id: order.order_id,
-            currency: 'MZN'
-          });
-
-        if (balanceError) {
-          console.error('⚠️ Error crediting seller:', balanceError);
-        } else {
-          console.log('✅ Seller balance credited:', sellerCommission, 'MZN');
-        }
+        // ⚠️ NÃO INSERIR balance_transaction aqui!
+        // O trigger create_balance_transaction_on_sale já cuida disso automaticamente
+        // quando o status da order muda para 'completed'
+        console.log('✅ Balance will be credited by database trigger for order:', order.order_id);
 
         // Send OneSignal notification to seller
         const formattedPrice = formatPrice(sellerCommission, 'MZN');

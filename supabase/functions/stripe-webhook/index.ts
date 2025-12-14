@@ -643,36 +643,10 @@ serve(async (req) => {
             if (productBalanceError) {
               console.error('❌ Error fetching product for balance:', productBalanceError);
             } else if (productForBalance?.user_id) {
-              // Verificar se já existe transação para este order_id
-              const { data: existingTransaction, error: checkTxError } = await supabase
-                .from('balance_transactions')
-                .select('id')
-                .eq('order_id', order.id)
-                .eq('type', 'sale_revenue')
-                .maybeSingle();
-              
-              if (!existingTransaction && !checkTxError) {
-                const sellerAmount = sellerCommissionInKZ * 0.9101;
-                
-                const { error: balanceError } = await supabase
-                  .from('balance_transactions')
-                  .insert({
-                    user_id: productForBalance.user_id,
-                    type: 'sale_revenue',
-                    amount: sellerAmount,
-                    currency: 'KZ',
-                    description: `Venda - ${productForBalance.name}`,
-                    order_id: order.id
-                  });
-                
-                if (balanceError) {
-                  console.error('❌ Error creating balance transaction:', balanceError);
-                } else {
-                  console.log('✅ Balance transaction created:', sellerAmount);
-                }
-              } else if (existingTransaction) {
-                console.log('⚠️ Balance transaction already exists, skipping');
-              }
+              // ⚠️ NÃO INSERIR balance_transaction aqui!
+              // O trigger create_balance_transaction_on_sale já cuida disso automaticamente
+              // quando o status da order muda para 'completed'
+              console.log('✅ Balance will be credited by database trigger for order:', order.id);
             }
           } catch (balanceProcessError) {
             console.error('❌ Error processing seller balance:', balanceProcessError);
