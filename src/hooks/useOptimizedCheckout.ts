@@ -40,7 +40,7 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
     fullName: "",
     email: "",
     phone: "",
-    phoneCountry: "AO"
+    phoneCountry: "" // Será definido dinamicamente pelo país detectado
   });
 
   const { 
@@ -486,6 +486,17 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
       // Os preços são atualizados automaticamente via userCountry nos componentes
     }
   }, [geoReady, product]);
+
+  // Definir phoneCountry com base no país detectado
+  useEffect(() => {
+    if (geoReady && userCountry && !formData.phoneCountry) {
+      console.log('🌍 Auto-applying detected country to phone:', userCountry.code);
+      setFormData(prev => ({
+        ...prev,
+        phoneCountry: userCountry.code
+      }));
+    }
+  }, [geoReady, userCountry, formData.phoneCountry]);
 
   // Handler para aplicar cupom
   const handleCouponApplied = useCallback((coupon: any, discountAmount: number) => {
