@@ -18,6 +18,13 @@ interface RecoverySettings {
   max_recovery_attempts: number;
   email_subject: string;
   email_template: string;
+  email_subject_2: string | null;
+  email_template_2: string | null;
+  email_subject_3: string | null;
+  email_template_3: string | null;
+  enable_discount_on_last: boolean;
+  discount_type: 'percentage' | 'fixed';
+  discount_value: number;
 }
 
 interface AbandonedPurchase {
@@ -34,7 +41,11 @@ interface AbandonedPurchase {
 interface Product {
   id: string;
   name: string;
-  checkout_url?: string;
+}
+
+// Generate unique coupon code
+function generateCouponCode(): string {
+  return `VOLTA${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -119,8 +130,57 @@ const handler = async (req: Request): Promise<Response> => {
           totalProcessed++;
 
           try {
-            // Generate checkout link
-            const checkoutLink = `https://pay.kambafy.com/checkout/${product.id}?recovery=${purchase.id}`;
+            // Determine which email to send based on attempts count
+            const emailNumber = purchase.recovery_attempts_count + 1;
+            const isLastEmail = emailNumber >= settings.max_recovery_attempts;
+            
+            // Get correct template based on email number
+            let emailSubject = settings.email_subject;
+            let emailTemplate = settings.email_template;
+            
+            if (emailNumber === 2 && settings.email_subject_2 && settings.email_template_2) {
+              emailSubject = settings.email_subject_2;
+              emailTemplate = settings.email_template_2;
+            } else if (emailNumber >= 3 && settings.email_subject_3 && settings.email_template_3) {
+              emailSubject = settings.email_subject_3;
+              emailTemplate = settings.email_template_3;
+            }
+
+            // Generate coupon if it's the last email and discount is enabled
+            let couponCode = '';
+            let discountAmountText = '';
+            let checkoutLink = `https://pay.kambafy.com/checkout/${product.id}?recovery=${purchase.id}`;
+            
+            if (isLastEmail && settings.enable_discount_on_last) {
+              couponCode = generateCouponCode();
+              discountAmountText = settings.discount_type === 'percentage'
+                ? `${settings.discount_value}%`
+                : `${settings.discount_value} ${purchase.currency}`;
+              
+              // Create the coupon in the database
+              const { error: couponError } = await supabase
+                .from("discount_coupons")
+                .insert({
+                  code: couponCode,
+                  user_id: settings.user_id,
+                  product_id: settings.product_id,
+                  discount_type: settings.discount_type,
+                  discount_value: settings.discount_value,
+                  currency: purchase.currency,
+                  max_uses: 1,
+                  uses_per_customer: 1,
+                  is_active: true,
+                  valid_from: new Date().toISOString(),
+                  valid_until: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // Valid for 7 days
+                });
+              
+              if (couponError) {
+                console.error(`Error creating coupon for purchase ${purchase.id}:`, couponError);
+              } else {
+                checkoutLink = `https://pay.kambafy.com/checkout/${product.id}?recovery=${purchase.id}&coupon=${couponCode}`;
+                console.log(`Created recovery coupon ${couponCode} for ${purchase.customer_email}`);
+              }
+            }
 
             // Format amount based on currency
             const formattedAmount = purchase.currency === 'EUR' 
@@ -130,26 +190,38 @@ const handler = async (req: Request): Promise<Response> => {
               : `${purchase.amount.toLocaleString('pt-AO')} ${purchase.currency}`;
 
             // Replace template variables
-            const emailBody = settings.email_template
+            const emailBody = emailTemplate
               .replace(/{customer_name}/g, purchase.customer_name)
               .replace(/{product_name}/g, product.name)
               .replace(/{amount}/g, formattedAmount)
-              .replace(/{checkout_link}/g, checkoutLink);
+              .replace(/{checkout_link}/g, checkoutLink)
+              .replace(/{coupon_code}/g, couponCode)
+              .replace(/{discount_amount}/g, discountAmountText);
 
-            const emailSubject = settings.email_subject
+            const finalSubject = emailSubject
               .replace(/{customer_name}/g, purchase.customer_name)
               .replace(/{product_name}/g, product.name);
+
+            // Build HTML email
+            const couponSection = isLastEmail && settings.enable_discount_on_last && couponCode ? `
+              <div style="background-color: #d1fae5; border: 2px dashed #10b981; border-radius: 8px; padding: 16px; margin: 20px 0; text-align: center;">
+                <p style="margin: 0; color: #065f46; font-size: 14px;">🎁 Seu cupom exclusivo:</p>
+                <p style="margin: 8px 0; color: #065f46; font-weight: bold; font-size: 24px; letter-spacing: 2px;">${couponCode}</p>
+                <p style="margin: 0; color: #065f46; font-size: 16px;">Desconto de ${discountAmountText}!</p>
+              </div>
+            ` : '';
 
             // Send recovery email
             const emailResponse = await resend.emails.send({
               from: "Recuperação de Vendas <noreply@resend.dev>",
               to: [purchase.customer_email],
-              subject: emailSubject,
+              subject: finalSubject,
               html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
                   <div style="white-space: pre-wrap; line-height: 1.6;">
 ${emailBody.split('\n').map(line => `                    ${line}`).join('\n')}
                   </div>
+                  ${couponSection}
                   <div style="margin-top: 30px; text-align: center;">
                     <a href="${checkoutLink}" 
                        style="display: inline-block; background-color: #10b981; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold;">
@@ -160,7 +232,7 @@ ${emailBody.split('\n').map(line => `                    ${line}`).join('\n')}
               `,
             });
 
-            console.log(`Recovery email sent to ${purchase.customer_email}:`, emailResponse);
+            console.log(`Recovery email ${emailNumber} sent to ${purchase.customer_email}:`, emailResponse);
 
             // Update purchase record
             const { error: updateError } = await supabase
@@ -182,8 +254,10 @@ ${emailBody.split('\n').map(line => `                    ${line}`).join('\n')}
               .insert({
                 abandoned_purchase_id: purchase.id,
                 email_sent_to: purchase.customer_email,
-                email_subject: emailSubject,
-                status: "sent"
+                email_subject: finalSubject,
+                status: "sent",
+                email_number: emailNumber,
+                coupon_code: couponCode || null
               });
 
             if (logError) {

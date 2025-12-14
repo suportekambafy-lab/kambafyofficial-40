@@ -7,10 +7,11 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2, Save, Mail, Clock, RefreshCw, Eye, Send } from 'lucide-react';
+import { Loader2, Save, Mail, Clock, RefreshCw, Eye, Send, Percent, Gift } from 'lucide-react';
 import { CartRecoveryDashboard } from './CartRecoveryDashboard';
 import { z } from 'zod';
 
@@ -23,18 +24,24 @@ interface RecoverySettings {
   enabled: boolean;
   delay_hours: number;
   max_attempts: number;
+  // Email 1
   email_subject: string;
   email_template: string;
+  // Email 2
+  email_subject_2: string;
+  email_template_2: string;
+  // Email 3
+  email_subject_3: string;
+  email_template_3: string;
+  // Discount settings
+  enable_discount_on_last: boolean;
+  discount_type: 'percentage' | 'fixed';
+  discount_value: number;
 }
 
 const emailSchema = z.string().email({ message: "Email inválido" });
 
-const defaultSettings: RecoverySettings = {
-  enabled: false,
-  delay_hours: 24,
-  max_attempts: 3,
-  email_subject: 'Você esqueceu algo no carrinho!',
-  email_template: `Olá {customer_name},
+const defaultTemplate1 = `Olá {customer_name},
 
 Notamos que você deixou alguns itens no carrinho. Seu produto "{product_name}" está esperando por você!
 
@@ -45,7 +52,52 @@ Clique aqui para finalizar sua compra: {checkout_link}
 Não perca essa oportunidade!
 
 Atenciosamente,
-Equipe de Vendas`
+Equipe de Vendas`;
+
+const defaultTemplate2 = `Olá {customer_name},
+
+Ainda estamos guardando o produto "{product_name}" para você!
+
+Sabemos que às vezes a vida fica corrida, mas não queremos que você perca essa oportunidade.
+
+Valor: {amount}
+
+Finalize sua compra agora: {checkout_link}
+
+Abraços,
+Equipe de Vendas`;
+
+const defaultTemplate3 = `Olá {customer_name},
+
+Última chance! 🎁
+
+Como forma de agradecimento por seu interesse no produto "{product_name}", preparamos um desconto EXCLUSIVO para você:
+
+Use o cupom: {coupon_code}
+E ganhe {discount_amount} de desconto!
+
+Valor original: {amount}
+
+Esta oferta é válida por tempo limitado!
+
+Finalize agora: {checkout_link}
+
+Não perca!
+Equipe de Vendas`;
+
+const defaultSettings: RecoverySettings = {
+  enabled: false,
+  delay_hours: 24,
+  max_attempts: 3,
+  email_subject: 'Você esqueceu algo no carrinho!',
+  email_template: defaultTemplate1,
+  email_subject_2: 'Ainda estamos guardando seu produto!',
+  email_template_2: defaultTemplate2,
+  email_subject_3: '🎁 Última chance + Desconto exclusivo!',
+  email_template_3: defaultTemplate3,
+  enable_discount_on_last: true,
+  discount_type: 'percentage',
+  discount_value: 10,
 };
 
 export function CartRecoveryForm({ productId, onSaveSuccess }: CartRecoveryFormProps) {
@@ -55,6 +107,7 @@ export function CartRecoveryForm({ productId, onSaveSuccess }: CartRecoveryFormP
   const [saving, setSaving] = useState(false);
   const [sendingTest, setSendingTest] = useState(false);
   const [testEmail, setTestEmail] = useState('');
+  const [testEmailNumber, setTestEmailNumber] = useState<1 | 2 | 3>(1);
   const [settings, setSettings] = useState<RecoverySettings>(defaultSettings);
   const [activeTab, setActiveTab] = useState('settings');
 
@@ -82,6 +135,13 @@ export function CartRecoveryForm({ productId, onSaveSuccess }: CartRecoveryFormP
           max_attempts: data.max_recovery_attempts ?? 3,
           email_subject: data.email_subject ?? defaultSettings.email_subject,
           email_template: data.email_template ?? defaultSettings.email_template,
+          email_subject_2: data.email_subject_2 ?? defaultSettings.email_subject_2,
+          email_template_2: data.email_template_2 ?? defaultSettings.email_template_2,
+          email_subject_3: data.email_subject_3 ?? defaultSettings.email_subject_3,
+          email_template_3: data.email_template_3 ?? defaultSettings.email_template_3,
+          enable_discount_on_last: data.enable_discount_on_last ?? true,
+          discount_type: (data.discount_type as 'percentage' | 'fixed') ?? 'percentage',
+          discount_value: data.discount_value ?? 10,
         });
       }
     } catch (error) {
@@ -106,6 +166,13 @@ export function CartRecoveryForm({ productId, onSaveSuccess }: CartRecoveryFormP
           max_recovery_attempts: settings.max_attempts,
           email_subject: settings.email_subject,
           email_template: settings.email_template,
+          email_subject_2: settings.email_subject_2,
+          email_template_2: settings.email_template_2,
+          email_subject_3: settings.email_subject_3,
+          email_template_3: settings.email_template_3,
+          enable_discount_on_last: settings.enable_discount_on_last,
+          discount_type: settings.discount_type,
+          discount_value: settings.discount_value,
           updated_at: new Date().toISOString()
         }, {
           onConflict: 'product_id,user_id'
@@ -131,16 +198,27 @@ export function CartRecoveryForm({ productId, onSaveSuccess }: CartRecoveryFormP
     }
   };
 
-  const getPreviewEmail = () => {
-    return settings.email_template
+  const getPreviewEmail = (emailNumber: 1 | 2 | 3) => {
+    const templates = {
+      1: settings.email_template,
+      2: settings.email_template_2,
+      3: settings.email_template_3,
+    };
+    
+    const discountText = settings.discount_type === 'percentage' 
+      ? `${settings.discount_value}%` 
+      : `${settings.discount_value} Kz`;
+    
+    return templates[emailNumber]
       .replace(/{customer_name}/g, 'João Silva')
       .replace(/{product_name}/g, 'Curso de Marketing Digital')
-      .replace(/{amount}/g, '€49,00 ou 10.000 Kz (conforme moeda do cliente)')
+      .replace(/{amount}/g, '€49,00')
       .replace(/{checkout_link}/g, 'https://pay.kambafy.com/checkout/abc123')
+      .replace(/{coupon_code}/g, 'VOLTA10')
+      .replace(/{discount_amount}/g, discountText);
   };
 
   const handleSendTest = async () => {
-    // Validate email
     const validation = emailSchema.safeParse(testEmail);
     if (!validation.success) {
       toast({
@@ -153,12 +231,22 @@ export function CartRecoveryForm({ productId, onSaveSuccess }: CartRecoveryFormP
 
     setSendingTest(true);
     try {
+      const templates = {
+        1: { subject: settings.email_subject, template: settings.email_template },
+        2: { subject: settings.email_subject_2, template: settings.email_template_2 },
+        3: { subject: settings.email_subject_3, template: settings.email_template_3 },
+      };
+
       const { error } = await supabase.functions.invoke('send-test-recovery-email', {
         body: {
           email: testEmail,
-          subject: settings.email_subject,
-          template: settings.email_template,
-          productId
+          subject: templates[testEmailNumber].subject,
+          template: templates[testEmailNumber].template,
+          productId,
+          emailNumber: testEmailNumber,
+          includeDiscount: testEmailNumber === 3 && settings.enable_discount_on_last,
+          discountType: settings.discount_type,
+          discountValue: settings.discount_value,
         }
       });
 
@@ -166,7 +254,7 @@ export function CartRecoveryForm({ productId, onSaveSuccess }: CartRecoveryFormP
 
       toast({
         title: 'Email de teste enviado!',
-        description: `Verifique sua caixa de entrada em ${testEmail}`,
+        description: `Email ${testEmailNumber} enviado para ${testEmail}`,
       });
     } catch (error: any) {
       console.error('Error sending test email:', error);
@@ -211,7 +299,7 @@ export function CartRecoveryForm({ productId, onSaveSuccess }: CartRecoveryFormP
                 Recuperação Automática
               </CardTitle>
               <CardDescription>
-                Envie emails automáticos para clientes que abandonaram o carrinho
+                Envie até 3 emails automáticos para clientes que abandonaram o carrinho
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -235,13 +323,13 @@ export function CartRecoveryForm({ productId, onSaveSuccess }: CartRecoveryFormP
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Clock className="h-5 w-5" />
-                Tempo e Tentativas
+                Tempo entre Emails
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Tempo após abandono</Label>
+                  <Label>Intervalo entre emails</Label>
                   <Select
                     value={settings.delay_hours.toString()}
                     onValueChange={(value) => setSettings(prev => ({ ...prev, delay_hours: parseInt(value) }))}
@@ -262,7 +350,7 @@ export function CartRecoveryForm({ productId, onSaveSuccess }: CartRecoveryFormP
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Máximo de tentativas</Label>
+                  <Label>Número de emails</Label>
                   <Select
                     value={settings.max_attempts.toString()}
                     onValueChange={(value) => setSettings(prev => ({ ...prev, max_attempts: parseInt(value) }))}
@@ -271,10 +359,9 @@ export function CartRecoveryForm({ productId, onSaveSuccess }: CartRecoveryFormP
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1">1 tentativa</SelectItem>
-                      <SelectItem value="2">2 tentativas</SelectItem>
-                      <SelectItem value="3">3 tentativas</SelectItem>
-                      <SelectItem value="5">5 tentativas</SelectItem>
+                      <SelectItem value="1">1 email</SelectItem>
+                      <SelectItem value="2">2 emails</SelectItem>
+                      <SelectItem value="3">3 emails</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -282,64 +369,193 @@ export function CartRecoveryForm({ productId, onSaveSuccess }: CartRecoveryFormP
             </CardContent>
           </Card>
 
-          {/* Email Settings */}
+          {/* Discount Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Gift className="h-5 w-5" />
+                Cupom Automático (Último Email)
+              </CardTitle>
+              <CardDescription>
+                Ofereça um desconto exclusivo no último email para aumentar a conversão
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Ativar cupom automático</p>
+                  <p className="text-sm text-muted-foreground">
+                    Gera um cupom único válido para usar no checkout
+                  </p>
+                </div>
+                <Switch
+                  checked={settings.enable_discount_on_last}
+                  onCheckedChange={(enabled) => setSettings(prev => ({ ...prev, enable_discount_on_last: enabled }))}
+                />
+              </div>
+
+              {settings.enable_discount_on_last && (
+                <div className="grid gap-4 sm:grid-cols-2 pt-4 border-t">
+                  <div className="space-y-2">
+                    <Label>Tipo de desconto</Label>
+                    <Select
+                      value={settings.discount_type}
+                      onValueChange={(value: 'percentage' | 'fixed') => setSettings(prev => ({ ...prev, discount_type: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="percentage">Porcentagem (%)</SelectItem>
+                        <SelectItem value="fixed">Valor fixo</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Valor do desconto</Label>
+                    <div className="flex gap-2 items-center">
+                      <Input
+                        type="number"
+                        value={settings.discount_value}
+                        onChange={(e) => setSettings(prev => ({ ...prev, discount_value: parseFloat(e.target.value) || 0 }))}
+                        min={1}
+                        max={settings.discount_type === 'percentage' ? 100 : undefined}
+                      />
+                      <span className="text-muted-foreground">
+                        {settings.discount_type === 'percentage' ? '%' : 'Kz'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Email Templates */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Mail className="h-5 w-5" />
-                Template do Email
+                Templates dos Emails
               </CardTitle>
               <CardDescription>
-                Use variáveis: {'{customer_name}'}, {'{product_name}'}, {'{amount}'}, {'{checkout_link}'}
+                Configure cada email da sequência. Use variáveis: {'{customer_name}'}, {'{product_name}'}, {'{amount}'}, {'{checkout_link}'}
+                {settings.enable_discount_on_last && <>, {'{coupon_code}'}, {'{discount_amount}'}</>}
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Assunto do email</Label>
-                <Input
-                  value={settings.email_subject}
-                  onChange={(e) => setSettings(prev => ({ ...prev, email_subject: e.target.value }))}
-                  placeholder="Você esqueceu algo no carrinho!"
-                />
-              </div>
+            <CardContent>
+              <Accordion type="single" collapsible className="w-full">
+                {/* Email 1 */}
+                <AccordionItem value="email-1">
+                  <AccordionTrigger>
+                    <div className="flex items-center gap-2">
+                      <span className="h-6 w-6 rounded-full bg-primary/10 text-primary text-sm flex items-center justify-center">1</span>
+                      Email 1 - Lembrete inicial
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-4 pt-4">
+                    <div className="space-y-2">
+                      <Label>Assunto</Label>
+                      <Input
+                        value={settings.email_subject}
+                        onChange={(e) => setSettings(prev => ({ ...prev, email_subject: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Corpo do email</Label>
+                      <Textarea
+                        value={settings.email_template}
+                        onChange={(e) => setSettings(prev => ({ ...prev, email_template: e.target.value }))}
+                        rows={8}
+                        className="font-mono text-sm"
+                      />
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
 
-              <div className="space-y-2">
-                <Label>Corpo do email</Label>
-                <Textarea
-                  value={settings.email_template}
-                  onChange={(e) => setSettings(prev => ({ ...prev, email_template: e.target.value }))}
-                  rows={10}
-                  className="font-mono text-sm"
-                />
-              </div>
+                {/* Email 2 */}
+                {settings.max_attempts >= 2 && (
+                  <AccordionItem value="email-2">
+                    <AccordionTrigger>
+                      <div className="flex items-center gap-2">
+                        <span className="h-6 w-6 rounded-full bg-primary/10 text-primary text-sm flex items-center justify-center">2</span>
+                        Email 2 - Follow-up
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="space-y-4 pt-4">
+                      <div className="space-y-2">
+                        <Label>Assunto</Label>
+                        <Input
+                          value={settings.email_subject_2}
+                          onChange={(e) => setSettings(prev => ({ ...prev, email_subject_2: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Corpo do email</Label>
+                        <Textarea
+                          value={settings.email_template_2}
+                          onChange={(e) => setSettings(prev => ({ ...prev, email_template_2: e.target.value }))}
+                          rows={8}
+                          className="font-mono text-sm"
+                        />
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                )}
+
+                {/* Email 3 */}
+                {settings.max_attempts >= 3 && (
+                  <AccordionItem value="email-3">
+                    <AccordionTrigger>
+                      <div className="flex items-center gap-2">
+                        <span className="h-6 w-6 rounded-full bg-emerald-500/10 text-emerald-600 text-sm flex items-center justify-center">3</span>
+                        Email 3 - Última chance + Desconto
+                        {settings.enable_discount_on_last && (
+                          <span className="ml-2 text-xs bg-emerald-500/10 text-emerald-600 px-2 py-0.5 rounded">
+                            Com cupom
+                          </span>
+                        )}
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="space-y-4 pt-4">
+                      <div className="space-y-2">
+                        <Label>Assunto</Label>
+                        <Input
+                          value={settings.email_subject_3}
+                          onChange={(e) => setSettings(prev => ({ ...prev, email_subject_3: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Corpo do email</Label>
+                        <Textarea
+                          value={settings.email_template_3}
+                          onChange={(e) => setSettings(prev => ({ ...prev, email_template_3: e.target.value }))}
+                          rows={8}
+                          className="font-mono text-sm"
+                        />
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                )}
+              </Accordion>
             </CardContent>
           </Card>
 
-          {/* Email Preview */}
+          {/* Test Email */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Eye className="h-5 w-5" />
-                Pré-visualização e Teste
+                <Send className="h-5 w-5" />
+                Testar Email
               </CardTitle>
               <CardDescription>
-                Visualize o email e envie um teste para verificar
+                Envie um email de teste para verificar como fica
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="border rounded-lg p-4 bg-muted/30">
-                <div className="mb-3 pb-3 border-b">
-                  <p className="text-sm text-muted-foreground">Assunto:</p>
-                  <p className="font-medium">{settings.email_subject}</p>
-                </div>
-                <div className="whitespace-pre-wrap text-sm">
-                  {getPreviewEmail()}
-                </div>
-              </div>
-
-              {/* Test Email */}
-              <div className="flex gap-2">
-                <div className="flex-1">
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div className="sm:col-span-2">
                   <Input
                     type="email"
                     placeholder="Seu email para teste"
@@ -347,20 +563,42 @@ export function CartRecoveryForm({ productId, onSaveSuccess }: CartRecoveryFormP
                     onChange={(e) => setTestEmail(e.target.value)}
                   />
                 </div>
-                <Button 
-                  variant="outline" 
-                  onClick={handleSendTest} 
-                  disabled={sendingTest || !testEmail}
+                <Select
+                  value={testEmailNumber.toString()}
+                  onValueChange={(value) => setTestEmailNumber(parseInt(value) as 1 | 2 | 3)}
                 >
-                  {sendingTest ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <>
-                      <Send className="h-4 w-4 mr-2" />
-                      Enviar Teste
-                    </>
-                  )}
-                </Button>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">Email 1</SelectItem>
+                    {settings.max_attempts >= 2 && <SelectItem value="2">Email 2</SelectItem>}
+                    {settings.max_attempts >= 3 && <SelectItem value="3">Email 3</SelectItem>}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button 
+                variant="outline" 
+                onClick={handleSendTest} 
+                disabled={sendingTest || !testEmail}
+                className="w-full"
+              >
+                {sendingTest ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <Send className="h-4 w-4 mr-2" />
+                )}
+                Enviar Email {testEmailNumber} de Teste
+              </Button>
+
+              {/* Preview */}
+              <div className="border rounded-lg p-4 bg-muted/30 mt-4">
+                <div className="mb-3 pb-3 border-b">
+                  <p className="text-sm text-muted-foreground">Pré-visualização do Email {testEmailNumber}:</p>
+                </div>
+                <div className="whitespace-pre-wrap text-sm">
+                  {getPreviewEmail(testEmailNumber)}
+                </div>
               </div>
             </CardContent>
           </Card>
