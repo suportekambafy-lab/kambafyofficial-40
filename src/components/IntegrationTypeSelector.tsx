@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
-import { Webhook, Palette, Plus, Settings, Ticket, MessageSquare } from 'lucide-react';
+import { Webhook, Palette, Plus, Settings, Ticket, MessageSquare, RefreshCw } from 'lucide-react';
 import utmifyLogo from '@/assets/utmify-logo.png';
 import googleAnalyticsLogo from '@/assets/google-analytics-logo.png';
 import googleAdsLogo from '@/assets/google-ads-logo.png';
@@ -115,6 +115,13 @@ const automationIntegrations: IntegrationType[] = [
     description: 'Receba notificações em tempo real',
     icon: ({ className }: { className?: string }) => <Webhook className={className} />,
     color: 'text-orange-600'
+  },
+  {
+    id: 'cart-recovery',
+    name: 'Recuperação de Carrinho',
+    description: 'Recupere vendas abandonadas',
+    icon: ({ className }: { className?: string }) => <RefreshCw className={className} />,
+    color: 'text-emerald-600'
   }
 ];
 
