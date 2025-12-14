@@ -6,13 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useOptimizedPayment } from '@/hooks/useOptimizedPayment';
 import { Loader2, Shield, CheckCircle, Zap, MessageSquare, TrendingUp, Crown, Smartphone, Phone, AlertCircle, Sparkles, X, ChevronRight, Copy, Check } from 'lucide-react';
 import { formatPrice } from '@/utils/priceFormatting';
 import { getPaymentMethodsByCountry, PaymentMethod } from '@/utils/paymentMethods';
 import { getPaymentMethodImage } from '@/utils/paymentMethodImages';
 import { PhoneInput } from '@/components/PhoneInput';
 import { motion, AnimatePresence } from 'framer-motion';
+import StripeCardPayment from '@/components/checkout/StripeCardPayment';
 
 interface TokenPackage {
   id: string;
@@ -70,7 +70,30 @@ export function ChatTokenPurchaseModal({
     paymentMethod: string;
   } | null>(null);
   const { toast } = useToast();
-  const { processStripePayment, isProcessing: stripeProcessing } = useOptimizedPayment();
+  const [showStripeForm, setShowStripeForm] = useState(false);
+  const [stripeProcessing, setStripeProcessing] = useState(false);
+  const [userInfo, setUserInfo] = useState<{ name: string; email: string; phone: string }>({
+    name: '',
+    email: '',
+    phone: ''
+  });
+
+  // Load user info on mount
+  useEffect(() => {
+    const loadUserInfo = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserInfo({
+          name: user.user_metadata?.full_name || user.email || '',
+          email: user.email || '',
+          phone: user.user_metadata?.phone || ''
+        });
+      }
+    };
+    if (isOpen) {
+      loadUserInfo();
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -81,6 +104,8 @@ export function ChatTokenPurchaseModal({
       setPaymentError('');
       setReferenceData(null);
       setPendingPaymentData(null);
+      setShowStripeForm(false);
+      setStripeProcessing(false);
     }
   }, [isOpen]);
 
@@ -311,24 +336,9 @@ export function ChatTokenPurchaseModal({
         return;
       }
 
-      // Stripe payments (card, multibanco, klarna, mbway)
+      // Stripe payments (card, multibanco, klarna, mbway) - show inline form
       if (['card', 'klarna', 'multibanco', 'mbway', 'card_uk', 'klarna_uk', 'card_us'].includes(selectedPaymentMethod)) {
-        await processStripePayment({
-          amount: priceInfo.price,
-          currency: priceInfo.currency,
-          productName: `Chat Tokens: ${selectedPackage.name} (${selectedPackage.tokens.toLocaleString()} tokens)`,
-          customerEmail: user.email || '',
-          customerName: user.user_metadata?.full_name || user.email || '',
-          productId: `chat-tokens-${selectedPackage.id}`,
-          orderId: orderId
-        }, {
-          onSuccess: () => {
-            onClose();
-          },
-          onError: (error) => {
-            setPaymentError(error);
-          }
-        });
+        setShowStripeForm(true);
         setProcessing(false);
         return;
       }
@@ -780,8 +790,51 @@ export function ChatTokenPurchaseModal({
           )}
         </div>
 
+        {/* Stripe Inline Payment Form */}
+        {showStripeForm && selectedPackage && !waitingForConfirmation && !referenceData && (
+          <div className="p-6 pt-0 space-y-4">
+            <div className="flex items-center justify-between mb-2">
+              <Label className="text-sm font-medium">Detalhes do pagamento</Label>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowStripeForm(false)}
+                className="text-xs"
+              >
+                Voltar
+              </Button>
+            </div>
+            <StripeCardPayment
+              amount={priceInfo.price}
+              originalAmountKZ={selectedPackage.price_kz}
+              currency={priceInfo.currency}
+              productId={`chat-tokens-${selectedPackage.id}`}
+              customerData={userInfo}
+              paymentMethod={selectedPaymentMethod}
+              onSuccess={() => {
+                toast({
+                  title: 'Pagamento realizado!',
+                  description: `${selectedPackage.tokens.toLocaleString()} tokens foram adicionados à sua conta.`
+                });
+                onPurchaseComplete();
+                onClose();
+              }}
+              onError={(error) => {
+                setPaymentError(error);
+                setStripeProcessing(false);
+              }}
+              processing={stripeProcessing}
+              setProcessing={setStripeProcessing}
+              displayPrice={priceInfo.formatted}
+              convertedAmount={priceInfo.price}
+              mbwayPhone={mbwayPhone}
+              onMbwayPhoneChange={setMbwayPhone}
+            />
+          </div>
+        )}
+
         {/* Footer */}
-        {!waitingForConfirmation && !referenceData && (
+        {!waitingForConfirmation && !referenceData && !showStripeForm && (
           <div className="p-6 pt-0 space-y-3">
             <Button 
               className="w-full h-12 text-base font-semibold rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-shadow"
