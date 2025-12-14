@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Facebook, Webhook, Palette, Settings, Mail, RotateCcw, MessageSquare } from "lucide-react";
+import { Plus, Facebook, Webhook, Palette, Settings, Mail, RotateCcw, MessageSquare, RefreshCw } from "lucide-react";
 import utmifyLogo from '@/assets/utmify-logo.png';
 import googleAnalyticsLogo from '@/assets/google-analytics-logo.png';
 import googleAdsLogo from '@/assets/google-ads-logo.png';
@@ -377,7 +377,35 @@ export function AppsTabLayout() {
         });
       }
 
-      // Sales Recovery system removed - skipping fetch
+      // Fetch Cart Recovery settings
+      const { data: cartRecoveryData, error: cartRecoveryError } = await supabase
+        .from('sales_recovery_settings')
+        .select(`
+          *,
+          products(name)
+        `)
+        .eq('user_id', user.id);
+
+      if (cartRecoveryError) {
+        console.error('Error fetching cart recovery settings:', cartRecoveryError);
+      } else {
+        console.log('Cart recovery settings:', cartRecoveryData);
+      }
+
+      if (cartRecoveryData && cartRecoveryData.length > 0) {
+        cartRecoveryData.forEach((recovery: any) => {
+          allIntegrations.push({
+            id: recovery.id,
+            type: 'cart-recovery',
+            name: 'Recuperação de Carrinho',
+            active: recovery.enabled || false,
+            createdAt: new Date(recovery.created_at || '').toLocaleDateString(),
+            icon: <RefreshCw className="h-5 w-5 text-emerald-600" />,
+            productName: recovery.products?.name || 'Produto não encontrado',
+            productId: recovery.product_id
+          });
+        });
+      }
 
       // Fetch Live Chat AI products
       const { data: chatProducts, error: chatError } = await supabase
@@ -541,6 +569,12 @@ export function AppsTabLayout() {
           .update({ enabled: active })
           .eq('id', integration.id)
           .select();
+      } else if (integration.type === 'cart-recovery') {
+        updateResult = await supabase
+          .from('sales_recovery_settings')
+          .update({ enabled: active })
+          .eq('id', integration.id)
+          .select();
       } else if (integration.type === 'discount-coupons') {
         // Toggle all coupons for this product
         const productId = integration.productId;
@@ -661,6 +695,12 @@ export function AppsTabLayout() {
       } else if (integration.type === 'utmify') {
         deleteResult = await supabase
           .from('utmify_settings' as any)
+          .delete()
+          .eq('id', integration.id)
+          .select();
+      } else if (integration.type === 'cart-recovery') {
+        deleteResult = await supabase
+          .from('sales_recovery_settings')
           .delete()
           .eq('id', integration.id)
           .select();
@@ -814,6 +854,14 @@ export function AppsTabLayout() {
           <span className={className || "text-lg"}>🎟️</span>
         ),
         color: 'text-amber-600'
+      };
+    } else if (integration.type === 'cart-recovery') {
+      integrationType = {
+        id: 'cart-recovery',
+        name: 'Recuperação de Carrinho',
+        description: 'Recupere vendas abandonadas automaticamente',
+        icon: ({ className }: { className?: string }) => <RefreshCw className={className || "w-6 h-6"} />,
+        color: 'text-emerald-600'
       };
     }
     
