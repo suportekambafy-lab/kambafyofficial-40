@@ -120,7 +120,7 @@ const handler = async (req: Request): Promise<Response> => {
 
           try {
             // Generate checkout link
-            const checkoutLink = `${supabaseUrl.replace('.supabase.co', '.lovable.app')}/checkout/${product.id}?recovery=${purchase.id}`;
+            const checkoutLink = `https://pay.kambafy.com/checkout/${product.id}?recovery=${purchase.id}`;
 
             // Replace template variables
             const emailBody = settings.email_template
