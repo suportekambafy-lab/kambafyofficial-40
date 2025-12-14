@@ -98,10 +98,16 @@ const Checkout = () => {
   useEffect(() => {
     if (geoReady && userCountry && !geoLoading) {
       console.log('🌍 Auto-applying detected country from IP:', userCountry.code);
-      setFormData(prev => ({
-        ...prev,
-        phoneCountry: userCountry.code
-      }));
+      setFormData(prev => {
+        // Só aplicar se phoneCountry estiver vazio ou for o primeiro load
+        if (!prev.phoneCountry) {
+          return {
+            ...prev,
+            phoneCountry: userCountry.code
+          };
+        }
+        return prev;
+      });
     }
   }, [geoReady, userCountry, geoLoading]);
   const {
@@ -120,7 +126,7 @@ const Checkout = () => {
     fullName: "",
     email: "",
     phone: "",
-    phoneCountry: "AO"
+    phoneCountry: "" // Será definido dinamicamente pelo país detectado
   });
   const [expressPhone, setExpressPhone] = useState("");
   const [selectedPayment, setSelectedPayment] = useState("");

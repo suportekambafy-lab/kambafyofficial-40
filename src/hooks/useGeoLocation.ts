@@ -67,7 +67,9 @@ const getInitialCountry = (): CountryInfo => {
   } catch {
     // localStorage indisponível
   }
-  return SUPPORTED_COUNTRIES.AO;
+  // Não retornar país padrão aqui - deixar a detecção por IP decidir
+  // Retornar null temporariamente até detectar
+  return SUPPORTED_COUNTRIES.US; // Fallback para USD até detectar IP
 };
 
 // Função para obter taxas iniciais do cache
@@ -201,27 +203,32 @@ export const useGeoLocation = () => {
           setDetectedLanguage(language);
           applyLanguage(language);
         } else {
-          // País não suportado, usar Angola como padrão
-          setUserCountry(supportedCountries.AO);
-          localStorage.setItem('userCountry', 'AO');
-          setDetectedLanguage('pt');
-          applyLanguage('pt');
+          // País não suportado - usar USD como padrão internacional
+          console.log('🌍 País não suportado, usando USD como padrão:', countryCode);
+          setUserCountry(supportedCountries.US);
+          localStorage.setItem('userCountry', 'US');
+          setDetectedLanguage('en');
+          applyLanguage('en');
         }
       } else {
-        // Nenhuma API funcionou, manter país atual (do cache ou Angola)
+        // Nenhuma API funcionou - usar USD como fallback internacional
+        console.log('⚠️ APIs de IP falharam, usando USD como fallback');
         if (!localStorage.getItem('userCountry')) {
-          setUserCountry(supportedCountries.AO);
-          setDetectedLanguage('pt');
-          applyLanguage('pt');
+          setUserCountry(supportedCountries.US);
+          localStorage.setItem('userCountry', 'US');
+          setDetectedLanguage('en');
+          applyLanguage('en');
         }
       }
     } catch (err) {
       console.error('Erro ao detectar país por IP:', err);
-      // Em caso de erro, manter país atual (do cache ou Angola)
+      // Em caso de erro - usar USD como fallback internacional
       if (!localStorage.getItem('userCountry')) {
-        setUserCountry(supportedCountries.AO);
-        setDetectedLanguage('pt');
-        applyLanguage('pt');
+        console.log('⚠️ Erro na detecção, usando USD como fallback');
+        setUserCountry(supportedCountries.US);
+        localStorage.setItem('userCountry', 'US');
+        setDetectedLanguage('en');
+        applyLanguage('en');
       }
     } finally {
       setLoading(false);
