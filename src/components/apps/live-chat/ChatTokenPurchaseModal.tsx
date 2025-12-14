@@ -626,7 +626,7 @@ export function ChatTokenPurchaseModal({
                       </div>
                     </SelectValue>
                   </SelectTrigger>
-                  <SelectContent className="bg-background border border-border rounded-xl shadow-lg z-50">
+                  <SelectContent className="bg-background border border-border rounded-xl shadow-lg z-[200]">
                     {Object.values(supportedCountries).map((c) => (
                       <SelectItem key={c.code} value={c.code} className="cursor-pointer py-3">
                         <div className="flex items-center gap-3">
