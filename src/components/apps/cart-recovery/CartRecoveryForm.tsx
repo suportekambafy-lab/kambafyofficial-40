@@ -10,8 +10,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2, Save, Mail, Clock, RefreshCw, Eye } from 'lucide-react';
+import { Loader2, Save, Mail, Clock, RefreshCw, Eye, Send } from 'lucide-react';
 import { CartRecoveryDashboard } from './CartRecoveryDashboard';
+import { z } from 'zod';
 
 interface CartRecoveryFormProps {
   productId: string;
@@ -25,6 +26,8 @@ interface RecoverySettings {
   email_subject: string;
   email_template: string;
 }
+
+const emailSchema = z.string().email({ message: "Email inválido" });
 
 const defaultSettings: RecoverySettings = {
   enabled: false,
@@ -50,6 +53,8 @@ export function CartRecoveryForm({ productId, onSaveSuccess }: CartRecoveryFormP
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [sendingTest, setSendingTest] = useState(false);
+  const [testEmail, setTestEmail] = useState('');
   const [settings, setSettings] = useState<RecoverySettings>(defaultSettings);
   const [activeTab, setActiveTab] = useState('settings');
 
@@ -128,10 +133,51 @@ export function CartRecoveryForm({ productId, onSaveSuccess }: CartRecoveryFormP
 
   const getPreviewEmail = () => {
     return settings.email_template
-      .replace('{customer_name}', 'João Silva')
-      .replace('{product_name}', 'Curso de Marketing Digital')
-      .replace('{amount}', '197,00 Kz')
-      .replace('{checkout_link}', 'https://exemplo.com/checkout/abc123');
+      .replace(/{customer_name}/g, 'João Silva')
+      .replace(/{product_name}/g, 'Curso de Marketing Digital')
+      .replace(/{amount}/g, '197,00 Kz')
+      .replace(/{checkout_link}/g, 'https://exemplo.com/checkout/abc123');
+  };
+
+  const handleSendTest = async () => {
+    // Validate email
+    const validation = emailSchema.safeParse(testEmail);
+    if (!validation.success) {
+      toast({
+        title: 'Email inválido',
+        description: 'Por favor, insira um email válido para teste.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setSendingTest(true);
+    try {
+      const { error } = await supabase.functions.invoke('send-test-recovery-email', {
+        body: {
+          email: testEmail,
+          subject: settings.email_subject,
+          template: settings.email_template,
+          productId
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Email de teste enviado!',
+        description: `Verifique sua caixa de entrada em ${testEmail}`,
+      });
+    } catch (error: any) {
+      console.error('Error sending test email:', error);
+      toast({
+        title: 'Erro ao enviar email',
+        description: error.message || 'Não foi possível enviar o email de teste.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSendingTest(false);
+    }
   };
 
   if (loading) {
@@ -274,10 +320,13 @@ export function CartRecoveryForm({ productId, onSaveSuccess }: CartRecoveryFormP
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Eye className="h-5 w-5" />
-                Pré-visualização
+                Pré-visualização e Teste
               </CardTitle>
+              <CardDescription>
+                Visualize o email e envie um teste para verificar
+              </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <div className="border rounded-lg p-4 bg-muted/30">
                 <div className="mb-3 pb-3 border-b">
                   <p className="text-sm text-muted-foreground">Assunto:</p>
@@ -286,6 +335,32 @@ export function CartRecoveryForm({ productId, onSaveSuccess }: CartRecoveryFormP
                 <div className="whitespace-pre-wrap text-sm">
                   {getPreviewEmail()}
                 </div>
+              </div>
+
+              {/* Test Email */}
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <Input
+                    type="email"
+                    placeholder="Seu email para teste"
+                    value={testEmail}
+                    onChange={(e) => setTestEmail(e.target.value)}
+                  />
+                </div>
+                <Button 
+                  variant="outline" 
+                  onClick={handleSendTest} 
+                  disabled={sendingTest || !testEmail}
+                >
+                  {sendingTest ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4 mr-2" />
+                      Enviar Teste
+                    </>
+                  )}
+                </Button>
               </div>
             </CardContent>
           </Card>

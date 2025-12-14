@@ -215,3 +215,6 @@ verify_jwt = false
 
 [functions.process-cart-recovery]
 verify_jwt = false
+
+[functions.send-test-recovery-email]
+verify_jwt = false
