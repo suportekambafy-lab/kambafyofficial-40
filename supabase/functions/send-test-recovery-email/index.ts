@@ -46,7 +46,7 @@ const handler = async (req: Request): Promise<Response> => {
     const productName = product?.name || "Produto Exemplo";
 
     // Generate test checkout link
-    const checkoutLink = `https://hcbkqygdtzpxvctfdqbd.lovable.app/checkout/${productId}?test=true`;
+    const checkoutLink = `https://pay.kambafy.com/checkout/${productId}?test=true`;
 
     // Replace template variables with test data
     const emailBody = template
