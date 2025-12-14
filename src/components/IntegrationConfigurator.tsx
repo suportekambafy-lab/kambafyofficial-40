@@ -11,6 +11,7 @@ import { QuizBuilder } from '@/components/QuizBuilder';
 import { UtmifyForm } from '@/components/UtmifyForm';
 import { DiscountCouponsForm } from '@/components/DiscountCouponsForm';
 import { LiveChatApp } from '@/components/apps/live-chat/LiveChatApp';
+import { CartRecoveryForm } from '@/components/apps/cart-recovery';
 import { IntegrationType } from '@/components/IntegrationTypeSelector';
 
 interface Product {
@@ -129,6 +130,13 @@ export function IntegrationConfigurator({
         <LiveChatApp 
           productId={product.id}
           onComplete={handleSuccess}
+        />
+      )}
+
+      {integrationType.id === 'cart-recovery' && (
+        <CartRecoveryForm 
+          productId={product.id}
+          onSaveSuccess={handleSuccess}
         />
       )}
     </div>

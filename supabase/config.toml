@@ -212,3 +212,6 @@ verify_jwt = false
 
 [functions.create-pending-token-purchase]
 verify_jwt = false
+
+[functions.process-cart-recovery]
+verify_jwt = false
