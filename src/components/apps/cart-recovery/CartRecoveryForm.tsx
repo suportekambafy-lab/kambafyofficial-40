@@ -135,8 +135,8 @@ export function CartRecoveryForm({ productId, onSaveSuccess }: CartRecoveryFormP
     return settings.email_template
       .replace(/{customer_name}/g, 'João Silva')
       .replace(/{product_name}/g, 'Curso de Marketing Digital')
-      .replace(/{amount}/g, '197,00 Kz')
-      .replace(/{checkout_link}/g, 'https://exemplo.com/checkout/abc123');
+      .replace(/{amount}/g, '€49,00 ou 10.000 Kz (conforme moeda do cliente)')
+      .replace(/{checkout_link}/g, 'https://pay.kambafy.com/checkout/abc123')
   };
 
   const handleSendTest = async () => {
