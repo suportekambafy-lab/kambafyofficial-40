@@ -23,6 +23,7 @@ import { useAffiliateTracking } from "@/hooks/useAffiliateTracking";
 import { logger } from "@/utils/productionLogger";
 import { getSubscriptionIntervalText } from "@/utils/priceFormatting";
 import { useCheckoutPresence } from "@/hooks/useCheckoutPresence";
+import { useAbandonedCartDetection } from "@/hooks/useAbandonedCartDetection";
 
 import { BankTransferForm } from "@/components/checkout/BankTransferForm";
 import { MozambiquePaymentForm } from "@/components/checkout/MozambiquePaymentForm";
@@ -349,6 +350,26 @@ const Checkout = () => {
     return getConvertedPrice(productPriceKZ);
   }, [product, originalPriceKZ, userCountry, getConvertedPrice, cohort]);
   const totalAmountForDetection = useMemo(() => product ? getProductFinalPrice() + totalOrderBumpPrice : 0, [product, getProductFinalPrice, totalOrderBumpPrice]);
+
+  // State para controlar se o pagamento foi completado
+  const [paymentCompleted, setPaymentCompleted] = useState(false);
+
+  // Hook para detecção de carrinho abandonado
+  const { markAsRecovered } = useAbandonedCartDetection(
+    {
+      productId: productId || '',
+      customerEmail: formData.email.trim().toLowerCase(),
+      customerName: formData.fullName.trim(),
+      customerPhone: formData.phone || expressPhone || undefined,
+      amount: totalAmountForDetection,
+      currency: userCountry?.currency || 'KZ'
+    },
+    {
+      enabled: !!productId && !!product,
+      minDataRequired: formData.fullName.trim().length > 2 && formData.email.trim().length > 5 && formData.email.includes('@'),
+      paymentCompleted
+    }
+  );
 
   // Remover efeito que aguarda geo - não precisamos mais
   // Os preços se atualizam automaticamente quando geo estiver pronto
@@ -1885,8 +1906,10 @@ const Checkout = () => {
         })
       });
 
-      // Não marcar vendas como recuperadas - sistema de recuperação removido
-      console.log('✅ Venda concluída - sistema de recuperação desabilitado');
+      // Marcar pagamento como completado e abandonos como recuperados
+      setPaymentCompleted(true);
+      markAsRecovered(orderId);
+      console.log('✅ Venda concluída - abandonos marcados como recuperados');
 
       // ═══════════════════════════════════════════════════════════════
       // 🎯 LÓGICA DE UPSELL CORRIGIDA
