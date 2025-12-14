@@ -3403,9 +3403,16 @@ export type Database = {
       sales_recovery_settings: {
         Row: {
           created_at: string
+          discount_type: string | null
+          discount_value: number | null
           email_delay_hours: number
           email_subject: string
+          email_subject_2: string | null
+          email_subject_3: string | null
           email_template: string
+          email_template_2: string | null
+          email_template_3: string | null
+          enable_discount_on_last: boolean | null
           enabled: boolean
           id: string
           max_recovery_attempts: number
@@ -3415,9 +3422,16 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          discount_type?: string | null
+          discount_value?: number | null
           email_delay_hours?: number
           email_subject?: string
+          email_subject_2?: string | null
+          email_subject_3?: string | null
           email_template?: string
+          email_template_2?: string | null
+          email_template_3?: string | null
+          enable_discount_on_last?: boolean | null
           enabled?: boolean
           id?: string
           max_recovery_attempts?: number
@@ -3427,9 +3441,16 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          discount_type?: string | null
+          discount_value?: number | null
           email_delay_hours?: number
           email_subject?: string
+          email_subject_2?: string | null
+          email_subject_3?: string | null
           email_template?: string
+          email_template_2?: string | null
+          email_template_3?: string | null
+          enable_discount_on_last?: boolean | null
           enabled?: boolean
           id?: string
           max_recovery_attempts?: number

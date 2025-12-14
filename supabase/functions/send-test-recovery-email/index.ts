@@ -14,6 +14,10 @@ interface TestEmailRequest {
   subject: string;
   template: string;
   productId: string;
+  emailNumber: number;
+  includeDiscount?: boolean;
+  discountType?: 'percentage' | 'fixed';
+  discountValue?: number;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -26,7 +30,16 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { email, subject, template, productId }: TestEmailRequest = await req.json();
+    const { 
+      email, 
+      subject, 
+      template, 
+      productId, 
+      emailNumber,
+      includeDiscount,
+      discountType,
+      discountValue 
+    }: TestEmailRequest = await req.json();
 
     // Validate email
     if (!email || !email.includes('@')) {
@@ -36,7 +49,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Get product details including price
+    // Get product details including price and currency
     const { data: product } = await supabase
       .from("products")
       .select("name, price, currency")
@@ -54,17 +67,33 @@ const handler = async (req: Request): Promise<Response> => {
       ? `$${parseFloat(productPrice).toLocaleString('en-US', { minimumFractionDigits: 2 })}`
       : `${parseFloat(productPrice).toLocaleString('pt-AO')} ${productCurrency}`;
 
+    // Generate test coupon code
+    const testCouponCode = `TESTE${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    
+    // Format discount amount
+    const discountAmountText = discountType === 'percentage'
+      ? `${discountValue}%`
+      : `${discountValue} ${productCurrency}`;
+
     // Generate test checkout link
-    const checkoutLink = `https://pay.kambafy.com/checkout/${productId}?test=true`;
+    const checkoutLink = includeDiscount 
+      ? `https://pay.kambafy.com/checkout/${productId}?coupon=${testCouponCode}&test=true`
+      : `https://pay.kambafy.com/checkout/${productId}?test=true`;
 
     // Replace template variables with test data
     const emailBody = template
       .replace(/{customer_name}/g, "Vendedor (Teste)")
       .replace(/{product_name}/g, productName)
       .replace(/{amount}/g, formattedAmount)
-      .replace(/{checkout_link}/g, checkoutLink);
+      .replace(/{checkout_link}/g, checkoutLink)
+      .replace(/{coupon_code}/g, testCouponCode)
+      .replace(/{discount_amount}/g, discountAmountText);
 
-    console.log(`Sending test recovery email to ${email}`);
+    console.log(`Sending test recovery email ${emailNumber} to ${email}`);
+
+    // Determine email badge color based on number
+    const badgeColor = emailNumber === 3 ? '#10b981' : '#6366f1';
+    const badgeText = emailNumber === 3 ? 'Email 3 - Com Cupom' : `Email ${emailNumber}`;
 
     // Send test email
     const emailResponse = await resend.emails.send({
@@ -75,8 +104,19 @@ const handler = async (req: Request): Promise<Response> => {
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="background-color: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 12px; margin-bottom: 20px;">
             <p style="margin: 0; color: #92400e; font-weight: bold;">⚠️ Este é um email de TESTE</p>
-            <p style="margin: 4px 0 0 0; color: #92400e; font-size: 14px;">Este email foi enviado para verificar as configurações de recuperação de carrinho.</p>
+            <p style="margin: 4px 0 0 0; color: #92400e; font-size: 14px;">
+              <span style="display: inline-block; background: ${badgeColor}; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; margin-right: 8px;">
+                ${badgeText}
+              </span>
+              Este email foi enviado para verificar as configurações de recuperação de carrinho.
+            </p>
           </div>
+          ${includeDiscount ? `
+          <div style="background-color: #d1fae5; border: 1px solid #10b981; border-radius: 8px; padding: 12px; margin-bottom: 20px; text-align: center;">
+            <p style="margin: 0; color: #065f46; font-weight: bold;">🎁 Cupom de Teste: ${testCouponCode}</p>
+            <p style="margin: 4px 0 0 0; color: #065f46; font-size: 14px;">Desconto: ${discountAmountText}</p>
+          </div>
+          ` : ''}
           <div style="white-space: pre-wrap; line-height: 1.6;">
 ${emailBody.split('\n').map(line => `            ${line}`).join('\n')}
           </div>
