@@ -122,11 +122,18 @@ const handler = async (req: Request): Promise<Response> => {
             // Generate checkout link
             const checkoutLink = `https://pay.kambafy.com/checkout/${product.id}?recovery=${purchase.id}`;
 
+            // Format amount based on currency
+            const formattedAmount = purchase.currency === 'EUR' 
+              ? `€${purchase.amount.toLocaleString('pt-PT', { minimumFractionDigits: 2 })}`
+              : purchase.currency === 'USD'
+              ? `$${purchase.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+              : `${purchase.amount.toLocaleString('pt-AO')} ${purchase.currency}`;
+
             // Replace template variables
             const emailBody = settings.email_template
               .replace(/{customer_name}/g, purchase.customer_name)
               .replace(/{product_name}/g, product.name)
-              .replace(/{amount}/g, `${purchase.amount.toLocaleString('pt-AO')} ${purchase.currency}`)
+              .replace(/{amount}/g, formattedAmount)
               .replace(/{checkout_link}/g, checkoutLink);
 
             const emailSubject = settings.email_subject

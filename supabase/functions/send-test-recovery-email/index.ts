@@ -36,14 +36,23 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Get product name
+    // Get product details including price
     const { data: product } = await supabase
       .from("products")
-      .select("name")
+      .select("name, price, currency")
       .eq("id", productId)
       .single();
 
     const productName = product?.name || "Produto Exemplo";
+    const productPrice = product?.price || "0";
+    const productCurrency = product?.currency || "KZ";
+
+    // Format amount based on currency
+    const formattedAmount = productCurrency === 'EUR' 
+      ? `€${parseFloat(productPrice).toLocaleString('pt-PT', { minimumFractionDigits: 2 })}`
+      : productCurrency === 'USD'
+      ? `$${parseFloat(productPrice).toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+      : `${parseFloat(productPrice).toLocaleString('pt-AO')} ${productCurrency}`;
 
     // Generate test checkout link
     const checkoutLink = `https://pay.kambafy.com/checkout/${productId}?test=true`;
@@ -52,7 +61,7 @@ const handler = async (req: Request): Promise<Response> => {
     const emailBody = template
       .replace(/{customer_name}/g, "Vendedor (Teste)")
       .replace(/{product_name}/g, productName)
-      .replace(/{amount}/g, "197,00 Kz")
+      .replace(/{amount}/g, formattedAmount)
       .replace(/{checkout_link}/g, checkoutLink);
 
     console.log(`Sending test recovery email to ${email}`);
