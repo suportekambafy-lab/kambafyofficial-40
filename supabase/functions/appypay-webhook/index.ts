@@ -26,6 +26,83 @@ interface AppyPayWebhookPayload {
   };
 }
 
+// Process chat token payment confirmation
+async function processChatTokenPayment(supabase: any, payload: AppyPayWebhookPayload, tokenTransaction: any) {
+  console.log('[APPYPAY-WEBHOOK] Processing chat token payment...');
+  
+  const paymentStatus = payload.responseStatus?.status;
+  const isSuccessful = payload.responseStatus?.successful;
+  
+  if (isSuccessful !== true || paymentStatus !== 'Success') {
+    console.log('[APPYPAY-WEBHOOK] Token payment not successful, updating status');
+    
+    await supabase
+      .from('chat_token_transactions')
+      .update({
+        type: 'failed_purchase',
+        description: `Pagamento falhou - ${tokenTransaction.tokens?.toLocaleString() || 0} tokens`,
+        metadata: { ...tokenTransaction.metadata, status: 'failed', failed_at: new Date().toISOString() }
+      })
+      .eq('id', tokenTransaction.id);
+    
+    return new Response(JSON.stringify({ message: 'Token payment failed', status: paymentStatus }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json', ...corsHeaders }
+    });
+  }
+  
+  const userId = tokenTransaction.user_id;
+  const tokens = tokenTransaction.tokens || 0;
+  
+  // Get current balance
+  const { data: currentCredits } = await supabase
+    .from('seller_chat_credits')
+    .select('*')
+    .eq('user_id', userId)
+    .single();
+  
+  let newBalance: number;
+  
+  if (!currentCredits) {
+    newBalance = tokens;
+    await supabase.from('seller_chat_credits').insert({
+      user_id: userId,
+      token_balance: tokens,
+      total_tokens_purchased: tokens,
+      total_tokens_used: 0
+    });
+  } else {
+    newBalance = currentCredits.token_balance + tokens;
+    await supabase.from('seller_chat_credits').update({
+      token_balance: newBalance,
+      total_tokens_purchased: currentCredits.total_tokens_purchased + tokens,
+      updated_at: new Date().toISOString()
+    }).eq('user_id', userId);
+  }
+  
+  // Update transaction record
+  await supabase
+    .from('chat_token_transactions')
+    .update({
+      type: 'purchase',
+      balance_after: newBalance,
+      description: `Compra de ${tokens.toLocaleString()} tokens - Referência`,
+      metadata: { ...tokenTransaction.metadata, status: 'completed', completed_at: new Date().toISOString() }
+    })
+    .eq('id', tokenTransaction.id);
+  
+  console.log(`[APPYPAY-WEBHOOK] Chat tokens credited: ${tokens} tokens to user ${userId}`);
+  
+  return new Response(JSON.stringify({ 
+    message: 'Chat tokens credited successfully',
+    tokens: tokens,
+    newBalance: newBalance
+  }), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json', ...corsHeaders }
+  });
+}
+
 async function grantModuleAccess(supabase: any, modulePayment: any) {
   console.log('[APPYPAY-WEBHOOK] Granting module access...');
   
@@ -282,7 +359,45 @@ const handler = async (req: Request): Promise<Response> => {
         return await processModulePayment(supabase, payload, modulePaymentId);
       }
       
-      // Se não encontrou nem em orders nem em module_payments
+      // Check for pending chat token purchases
+      console.log('[APPYPAY-WEBHOOK] Checking for pending chat token purchases...');
+      
+      let tokenTransactionId = null;
+      
+      // Try by reference number in metadata
+      if (payload.reference?.referenceNumber) {
+        const { data: tokenTransaction } = await supabase
+          .from('chat_token_transactions')
+          .select('*')
+          .eq('type', 'pending_purchase')
+          .eq('metadata->>reference_number', payload.reference.referenceNumber)
+          .single();
+        
+        if (tokenTransaction) {
+          tokenTransactionId = tokenTransaction.id;
+          console.log(`[APPYPAY-WEBHOOK] Token transaction found by referenceNumber`);
+          
+          // Process the token credit
+          return await processChatTokenPayment(supabase, payload, tokenTransaction);
+        }
+      }
+      
+      // Try by transaction ID in metadata
+      if (!tokenTransactionId && payload.merchantTransactionId) {
+        const { data: tokenTransaction } = await supabase
+          .from('chat_token_transactions')
+          .select('*')
+          .eq('type', 'pending_purchase')
+          .eq('metadata->>transaction_id', payload.merchantTransactionId)
+          .single();
+        
+        if (tokenTransaction) {
+          console.log(`[APPYPAY-WEBHOOK] Token transaction found by merchantTransactionId`);
+          return await processChatTokenPayment(supabase, payload, tokenTransaction);
+        }
+      }
+      
+      // Se não encontrou em nenhuma tabela
       console.log(`[APPYPAY-WEBHOOK] Payment not found in any table`);
       return new Response(JSON.stringify({ 
         message: 'Payment not found',

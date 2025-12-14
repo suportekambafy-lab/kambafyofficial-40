@@ -61,6 +61,14 @@ export function ChatTokenPurchaseModal({
   const [referenceData, setReferenceData] = useState<ReferenceData | null>(null);
   const [copiedEntity, setCopiedEntity] = useState(false);
   const [copiedReference, setCopiedReference] = useState(false);
+  const [pendingPaymentData, setPendingPaymentData] = useState<{
+    transactionId: string;
+    tokens: number;
+    packageId: string;
+    packageName: string;
+    amount: number;
+    paymentMethod: string;
+  } | null>(null);
   const { toast } = useToast();
   const { processStripePayment, isProcessing: stripeProcessing } = useOptimizedPayment();
 
@@ -72,6 +80,7 @@ export function ChatTokenPurchaseModal({
       setMbwayPhone('');
       setPaymentError('');
       setReferenceData(null);
+      setPendingPaymentData(null);
     }
   }, [isOpen]);
 
@@ -238,11 +247,47 @@ export function ChatTokenPurchaseModal({
           
           const transactionId = data?.id || data?.merchantTransactionId;
           if (transactionId) {
-            pollPaymentStatus(transactionId, selectedPackage.tokens);
+            // Save payment data for crediting tokens after confirmation
+            setPendingPaymentData({
+              transactionId,
+              tokens: selectedPackage.tokens,
+              packageId: selectedPackage.id,
+              packageName: selectedPackage.name,
+              amount: priceInfo.price,
+              paymentMethod: selectedPaymentMethod
+            });
+            pollPaymentStatus(transactionId, selectedPackage.tokens, selectedPackage.id, selectedPackage.name, priceInfo.price);
           }
         } else if (selectedPaymentMethod === 'reference') {
           // Show reference data UI
           if (data?.entity && data?.reference) {
+            // Save pending payment for reference (will be credited via webhook)
+            setPendingPaymentData({
+              transactionId: data.merchantTransactionId || `ref-${Date.now()}`,
+              tokens: selectedPackage.tokens,
+              packageId: selectedPackage.id,
+              packageName: selectedPackage.name,
+              amount: priceInfo.price,
+              paymentMethod: selectedPaymentMethod
+            });
+            
+            // Store pending token purchase for webhook processing
+            try {
+              await supabase.functions.invoke('create-pending-token-purchase', {
+                body: {
+                  tokens: selectedPackage.tokens,
+                  packageId: selectedPackage.id,
+                  packageName: selectedPackage.name,
+                  amount: priceInfo.price,
+                  referenceNumber: data.reference,
+                  entity: data.entity,
+                  transactionId: data.merchantTransactionId
+                }
+              });
+            } catch (e) {
+              console.log('Note: Pending token purchase not saved - will need manual credit');
+            }
+            
             setReferenceData({
               entity: data.entity,
               reference: data.reference,
@@ -301,7 +346,13 @@ export function ChatTokenPurchaseModal({
     }
   };
 
-  const pollPaymentStatus = async (transactionId: string, tokens: number) => {
+  const pollPaymentStatus = async (
+    transactionId: string, 
+    tokens: number, 
+    packageId: string, 
+    packageName: string, 
+    amount: number
+  ) => {
     let attempts = 0;
     const maxAttempts = 18;
 
@@ -318,12 +369,43 @@ export function ChatTokenPurchaseModal({
         });
 
         if (data?.status === 'completed' || data?.status === 'Success') {
+          // Credit the tokens to user's account
+          try {
+            const { data: creditResult, error: creditError } = await supabase.functions.invoke('credit-chat-tokens', {
+              body: {
+                tokens,
+                packageId,
+                packageName,
+                transactionId,
+                paymentMethod: 'express',
+                amount
+              }
+            });
+
+            if (creditError) {
+              console.error('Error crediting tokens:', creditError);
+              toast({
+                title: 'Pagamento confirmado',
+                description: 'Pagamento recebido, mas houve erro ao creditar tokens. Contacte o suporte.',
+                variant: 'destructive'
+              });
+            } else {
+              toast({
+                title: 'Pagamento confirmado!',
+                description: `${tokens.toLocaleString()} tokens foram adicionados à sua conta.`
+              });
+            }
+          } catch (creditErr) {
+            console.error('Exception crediting tokens:', creditErr);
+            toast({
+              title: 'Pagamento confirmado',
+              description: 'Pagamento recebido, mas houve erro ao creditar tokens. Contacte o suporte.',
+              variant: 'destructive'
+            });
+          }
+
           setWaitingForConfirmation(false);
           setProcessing(false);
-          toast({
-            title: 'Pagamento confirmado!',
-            description: `${tokens.toLocaleString()} tokens foram adicionados à sua conta.`
-          });
           onPurchaseComplete();
           onClose();
           return;

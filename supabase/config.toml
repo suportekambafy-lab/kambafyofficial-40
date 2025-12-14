@@ -206,3 +206,9 @@ verify_jwt = false
 
 [functions.check-appypay-status]
 verify_jwt = false
+
+[functions.credit-chat-tokens]
+verify_jwt = false
+
+[functions.create-pending-token-purchase]
+verify_jwt = false
