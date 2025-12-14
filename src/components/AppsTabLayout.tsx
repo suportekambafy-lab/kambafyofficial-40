@@ -575,6 +575,14 @@ export function AppsTabLayout() {
           .update({ enabled: active })
           .eq('id', integration.id)
           .select();
+      } else if (integration.type === 'live-chat-ai') {
+        // Extract the real product ID from the integration id (format: live-chat-{productId})
+        const productId = integration.productId || integration.id.replace('live-chat-', '');
+        updateResult = await supabase
+          .from('products')
+          .update({ chat_enabled: active })
+          .eq('id', productId)
+          .select();
       } else if (integration.type === 'discount-coupons') {
         // Toggle all coupons for this product
         const productId = integration.productId;
@@ -703,6 +711,14 @@ export function AppsTabLayout() {
           .from('sales_recovery_settings')
           .delete()
           .eq('id', integration.id)
+          .select();
+      } else if (integration.type === 'live-chat-ai') {
+        // For live chat, we disable and clear the config
+        const productId = integration.productId || integration.id.replace('live-chat-', '');
+        deleteResult = await supabase
+          .from('products')
+          .update({ chat_enabled: false, chat_config: null })
+          .eq('id', productId)
           .select();
       }
 
@@ -862,6 +878,14 @@ export function AppsTabLayout() {
         description: 'Recupere vendas abandonadas automaticamente',
         icon: ({ className }: { className?: string }) => <RefreshCw className={className || "w-6 h-6"} />,
         color: 'text-emerald-600'
+      };
+    } else if (integration.type === 'live-chat-ai') {
+      integrationType = {
+        id: 'live-chat-ai',
+        name: 'Chat ao Vivo IA',
+        description: 'Configure o atendente virtual com IA para seus produtos',
+        icon: ({ className }: { className?: string }) => <MessageSquare className={className || "w-6 h-6"} />,
+        color: 'text-pink-600'
       };
     }
     
