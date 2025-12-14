@@ -4,7 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { User, Calendar, DollarSign, CheckCircle, XCircle, CreditCard } from 'lucide-react';
+import { User, Calendar, DollarSign, CheckCircle, XCircle, CreditCard, Wallet, Globe, Bitcoin, Building } from 'lucide-react';
+
+interface WithdrawalMethod {
+  type: string;
+  details: Record<string, string>;
+  is_primary?: boolean;
+}
 
 interface WithdrawalWithProfile {
   id: string;
@@ -19,6 +25,7 @@ interface WithdrawalWithProfile {
     email: string;
     iban?: string;
     account_holder?: string;
+    withdrawal_methods?: WithdrawalMethod[];
   } | null;
 }
 
@@ -31,8 +38,18 @@ interface WithdrawalRequestCardProps {
   onProcess: (id: string, status: 'aprovado' | 'rejeitado') => void;
 }
 
-// Nota: O valor já vem líquido (8% descontado) para vendas novas
-// Vendas antigas são calculadas automaticamente pela função do banco
+const METHOD_LABELS: Record<string, { label: string; flag: string }> = {
+  angola_iban: { label: "IBAN Angola", flag: "🇦🇴" },
+  portugal_iban: { label: "IBAN Portugal", flag: "🇵🇹" },
+  mozambique_bank: { label: "Banco Moçambique", flag: "🇲🇿" },
+  brazil_pix: { label: "PIX Brasil", flag: "🇧🇷" },
+  germany_iban: { label: "IBAN Alemanha", flag: "🇩🇪" },
+  uk_bank: { label: "Banco Reino Unido", flag: "🇬🇧" },
+  belgium_iban: { label: "IBAN Bélgica", flag: "🇧🇪" },
+  us_bank: { label: "Banco EUA", flag: "🇺🇸" },
+  usdt: { label: "USDT (Crypto)", flag: "₮" },
+  paypal: { label: "PayPal", flag: "💳" },
+};
 
 const getStatusBadge = (status: string) => {
   switch (status) {
@@ -47,6 +64,54 @@ const getStatusBadge = (status: string) => {
   }
 };
 
+const formatMethodDetails = (method: WithdrawalMethod) => {
+  const details = method.details;
+  const lines: { label: string; value: string }[] = [];
+
+  // Common fields
+  if (details.account_holder) {
+    lines.push({ label: "Titular", value: details.account_holder });
+  }
+
+  // Type-specific fields
+  switch (method.type) {
+    case 'angola_iban':
+    case 'portugal_iban':
+    case 'germany_iban':
+    case 'belgium_iban':
+      if (details.iban) lines.push({ label: "IBAN", value: details.iban });
+      if (details.bank_name) lines.push({ label: "Banco", value: details.bank_name });
+      if (details.bic) lines.push({ label: "BIC/SWIFT", value: details.bic });
+      break;
+    case 'mozambique_bank':
+      if (details.account_number) lines.push({ label: "NIB/Conta", value: details.account_number });
+      if (details.bank_name) lines.push({ label: "Banco", value: details.bank_name });
+      break;
+    case 'brazil_pix':
+      if (details.pix_key) lines.push({ label: "Chave PIX", value: details.pix_key });
+      if (details.pix_type) lines.push({ label: "Tipo", value: details.pix_type });
+      break;
+    case 'uk_bank':
+      if (details.sort_code) lines.push({ label: "Sort Code", value: details.sort_code });
+      if (details.account_number) lines.push({ label: "Account", value: details.account_number });
+      break;
+    case 'us_bank':
+      if (details.routing_number) lines.push({ label: "Routing", value: details.routing_number });
+      if (details.account_number) lines.push({ label: "Account", value: details.account_number });
+      if (details.account_type) lines.push({ label: "Tipo", value: details.account_type });
+      break;
+    case 'usdt':
+      if (details.wallet_address) lines.push({ label: "Carteira", value: details.wallet_address });
+      if (details.network) lines.push({ label: "Rede", value: details.network });
+      break;
+    case 'paypal':
+      if (details.email) lines.push({ label: "Email", value: details.email });
+      break;
+  }
+
+  return lines;
+};
+
 export function WithdrawalRequestCard({
   request,
   index,
@@ -56,6 +121,16 @@ export function WithdrawalRequestCard({
   onProcess
 }: WithdrawalRequestCardProps) {
   console.log('🃏 Card render - Request:', request.id, 'Status:', request.status, 'Index:', index);
+
+  const withdrawalMethods = request.profiles?.withdrawal_methods || [];
+  const hasWithdrawalMethods = withdrawalMethods.length > 0;
+  
+  // Separate primary and secondary methods
+  const primaryMethod = withdrawalMethods.find(m => m.is_primary) || withdrawalMethods[0];
+  const secondaryMethods = withdrawalMethods.filter(m => m !== primaryMethod);
+
+  // Fallback to legacy IBAN if no withdrawal methods
+  const hasLegacyIban = !hasWithdrawalMethods && request.profiles?.iban;
   
   return (
     <Card className="shadow-lg border bg-white hover:shadow-xl transition-shadow">
@@ -95,21 +170,77 @@ export function WithdrawalRequestCard({
         </div>
       </CardHeader>
       <CardContent>
-        {/* Dados bancários do cliente */}
-        {request.profiles?.iban && (
+        {/* Métodos de pagamento do vendedor */}
+        {hasWithdrawalMethods && primaryMethod && (
+          <div className="mb-4 space-y-3">
+            {/* Método Principal */}
+            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-center gap-2 mb-2">
+                <CreditCard className="h-4 w-4 text-blue-600" />
+                <p className="text-sm font-medium text-blue-900">
+                  {METHOD_LABELS[primaryMethod.type]?.flag} {METHOD_LABELS[primaryMethod.type]?.label || primaryMethod.type}
+                  <Badge className="ml-2 bg-blue-200 text-blue-800 text-xs">Principal</Badge>
+                </p>
+              </div>
+              <div className="space-y-1">
+                {formatMethodDetails(primaryMethod).map((line, idx) => (
+                  <p key={idx} className="text-sm text-blue-800">
+                    <strong>{line.label}:</strong> <span className="font-mono">{line.value}</span>
+                  </p>
+                ))}
+              </div>
+            </div>
+
+            {/* Métodos Secundários */}
+            {secondaryMethods.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-gray-500 uppercase">Outros métodos configurados:</p>
+                {secondaryMethods.map((method, idx) => (
+                  <div key={idx} className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Wallet className="h-3 w-3 text-gray-500" />
+                      <p className="text-xs font-medium text-gray-700">
+                        {METHOD_LABELS[method.type]?.flag} {METHOD_LABELS[method.type]?.label || method.type}
+                      </p>
+                    </div>
+                    <div className="space-y-0.5">
+                      {formatMethodDetails(method).map((line, lineIdx) => (
+                        <p key={lineIdx} className="text-xs text-gray-600">
+                          <strong>{line.label}:</strong> <span className="font-mono">{line.value}</span>
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Fallback: IBAN Legado */}
+        {hasLegacyIban && (
           <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
             <div className="flex items-center gap-2 mb-2">
               <CreditCard className="h-4 w-4 text-blue-600" />
-              <p className="text-sm font-medium text-blue-900">Dados Bancários do Cliente:</p>
+              <p className="text-sm font-medium text-blue-900">🇦🇴 IBAN Angola (legado)</p>
             </div>
             <div className="space-y-1">
               <p className="text-sm text-blue-800">
-                <strong>Titular:</strong> {request.profiles.account_holder || 'Não informado'}
+                <strong>Titular:</strong> {request.profiles?.account_holder || 'Não informado'}
               </p>
               <p className="text-sm text-blue-800 font-mono">
-                <strong>IBAN:</strong> AO06 {request.profiles.iban}
+                <strong>IBAN:</strong> {request.profiles?.iban}
               </p>
             </div>
+          </div>
+        )}
+
+        {/* Sem métodos configurados */}
+        {!hasWithdrawalMethods && !hasLegacyIban && (
+          <div className="mb-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+            <p className="text-sm text-yellow-800">
+              ⚠️ Vendedor não configurou métodos de recebimento
+            </p>
           </div>
         )}
 

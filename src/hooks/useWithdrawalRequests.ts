@@ -3,6 +3,12 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+interface WithdrawalMethod {
+  type: string;
+  details: Record<string, string>;
+  is_primary?: boolean;
+}
+
 interface WithdrawalWithProfile {
   id: string;
   user_id: string;
@@ -17,6 +23,7 @@ interface WithdrawalWithProfile {
     email: string;
     iban?: string;
     account_holder?: string;
+    withdrawal_methods?: WithdrawalMethod[];
   } | null;
 }
 
@@ -60,7 +67,7 @@ export function useWithdrawalRequests() {
         const [profilesResult, balancesResult] = await Promise.all([
           supabase
             .from('profiles')
-            .select('user_id, full_name, email, iban, account_holder')
+            .select('user_id, full_name, email, iban, account_holder, withdrawal_methods')
             .in('user_id', userIds),
           supabase
             .from('customer_balances')
@@ -85,11 +92,17 @@ export function useWithdrawalRequests() {
         }
 
         // Combinar os dados incluindo saldo
-        const requestsWithProfiles = withdrawals.map(withdrawal => ({
-          ...withdrawal,
-          profiles: profiles?.find(p => p.user_id === withdrawal.user_id) || null,
-          seller_balance: balances?.find(b => b.user_id === withdrawal.user_id)?.balance ?? 0
-        }));
+        const requestsWithProfiles = withdrawals.map(withdrawal => {
+          const profile = profiles?.find(p => p.user_id === withdrawal.user_id);
+          return {
+            ...withdrawal,
+            profiles: profile ? {
+              ...profile,
+              withdrawal_methods: (profile.withdrawal_methods as unknown as WithdrawalMethod[]) || []
+            } : null,
+            seller_balance: balances?.find(b => b.user_id === withdrawal.user_id)?.balance ?? 0
+          };
+        });
 
         console.log('🔗 Resultado final combinado com saldos:', requestsWithProfiles);
         setRequests(requestsWithProfiles);
