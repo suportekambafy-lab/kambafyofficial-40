@@ -61,15 +61,25 @@ const SAFETY_MARGIN = 1.05;
 const getInitialCountry = (): CountryInfo => {
   try {
     const storedCountry = localStorage.getItem('userCountry');
-    if (storedCountry && SUPPORTED_COUNTRIES[storedCountry]) {
+    const lastIpDetection = localStorage.getItem('lastIpDetection');
+    const now = Date.now();
+    const oneHour = 60 * 60 * 1000;
+    const hasRecentDetection = lastIpDetection && (now - parseInt(lastIpDetection)) < oneHour;
+    
+    // Só usar cache se foi detectado recentemente (menos de 1 hora)
+    if (storedCountry && SUPPORTED_COUNTRIES[storedCountry] && hasRecentDetection) {
       return SUPPORTED_COUNTRIES[storedCountry];
+    }
+    
+    // Limpar cache antigo para forçar nova detecção
+    if (storedCountry && !hasRecentDetection) {
+      localStorage.removeItem('userCountry');
     }
   } catch {
     // localStorage indisponível
   }
-  // Não retornar país padrão aqui - deixar a detecção por IP decidir
-  // Retornar null temporariamente até detectar
-  return SUPPORTED_COUNTRIES.US; // Fallback para USD até detectar IP
+  // Retornar US como fallback temporário até detectar IP
+  return SUPPORTED_COUNTRIES.US;
 };
 
 // Função para obter taxas iniciais do cache
@@ -346,38 +356,36 @@ export const useGeoLocation = () => {
     const initializeGeoLocation = async () => {
       const storedCountry = localStorage.getItem('userCountry');
       const lastUpdate = localStorage.getItem('ratesLastUpdate');
+      const lastIpDetection = localStorage.getItem('lastIpDetection');
       
       const now = Date.now();
       const oneHour = 60 * 60 * 1000;
-      const hasRecentData = lastUpdate && (now - parseInt(lastUpdate)) < oneHour;
+      const hasRecentRates = lastUpdate && (now - parseInt(lastUpdate)) < oneHour;
+      const hasRecentIpDetection = lastIpDetection && (now - parseInt(lastIpDetection)) < oneHour;
       
-      // Se já temos país guardado, apenas atualizar taxas em background
-      if (storedCountry && SUPPORTED_COUNTRIES[storedCountry]) {
-        // País já está definido pelo estado inicial, só marcar como pronto
+      // Se já temos país guardado E foi detectado recentemente (menos de 1 hora)
+      if (storedCountry && SUPPORTED_COUNTRIES[storedCountry] && hasRecentIpDetection) {
+        console.log('🌍 Using cached country (recent):', storedCountry);
+        setUserCountry(SUPPORTED_COUNTRIES[storedCountry]);
         setIsReady(true);
         setLoading(false);
         
-        const language = COUNTRY_LANGUAGES[storedCountry] || 'pt';
+        const language = COUNTRY_LANGUAGES[storedCountry] || 'en';
         setDetectedLanguage(language);
         applyLanguage(language);
         
         // Atualizar taxas em background sem bloquear
-        if (!hasRecentData) {
+        if (!hasRecentRates) {
           fetchExchangeRates();
-        }
-        
-        // Re-detectar país em background (caso tenha mudado de localização)
-        // mas só se os dados tiverem mais de 24 horas
-        const twentyFourHours = 24 * 60 * 60 * 1000;
-        if (!lastUpdate || (now - parseInt(lastUpdate)) > twentyFourHours) {
-          detectCountryByIP();
         }
         
         return;
       }
       
-      // Primeira visita - detectar país
+      // Detectar país por IP (primeira visita ou cache expirado)
+      console.log('🌍 Detecting country by IP...');
       await detectCountryByIP();
+      localStorage.setItem('lastIpDetection', now.toString());
       fetchExchangeRates();
     };
     
