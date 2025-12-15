@@ -1450,7 +1450,7 @@ export type Database = {
           country: string | null
           created_at: string
           document_back_url: string | null
-          document_front_url: string | null
+          document_front_url: string
           document_number: string
           document_type: string
           full_name: string
@@ -1474,7 +1474,7 @@ export type Database = {
           country?: string | null
           created_at?: string
           document_back_url?: string | null
-          document_front_url?: string | null
+          document_front_url: string
           document_number: string
           document_type: string
           full_name: string
@@ -1498,7 +1498,7 @@ export type Database = {
           country?: string | null
           created_at?: string
           document_back_url?: string | null
-          document_front_url?: string | null
+          document_front_url?: string
           document_number?: string
           document_type?: string
           full_name?: string
