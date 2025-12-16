@@ -161,17 +161,16 @@ export default function AdminRefunds() {
   });
 
   // Refunds that need admin intervention (rejected by seller or pending too long)
-  // ALSO check orders.has_active_refund - if false, the refund is already resolved
+  // Only use refund_requests.status - ignore orders.has_active_refund for display
   const disputedRefunds = filteredRefunds.filter(r => 
-    (r.status === 'rejected_by_seller' || r.status === 'pending') &&
-    r.orders?.has_active_refund !== false // Only show if still active
+    r.status === 'rejected_by_seller' || 
+    r.status === 'pending'
   );
   const resolvedRefunds = filteredRefunds.filter(r => 
     r.status === 'approved_by_admin' || 
     r.status === 'rejected_by_admin' ||
     r.status === 'approved_by_seller' ||
-    r.status === 'completed' ||
-    r.orders?.has_active_refund === false // Also include those marked as resolved in orders
+    r.status === 'completed'
   );
 
   const getStatusBadge = (status: string) => {
