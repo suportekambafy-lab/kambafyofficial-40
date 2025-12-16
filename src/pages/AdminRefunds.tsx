@@ -138,7 +138,7 @@ export default function AdminRefunds() {
       case 'rejected_by_admin':
         return <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-300 text-xs">Rejeitado (Admin)</Badge>;
       case 'completed':
-        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300 text-xs">Concluído</Badge>;
+        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300 text-xs">Reembolsado</Badge>;
       default:
         return <Badge variant="outline" className="text-xs">{status}</Badge>;
     }
