@@ -91,7 +91,9 @@ export default function AdminRefunds() {
         description: "A decisão administrativa foi aplicada",
       });
 
-      queryClient.invalidateQueries({ queryKey: ['admin-refunds'] });
+      // Forçar refetch imediato para atualizar a lista
+      await queryClient.refetchQueries({ queryKey: ['admin-refunds'] });
+      
       setSelectedRefund(null);
       setAction(null);
       setComment('');
@@ -105,6 +107,10 @@ export default function AdminRefunds() {
     } finally {
       setProcessing(false);
     }
+  };
+
+  const handleRefresh = async () => {
+    await queryClient.refetchQueries({ queryKey: ['admin-refunds'] });
   };
 
   const openDialog = (refund: RefundRequest, actionType: 'approve' | 'reject') => {
@@ -170,6 +176,18 @@ export default function AdminRefunds() {
   return (
     <AdminLayout title="Gestão de Reembolsos" description="Intervenha em disputas entre compradores e vendedores">
       <div className="mb-6">
+        <div className="flex justify-end mb-3">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={handleRefresh}
+            disabled={isLoading}
+            className="h-8 text-xs"
+          >
+            <RefreshCw className={`h-3 w-3 mr-1 ${isLoading ? 'animate-spin' : ''}`} />
+            Atualizar
+          </Button>
+        </div>
         
         <div className="grid grid-cols-3 gap-3 mb-4">
           <Card>
