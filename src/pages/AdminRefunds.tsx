@@ -68,9 +68,10 @@ export default function AdminRefunds() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
-  const { data: refunds = [], isLoading } = useQuery({
+  const { data: refunds = [], isLoading, isFetching } = useQuery({
     queryKey: ['admin-refunds'],
     queryFn: async () => {
+      console.log('[AdminRefunds] Fetching refunds...');
       const { data, error } = await supabase
         .from('refund_requests')
         .select(`
@@ -80,8 +81,11 @@ export default function AdminRefunds() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
+      console.log('[AdminRefunds] Fetched refunds:', data?.map(r => ({ order_id: r.order_id, status: r.status })));
       return data as RefundRequest[];
-    }
+    },
+    staleTime: 0, // Sempre considerar dados como stale
+    refetchOnMount: 'always',
   });
 
   const handleProcess = async () => {
@@ -122,7 +126,11 @@ export default function AdminRefunds() {
   };
 
   const handleRefresh = async () => {
+    console.log('[AdminRefunds] Manual refresh triggered');
+    // Limpar cache e forçar nova busca
+    queryClient.removeQueries({ queryKey: ['admin-refunds'] });
     await queryClient.refetchQueries({ queryKey: ['admin-refunds'] });
+    console.log('[AdminRefunds] Refresh completed');
   };
 
   const openDialog = (refund: RefundRequest, actionType: 'approve' | 'reject') => {
@@ -130,6 +138,9 @@ export default function AdminRefunds() {
     setAction(actionType);
     setComment('');
   };
+
+  // Log para debug
+  console.log('[AdminRefunds] Current refunds data:', refunds.map(r => ({ order_id: r.order_id, status: r.status })));
 
   // Aplicar filtros de busca
   const filteredRefunds = refunds.filter(r => {
@@ -154,6 +165,8 @@ export default function AdminRefunds() {
     r.status === 'approved_by_seller' ||
     r.status === 'completed'
   );
+  
+  console.log('[AdminRefunds] Disputed:', disputedRefunds.length, 'Resolved:', resolvedRefunds.length);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -230,11 +243,11 @@ export default function AdminRefunds() {
             variant="outline" 
             size="sm"
             onClick={handleRefresh}
-            disabled={isLoading}
+            disabled={isFetching}
             className="h-8 text-xs"
           >
-            <RefreshCw className={`h-3 w-3 mr-1 ${isLoading ? 'animate-spin' : ''}`} />
-            Atualizar
+            <RefreshCw className={`h-3 w-3 mr-1 ${isFetching ? 'animate-spin' : ''}`} />
+            {isFetching ? 'Atualizando...' : 'Atualizar'}
           </Button>
         </div>
         
