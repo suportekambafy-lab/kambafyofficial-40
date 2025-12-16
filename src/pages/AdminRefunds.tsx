@@ -121,7 +121,8 @@ export default function AdminRefunds() {
   const resolvedRefunds = refunds.filter(r => 
     r.status === 'approved_by_admin' || 
     r.status === 'rejected_by_admin' ||
-    r.status === 'approved_by_seller'
+    r.status === 'approved_by_seller' ||
+    r.status === 'completed'
   );
 
   const getStatusBadge = (status: string) => {
@@ -136,6 +137,8 @@ export default function AdminRefunds() {
         return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-300 text-xs">Aprovado (Admin)</Badge>;
       case 'rejected_by_admin':
         return <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-300 text-xs">Rejeitado (Admin)</Badge>;
+      case 'completed':
+        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300 text-xs">Concluído</Badge>;
       default:
         return <Badge variant="outline" className="text-xs">{status}</Badge>;
     }
@@ -145,6 +148,7 @@ export default function AdminRefunds() {
     switch (status) {
       case 'approved_by_seller':
       case 'approved_by_admin':
+      case 'completed':
         return <CheckCircle className="h-4 w-4 text-green-600" />;
       case 'rejected_by_seller':
         return <AlertCircle className="h-4 w-4 text-orange-600" />;

@@ -111,27 +111,15 @@ export function AddressCard() {
 
         if (error) throw error;
       } else {
-        const { error } = await supabase
-          .from('identity_verification')
-          .insert({
-            user_id: user.id,
-            full_name: user.email?.split('@')[0] || 'Usuário',
-            document_type: 'Pendente',
-            document_number: 'Pendente',
-            birth_date: '2000-01-01',
-            status: 'pendente',
-            country: address.country || null,
-            address_street: address.address_street || null,
-            address_number: address.address_number || null,
-            address_complement: address.address_complement || null,
-            address_neighborhood: address.address_neighborhood || null,
-            address_city: address.address_city || null,
-            address_state: address.address_state || null,
-            address_postal_code: address.address_postal_code || null
-          });
-
-        if (error) throw error;
-        setHasIdentity(true);
+        // Não é possível salvar endereço sem verificação de identidade
+        // O usuário deve primeiro completar a verificação KYC
+        toast({
+          title: "Verificação necessária",
+          description: "Complete a verificação de identidade primeiro para salvar seu endereço.",
+          variant: "destructive"
+        });
+        setSaving(false);
+        return;
       }
 
       setIsEditing(false);
