@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { PageSkeleton } from '@/components/ui/page-skeleton';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { 
@@ -13,7 +14,9 @@ import {
   Clock,
   MessageSquare,
   Shield,
-  RefreshCw
+  RefreshCw,
+  Search,
+  Filter
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -24,6 +27,13 @@ import {
   DialogTitle,
   DialogFooter
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -55,6 +65,8 @@ export default function AdminRefunds() {
   const [action, setAction] = useState<'approve' | 'reject' | null>(null);
   const [comment, setComment] = useState('');
   const [processing, setProcessing] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   const { data: refunds = [], isLoading } = useQuery({
     queryKey: ['admin-refunds'],
@@ -119,12 +131,24 @@ export default function AdminRefunds() {
     setComment('');
   };
 
+  // Aplicar filtros de busca
+  const filteredRefunds = refunds.filter(r => {
+    const matchesSearch = searchTerm === '' || 
+      r.order_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      r.buyer_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      r.products?.name?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === 'all' || r.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
+
   // Refunds that need admin intervention (rejected by seller or pending too long)
-  const disputedRefunds = refunds.filter(r => 
+  const disputedRefunds = filteredRefunds.filter(r => 
     r.status === 'rejected_by_seller' || 
     r.status === 'pending'
   );
-  const resolvedRefunds = refunds.filter(r => 
+  const resolvedRefunds = filteredRefunds.filter(r => 
     r.status === 'approved_by_admin' || 
     r.status === 'rejected_by_admin' ||
     r.status === 'approved_by_seller' ||
@@ -176,7 +200,32 @@ export default function AdminRefunds() {
   return (
     <AdminLayout title="Gestão de Reembolsos" description="Intervenha em disputas entre compradores e vendedores">
       <div className="mb-6">
-        <div className="flex justify-end mb-3">
+        {/* Filtros */}
+        <div className="flex flex-wrap gap-2 mb-3">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por pedido, email ou produto..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="h-8 pl-8 text-xs"
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[160px] h-8 text-xs">
+              <Filter className="h-3 w-3 mr-1" />
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent className="bg-background border shadow-lg z-50">
+              <SelectItem value="all">Todos os Status</SelectItem>
+              <SelectItem value="pending">Pendente</SelectItem>
+              <SelectItem value="rejected_by_seller">Rejeitado (Vendedor)</SelectItem>
+              <SelectItem value="approved_by_seller">Aprovado (Vendedor)</SelectItem>
+              <SelectItem value="approved_by_admin">Aprovado (Admin)</SelectItem>
+              <SelectItem value="rejected_by_admin">Rejeitado (Admin)</SelectItem>
+              <SelectItem value="completed">Reembolsado</SelectItem>
+            </SelectContent>
+          </Select>
           <Button 
             variant="outline" 
             size="sm"
