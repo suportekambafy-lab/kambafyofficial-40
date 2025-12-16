@@ -4715,6 +4715,10 @@ export type Database = {
       is_admin_user: { Args: { check_email: string }; Returns: boolean }
       is_authenticated_admin: { Args: never; Returns: boolean }
       is_authenticated_super_admin: { Args: never; Returns: boolean }
+      is_cart_recovery_enabled: {
+        Args: { p_product_id: string }
+        Returns: boolean
+      }
       is_current_user_admin: { Args: never; Returns: boolean }
       is_member_area_owner: { Args: { area_id: string }; Returns: boolean }
       is_super_admin: { Args: { user_email: string }; Returns: boolean }
