@@ -56,6 +56,7 @@ interface RefundRequest {
   updated_at: string;
   products?: { name: string };
   profiles?: { full_name: string; email: string };
+  orders?: { has_active_refund: boolean };
 }
 
 export default function AdminRefunds() {
@@ -71,16 +72,29 @@ export default function AdminRefunds() {
   const { data: refunds = [], isLoading, isFetching, refetch } = useQuery({
     queryKey: ['admin-refunds'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Buscar refund_requests
+      const { data: refundData, error: refundError } = await supabase
         .from('refund_requests')
-        .select(`
-          *,
-          products(name)
-        `)
+        .select(`*, products(name)`)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return data as RefundRequest[];
+      if (refundError) throw refundError;
+      if (!refundData?.length) return [];
+
+      // Buscar orders para verificar has_active_refund
+      const orderIds = refundData.map(r => r.order_id);
+      const { data: ordersData } = await supabase
+        .from('orders')
+        .select('order_id, has_active_refund')
+        .in('order_id', orderIds);
+
+      // Mapear has_active_refund para cada refund
+      const ordersMap = new Map(ordersData?.map(o => [o.order_id, o.has_active_refund]) || []);
+      
+      return refundData.map(r => ({
+        ...r,
+        orders: { has_active_refund: ordersMap.get(r.order_id) ?? true }
+      })) as RefundRequest[];
     },
     staleTime: 0,
     refetchOnMount: 'always',
@@ -147,15 +161,17 @@ export default function AdminRefunds() {
   });
 
   // Refunds that need admin intervention (rejected by seller or pending too long)
+  // ALSO check orders.has_active_refund - if false, the refund is already resolved
   const disputedRefunds = filteredRefunds.filter(r => 
-    r.status === 'rejected_by_seller' || 
-    r.status === 'pending'
+    (r.status === 'rejected_by_seller' || r.status === 'pending') &&
+    r.orders?.has_active_refund !== false // Only show if still active
   );
   const resolvedRefunds = filteredRefunds.filter(r => 
     r.status === 'approved_by_admin' || 
     r.status === 'rejected_by_admin' ||
     r.status === 'approved_by_seller' ||
-    r.status === 'completed'
+    r.status === 'completed' ||
+    r.orders?.has_active_refund === false // Also include those marked as resolved in orders
   );
 
   const getStatusBadge = (status: string) => {
