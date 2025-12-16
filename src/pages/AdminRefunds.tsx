@@ -36,7 +36,7 @@ import {
 } from '@/components/ui/select';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { toast } from '@/hooks/useCustomToast';
 
 interface RefundRequest {
@@ -60,7 +60,7 @@ interface RefundRequest {
 
 export default function AdminRefunds() {
   const { admin } = useAdminAuth();
-  const queryClient = useQueryClient();
+  
   const [selectedRefund, setSelectedRefund] = useState<RefundRequest | null>(null);
   const [action, setAction] = useState<'approve' | 'reject' | null>(null);
   const [comment, setComment] = useState('');
@@ -68,10 +68,9 @@ export default function AdminRefunds() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
-  const { data: refunds = [], isLoading, isFetching } = useQuery({
+  const { data: refunds = [], isLoading, isFetching, refetch } = useQuery({
     queryKey: ['admin-refunds'],
     queryFn: async () => {
-      console.log('[AdminRefunds] Fetching refunds...');
       const { data, error } = await supabase
         .from('refund_requests')
         .select(`
@@ -81,11 +80,11 @@ export default function AdminRefunds() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      console.log('[AdminRefunds] Fetched refunds:', data?.map(r => ({ order_id: r.order_id, status: r.status })));
       return data as RefundRequest[];
     },
-    staleTime: 0, // Sempre considerar dados como stale
+    staleTime: 0,
     refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   });
 
   const handleProcess = async () => {
@@ -108,7 +107,7 @@ export default function AdminRefunds() {
       });
 
       // Forçar refetch imediato para atualizar a lista
-      await queryClient.refetchQueries({ queryKey: ['admin-refunds'] });
+      await refetch();
       
       setSelectedRefund(null);
       setAction(null);
@@ -126,11 +125,7 @@ export default function AdminRefunds() {
   };
 
   const handleRefresh = async () => {
-    console.log('[AdminRefunds] Manual refresh triggered');
-    // Limpar cache e forçar nova busca
-    queryClient.removeQueries({ queryKey: ['admin-refunds'] });
-    await queryClient.refetchQueries({ queryKey: ['admin-refunds'] });
-    console.log('[AdminRefunds] Refresh completed');
+    await refetch();
   };
 
   const openDialog = (refund: RefundRequest, actionType: 'approve' | 'reject') => {
@@ -138,9 +133,6 @@ export default function AdminRefunds() {
     setAction(actionType);
     setComment('');
   };
-
-  // Log para debug
-  console.log('[AdminRefunds] Current refunds data:', refunds.map(r => ({ order_id: r.order_id, status: r.status })));
 
   // Aplicar filtros de busca
   const filteredRefunds = refunds.filter(r => {
@@ -165,8 +157,6 @@ export default function AdminRefunds() {
     r.status === 'approved_by_seller' ||
     r.status === 'completed'
   );
-  
-  console.log('[AdminRefunds] Disputed:', disputedRefunds.length, 'Resolved:', resolvedRefunds.length);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
