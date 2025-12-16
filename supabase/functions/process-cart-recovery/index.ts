@@ -211,9 +211,14 @@ const handler = async (req: Request): Promise<Response> => {
               </div>
             ` : '';
 
+            // Add small delay between emails to avoid rate limits
+            if (totalSent > 0) {
+              await new Promise(resolve => setTimeout(resolve, 500));
+            }
+
             // Send recovery email
             const emailResponse = await resend.emails.send({
-              from: "Recuperação de Vendas <noreply@resend.dev>",
+              from: "Kambafy <noreply@kambafy.com>",
               to: [purchase.customer_email],
               subject: finalSubject,
               html: `
