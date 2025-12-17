@@ -98,6 +98,8 @@ export function WithdrawalModal({
     }
   }, [open, show2FAVerification]);
 
+  const MINIMUM_WITHDRAWAL = 20000; // Saque mínimo de 20.000 KZ
+
   const validateAndPrepareWithdrawal = async (): Promise<{ amount: number; roundedAmount: number } | null> => {
     if (!user) {
       setError("Usuário não autenticado");
@@ -115,6 +117,12 @@ export function WithdrawalModal({
     // Arredondar ambos valores para 2 casas decimais para evitar erros de precisão
     const roundedAmount = Math.round(amount * 100) / 100;
     const roundedAvailableBalance = Math.round(availableBalance * 100) / 100;
+
+    // Validar saque mínimo
+    if (roundedAmount < MINIMUM_WITHDRAWAL) {
+      setError(`O valor mínimo para saque é ${MINIMUM_WITHDRAWAL.toLocaleString('pt-AO')} KZ`);
+      return null;
+    }
 
     if (roundedAmount > roundedAvailableBalance) {
       setError(`Valor máximo disponível: ${availableBalance.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} KZ`);
@@ -383,7 +391,7 @@ export function WithdrawalModal({
             </div>
 
             <p className="text-xs text-muted-foreground">
-              Digite o valor que deseja sacar (será descontado do seu saldo disponível)
+              Saque mínimo: 20.000 KZ. O valor será descontado do seu saldo disponível.
             </p>
             {error && (
               <div className="flex items-center gap-2 text-sm text-destructive">
