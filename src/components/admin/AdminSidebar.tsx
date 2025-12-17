@@ -17,7 +17,8 @@ import {
   PanelLeft,
   Wrench,
   Radio,
-  RefreshCw
+  RefreshCw,
+  Sparkles
 } from 'lucide-react';
 import kambabyLogo from '@/assets/kambafy-logo.png';
 import { useAdminPendingCounts } from '@/hooks/useAdminPendingCounts';
@@ -88,6 +89,11 @@ const menuItems = [
     href: '/admin/refunds',
     label: 'Reembolsos',
     icon: RefreshCw,
+  },
+  {
+    href: '/admin/apps',
+    label: 'Apps',
+    icon: Sparkles,
   },
   {
     href: '/admin/extras',
