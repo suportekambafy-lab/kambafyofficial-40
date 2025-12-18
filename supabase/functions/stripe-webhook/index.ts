@@ -932,7 +932,7 @@ serve(async (req) => {
                     .single();
                   
                   if (!memberAreaError && memberArea) {
-                    const mainMemberAreaUrl = `https://kambafy.com/members/login/${mainProduct.member_area_id}`;
+                    const mainMemberAreaUrl = `https://membros.kambafy.com/login/${mainProduct.member_area_id}`;
                     
                     // Generate temporary password for main product access
                     function generateTemporaryPassword(): string {
@@ -1005,7 +1005,7 @@ serve(async (req) => {
                             .single();
                           
                           if (!memberAreaError && memberArea) {
-                            const bumpMemberAreaUrl = `https://kambafy.com/members/login/${bumpProduct.member_area_id}`;
+                            const bumpMemberAreaUrl = `https://membros.kambafy.com/login/${bumpProduct.member_area_id}`;
                             
                             // Generate temporary password for order bump access
                             function generateTemporaryPassword(): string {
