@@ -542,7 +542,7 @@ serve(async (req) => {
                   .single();
                 
                 if (!memberAreaError && memberArea) {
-                  const bumpMemberAreaUrl = `https://kambafy.com/members/login/${bumpProduct.member_area_id}`;
+                  const bumpMemberAreaUrl = `https://membros.kambafy.com/login/${bumpProduct.member_area_id}`;
                   
                   // Generate temporary password for order bump access
                   function generateTemporaryPassword(): string {

@@ -130,7 +130,7 @@ const handler = async (req: Request): Promise<Response> => {
             studentEmail: student.email,
             studentName: student.name,
             memberAreaName: 'IA Lucrativo',
-            memberAreaUrl: `https://kambafy.com/members/login/${MEMBER_AREA_ID}`,
+            memberAreaUrl: `https://membros.kambafy.com/login/${MEMBER_AREA_ID}`,
             isNewAccount: studentResult?.isNewAccount || true,
             temporaryPassword: temporaryPassword
           };

@@ -442,7 +442,7 @@ const handler = async (req: Request): Promise<Response> => {
         let memberAreaUrl = null;
         if (memberAreaId) {
           // Usar a rota correta para login da área de membros
-          memberAreaUrl = `https://kambafy.com/members/login/${memberAreaId}`;
+          memberAreaUrl = `https://membros.kambafy.com/login/${memberAreaId}`;
         }
 
         // Create access link
@@ -968,7 +968,7 @@ const handler = async (req: Request): Promise<Response> => {
 
         // Send SMS for purchase confirmation if phone number is provided
         if (customerPhone) {
-          const memberAreaUrl = memberAreaId ? `https://kambafy.com/members/login/${memberAreaId}` : shareLink;
+          const memberAreaUrl = memberAreaId ? `https://membros.kambafy.com/login/${memberAreaId}` : shareLink;
           await sendSMSNotification(customerPhone, 'purchase_confirmation', {
             customerName,
             productName,
@@ -1097,7 +1097,7 @@ const handler = async (req: Request): Promise<Response> => {
                 .single();
               
               if (!memberAreaError && memberArea) {
-                bumpMemberAreaUrl = `https://kambafy.com/members/login/${bumpMemberAreaId}`;
+                bumpMemberAreaUrl = `https://membros.kambafy.com/login/${bumpMemberAreaId}`;
                 
                 // Generate temporary password for order bump access
                 function generateTemporaryPassword(): string {
