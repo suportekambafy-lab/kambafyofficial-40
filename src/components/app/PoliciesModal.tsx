@@ -1,5 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import DOMPurify from 'dompurify';
 
 type PolicyType = 'terms' | 'privacy';
 
@@ -109,6 +110,12 @@ export function PoliciesModal({ isOpen, onClose, policyType }: PoliciesModalProp
   };
 
   const { title, content: htmlContent } = content[policyType];
+  
+  // Sanitize HTML content to prevent XSS attacks
+  const sanitizedContent = DOMPurify.sanitize(htmlContent, {
+    ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'ul', 'ol', 'li', 'a', 'span', 'div', 'class'],
+    ALLOWED_ATTR: ['href', 'target', 'rel', 'class']
+  });
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -119,7 +126,7 @@ export function PoliciesModal({ isOpen, onClose, policyType }: PoliciesModalProp
         <ScrollArea className="h-[65vh] pr-4">
           <div 
             className="prose prose-sm dark:prose-invert max-w-none text-foreground"
-            dangerouslySetInnerHTML={{ __html: htmlContent }}
+            dangerouslySetInnerHTML={{ __html: sanitizedContent }}
           />
         </ScrollArea>
       </DialogContent>
