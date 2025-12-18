@@ -218,3 +218,15 @@ verify_jwt = false
 
 [functions.send-test-recovery-email]
 verify_jwt = false
+
+[functions.fix-missing-access]
+verify_jwt = false
+
+[functions.resend-missing-access-emails]
+verify_jwt = false
+
+[functions.resend-purchase-access]
+verify_jwt = false
+
+[functions.auto-process-missing-access]
+verify_jwt = false

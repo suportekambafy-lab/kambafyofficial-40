@@ -656,10 +656,10 @@ serve(async (req) => {
         if (order?.product_id) {
           console.log('📊 Updating sales count for product:', order.product_id);
           
-          // Buscar o valor atual de vendas e dados do produto
+          // Buscar o valor atual de vendas e dados do produto (incluindo duração de acesso)
           const { data: product, error: productError } = await supabase
             .from('products')
-            .select('sales, name, user_id')
+            .select('sales, name, user_id, access_duration_type, access_duration_value, member_area_id')
             .eq('id', order.product_id)
             .single();
 
@@ -685,6 +685,62 @@ serve(async (req) => {
                 throw salesError;
               } else {
                 console.log('✅ Product sales updated successfully');
+              }
+
+              // ✅ CRIAR CUSTOMER_ACCESS ANTES DE ENVIAR EMAIL
+              console.log('🔓 Creating customer access for Stripe payment...');
+              
+              // Verificar se já existe acesso
+              const { data: existingAccess } = await supabase
+                .from('customer_access')
+                .select('id, is_active')
+                .eq('customer_email', order.customer_email.toLowerCase().trim())
+                .eq('product_id', order.product_id)
+                .single();
+              
+              if (existingAccess) {
+                console.log('⚠️ Access already exists, updating...');
+                await supabase
+                  .from('customer_access')
+                  .update({ 
+                    is_active: true,
+                    updated_at: new Date().toISOString()
+                  })
+                  .eq('id', existingAccess.id);
+                console.log('✅ Customer access updated');
+              } else {
+                // Calcular expiração de acesso
+                const accessExpiresAt = product.access_duration_type === 'lifetime' || !product.access_duration_type
+                  ? null
+                  : (() => {
+                      const now = new Date();
+                      switch (product.access_duration_type) {
+                        case 'days':
+                          return new Date(now.setDate(now.getDate() + product.access_duration_value));
+                        case 'months':
+                          return new Date(now.setMonth(now.getMonth() + product.access_duration_value));
+                        case 'years':
+                          return new Date(now.setFullYear(now.getFullYear() + product.access_duration_value));
+                        default:
+                          return null;
+                      }
+                    })();
+                
+                const { error: accessError } = await supabase.from('customer_access').insert({
+                  customer_email: order.customer_email.toLowerCase().trim(),
+                  customer_name: order.customer_name,
+                  product_id: order.product_id,
+                  order_id: orderId,
+                  access_granted_at: new Date().toISOString(),
+                  access_expires_at: accessExpiresAt,
+                  is_active: true
+                });
+                
+                if (accessError) {
+                  console.error('❌ Error creating customer access:', accessError);
+                } else {
+                  console.log('✅ Customer access created successfully');
+                }
               }
 
               // Enviar email de confirmação de compra
