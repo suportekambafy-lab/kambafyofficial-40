@@ -750,13 +750,18 @@ serve(async (req) => {
                 const confirmationPayload = {
                   customerName: order.customer_name,
                   customerEmail: order.customer_email,
+                  customerPhone: order.customer_phone,
                   productName: product?.name,
                   orderId: orderId,
                   // CORREÇÃO: Usar valor original do metadata ao invés do valor convertido do Stripe
                   amount: paymentIntent.metadata.original_amount || (paymentIntent.amount / 100).toString(),
                   currency: paymentIntent.metadata.original_currency || paymentIntent.currency.toUpperCase(),
                   productId: order.product_id,
-                  sellerId: product?.user_id
+                  shareLink: product?.share_link, // Link do E-book/produto para download
+                  memberAreaId: product?.member_area_id,
+                  sellerId: product?.user_id,
+                  paymentMethod: 'stripe',
+                  paymentStatus: 'completed'
                 };
 
                 const { error: emailError } = await supabase.functions.invoke('send-purchase-confirmation', {

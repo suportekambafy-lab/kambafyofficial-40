@@ -564,6 +564,7 @@ const handler = async (req: Request): Promise<Response> => {
             amount: order.amount,
             currency: order.currency,
             productId: order.product_id,
+            shareLink: product?.share_link, // Link do E-book/produto para download
             memberAreaId: product?.member_area_id,
             sellerId: product?.user_id,
             paymentMethod: order.payment_method,

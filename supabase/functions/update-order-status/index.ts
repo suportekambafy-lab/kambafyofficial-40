@@ -269,6 +269,38 @@ serve(async (req) => {
           }
         }
         
+        // 📧 ENVIAR EMAIL DE CONFIRMAÇÃO DE COMPRA
+        console.log('📧 Sending purchase confirmation email...');
+        try {
+          const confirmationPayload = {
+            customerName: orderData.customer_name,
+            customerEmail: orderData.customer_email,
+            customerPhone: orderData.customer_phone,
+            productName: product.name,
+            orderId: orderData.order_id,
+            amount: orderData.amount,
+            currency: orderData.currency,
+            productId: orderData.product_id,
+            shareLink: product.share_link, // Link do E-book/produto para download
+            memberAreaId: product.member_area_id,
+            sellerId: product.user_id,
+            paymentMethod: orderData.payment_method,
+            paymentStatus: 'completed'
+          };
+
+          const { error: emailError } = await supabase.functions.invoke('send-purchase-confirmation', {
+            body: confirmationPayload
+          });
+
+          if (emailError) {
+            console.error('❌ Error sending purchase confirmation email:', emailError);
+          } else {
+            console.log('✅ Purchase confirmation email sent successfully');
+          }
+        } catch (emailError) {
+          console.error('❌ Error in email sending process:', emailError);
+        }
+        
         // 3. DISPARAR WEBHOOKS - SOMENTE PARA PAGAMENTOS VERIFICADOS COMO COMPLETOS
         console.log('🔔 Triggering webhooks for verified completed payment...');
         
@@ -435,12 +467,33 @@ serve(async (req) => {
           // Buscar email do vendedor para usar como external_id
           const { data: sellerProfile } = await supabase
             .from('profiles')
-            .select('email')
+            .select('email, full_name')
             .eq('user_id', product.user_id)
             .single();
           
           if (sellerProfile?.email) {
             console.log('📤 Enviando notificação OneSignal para:', sellerProfile.email);
+            
+            // 📧 ENVIAR EMAIL DE NOTIFICAÇÃO PARA O VENDEDOR
+            console.log('📧 Sending seller notification email...');
+            const { error: sellerEmailError } = await supabase.functions.invoke('send-seller-notification-email', {
+              body: {
+                sellerEmail: sellerProfile.email,
+                sellerName: sellerProfile.full_name || sellerProfile.email,
+                productName: product.name,
+                orderNumber: orderData.order_id,
+                amount: orderData.amount,
+                currency: orderData.currency || 'KZ',
+                customerName: orderData.customer_name,
+                customerEmail: orderData.customer_email
+              }
+            });
+            
+            if (sellerEmailError) {
+              console.error('❌ Error sending seller notification email:', sellerEmailError);
+            } else {
+              console.log('✅ Seller notification email sent successfully');
+            }
             
             // Helper para formatar preço como no dashboard
             const formatPrice = (amount: number, currency: string = 'KZ'): string => {
