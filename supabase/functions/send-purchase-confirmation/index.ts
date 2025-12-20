@@ -453,9 +453,9 @@ const handler = async (req: Request): Promise<Response> => {
         console.log('Product type:', productType);
         console.log('Share link:', shareLink);
         
-        // Para E-books, sempre mostrar botão de download
-        if (productType === 'E-book' || productType === 'Ebook') {
-          console.log('Product is E-book - adding download button');
+        // Para E-books, mostrar botão de download SOMENTE se tiver shareLink válido
+        if ((productType === 'E-book' || productType === 'Ebook') && shareLink && shareLink.startsWith('http')) {
+          console.log('Product is E-book WITH valid share link - adding download button');
           accessInfo = `
             <div style="background-color: #16a34a; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <h3 style="color: white; margin: 0 0 10px 0;">📚 Seu E-book está Pronto!</h3>
@@ -463,6 +463,18 @@ const handler = async (req: Request): Promise<Response> => {
               <a href="${shareLink}" 
                  style="display: inline-block; background-color: white; color: #16a34a; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 10px; font-weight: bold;">
                 Baixar E-book
+              </a>
+            </div>
+          `;
+        } else if ((productType === 'E-book' || productType === 'Ebook') && (!shareLink || !shareLink.startsWith('http'))) {
+          console.log('⚠️ Product is E-book but NO VALID share link - shareLink:', shareLink);
+          accessInfo = `
+            <div style="background-color: #f59e0b; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="color: white; margin: 0 0 10px 0;">📚 Compra Confirmada!</h3>
+              <p style="margin: 0; color: white;">Sua compra foi confirmada com sucesso. Acesse a seção "Meus Acessos" para baixar seu e-book.</p>
+              <a href="https://kambafy.com/meus-acessos" 
+                 style="display: inline-block; background-color: white; color: #f59e0b; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 10px; font-weight: bold;">
+                Ver Meus Acessos
               </a>
             </div>
           `;
@@ -495,8 +507,8 @@ const handler = async (req: Request): Promise<Response> => {
               </a>
             </div>
           `;
-        } else if (shareLink) {
-          console.log('Product has share link - adding product access');
+        } else if (shareLink && shareLink.startsWith('http')) {
+          console.log('Product has valid share link - adding product access');
           accessInfo = `
             <div style="background-color: #16a34a; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <h3 style="color: white; margin: 0 0 10px 0;">📱 Acesso ao Produto</h3>
@@ -507,6 +519,8 @@ const handler = async (req: Request): Promise<Response> => {
               </a>
             </div>
           `;
+        } else if (shareLink && !shareLink.startsWith('http')) {
+          console.log('⚠️ Invalid share link format:', shareLink);
         }
 
         // Create order bump section for email

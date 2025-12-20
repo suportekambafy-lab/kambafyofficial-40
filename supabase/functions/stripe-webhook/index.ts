@@ -656,10 +656,10 @@ serve(async (req) => {
         if (order?.product_id) {
           console.log('📊 Updating sales count for product:', order.product_id);
           
-          // Buscar o valor atual de vendas e dados do produto (incluindo duração de acesso)
+          // Buscar o valor atual de vendas e dados do produto (incluindo duração de acesso e share_link para ebooks)
           const { data: product, error: productError } = await supabase
             .from('products')
-            .select('sales, name, user_id, access_duration_type, access_duration_value, member_area_id')
+            .select('sales, name, user_id, access_duration_type, access_duration_value, member_area_id, share_link')
             .eq('id', order.product_id)
             .single();
 
@@ -827,13 +827,23 @@ serve(async (req) => {
               // 📧 ENVIAR EMAIL DE NOTIFICAÇÃO PARA O VENDEDOR
               try {
                 console.log('📧 Sending seller notification email for Stripe payment...');
+                console.log('📧 Product user_id (seller):', product?.user_id);
                 
-                // Buscar dados do vendedor
-                const { data: sellerProfile } = await supabase
-                  .from('profiles')
-                  .select('email, full_name')
-                  .eq('user_id', product?.user_id)
-                  .single();
+                if (!product?.user_id) {
+                  console.error('❌ No product user_id found - cannot send seller notification');
+                } else {
+                  // Buscar dados do vendedor
+                  const { data: sellerProfile, error: sellerProfileError } = await supabase
+                    .from('profiles')
+                    .select('email, full_name')
+                    .eq('user_id', product.user_id)
+                    .single();
+                  
+                  console.log('📧 Seller profile fetch result:', { 
+                    found: !!sellerProfile, 
+                    email: sellerProfile?.email,
+                    error: sellerProfileError?.message 
+                  });
                 
                 if (sellerProfile?.email) {
                   const sellerNotificationPayload = {
@@ -912,6 +922,7 @@ serve(async (req) => {
                 } else {
                   console.log('⚠️ Seller email not found, skipping seller notification');
                 }
+                } // Fechar o else do product?.user_id
               } catch (sellerEmailError) {
                 console.error('❌ Error in seller email sending process:', sellerEmailError);
               }
