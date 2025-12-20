@@ -129,15 +129,21 @@ export function WithdrawalModal({
       return null;
     }
 
-    // ✅ Verificar se o usuário tem IBAN configurado antes de permitir saque
+    // ✅ Verificar se o usuário tem algum método de pagamento configurado
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('iban, account_holder')
+      .select('iban, account_holder, withdrawal_methods')
       .eq('user_id', user.id)
       .single();
 
-    if (profileError || !profile?.iban || !profile?.account_holder) {
-      setError("Para solicitar um saque, você precisa configurar seu IBAN e nome do titular da conta nas configurações do perfil");
+    // Verificar se tem IBAN ou withdrawal_methods configurados
+    const hasIban = profile?.iban && profile?.account_holder;
+    const hasWithdrawalMethods = profile?.withdrawal_methods && 
+      Array.isArray(profile.withdrawal_methods) && 
+      profile.withdrawal_methods.length > 0;
+
+    if (profileError || (!hasIban && !hasWithdrawalMethods)) {
+      setError("Para solicitar um saque, você precisa configurar pelo menos um método de recebimento nas configurações avançadas");
       return null;
     }
 
