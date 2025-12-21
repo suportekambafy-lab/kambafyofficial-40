@@ -62,8 +62,8 @@ export function AppLogin() {
   // Detectar modo escuro
   useEffect(() => {
     const checkTheme = () => {
-      const isDark = document.documentElement.classList.contains('dark') || 
-                     localStorage.getItem('seller-theme') === 'dark' ||
+      const isDark = document.documentElement.classList.contains('dark') ||
+                     (() => { try { return localStorage.getItem('seller-theme') === 'dark'; } catch { return false; } })() ||
                      theme === 'dark';
       setIsDarkMode(isDark);
     };
@@ -148,7 +148,7 @@ export function AppLogin() {
         return;
       }
       console.log('✅ Login bem-sucedido!');
-      localStorage.setItem('kambafy_device_known', 'true');
+      try { localStorage.setItem('kambafy_device_known', 'true'); } catch { /* localStorage indisponível */ }
       const {
         data: {
           user
