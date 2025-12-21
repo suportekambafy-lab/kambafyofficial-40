@@ -218,9 +218,64 @@ const handler = async (req: Request): Promise<Response> => {
         
         const { data: product } = await supabase
           .from('products')
-          .select('name, user_id, member_area_id')
+          .select('name, user_id, member_area_id, share_link, access_duration_type, access_duration_value')
           .eq('id', order.product_id)
           .single();
+
+        // ✅ CRIAR CUSTOMER_ACCESS ANTES DE ENVIAR EMAIL
+        console.log('[VERIFY-APPYPAY-ORDER] 🔓 Creating customer access...');
+        
+        const { data: existingAccess } = await supabase
+          .from('customer_access')
+          .select('id, is_active')
+          .eq('customer_email', order.customer_email.toLowerCase().trim())
+          .eq('product_id', order.product_id)
+          .single();
+        
+        if (existingAccess) {
+          console.log('[VERIFY-APPYPAY-ORDER] ⚠️ Access already exists, updating...');
+          await supabase
+            .from('customer_access')
+            .update({ 
+              is_active: true,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', existingAccess.id);
+          console.log('[VERIFY-APPYPAY-ORDER] ✅ Customer access updated');
+        } else {
+          // Calcular expiração de acesso
+          const accessExpiresAt = product?.access_duration_type === 'lifetime' || !product?.access_duration_type
+            ? null
+            : (() => {
+                const now = new Date();
+                switch (product.access_duration_type) {
+                  case 'days':
+                    return new Date(now.setDate(now.getDate() + product.access_duration_value));
+                  case 'months':
+                    return new Date(now.setMonth(now.getMonth() + product.access_duration_value));
+                  case 'years':
+                    return new Date(now.setFullYear(now.getFullYear() + product.access_duration_value));
+                  default:
+                    return null;
+                }
+              })();
+          
+          const { error: accessError } = await supabase.from('customer_access').insert({
+            customer_email: order.customer_email.toLowerCase().trim(),
+            customer_name: order.customer_name,
+            product_id: order.product_id,
+            order_id: order.order_id,
+            access_granted_at: new Date().toISOString(),
+            access_expires_at: accessExpiresAt,
+            is_active: true
+          });
+          
+          if (accessError) {
+            console.error('[VERIFY-APPYPAY-ORDER] ❌ Error creating customer access:', accessError);
+          } else {
+            console.log('[VERIFY-APPYPAY-ORDER] ✅ Customer access created successfully');
+          }
+        }
 
         const confirmationPayload = {
           customerName: order.customer_name,
@@ -231,6 +286,7 @@ const handler = async (req: Request): Promise<Response> => {
           amount: order.amount,
           currency: order.currency,
           productId: order.product_id,
+          shareLink: product?.share_link, // Link do E-book/produto para download
           memberAreaId: product?.member_area_id,
           sellerId: product?.user_id,
           paymentMethod: order.payment_method,
@@ -242,6 +298,39 @@ const handler = async (req: Request): Promise<Response> => {
         });
 
         console.log('[VERIFY-APPYPAY-ORDER] Confirmation sent');
+        
+        // 📧 ENVIAR EMAIL DE NOTIFICAÇÃO PARA O VENDEDOR
+        try {
+          const { data: sellerProfile } = await supabase
+            .from('profiles')
+            .select('email, full_name')
+            .eq('user_id', product?.user_id)
+            .single();
+          
+          if (sellerProfile?.email) {
+            console.log('[VERIFY-APPYPAY-ORDER] 📧 Enviando email de venda para vendedor:', sellerProfile.email);
+            const { error: sellerEmailError } = await supabase.functions.invoke('send-seller-notification-email', {
+              body: {
+                sellerEmail: sellerProfile.email,
+                sellerName: sellerProfile.full_name || sellerProfile.email,
+                productName: product?.name || 'Produto',
+                orderNumber: order.order_id,
+                amount: order.amount,
+                currency: order.currency || 'KZ',
+                customerName: order.customer_name,
+                customerEmail: order.customer_email
+              }
+            });
+            
+            if (sellerEmailError) {
+              console.error('[VERIFY-APPYPAY-ORDER] ❌ Erro ao enviar email para vendedor:', sellerEmailError);
+            } else {
+              console.log('[VERIFY-APPYPAY-ORDER] ✅ Email de venda enviado para vendedor com sucesso');
+            }
+          }
+        } catch (sellerEmailErr) {
+          console.error('[VERIFY-APPYPAY-ORDER] ❌ Error sending seller email:', sellerEmailErr);
+        }
 
         // 🔔 ENVIAR NOTIFICAÇÃO ONESIGNAL PARA O VENDEDOR
         try {

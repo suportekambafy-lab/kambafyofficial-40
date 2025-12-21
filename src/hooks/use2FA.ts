@@ -33,7 +33,7 @@ export const use2FA = () => {
   const [loading, setLoading] = useState(false);
   const [securityEvents, setSecurityEvents] = useState<SecurityEvent[]>([]);
 
-  // Carregar configurações 2FA do usuário
+  // Carregar configurações 2FA do usuário (criar com 2FA ativo por padrão se não existir)
   const loadSettings = useCallback(async () => {
     if (!user) {
       setSettings(null);
@@ -59,7 +59,38 @@ export const use2FA = () => {
         };
         setSettings(typedSettings);
       } else {
-        setSettings(null);
+        // 🔐 2FA ATIVO POR PADRÃO: Criar configurações com 2FA habilitado via email
+        console.log('[use2FA] Criando configurações 2FA com enabled=true por padrão para:', user.id);
+        
+        const defaultSettings = {
+          user_id: user.id,
+          enabled: true, // ✅ 2FA ativado por padrão
+          method: 'email' as const,
+          phone_number: null,
+        };
+        
+        const { data: newSettings, error: insertError } = await supabase
+          .from('user_2fa_settings')
+          .insert(defaultSettings)
+          .select()
+          .single();
+        
+        if (insertError) {
+          console.error('[use2FA] Error creating default 2FA settings:', insertError);
+          // Se falhar ao criar, ainda definir como se estivesse ativo para segurança
+          setSettings({
+            id: '',
+            user_id: user.id,
+            enabled: true,
+            method: 'email'
+          });
+        } else if (newSettings) {
+          setSettings({
+            ...newSettings,
+            method: newSettings.method as 'email' | 'sms' | 'whatsapp' | 'authenticator'
+          });
+          console.log('[use2FA] ✅ 2FA ativado por padrão para novo usuário');
+        }
       }
     } catch (error) {
       console.error('Error loading 2FA settings:', error);
