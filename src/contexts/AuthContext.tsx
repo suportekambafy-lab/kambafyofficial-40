@@ -175,7 +175,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Setup auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         if (!mounted) return;
 
         console.log('🔄 Auth state change:', event);
@@ -198,11 +198,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Validar nova sessão
         if (!isValidSession(session) || !isValidUser(session.user)) {
           console.log('❌ Nova sessão inválida detectada no listener - fazendo logout');
-          try {
-            await supabase.auth.signOut();
-          } catch (error) {
-            console.error('Erro ao fazer logout:', error);
-          }
+          setTimeout(() => {
+            supabase.auth.signOut().catch((error) => {
+              console.error('Erro ao fazer logout:', error);
+            });
+          }, 0);
           clearAuth();
           setLoading(false);
           return;
@@ -232,7 +232,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               });
               
               // Deslogar o usuário
-              await supabase.auth.signOut();
+               setTimeout(() => { supabase.auth.signOut().catch(() => {}); }, 0);
               clearAuth();
               setLoading(false);
               return;
@@ -290,14 +290,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               }
               
               // Verificar se é login via Google e não signup
-              const googleAuthMode = localStorage.getItem('googleAuthMode');
+              const googleAuthMode = (() => { try { return localStorage.getItem('googleAuthMode'); } catch { return null; } })();
               
               if (!existingProfile) {
                 console.log('👤 Profile não existe, criando...');
                 if (googleAuthMode === 'signin') {
-                  localStorage.removeItem('googleAuthMode');
+                   try { localStorage.removeItem('googleAuthMode'); } catch { /* ignore */ }
                   await supabase.auth.signOut();
-                  const userType = localStorage.getItem('userType');
+                  const userType = (() => { try { return localStorage.getItem('userType'); } catch { return ''; } })();
                   window.location.href = `/auth?mode=signup&type=${userType}&error=google-account-not-found`;
                   return;
                 }
@@ -322,7 +322,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 console.log('✅ Profile já existe:', existingProfile.full_name);
               }
               
-              localStorage.removeItem('googleAuthMode');
+               try { localStorage.removeItem('googleAuthMode'); } catch { /* ignore */ }
               
             } catch (error) {
               console.error('❌ Erro ao processar autenticação:', error);
