@@ -35,7 +35,15 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
     countryFlag: "🇦🇴",
     countryName: "Angola"
   },
-  // Transferência bancária removida
+  {
+    id: "transfer",
+    name: "Transferência Bancária",
+    image: getPaymentMethodImage("transfer"),
+    enabled: true,
+    isAngola: true,
+    countryFlag: "🇦🇴",
+    countryName: "Angola"
+  },
   {
     id: "emola",
     name: "e-Mola",
