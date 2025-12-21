@@ -5,13 +5,40 @@ import type { Database } from './types';
 const SUPABASE_URL = "https://hcbkqygdtzpxvctfdqbd.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjYmtxeWdkdHpweHZjdGZkcWJkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1MDExODEsImV4cCI6MjA2NzA3NzE4MX0.RBg9ZnGehO-UWjtlLRdlGB0ELML9DH_ltChu2w9h62A";
 
+// Fallback storage for browsers that block localStorage (Safari private mode, etc.)
+const memoryStorage: Record<string, string> = {};
+const fallbackStorage = {
+  getItem: (key: string) => memoryStorage[key] ?? null,
+  setItem: (key: string, value: string) => { memoryStorage[key] = value; },
+  removeItem: (key: string) => { delete memoryStorage[key]; },
+};
+
+// Test if localStorage is available
+const isLocalStorageAvailable = (): boolean => {
+  try {
+    const testKey = '__supabase_storage_test__';
+    localStorage.setItem(testKey, 'test');
+    localStorage.removeItem(testKey);
+    return true;
+  } catch {
+    console.warn('[Supabase] localStorage not available, using memory fallback');
+    return false;
+  }
+};
+
+const getStorage = () => {
+  return isLocalStorageAvailable() ? localStorage : fallbackStorage;
+};
+
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
-    storage: localStorage,
+    storage: getStorage(),
     persistSession: true,
     autoRefreshToken: true,
+    detectSessionInUrl: true,
+    flowType: 'pkce',
   }
 });
