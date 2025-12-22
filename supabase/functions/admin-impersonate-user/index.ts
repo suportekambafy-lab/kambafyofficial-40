@@ -110,14 +110,17 @@ Deno.serve(async (req) => {
 
     console.log(`✅ Usuário encontrado: ${targetUser.user.email}`)
 
-    // 3. Gerar sessão administrativa para o usuário alvo
-    const { data: magicLinkData, error: magicLinkError } = await supabaseAdmin.auth.admin.generateLink({
-      type: 'magiclink',
-      email: targetUser.user.email!,
-    })
+    // 3. Criar uma senha temporária única para impersonation
+    const temporaryPassword = `IMPERSONATE_${Date.now()}_${Math.random().toString(36).substring(7)}`
+    
+    // Atualizar a senha do usuário temporariamente
+    const { data: updateData, error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
+      targetUserId,
+      { password: temporaryPassword }
+    )
 
-    if (magicLinkError || !magicLinkData) {
-      console.error('❌ Erro ao gerar link mágico:', magicLinkError)
+    if (updateError) {
+      console.error('❌ Erro ao criar senha temporária:', updateError)
       throw new Error('Erro ao criar sessão de impersonation')
     }
 
@@ -169,7 +172,7 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        magicLink: magicLinkData.properties.action_link,
+        temporaryPassword: temporaryPassword,
         targetUser: {
           id: targetUser.user.id,
           email: targetUser.user.email,

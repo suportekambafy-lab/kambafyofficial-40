@@ -292,7 +292,7 @@ export default function AdminUsers() {
         throw error;
       }
 
-      if (!data?.success || !data?.magicLink) {
+      if (!data?.success || !data?.temporaryPassword) {
         throw new Error('Dados de impersonation inválidos');
       }
 
@@ -311,30 +311,54 @@ export default function AdminUsers() {
   };
 
   const completeImpersonation = async (data: any, user: UserProfile) => {
-    console.log('✅ Magic link recebido, completando impersonation');
+    console.log('✅ Senha temporária recebida, fazendo login...');
 
-    // Salvar dados de impersonation no localStorage
-    const impersonationData = {
-      id: data.impersonationSession?.id,
-      adminEmail: admin?.email,
-      targetUserId: user.user_id,
-      targetUserEmail: user.email,
-      targetUserName: user.full_name || user.email,
-      expiresAt: data.impersonationSession?.expiresAt,
-      startedAt: new Date().toISOString(),
-      readOnlyMode: data.impersonationSession?.readOnlyMode,
-      durationMinutes: data.impersonationSession?.durationMinutes
-    };
+    try {
+      // Fazer logout do admin primeiro
+      await supabase.auth.signOut();
 
-    localStorage.setItem('impersonation_data', JSON.stringify(impersonationData));
+      // Fazer login com a senha temporária
+      const { error: loginError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: data.temporaryPassword
+      });
 
-    toast({
-      title: 'Impersonation iniciado',
-      description: `Você está entrando como ${user.full_name || user.email}`,
-    });
+      if (loginError) {
+        console.error('❌ Erro ao fazer login durante impersonation:', loginError);
+        throw new Error('Falha ao entrar como usuário: ' + loginError.message);
+      }
 
-    // Redirecionar para o magic link que fará login automático
-    window.location.href = data.magicLink;
+      // Salvar dados de impersonation no localStorage
+      const impersonationData = {
+        id: data.impersonationSession?.id,
+        adminEmail: admin?.email,
+        targetUserId: user.user_id,
+        targetUserEmail: user.email,
+        targetUserName: user.full_name || user.email,
+        expiresAt: data.impersonationSession?.expiresAt,
+        startedAt: new Date().toISOString(),
+        readOnlyMode: data.impersonationSession?.readOnlyMode,
+        durationMinutes: data.impersonationSession?.durationMinutes
+      };
+
+      localStorage.setItem('impersonation_data', JSON.stringify(impersonationData));
+
+      toast({
+        title: 'Impersonation iniciado',
+        description: `Você está entrando como ${user.full_name || user.email}`,
+      });
+
+      // Redirecionar para a página do vendedor
+      window.location.href = '/app';
+    } catch (error: any) {
+      console.error('❌ Erro ao completar impersonation:', error);
+      toast({
+        title: 'Erro',
+        description: error.message || 'Erro ao entrar como usuário',
+        variant: 'destructive'
+      });
+      throw error;
+    }
   };
 
   const getStatusBadge = (banned: boolean | null, isCreator: boolean | null) => {

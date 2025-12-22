@@ -1,5 +1,8 @@
 project_id = "hcbkqygdtzpxvctfdqbd"
 
+[functions.fix-missing-appypay-access]
+verify_jwt = false
+
 [functions.send-app-announcement]
 verify_jwt = false
 
