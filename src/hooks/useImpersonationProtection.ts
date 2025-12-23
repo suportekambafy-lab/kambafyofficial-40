@@ -122,16 +122,21 @@ export const useImpersonationProtection = (): ImpersonationProtectionResult => {
           .eq('id', session.id);
       }
 
-      // Limpar dados locais
+      // Limpar APENAS dados de impersonation (manter sessão admin)
       localStorage.removeItem('impersonation_data');
       setSession(null);
       setTimeRemaining(0);
 
-      // Logout do usuário impersonado
+      // Logout do usuário impersonado (NÃO afeta a sessão admin que usa JWT customizado)
       await supabase.auth.signOut();
 
-      // Redirecionar para login admin
-      window.location.href = '/admin/login';
+      toast({
+        title: 'Impersonation encerrado',
+        description: 'Voltando ao painel de administração',
+      });
+
+      // Redirecionar para o painel admin (não para login, pois o admin ainda está logado via JWT)
+      window.location.href = '/admin/usuarios';
     } catch (error) {
       console.error('Erro ao sair do impersonation:', error);
       toast({
