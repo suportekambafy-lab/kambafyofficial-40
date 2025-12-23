@@ -74,38 +74,64 @@ export default function AdminProducts() {
     try {
       console.log('Carregando produtos...');
       
-      // Buscar produtos com novas colunas
-      const { data: productsData, error: productsError } = await supabase
-        .from('products')
-        .select('*, member_areas(id, name, url)')
-        .order('created_at', { ascending: false });
+      // Buscar TODOS os produtos usando paginação (bypass limite de 1000)
+      const BATCH_SIZE = 1000;
+      let allProducts: any[] = [];
+      let offset = 0;
+      let hasMore = true;
 
-      console.log('Produtos encontrados:', productsData);
+      while (hasMore) {
+        const { data: batch, error: batchError } = await supabase
+          .from('products')
+          .select('*, member_areas(id, name, url)')
+          .order('created_at', { ascending: false })
+          .range(offset, offset + BATCH_SIZE - 1);
 
-      if (productsError) {
-        console.error('Erro ao carregar produtos:', productsError);
-        toast.error('Erro ao carregar produtos');
-        return;
+        if (batchError) {
+          console.error('Erro ao carregar produtos:', batchError);
+          toast.error('Erro ao carregar produtos');
+          return;
+        }
+
+        if (!batch || batch.length === 0) {
+          hasMore = false;
+        } else {
+          allProducts = [...allProducts, ...batch];
+          offset += BATCH_SIZE;
+          hasMore = batch.length === BATCH_SIZE;
+        }
       }
 
-      // Depois buscar os perfis dos usuários
+      const productsData = allProducts;
+      console.log('Produtos encontrados:', productsData.length);
+
+      // Depois buscar os perfis dos usuários (em lotes para evitar URL muito longa)
       if (productsData && productsData.length > 0) {
-        const userIds = productsData.map(p => p.user_id);
-        const { data: profiles, error: profileError } = await supabase
-          .from('profiles')
-          .select('user_id, full_name, email')
-          .in('user_id', userIds);
+        const userIds = [...new Set(productsData.map(p => p.user_id))];
+        let allProfiles: any[] = [];
+        
+        // Dividir em lotes de 50 para evitar URL muito longa
+        const PROFILE_BATCH_SIZE = 50;
+        for (let i = 0; i < userIds.length; i += PROFILE_BATCH_SIZE) {
+          const batch = userIds.slice(i, i + PROFILE_BATCH_SIZE);
+          const { data: profiles, error: profileError } = await supabase
+            .from('profiles')
+            .select('user_id, full_name, email')
+            .in('user_id', batch);
 
-        console.log('Perfis encontrados:', profiles);
-
-        if (profileError) {
-          console.error('Erro ao carregar perfis:', profileError);
+          if (profileError) {
+            console.error('Erro ao carregar perfis (lote):', profileError);
+          } else if (profiles) {
+            allProfiles = [...allProfiles, ...profiles];
+          }
         }
+
+        console.log('Perfis encontrados:', allProfiles.length);
 
         // Combinar os dados
         const productsWithProfiles = productsData.map(product => ({
           ...product,
-          profiles: profiles?.find(p => p.user_id === product.user_id) || null
+          profiles: allProfiles.find(p => p.user_id === product.user_id) || null
         }));
 
         console.log('Resultado final:', productsWithProfiles);
