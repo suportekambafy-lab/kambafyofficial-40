@@ -130,15 +130,18 @@ export function AdminSidebar({ collapsed = false, onToggle }: AdminSidebarProps)
     )}>
       {/* Logo */}
       <div className="h-[70px] flex items-center justify-between px-4 border-b border-[hsl(var(--admin-border))]">
-        {!collapsed ? (
-          <img src={kambabyLogo} alt="Kambafy" className="h-[60px] w-auto" />
-        ) : (
+        <div className="relative flex items-center justify-center overflow-hidden">
+          <img 
+            src={kambabyLogo} 
+            alt="Kambafy" 
+            className={`h-[60px] w-auto transition-all duration-300 ${collapsed ? 'opacity-0 scale-75 absolute' : 'opacity-100 scale-100'}`}
+          />
           <img 
             src="/kambafy-icon-light.png" 
             alt="Kambafy" 
-            className="w-8 h-8 mx-auto"
+            className={`w-8 h-8 transition-all duration-300 ${collapsed ? 'opacity-100 scale-100' : 'opacity-0 scale-75 absolute'}`}
           />
-        )}
+        </div>
         <button 
           onClick={onToggle}
           className="flex-shrink-0 w-8 h-8 flex items-center justify-center hover:bg-[hsl(var(--admin-bg))] rounded-lg transition-colors"
