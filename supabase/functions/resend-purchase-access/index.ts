@@ -37,7 +37,9 @@ const handler = async (req: Request): Promise<Response> => {
     let query = supabase
       .from('orders')
       .select(`
+        id,
         order_id,
+        cohort_id,
         customer_email,
         customer_name,
         customer_phone,
@@ -138,12 +140,36 @@ const handler = async (req: Request): Promise<Response> => {
         const normalizedEmail = order.customer_email.toLowerCase().trim();
         console.log(`\n🔄 Processing order ${order.order_id} for ${normalizedEmail}`);
 
-        // Tentar criar conta - se já existir, continua normalmente
+        // 0) Segurança: não reenviar se já existe acesso
+        const { data: existingAccess, error: accessCheckError } = await supabase
+          .from('customer_access')
+          .select('id, is_active')
+          .eq('order_id', order.order_id)
+          .maybeSingle();
+
+        if (accessCheckError) {
+          console.error('❌ Error checking existing access:', accessCheckError);
+          throw accessCheckError;
+        }
+
+        if (existingAccess?.id && existingAccess.is_active) {
+          console.log('ℹ️ Access already exists for this order, skipping');
+          results.push({
+            order_id: order.order_id,
+            email: normalizedEmail,
+            success: true,
+            account_created: false,
+            error: 'already_has_access'
+          });
+          continue;
+        }
+
+        // 1) Criar conta (se ainda não existir). Se já existir, seguimos normalmente.
         let isNewAccount = false;
         let temporaryPassword: string | undefined;
 
         const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
-        const generatedPassword = Array.from({ length: 10 }, () => 
+        const generatedPassword = Array.from({ length: 10 }, () =>
           chars.charAt(Math.floor(Math.random() * chars.length))
         ).join('');
 
@@ -161,7 +187,7 @@ const handler = async (req: Request): Promise<Response> => {
           isNewAccount = true;
           temporaryPassword = generatedPassword;
         } else if (createError.code === 'email_exists' || createError.status === 422) {
-          console.log('ℹ️ Account already exists, continuing with email send');
+          console.log('ℹ️ Account already exists, continuing');
         } else {
           console.error('❌ Error creating account:', createError);
           results.push({
@@ -173,9 +199,39 @@ const handler = async (req: Request): Promise<Response> => {
           continue;
         }
 
-        // Send panel access email
+        // 2) Conceder acesso (customer_access)
         const product = order.products as any;
 
+        console.log('🔑 Creating customer_access...');
+        const { error: grantAccessError } = await supabase.rpc('create_customer_access_manual', {
+          p_customer_email: normalizedEmail,
+          p_customer_name: order.customer_name,
+          p_order_id: order.order_id,
+          p_product_id: order.product_id,
+        });
+
+        if (grantAccessError && grantAccessError.code !== '23505') {
+          console.error('❌ Error creating customer_access:', grantAccessError);
+          throw grantAccessError;
+        }
+
+        // 3) Adicionar na área de membros (se existir)
+        if (product?.member_area_id) {
+          console.log('👨‍🎓 Adding student to member area...');
+          const { error: addStudentError } = await supabase.rpc('admin_add_student_to_member_area', {
+            p_member_area_id: product.member_area_id,
+            p_student_email: normalizedEmail,
+            p_student_name: order.customer_name,
+            p_cohort_id: (order as any).cohort_id || null,
+          });
+
+          if (addStudentError) {
+            console.error('❌ Error adding student:', addStudentError);
+            throw addStudentError;
+          }
+        }
+
+        // 4) Enviar email
         console.log('📧 Invoking send-purchase-confirmation...');
         const { error: emailError } = await supabase.functions.invoke('send-purchase-confirmation', {
           body: {
@@ -204,7 +260,7 @@ const handler = async (req: Request): Promise<Response> => {
             error: `Failed to send emails: ${emailError.message || 'Unknown error'}`,
           });
         } else {
-          console.log('✅ Emails sent successfully');
+          console.log('✅ Access granted + emails sent successfully');
           results.push({
             order_id: order.order_id,
             email: normalizedEmail,
