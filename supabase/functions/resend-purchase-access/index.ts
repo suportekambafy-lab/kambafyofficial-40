@@ -46,10 +46,12 @@ const handler = async (req: Request): Promise<Response> => {
         product_id,
         amount,
         currency,
+        order_bump_data,
         products!inner(
           name,
           member_area_id,
           user_id,
+          access_duration_days,
           profiles!inner(full_name, email)
         )
       `)
@@ -231,7 +233,7 @@ const handler = async (req: Request): Promise<Response> => {
           }
         }
 
-        // 4) Enviar email
+        // 4) Enviar email do produto principal
         console.log('📧 Invoking send-purchase-confirmation...');
         const { error: emailError } = await supabase.functions.invoke('send-purchase-confirmation', {
           body: {
@@ -253,21 +255,139 @@ const handler = async (req: Request): Promise<Response> => {
 
         if (emailError) {
           console.error('❌ Error sending emails:', emailError);
-          results.push({
-            order_id: order.order_id,
-            email: normalizedEmail,
-            success: false,
-            error: `Failed to send emails: ${emailError.message || 'Unknown error'}`,
-          });
         } else {
-          console.log('✅ Access granted + emails sent successfully');
-          results.push({
-            order_id: order.order_id,
-            email: normalizedEmail,
-            success: true,
-            account_created: isNewAccount,
-          });
+          console.log('✅ Access granted + emails sent successfully for main product');
         }
+
+        // 5) Processar Order Bumps (se existir)
+        let orderBumpData = (order as any).order_bump_data;
+        if (orderBumpData) {
+          console.log('🎁 Processing order bump data...');
+          
+          // Parse se for string
+          if (typeof orderBumpData === 'string') {
+            try {
+              orderBumpData = JSON.parse(orderBumpData);
+            } catch (e) {
+              console.error('❌ Failed to parse order_bump_data:', e);
+              orderBumpData = null;
+            }
+          }
+
+          // Pode ser um array ou objeto único
+          const bumps = Array.isArray(orderBumpData) ? orderBumpData : [orderBumpData];
+
+          for (const bump of bumps) {
+            if (!bump || !bump.bump_product_id) {
+              console.log('⚠️ Skipping bump without product_id:', bump);
+              continue;
+            }
+
+            console.log(`🎁 Processing bump product: ${bump.bump_product_name || bump.bump_product_id}`);
+
+            try {
+              // Buscar dados do produto do bump
+              const { data: bumpProduct, error: bumpProductError } = await supabase
+                .from('products')
+                .select('id, name, member_area_id, user_id, access_duration_days')
+                .eq('id', bump.bump_product_id)
+                .maybeSingle();
+
+              if (bumpProductError || !bumpProduct) {
+                console.error('❌ Error fetching bump product:', bumpProductError);
+                continue;
+              }
+
+              // Verificar se já tem acesso ao bump
+              const { data: existingBumpAccess } = await supabase
+                .from('customer_access')
+                .select('id')
+                .eq('customer_email', normalizedEmail)
+                .eq('product_id', bumpProduct.id)
+                .maybeSingle();
+
+              if (existingBumpAccess) {
+                console.log('ℹ️ Customer already has access to bump product');
+                continue;
+              }
+
+              // Calcular expiração do bump
+              let bumpExpiresAt: string | null = null;
+              if (bumpProduct.access_duration_days) {
+                const expirationDate = new Date();
+                expirationDate.setDate(expirationDate.getDate() + bumpProduct.access_duration_days);
+                bumpExpiresAt = expirationDate.toISOString();
+              }
+
+              // Criar acesso para o produto do bump
+              const bumpOrderId = `${order.order_id}-bump-${bumpProduct.id.substring(0, 8)}`;
+              
+              const { error: bumpAccessError } = await supabase
+                .from('customer_access')
+                .insert({
+                  customer_email: normalizedEmail,
+                  customer_name: order.customer_name,
+                  order_id: bumpOrderId,
+                  product_id: bumpProduct.id,
+                  is_active: true,
+                  access_expires_at: bumpExpiresAt,
+                });
+
+              if (bumpAccessError && bumpAccessError.code !== '23505') {
+                console.error('❌ Error creating bump access:', bumpAccessError);
+                continue;
+              }
+
+              console.log('✅ Bump product access granted');
+
+              // Adicionar na área de membros do bump (se existir)
+              if (bumpProduct.member_area_id) {
+                console.log('👨‍🎓 Adding student to bump member area...');
+                const { error: addBumpStudentError } = await supabase.rpc('admin_add_student_to_member_area', {
+                  p_member_area_id: bumpProduct.member_area_id,
+                  p_student_email: normalizedEmail,
+                  p_student_name: order.customer_name,
+                  p_cohort_id: null,
+                });
+
+                if (addBumpStudentError) {
+                  console.error('❌ Error adding student to bump member area:', addBumpStudentError);
+                }
+              }
+
+              // Enviar email de acesso para o bump product
+              console.log('📧 Sending bump product confirmation email...');
+              await supabase.functions.invoke('send-purchase-confirmation', {
+                body: {
+                  customerName: order.customer_name,
+                  customerEmail: normalizedEmail,
+                  customerPhone: order.customer_phone,
+                  productName: bumpProduct.name,
+                  orderId: bumpOrderId,
+                  amount: bump.bump_product_price || '0',
+                  currency: order.currency,
+                  productId: bumpProduct.id,
+                  memberAreaId: bumpProduct.member_area_id,
+                  sellerId: bumpProduct.user_id,
+                  paymentStatus: 'completed',
+                  isNewAccount: false, // Já foi criada acima
+                  temporaryPassword: undefined,
+                },
+              });
+
+              console.log('✅ Bump product email sent');
+            } catch (bumpError) {
+              console.error('❌ Error processing bump:', bumpError);
+            }
+          }
+        }
+
+        results.push({
+          order_id: order.order_id,
+          email: normalizedEmail,
+          success: true,
+          account_created: isNewAccount,
+        });
       } catch (orderError) {
         console.error(`❌ Error processing order ${order.order_id}:`, orderError);
         results.push({
