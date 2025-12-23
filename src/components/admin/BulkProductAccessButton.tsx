@@ -28,6 +28,13 @@ export function BulkProductAccessButton() {
   const handleGrantAccess = async () => {
     setIsLoading(true);
     try {
+      const adminJwt = localStorage.getItem('admin_jwt');
+      if (!adminJwt) {
+        toast.error('Sessão de admin expirada. Faça login novamente.');
+        setIsLoading(false);
+        return;
+      }
+
       toast.info('🔄 Processando...', {
         description: 'Concedendo acessos, adicionando às áreas e enviando emails...'
       });
@@ -38,6 +45,9 @@ export function BulkProductAccessButton() {
         body: {
           source_product_id: SOURCE_PRODUCT_ID,
           target_product_ids: TARGET_PRODUCT_IDS
+        },
+        headers: {
+          Authorization: `Bearer ${adminJwt}`
         }
       });
 
