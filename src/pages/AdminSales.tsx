@@ -330,10 +330,18 @@ export default function AdminSales() {
       if (data?.results && data.results.length > 0) {
         const result = data.results[0];
         if (result.success) {
-          toast({
-            title: 'Acesso reenviado',
-            description: `Email enviado para ${order.customer_email}${result.account_created ? ' (nova conta criada)' : ''}`,
-          });
+          // Verificar se já tinha acesso
+          if (result.error === 'already_has_access') {
+            toast({
+              title: 'Cliente já tem acesso',
+              description: `O cliente ${order.customer_email} já possui acesso ativo a este produto.`,
+            });
+          } else {
+            toast({
+              title: 'Acesso concedido com sucesso',
+              description: `Acesso concedido e email enviado para ${order.customer_email}${result.account_created ? ' (nova conta criada)' : ''}`,
+            });
+          }
         } else {
           throw new Error(result.error || 'Falha ao reenviar acesso');
         }
