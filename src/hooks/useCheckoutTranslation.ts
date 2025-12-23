@@ -10,17 +10,19 @@ const CHECKOUT_TRANSLATIONS: Record<CheckoutLanguage, Record<string, string>> = 
     'checkout.secure': '100% Seguro',
     'checkout.sales': 'vendas',
     'checkout.per': 'por',
+    'checkout.instantDelivery': 'Entrega instantânea',
     
     // Form labels
     'checkout.billing': 'Informações de Cobrança',
-    'checkout.fullName': 'Nome Completo',
+    'checkout.fullName': 'Nome completo',
     'checkout.fullName.placeholder': 'Digite seu nome completo',
-    'checkout.email': 'Email',
-    'checkout.email.placeholder': 'Digite seu email',
+    'checkout.email': 'E-mail',
+    'checkout.email.placeholder': 'Digite seu e-mail para receber a compra',
     'checkout.country': 'País',
-    'checkout.phone': 'Telefone',
+    'checkout.phone': 'Telefone ou Whatsapp',
+    'checkout.phone.placeholder': 'Digite seu telefone',
     'checkout.phone.optional': '(opcional)',
-    'checkout.phone.required': 'Telefone é obrigatório',
+    'checkout.phone.required': '* obrigatório',
     
     // Validation messages
     'checkout.validation.nameValid': '✓ Nome válido',
@@ -33,18 +35,26 @@ const CHECKOUT_TRANSLATIONS: Record<CheckoutLanguage, Record<string, string>> = 
     // Payment
     'checkout.payment': 'Pagamento',
     'checkout.paymentMethod': 'Método de Pagamento',
+    'checkout.payWith': 'Pagar com:',
+    'checkout.selectPayment': 'Selecione a forma de pagamento desejada',
+    'checkout.noPaymentMethods': 'Métodos de pagamento não disponíveis para',
+    'checkout.comingSoon': 'Em breve teremos opções de pagamento para sua região.',
     'checkout.coupon': 'Cupom de Desconto',
     'checkout.subtotal': 'Subtotal',
     'checkout.discount': 'Desconto',
+    'checkout.discountApplied': 'Desconto aplicado:',
     'checkout.total': 'Total',
+    'checkout.orderSummary': 'Resumo do pedido',
+    'checkout.product': 'Produto',
     
     // Buttons
-    'checkout.buyNow': 'Comprar Agora',
-    'checkout.processing': 'Processando...',
+    'checkout.buyNow': 'COMPRAR AGORA',
+    'checkout.processing': 'PROCESSANDO...',
     'checkout.completePurchase': 'Finalizar Compra',
     'checkout.subscribe': 'Assinar Agora',
     'checkout.subscribing': 'Processando Assinatura...',
     'checkout.tryAgain': 'Tentar novamente',
+    'checkout.generateReference': 'GERAR REFERÊNCIA',
     
     // Status
     'checkout.offerExpired': 'Oferta Expirada',
@@ -57,6 +67,13 @@ const CHECKOUT_TRANSLATIONS: Record<CheckoutLanguage, Record<string, string>> = 
     'checkout.moneyBack': 'Garantia de Reembolso',
     'checkout.instantAccess': 'Acesso Imediato',
     'checkout.support': 'Suporte 24/7',
+    'checkout.trustBadges.title': '🔒 COMPRA 100% SEGURA',
+    'checkout.trustBadges.ssl': 'SSL Criptografado',
+    'checkout.trustBadges.guarantee': 'Garantia 7 Dias',
+    'checkout.trustBadges.support': 'Suporte 24/7',
+    'checkout.trustBadges.buyers': 'Compradores',
+    'checkout.trustBadges.verified': 'Produto Verificado',
+    'checkout.trustBadges.footer': 'Seus dados estão protegidos e sua compra é 100% segura',
     
     // Subscription
     'checkout.subscription.recurring': 'Pagamento recorrente via Stripe. Pode cancelar a qualquer momento.',
@@ -80,6 +97,14 @@ const CHECKOUT_TRANSLATIONS: Record<CheckoutLanguage, Record<string, string>> = 
     'checkout.express.finalize': 'clica no botão, selecione o pagamento pendente e finalize o pagamento.',
     'checkout.express.phoneLabel': 'Por favor, insira o número de telefone ativo do Multicaixa Express.',
     
+    // Reference payment
+    'checkout.reference.success': 'Referência gerada com sucesso!',
+    'checkout.reference.instructions': 'Use os dados abaixo para efetuar o pagamento em qualquer banco ou ATM',
+    'checkout.reference.entity': 'Entidade:',
+    'checkout.reference.number': 'Referência:',
+    'checkout.reference.amount': 'Valor:',
+    'checkout.reference.expires': 'Válido até:',
+    
     // Errors
     'checkout.error.requiredFields': 'Dados obrigatórios',
     'checkout.error.fillAllFields': 'Por favor, preencha todos os campos obrigatórios.',
@@ -102,31 +127,43 @@ const CHECKOUT_TRANSLATIONS: Record<CheckoutLanguage, Record<string, string>> = 
     // Country selector
     'checkout.selectCountry': 'Selecionar país',
     
-    // Trust badges
-    'checkout.trustBadges.title': '🔒 COMPRA 100% SEGURA',
-    'checkout.trustBadges.ssl': 'SSL Criptografado',
-    'checkout.trustBadges.guarantee': 'Garantia 7 Dias',
-    'checkout.trustBadges.support': 'Suporte 24/7',
-    'checkout.trustBadges.buyers': 'Compradores',
-    'checkout.trustBadges.verified': 'Produto Verificado',
-    'checkout.trustBadges.footer': 'Seus dados estão protegidos e sua compra é 100% segura',
+    // Coupon
+    'coupon.placeholder': 'CÓDIGO DO CUPOM',
+    'coupon.apply': 'Aplicar',
+    'coupon.enterCode': 'Digite um código de cupom',
+    'coupon.applied': 'Cupom aplicado com sucesso!',
+    'coupon.removed': 'Cupom removido',
+    'coupon.error': 'Erro ao validar cupom',
+    'coupon.maxUsesReached': 'Este cupom atingiu o limite de usos',
+    'coupon.alreadyUsed': 'Você já usou este cupom',
+    'coupon.minPurchase': 'Compra mínima de',
+    
+    // Footer
+    'checkout.allRightsReserved': 'Todos os direitos reservados.',
+    'checkout.termsNotice': 'Ao clicar em Comprar agora, eu declaro que li e concordo (1) com a Kambafy está processando este pedido em nome de',
+    'checkout.termsNotice2': 'não possui responsabilidade pelo conteúdo e/ou faz controle prévio deste (li) com os',
+    'checkout.termsOfUse': 'Termos de uso',
+    'checkout.privacyPolicy': 'Política de privacidade',
+    'checkout.refundPolicy': 'Política de reembolso',
   },
   en: {
     // Header
     'checkout.secure': '100% Secure',
     'checkout.sales': 'sales',
     'checkout.per': 'per',
+    'checkout.instantDelivery': 'Instant delivery',
     
     // Form labels
     'checkout.billing': 'Billing Information',
-    'checkout.fullName': 'Full Name',
+    'checkout.fullName': 'Full name',
     'checkout.fullName.placeholder': 'Enter your full name',
     'checkout.email': 'Email',
-    'checkout.email.placeholder': 'Enter your email',
+    'checkout.email.placeholder': 'Enter your email to receive the purchase',
     'checkout.country': 'Country',
-    'checkout.phone': 'Phone',
+    'checkout.phone': 'Phone or WhatsApp',
+    'checkout.phone.placeholder': 'Enter your phone number',
     'checkout.phone.optional': '(optional)',
-    'checkout.phone.required': 'Phone is required',
+    'checkout.phone.required': '* required',
     
     // Validation messages
     'checkout.validation.nameValid': '✓ Valid name',
@@ -139,18 +176,26 @@ const CHECKOUT_TRANSLATIONS: Record<CheckoutLanguage, Record<string, string>> = 
     // Payment
     'checkout.payment': 'Payment',
     'checkout.paymentMethod': 'Payment Method',
+    'checkout.payWith': 'Pay with:',
+    'checkout.selectPayment': 'Select your preferred payment method',
+    'checkout.noPaymentMethods': 'Payment methods not available for',
+    'checkout.comingSoon': 'Payment options for your region coming soon.',
     'checkout.coupon': 'Discount Coupon',
     'checkout.subtotal': 'Subtotal',
     'checkout.discount': 'Discount',
+    'checkout.discountApplied': 'Discount applied:',
     'checkout.total': 'Total',
+    'checkout.orderSummary': 'Order Summary',
+    'checkout.product': 'Product',
     
     // Buttons
-    'checkout.buyNow': 'Buy Now',
-    'checkout.processing': 'Processing...',
+    'checkout.buyNow': 'BUY NOW',
+    'checkout.processing': 'PROCESSING...',
     'checkout.completePurchase': 'Complete Purchase',
     'checkout.subscribe': 'Subscribe Now',
     'checkout.subscribing': 'Processing Subscription...',
     'checkout.tryAgain': 'Try again',
+    'checkout.generateReference': 'GENERATE REFERENCE',
     
     // Status
     'checkout.offerExpired': 'Offer Expired',
@@ -163,6 +208,13 @@ const CHECKOUT_TRANSLATIONS: Record<CheckoutLanguage, Record<string, string>> = 
     'checkout.moneyBack': 'Money Back Guarantee',
     'checkout.instantAccess': 'Instant Access',
     'checkout.support': '24/7 Support',
+    'checkout.trustBadges.title': '🔒 100% SECURE PURCHASE',
+    'checkout.trustBadges.ssl': 'SSL Encrypted',
+    'checkout.trustBadges.guarantee': '7 Day Guarantee',
+    'checkout.trustBadges.support': '24/7 Support',
+    'checkout.trustBadges.buyers': 'Buyers',
+    'checkout.trustBadges.verified': 'Verified Product',
+    'checkout.trustBadges.footer': 'Your data is protected and your purchase is 100% secure',
     
     // Subscription
     'checkout.subscription.recurring': 'Recurring payment via Stripe. Cancel anytime.',
@@ -186,6 +238,14 @@ const CHECKOUT_TRANSLATIONS: Record<CheckoutLanguage, Record<string, string>> = 
     'checkout.express.finalize': 'click the button, select the pending payment and complete the payment.',
     'checkout.express.phoneLabel': 'Please enter your active Multicaixa Express phone number.',
     
+    // Reference payment
+    'checkout.reference.success': 'Reference generated successfully!',
+    'checkout.reference.instructions': 'Use the information below to make payment at any bank or ATM',
+    'checkout.reference.entity': 'Entity:',
+    'checkout.reference.number': 'Reference:',
+    'checkout.reference.amount': 'Amount:',
+    'checkout.reference.expires': 'Valid until:',
+    
     // Errors
     'checkout.error.requiredFields': 'Required fields',
     'checkout.error.fillAllFields': 'Please fill in all required fields.',
@@ -208,14 +268,24 @@ const CHECKOUT_TRANSLATIONS: Record<CheckoutLanguage, Record<string, string>> = 
     // Country selector
     'checkout.selectCountry': 'Select country',
     
-    // Trust badges
-    'checkout.trustBadges.title': '🔒 100% SECURE PURCHASE',
-    'checkout.trustBadges.ssl': 'SSL Encrypted',
-    'checkout.trustBadges.guarantee': '7 Day Guarantee',
-    'checkout.trustBadges.support': '24/7 Support',
-    'checkout.trustBadges.buyers': 'Buyers',
-    'checkout.trustBadges.verified': 'Verified Product',
-    'checkout.trustBadges.footer': 'Your data is protected and your purchase is 100% secure',
+    // Coupon
+    'coupon.placeholder': 'COUPON CODE',
+    'coupon.apply': 'Apply',
+    'coupon.enterCode': 'Enter a coupon code',
+    'coupon.applied': 'Coupon applied successfully!',
+    'coupon.removed': 'Coupon removed',
+    'coupon.error': 'Error validating coupon',
+    'coupon.maxUsesReached': 'This coupon has reached its usage limit',
+    'coupon.alreadyUsed': 'You have already used this coupon',
+    'coupon.minPurchase': 'Minimum purchase of',
+    
+    // Footer
+    'checkout.allRightsReserved': 'All rights reserved.',
+    'checkout.termsNotice': 'By clicking Buy now, I declare that I have read and agree (1) that Kambafy is processing this order on behalf of',
+    'checkout.termsNotice2': 'is not responsible for the content and/or does not pre-control it (li) with the',
+    'checkout.termsOfUse': 'Terms of use',
+    'checkout.privacyPolicy': 'Privacy policy',
+    'checkout.refundPolicy': 'Refund policy',
   }
 };
 

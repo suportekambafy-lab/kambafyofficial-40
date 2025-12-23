@@ -2382,7 +2382,7 @@ const Checkout = () => {
                   <h2 className="text-lg sm:text-xl font-bold text-gray-900">{product.name.toUpperCase()}</h2>
                   
                   <div className="flex items-center gap-1 mt-1">
-                    <span className="text-xs sm:text-sm text-gray-600">Entrega instantânea</span>
+                    <span className="text-xs sm:text-sm text-gray-600">{tc('checkout.instantDelivery')}</span>
                     <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
                   </div>
                   
@@ -2433,23 +2433,23 @@ const Checkout = () => {
             <div className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="fullName" className="text-gray-700 font-medium">
-                  Nome completo
+                  {tc('checkout.fullName')}
                 </Label>
-                <Input id="fullName" placeholder="Digite seu nome completo" value={formData.fullName} onChange={e => handleInputChange("fullName", e.target.value)} className="h-12 border-gray-300 focus:border-green-500" />
+                <Input id="fullName" placeholder={tc('checkout.fullName.placeholder')} value={formData.fullName} onChange={e => handleInputChange("fullName", e.target.value)} className="h-12 border-gray-300 focus:border-green-500" />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-gray-700 font-medium">
-                  E-mail
+                  {tc('checkout.email')}
                 </Label>
-                <Input id="email" type="email" placeholder="Digite seu e-mail para receber a compra" value={formData.email} onChange={e => handleInputChange("email", e.target.value)} className="h-12 border-gray-300 focus:border-green-500" />
+                <Input id="email" type="email" placeholder={tc('checkout.email.placeholder')} value={formData.email} onChange={e => handleInputChange("email", e.target.value)} className="h-12 border-gray-300 focus:border-green-500" />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="phone" className="text-gray-700 font-medium">
-                  Telefone ou Whatsapp *
+                  {tc('checkout.phone')} {tc('checkout.phone.required')}
                 </Label>
-                <PhoneInput value={formData.phone} onChange={value => handleInputChange("phone", value)} selectedCountry={formData.phoneCountry} onCountryChange={handlePhoneCountryChange} placeholder="Digite seu telefone" className="h-12" />
+                <PhoneInput value={formData.phone} onChange={value => handleInputChange("phone", value)} selectedCountry={formData.phoneCountry} onCountryChange={handlePhoneCountryChange} placeholder={tc('checkout.phone.placeholder')} className="h-12" />
               </div>
 
 
@@ -2458,9 +2458,9 @@ const Checkout = () => {
               {availablePaymentMethods.length > 0 ? <div className="space-y-4">
                   <div className="space-y-2">
                     <span className="text-green-600 font-medium">
-                      Pagar com: {selectedPayment && <span className="text-gray-700">{getSelectedPaymentName()}</span>}
+                      {tc('checkout.payWith')} {selectedPayment && <span className="text-gray-700">{getSelectedPaymentName()}</span>}
                     </span>
-                    <p className="text-gray-700 font-medium">Selecione a forma de pagamento desejada</p>
+                    <p className="text-gray-700 font-medium">{tc('checkout.selectPayment')}</p>
                   </div>
                   
                   <div className={`grid ${getPaymentGridClasses()} gap-3`}>
@@ -2482,10 +2482,10 @@ const Checkout = () => {
                 </div> : <div className="space-y-4">
                   <div className="text-center py-8 bg-gray-100 rounded-lg">
                     <p className="text-gray-600 font-medium">
-                      Métodos de pagamento não disponíveis para {userCountry.name}
+                      {tc('checkout.noPaymentMethods')} {userCountry.name}
                     </p>
                     <p className="text-sm text-gray-500 mt-2">
-                      Em breve teremos opções de pagamento para sua região.
+                      {tc('checkout.comingSoon')}
                     </p>
                   </div>
                 </div>}
@@ -2496,7 +2496,7 @@ const Checkout = () => {
               {product?.id && (
                 <div className="mt-4 mb-4">
                   <Label className="text-sm font-medium mb-2 block text-gray-700">
-                    Cupom de Desconto
+                    {tc('checkout.coupon')}
                   </Label>
                   <CouponInput
                     productId={product.id}
@@ -2504,7 +2504,7 @@ const Checkout = () => {
                     totalAmount={finalProductPrice + totalOrderBumpPrice}
                     currency={userCountry?.currency || 'KZ'}
                     onCouponApplied={handleCouponApplied}
-                    t={(key: string) => key}
+                    t={tc}
                   />
                 </div>
               )}
@@ -2513,7 +2513,7 @@ const Checkout = () => {
               {couponDiscount > 0 && (
                 <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
                   <div className="flex justify-between items-center text-sm">
-                    <span className="text-green-700 font-medium">Desconto aplicado:</span>
+                    <span className="text-green-700 font-medium">{tc('checkout.discountApplied')}</span>
                     <span className="text-green-700 font-bold">
                       -{formatPrice(couponDiscount)}
                     </span>
@@ -2570,10 +2570,10 @@ const Checkout = () => {
             <div className="space-y-6">
               <Card className="shadow-sm">
                 <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Resumo do pedido</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">{tc('checkout.orderSummary')}</h3>
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-700">{product?.name || 'Produto'}</span>
+                      <span className="text-gray-700">{product?.name || tc('checkout.product')}</span>
                       <span className="font-medium text-gray-900">
                         {getDisplayPrice(finalProductPrice, true)}
                       </span>
@@ -2596,7 +2596,7 @@ const Checkout = () => {
                     
                     <div className="border-t pt-3">
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-700 font-medium">Total</span>
+                        <span className="text-gray-700 font-medium">{tc('checkout.total')}</span>
                         <span className="text-2xl font-bold text-green-600">
                           {getDisplayPrice(totalPrice, true)}
                         </span>
@@ -2614,17 +2614,17 @@ const Checkout = () => {
                           
                           <div className="text-center mb-4">
                             <p className="text-gray-900 font-semibold mb-2">
-                              Referência gerada com sucesso!
+                              {tc('checkout.reference.success')}
                             </p>
                             <p className="text-sm text-gray-700">
-                              Use os dados abaixo para efetuar o pagamento em qualquer banco ou ATM
+                              {tc('checkout.reference.instructions')}
                             </p>
                           </div>
 
                           <div className="space-y-3">
                             <div className="bg-blue-50 rounded-lg p-3">
                               <div className="flex justify-between items-center">
-                                <span className="text-sm font-medium text-gray-600">Entidade:</span>
+                                <span className="text-sm font-medium text-gray-600">{tc('checkout.reference.entity')}</span>
                                 <div className="flex items-center space-x-2">
                                   <span className="font-mono font-bold text-lg text-gray-900">{referenceData.entity}</span>
                                   <Button variant="ghost" size="sm" onClick={() => {
@@ -2640,7 +2640,7 @@ const Checkout = () => {
 
                             <div className="bg-blue-50 rounded-lg p-3">
                               <div className="flex justify-between items-center">
-                                <span className="text-sm font-medium text-gray-600">Referência:</span>
+                                <span className="text-sm font-medium text-gray-600">{tc('checkout.reference.number')}</span>
                                 <div className="flex items-center space-x-2">
                                   <span className="font-mono font-bold text-lg text-gray-900">{referenceData.referenceNumber}</span>
                                   <Button variant="ghost" size="sm" onClick={() => {
@@ -2830,8 +2830,8 @@ const Checkout = () => {
                   {processing ? <div className="flex items-center justify-center">
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2">
                       </div>
-                      PROCESSANDO...
-                    </div> : selectedPayment === 'reference' ? 'GERAR REFERÊNCIA' : 'COMPRAR AGORA'}
+                      {tc('checkout.processing')}
+                    </div> : selectedPayment === 'reference' ? tc('checkout.generateReference') : tc('checkout.buyNow')}
                 </Button>}
             </div>
           </div>
@@ -2845,23 +2845,23 @@ const Checkout = () => {
               <img src="/kambafy-secure-icon.png" alt="Kambafy" className="w-16 h-16 rounded-lg" />
               <div>
                 <h4 className="font-semibold text-green-600">Kambafy</h4>
-                <p className="text-sm text-gray-600">Todos os direitos reservados.</p>
+                <p className="text-sm text-gray-600">{tc('checkout.allRightsReserved')}</p>
               </div>
             </div>
             
             <p className="text-xs text-gray-500 max-w-2xl mx-auto">
-              Ao clicar em Comprar agora, eu declaro que li e concordo (1) com a Kambafy está processando este pedido em nome de{' '}
+              {tc('checkout.termsNotice')}{' '}
               <span className="text-green-600">
                 {product?.fantasy_name || product?.profiles?.full_name || 'produtor'}
-              </span> não possui responsabilidade pelo conteúdo e/ou faz controle prévio deste (li) com os{' '}
+              </span> {tc('checkout.termsNotice2')}{' '}
               <TermsModal>
-                <span className="underline cursor-pointer">Termos de uso</span>
+                <span className="underline cursor-pointer">{tc('checkout.termsOfUse')}</span>
               </TermsModal>,{' '}
               <PrivacyModal>
-                <span className="underline cursor-pointer">Política de privacidade</span>
+                <span className="underline cursor-pointer">{tc('checkout.privacyPolicy')}</span>
               </PrivacyModal> e{' '}
               <RefundPolicyModal>
-                <span className="underline cursor-pointer">Política de reembolso</span>
+                <span className="underline cursor-pointer">{tc('checkout.refundPolicy')}</span>
               </RefundPolicyModal>.
             </p>
           </div>
