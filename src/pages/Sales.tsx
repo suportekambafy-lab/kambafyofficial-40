@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ShoppingCart, Search, RefreshCw, CheckCircle, Clock, XCircle, CreditCard, Banknote, Building, Calendar, Package, User, DollarSign, Download, Mail, Loader2, Eye } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import { supabase } from "@/integrations/supabase/client";
@@ -388,10 +389,9 @@ export default function Sales() {
       </div>;
   };
   
-  const getPaymentMethodIcon = (paymentMethod: string) => {
+  const getPaymentMethodIconOnly = (paymentMethod: string) => {
     const methodLower = paymentMethod?.toLowerCase() || '';
     
-    // Usar os mesmos logos do checkout
     if (methodLower.includes('express') || methodLower.includes('multicaixa express')) {
       return <img src="/lovable-uploads/e9a7b374-3f3c-4e2b-ad03-9cdefa7be8a8.png" alt="Multicaixa Express" className="h-5 w-auto" />;
     } else if (methodLower.includes('reference') || methodLower.includes('referencia') || methodLower.includes('multicaixa')) {
@@ -414,6 +414,50 @@ export default function Sales() {
       return <DollarSign className="h-4 w-4 text-green-600" />;
     }
     return <Banknote className="h-4 w-4 text-muted-foreground" />;
+  };
+  
+  const getPaymentMethodLabel = (paymentMethod: string) => {
+    const methodLower = paymentMethod?.toLowerCase() || '';
+    
+    if (methodLower.includes('express') || methodLower.includes('multicaixa express')) {
+      return 'Multicaixa Express';
+    } else if (methodLower.includes('reference') || methodLower.includes('referencia')) {
+      return 'Referência Multicaixa';
+    } else if (methodLower.includes('transfer') || methodLower.includes('transferencia')) {
+      return 'Transferência Bancária';
+    } else if (methodLower.includes('emola')) {
+      return 'eMola';
+    } else if (methodLower.includes('mpesa')) {
+      return 'M-Pesa';
+    } else if (methodLower.includes('card') || methodLower.includes('stripe')) {
+      return 'Cartão de Crédito/Débito';
+    } else if (methodLower.includes('klarna')) {
+      return 'Klarna';
+    } else if (methodLower.includes('multibanco')) {
+      return 'Multibanco';
+    } else if (methodLower.includes('mbway')) {
+      return 'MB WAY';
+    } else if (methodLower.includes('balance') || methodLower.includes('saldo') || methodLower.includes('kambapay')) {
+      return 'Saldo KambaPay';
+    }
+    return paymentMethod || 'Desconhecido';
+  };
+  
+  const getPaymentMethodIconWithTooltip = (paymentMethod: string) => {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="cursor-pointer inline-flex">
+              {getPaymentMethodIconOnly(paymentMethod)}
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{getPaymentMethodLabel(paymentMethod)}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
   };
   const formatCurrency = (amount: number, currency: string = 'KZ') => {
     return formatPriceForSeller(amount, currency);
@@ -705,7 +749,7 @@ export default function Sales() {
                           
                           {/* Linha 2: Método de pagamento + Data */}
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            {getPaymentMethodBadge(sale.payment_method)}
+                            {getPaymentMethodIconWithTooltip(sale.payment_method)}
                             <span className="flex items-center gap-1">
                               <Calendar className="h-3 w-3" />
                               {new Date(sale.created_at).toLocaleDateString('pt-BR')}
@@ -812,7 +856,7 @@ export default function Sales() {
                                     <div className="flex justify-between items-center">
                                       <span className="text-muted-foreground">Método:</span>
                                       <div className="flex items-center gap-1">
-                                        {getPaymentMethodIcon(sale.payment_method)}
+                                        {getPaymentMethodIconWithTooltip(sale.payment_method)}
                                       </div>
                                     </div>
                                     <div className="flex justify-between">
