@@ -79,19 +79,27 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`📦 Processing ${orders.length} orders`);
 
-    const results = [];
-    
+    const results: Array<{
+      order_id: string;
+      email: string;
+      success: boolean;
+      error?: string;
+      account_created?: boolean;
+    }> = [];
+
     for (const order of orders) {
       try {
         const normalizedEmail = order.customer_email.toLowerCase().trim();
         console.log(`\n🔄 Processing order ${order.order_id} for ${normalizedEmail}`);
 
-        // Criar conta (se ainda não existir). Se já existir, seguimos normalmente.
+        // Tentar criar conta - se já existir, continua normalmente
         let isNewAccount = false;
         let temporaryPassword: string | undefined;
 
         const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
-        const generatedPassword = Array.from({ length: 10 }, () => chars.charAt(Math.floor(Math.random() * chars.length))).join('');
+        const generatedPassword = Array.from({ length: 10 }, () => 
+          chars.charAt(Math.floor(Math.random() * chars.length))
+        ).join('');
 
         const { error: createError } = await supabase.auth.admin.createUser({
           email: normalizedEmail,
@@ -107,7 +115,7 @@ const handler = async (req: Request): Promise<Response> => {
           isNewAccount = true;
           temporaryPassword = generatedPassword;
         } else if (createError.code === 'email_exists' || createError.status === 422) {
-          console.log('ℹ️ Account already exists');
+          console.log('ℹ️ Account already exists, continuing with email send');
         } else {
           console.error('❌ Error creating account:', createError);
           results.push({
@@ -120,7 +128,7 @@ const handler = async (req: Request): Promise<Response> => {
         }
 
         // Send panel access email
-        const product = order.products;
+        const product = order.products as any;
 
         console.log('📧 Invoking send-purchase-confirmation...');
         const { error: emailError } = await supabase.functions.invoke('send-purchase-confirmation', {
@@ -147,7 +155,7 @@ const handler = async (req: Request): Promise<Response> => {
             order_id: order.order_id,
             email: normalizedEmail,
             success: false,
-            error: `Failed to send emails: ${emailError.message}`,
+            error: `Failed to send emails: ${emailError.message || 'Unknown error'}`,
           });
         } else {
           console.log('✅ Emails sent successfully');
@@ -165,55 +173,6 @@ const handler = async (req: Request): Promise<Response> => {
           email: order.customer_email,
           success: false,
           error: (orderError as Error).message,
-        });
-      }
-    }
-        // Send panel access email
-        const product = order.products;
-        const sellerProfile = product.profiles;
-        
-        console.log('📧 Invoking send-purchase-confirmation...');
-        const { error: emailError } = await supabase.functions.invoke('send-purchase-confirmation', {
-          body: {
-            customerName: order.customer_name,
-            customerEmail: normalizedEmail,
-            customerPhone: order.customer_phone,
-            productName: product.name,
-            orderId: order.order_id,
-            amount: order.amount,
-            currency: order.currency,
-            productId: order.product_id,
-            memberAreaId: product.member_area_id,
-            sellerId: product.user_id,
-            paymentStatus: 'completed'
-          }
-        });
-
-        if (emailError) {
-          console.error('❌ Error sending emails:', emailError);
-          results.push({
-            order_id: order.order_id,
-            email: normalizedEmail,
-            success: false,
-            error: 'Failed to send emails'
-          });
-        } else {
-          console.log('✅ Emails sent successfully');
-          results.push({
-            order_id: order.order_id,
-            email: normalizedEmail,
-            success: true,
-            account_created: isNewAccount
-          });
-        }
-
-      } catch (orderError) {
-        console.error(`❌ Error processing order ${order.order_id}:`, orderError);
-        results.push({
-          order_id: order.order_id,
-          email: order.customer_email,
-          success: false,
-          error: (orderError as Error).message
         });
       }
     }
