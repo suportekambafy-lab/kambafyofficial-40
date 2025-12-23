@@ -24,6 +24,7 @@ import { logger } from "@/utils/productionLogger";
 import { getSubscriptionIntervalText } from "@/utils/priceFormatting";
 import { useCheckoutPresence } from "@/hooks/useCheckoutPresence";
 import { useAbandonedCartDetection } from "@/hooks/useAbandonedCartDetection";
+import { useCheckoutTranslation } from "@/hooks/useCheckoutTranslation";
 
 import { BankTransferForm } from "@/components/checkout/BankTransferForm";
 import { MozambiquePaymentForm } from "@/components/checkout/MozambiquePaymentForm";
@@ -63,6 +64,9 @@ const Checkout = () => {
     supportedCountries,
     isReady: geoReady
   } = useGeoLocation();
+  
+  // Hook de tradução baseado no país (US/UK = inglês)
+  const { tc, isEnglish } = useCheckoutTranslation(userCountry);
   
   // IP-detected country name (fetched directly from API)
   const [ipCountryName, setIpCountryName] = useState<string>('');
@@ -2348,7 +2352,7 @@ const Checkout = () => {
                 <Shield className="w-5 h-5" />
                 <Check className="w-2.5 h-2.5 absolute inset-0 m-auto text-white" />
               </div>
-              <span className="font-bold text-lg">COMPRA 100% SEGURA</span>
+              <span className="font-bold text-lg">{tc('checkout.trustBadges.title')}</span>
             </div>
             <CountrySelector selectedCountry={userCountry} onCountryChange={handleCountryChange} supportedCountries={supportedCountries} />
           </div>

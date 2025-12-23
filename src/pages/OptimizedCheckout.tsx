@@ -151,8 +151,7 @@ const PaymentMethods = memo(({
   setSelectedPayment,
   setHoveredPayment,
   userCountry,
-  t,
-  isTranslationReady
+  tc
 }: any) => {
   const getPaymentGridClasses = () => {
     const methodCount = availablePaymentMethods.length;
@@ -165,7 +164,7 @@ const PaymentMethods = memo(({
   return (
     <div className="mb-6">
       <Label className="text-base font-semibold mb-4 block">
-        {isTranslationReady ? t('payment.title') : 'Método de Pagamento'}
+        {tc('checkout.paymentMethod')}
       </Label>
       <div className={`grid ${getPaymentGridClasses()} gap-3`}>
         {availablePaymentMethods.map((method: any) => (
@@ -573,7 +572,7 @@ const OptimizedCheckout = () => {
           )}
 
           {/* Live Viewers Notification - Otimizado sem framer-motion */}
-          {product && <OptimizedLiveViewers initialCount={47} minViewers={32} maxViewers={89} />}
+          {product && <OptimizedLiveViewers initialCount={47} minViewers={32} maxViewers={89} tc={tc} />}
 
           {/* Header do produto */}
           {showingSkeleton ? (
@@ -761,8 +760,7 @@ const OptimizedCheckout = () => {
                     setSelectedPayment={setSelectedPayment}
                     setHoveredPayment={setHoveredPayment}
                     userCountry={userCountry}
-                    t={t}
-                    isTranslationReady={isTranslationReady}
+                    tc={tc}
                   />
 
                   {/* Campo de Cupom de Desconto */}
@@ -1317,7 +1315,7 @@ const OptimizedCheckout = () => {
           </Card>
 
           {/* Trust Badges Section */}
-          <TrustBadgesSection totalSales={product?.sales || 0} />
+          <TrustBadgesSection totalSales={product?.sales || 0} tc={tc} />
 
           {/* Reviews falsas - lazy load */}
           {checkoutSettings?.reviews?.enabled && (
