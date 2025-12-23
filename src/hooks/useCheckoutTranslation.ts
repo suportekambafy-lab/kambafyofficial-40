@@ -101,6 +101,15 @@ const CHECKOUT_TRANSLATIONS: Record<CheckoutLanguage, Record<string, string>> = 
     
     // Country selector
     'checkout.selectCountry': 'Selecionar país',
+    
+    // Trust badges
+    'checkout.trustBadges.title': '🔒 COMPRA 100% SEGURA',
+    'checkout.trustBadges.ssl': 'SSL Criptografado',
+    'checkout.trustBadges.guarantee': 'Garantia 7 Dias',
+    'checkout.trustBadges.support': 'Suporte 24/7',
+    'checkout.trustBadges.buyers': 'Compradores',
+    'checkout.trustBadges.verified': 'Produto Verificado',
+    'checkout.trustBadges.footer': 'Seus dados estão protegidos e sua compra é 100% segura',
   },
   en: {
     // Header
@@ -198,6 +207,15 @@ const CHECKOUT_TRANSLATIONS: Record<CheckoutLanguage, Record<string, string>> = 
     
     // Country selector
     'checkout.selectCountry': 'Select country',
+    
+    // Trust badges
+    'checkout.trustBadges.title': '🔒 100% SECURE PURCHASE',
+    'checkout.trustBadges.ssl': 'SSL Encrypted',
+    'checkout.trustBadges.guarantee': '7 Day Guarantee',
+    'checkout.trustBadges.support': '24/7 Support',
+    'checkout.trustBadges.buyers': 'Buyers',
+    'checkout.trustBadges.verified': 'Verified Product',
+    'checkout.trustBadges.footer': 'Your data is protected and your purchase is 100% secure',
   }
 };
 
@@ -206,7 +224,17 @@ const ENGLISH_COUNTRIES = ['US', 'GB'];
 
 export const useCheckoutTranslation = (userCountry?: CountryInfo | null) => {
   const language = useMemo<CheckoutLanguage>(() => {
-    if (userCountry?.code && ENGLISH_COUNTRIES.includes(userCountry.code)) {
+    const countryCode = userCountry?.code;
+    const isEnglishCountry = countryCode && ENGLISH_COUNTRIES.includes(countryCode);
+    
+    console.log('🌐 CHECKOUT TRANSLATION DEBUG:', {
+      countryCode,
+      isEnglishCountry,
+      language: isEnglishCountry ? 'en' : 'pt',
+      userCountry
+    });
+    
+    if (isEnglishCountry) {
       return 'en';
     }
     return 'pt';

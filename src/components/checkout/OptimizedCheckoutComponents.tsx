@@ -140,7 +140,10 @@ export const OptimizedStripeCardPayment = memo((props: any) => (
 ));
 
 // Componentes traduzidos
-export const OptimizedProductHeader = memo(({ product, formatPrice, userCountry, t }: any) => {
+export const OptimizedProductHeader = memo(({ product, formatPrice, userCountry, t, tc }: any) => {
+  // Use tc (checkout translation) if available, otherwise fall back to t
+  const translate = tc || t;
+  
   const getProductImage = (cover: string) => {
     if (!cover) return professionalManImage;
     if (cover.startsWith('data:')) return cover;
@@ -172,7 +175,7 @@ export const OptimizedProductHeader = memo(({ product, formatPrice, userCountry,
           <div className="flex items-center gap-2 mb-2">
             <Shield className="w-4 h-4 text-green-600" />
             <span className="text-xs text-green-600 font-medium">
-              {t('payment.secure')}
+              {translate('checkout.secure')}
             </span>
           </div>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
@@ -188,7 +191,7 @@ export const OptimizedProductHeader = memo(({ product, formatPrice, userCountry,
             {product.sales && (
               <div className="flex items-center gap-1">
                 <CheckCircle className="w-4 h-4 text-green-600" />
-                <span className="text-sm text-gray-600">{product.sales} {t('product.sales')}</span>
+                <span className="text-sm text-gray-600">{product.sales} {translate('checkout.sales')}</span>
               </div>
             )}
           </div>

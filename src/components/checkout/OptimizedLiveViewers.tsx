@@ -5,15 +5,28 @@ interface OptimizedLiveViewersProps {
   initialCount?: number;
   minViewers?: number;
   maxViewers?: number;
+  tc?: (key: string) => string;
 }
 
 export const OptimizedLiveViewers = memo(({ 
   initialCount = 47,
   minViewers = 32,
-  maxViewers = 89 
+  maxViewers = 89,
+  tc 
 }: OptimizedLiveViewersProps) => {
   const [viewers, setViewers] = useState(initialCount);
   const [isVisible, setIsVisible] = useState(false);
+
+  // Default translations
+  const getText = () => {
+    if (tc) {
+      const result = tc('checkout.liveViewers');
+      if (result !== 'checkout.liveViewers') {
+        return result;
+      }
+    }
+    return 'pessoas estão vendo este produto agora';
+  };
 
   useEffect(() => {
     // Show notification after brief delay
@@ -43,7 +56,7 @@ export const OptimizedLiveViewers = memo(({
       <div className="flex items-center gap-2">
         <Eye className="w-4 h-4 text-primary pulse-dot" />
         <span className="text-sm font-medium">
-          <span className="viewers-count">{viewers}</span> pessoas estão vendo este produto agora
+          <span className="viewers-count">{viewers}</span> {getText()}
         </span>
       </div>
     </div>
