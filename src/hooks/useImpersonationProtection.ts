@@ -127,15 +127,18 @@ export const useImpersonationProtection = (): ImpersonationProtectionResult => {
       setSession(null);
       setTimeRemaining(0);
 
-      // Logout do usuário impersonado (NÃO afeta a sessão admin que usa JWT customizado)
-      await supabase.auth.signOut();
+      // NÃO fazer signOut do Supabase - isso deslogaria o admin também
+      // O admin usa JWT customizado armazenado em localStorage (admin_session)
+      // Apenas limpar a sessão Supabase do usuário impersonado usando signOut com scope 'local'
+      // para não afetar outras abas/sessões
+      await supabase.auth.signOut({ scope: 'local' });
 
       toast({
         title: 'Impersonation encerrado',
         description: 'Voltando ao painel de administração',
       });
 
-      // Redirecionar para o painel admin (não para login, pois o admin ainda está logado via JWT)
+      // Redirecionar para o painel admin - o admin ainda está logado via JWT em localStorage
       window.location.href = '/admin/usuarios';
     } catch (error) {
       console.error('Erro ao sair do impersonation:', error);
