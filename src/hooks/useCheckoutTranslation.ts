@@ -148,6 +148,7 @@ const CHECKOUT_TRANSLATIONS: Record<CheckoutLanguage, Record<string, string>> = 
     'checkout.termsNotice2': 'não possui responsabilidade pelo conteúdo e/ou faz controle prévio deste (li) com os',
     'checkout.termsOfUse': 'Termos de uso',
     'checkout.privacyPolicy': 'Política de privacidade',
+    'checkout.and': 'e',
     'checkout.refundPolicy': 'Política de reembolso',
   },
   en: {
@@ -289,6 +290,7 @@ const CHECKOUT_TRANSLATIONS: Record<CheckoutLanguage, Record<string, string>> = 
     'checkout.termsNotice2': 'is not responsible for the content and/or does not pre-control it (li) with the',
     'checkout.termsOfUse': 'Terms of use',
     'checkout.privacyPolicy': 'Privacy policy',
+    'checkout.and': 'and',
     'checkout.refundPolicy': 'Refund policy',
   },
   es: {
@@ -430,6 +432,7 @@ const CHECKOUT_TRANSLATIONS: Record<CheckoutLanguage, Record<string, string>> = 
     'checkout.termsNotice2': 'no es responsable del contenido y/o no realiza control previo del mismo (li) con los',
     'checkout.termsOfUse': 'Términos de uso',
     'checkout.privacyPolicy': 'Política de privacidad',
+    'checkout.and': 'y',
     'checkout.refundPolicy': 'Política de reembolso',
   }
 };

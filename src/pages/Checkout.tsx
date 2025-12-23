@@ -2898,7 +2898,7 @@ const Checkout = () => {
               </TermsModal>,{' '}
               <PrivacyModal>
                 <span className="underline cursor-pointer">{tc('checkout.privacyPolicy')}</span>
-              </PrivacyModal> e{' '}
+              </PrivacyModal> {tc('checkout.and')}{' '}
               <RefundPolicyModal>
                 <span className="underline cursor-pointer">{tc('checkout.refundPolicy')}</span>
               </RefundPolicyModal>.
