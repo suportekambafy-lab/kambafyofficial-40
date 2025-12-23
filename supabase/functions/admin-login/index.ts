@@ -158,6 +158,72 @@ Deno.serve(async (req) => {
       console.log('✅ Código 2FA já foi verificado no frontend')
     }
 
+    // 3.1 Garantir permissões padrão para novos admins (evita "Acesso negado" sem permissões)
+    try {
+      const { count, error: countError } = await supabaseAdmin
+        .from('admin_permissions')
+        .select('*', { count: 'exact', head: true })
+        .eq('admin_id', adminUser.id)
+
+      if (countError) {
+        console.error('⚠️ Erro ao contar permissões (continuando):', countError)
+      } else if ((count ?? 0) === 0 && adminUser.role !== 'super_admin') {
+        const defaultPermissionsByRole: Record<string, string[]> = {
+          admin: [
+            // Permissões "novas"
+            'users',
+            'products',
+            'orders',
+            'affiliates',
+            'partners',
+            'identity_verification',
+            'support',
+            'analytics',
+            'notifications',
+            'settings',
+            'logs',
+
+            // Compatibilidade "antiga" (rotas/guards antigos)
+            'manage_users',
+            'manage_products',
+            'manage_verifications',
+            'view_analytics',
+            'manage_transactions',
+          ],
+          support: ['support'],
+          moderator: ['support'],
+        }
+
+        const permissionsToInsert = defaultPermissionsByRole[String(adminUser.role)] ?? []
+
+        if (permissionsToInsert.length > 0) {
+          console.log('🛡️ [ADMIN-LOGIN] Inserindo permissões padrão para novo admin:', {
+            email: adminUser.email,
+            role: adminUser.role,
+            permissions: permissionsToInsert,
+          })
+
+          const { error: insertPermError } = await supabaseAdmin
+            .from('admin_permissions')
+            .insert(
+              permissionsToInsert.map((permission) => ({
+                admin_id: adminUser.id,
+                permission,
+                granted_by: adminUser.id,
+              }))
+            )
+
+          if (insertPermError) {
+            console.error('⚠️ Erro ao inserir permissões padrão (continuando):', insertPermError)
+          } else {
+            console.log('✅ Permissões padrão inseridas com sucesso')
+          }
+        }
+      }
+    } catch (permError) {
+      console.error('⚠️ Erro inesperado ao garantir permissões (continuando):', permError)
+    }
+
     // 4. Garantir que o admin existe no auth.users para RLS funcionar
     console.log('🔄 Verificando/criando usuário no auth.users...')
     
