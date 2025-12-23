@@ -389,21 +389,29 @@ export default function Sales() {
   };
   
   const getPaymentMethodIcon = (paymentMethod: string) => {
-    // Retorna apenas o ícone/logo do método de pagamento
     const methodLower = paymentMethod?.toLowerCase() || '';
     
-    if (methodLower.includes('stripe') || methodLower.includes('card') || methodLower.includes('klarna')) {
-      return <CreditCard className="h-4 w-4 text-primary" />;
-    } else if (methodLower.includes('multicaixa') || methodLower.includes('express')) {
-      return <img src="/lovable-uploads/a0d34969-5a71-4a9b-808b-cd7a0f8c9e7f.png" alt="Multicaixa" className="h-5 w-auto" />;
-    } else if (methodLower.includes('pix')) {
-      return <img src="https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_Pix.png" alt="PIX" className="h-4 w-auto" />;
-    } else if (methodLower.includes('reference') || methodLower.includes('referencia')) {
-      return <Building className="h-4 w-4 text-muted-foreground" />;
-    } else if (methodLower.includes('balance') || methodLower.includes('saldo')) {
+    // Usar os mesmos logos do checkout
+    if (methodLower.includes('express') || methodLower.includes('multicaixa express')) {
+      return <img src="/lovable-uploads/e9a7b374-3f3c-4e2b-ad03-9cdefa7be8a8.png" alt="Multicaixa Express" className="h-5 w-auto" />;
+    } else if (methodLower.includes('reference') || methodLower.includes('referencia') || methodLower.includes('multicaixa')) {
+      return <img src="/lovable-uploads/809ca111-22ef-4df7-92fc-ebe47ba15021.png" alt="Referência Multicaixa" className="h-5 w-auto" />;
+    } else if (methodLower.includes('transfer') || methodLower.includes('transferencia')) {
+      return <img src="/lovable-uploads/809ca111-22ef-4df7-92fc-ebe47ba15021.png" alt="Transferência" className="h-5 w-auto" />;
+    } else if (methodLower.includes('emola')) {
+      return <img src="/lovable-uploads/70243346-a1ea-47dc-8ef7-abbd4a3d66a4.png" alt="eMola" className="h-5 w-auto" />;
+    } else if (methodLower.includes('mpesa')) {
+      return <img src="/lovable-uploads/eb1d9ab5-b83b-4c85-9028-61693547d5c0.png" alt="M-Pesa" className="h-5 w-auto" />;
+    } else if (methodLower.includes('card') || methodLower.includes('stripe')) {
+      return <img src="/lovable-uploads/3253c01d-89da-4a32-846f-4861dd03645c.png" alt="Cartão" className="h-5 w-auto" />;
+    } else if (methodLower.includes('klarna')) {
+      return <img src="/lovable-uploads/86f49c10-3542-43ce-89aa-cbef30d98480.png" alt="Klarna" className="h-5 w-auto" />;
+    } else if (methodLower.includes('multibanco')) {
+      return <img src="/lovable-uploads/eaa553f2-386c-434b-8096-7243db77886e.png" alt="Multibanco" className="h-5 w-auto" />;
+    } else if (methodLower.includes('mbway')) {
+      return <img src="/assets/mbway-logo.png" alt="MB WAY" className="h-5 w-auto" />;
+    } else if (methodLower.includes('balance') || methodLower.includes('saldo') || methodLower.includes('kambapay')) {
       return <DollarSign className="h-4 w-4 text-green-600" />;
-    } else if (methodLower.includes('paypal')) {
-      return <CreditCard className="h-4 w-4 text-blue-600" />;
     }
     return <Banknote className="h-4 w-4 text-muted-foreground" />;
   };
