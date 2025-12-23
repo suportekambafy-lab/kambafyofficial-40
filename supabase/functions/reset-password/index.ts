@@ -15,18 +15,6 @@ interface ResetPasswordRequest {
   memberAreaId?: string;
 }
 
-function generateTemporaryPassword(length = 12): string {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
-  const random = new Uint32Array(length);
-  crypto.getRandomValues(random);
-
-  let password = "";
-  for (let i = 0; i < length; i++) {
-    password += chars[random[i] % chars.length];
-  }
-  return password;
-}
-
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -61,19 +49,19 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Buscar usuário no Auth
-    const { data: listResponse, error: listError } = await supabase.auth.admin
+    // Buscar usuário no Auth usando getUserByEmail (mais eficiente que listUsers)
+    const { data: userData, error: userError } = await supabase.auth.admin
       .listUsers();
 
-    if (listError) {
-      console.error("❌ Error listing users:", listError);
+    if (userError) {
+      console.error("❌ Error listing users:", userError);
       return new Response(JSON.stringify({ error: "Erro ao buscar usuário" }), {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
-    const existingUser = listResponse.users.find((u) =>
+    const existingUser = userData.users.find((u) =>
       (u.email ?? "").toLowerCase() === normalizedEmail
     );
 
@@ -85,27 +73,53 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    // ✅ Em vez de link (que pode ser consumido por scanners de email), definimos senha temporária
-    const temporaryPassword = generateTemporaryPassword(12);
+    console.log("✅ User found:", existingUser.id);
 
-    console.log("🔑 Updating user password...");
-    const { error: updateError } = await supabase.auth.admin.updateUserById(
-      existingUser.id,
-      {
-        password: temporaryPassword,
-        email_confirm: true,
-      }
-    );
-
-    if (updateError) {
-      console.error("❌ Error updating password:", updateError);
-      return new Response(JSON.stringify({ error: "Erro ao atualizar senha" }), {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
+    // Gerar link de recuperação usando generateLink
+    // O link gerado contém token_hash que extraímos para enviar um link customizado
+    const { data: linkData, error: linkError } = await supabase.auth.admin
+      .generateLink({
+        type: "recovery",
+        email: normalizedEmail,
+        options: {
+          redirectTo: "https://app.kambafy.com/reset-password",
+        },
       });
+
+    if (linkError) {
+      console.error("❌ Error generating link:", linkError);
+      return new Response(
+        JSON.stringify({ error: "Erro ao gerar link de recuperação" }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
     }
 
-    console.log("✅ Password updated successfully");
+    // Extrair token_hash da action_link gerada
+    // A URL gerada é algo como: https://...supabase.co/auth/v1/verify?token=XXX&type=recovery&redirect_to=...
+    // O hashed_token está em linkData.properties.hashed_token
+    const tokenHash = linkData.properties?.hashed_token;
+
+    if (!tokenHash) {
+      console.error("❌ No token_hash in link data:", linkData);
+      return new Response(
+        JSON.stringify({ error: "Erro ao gerar token de recuperação" }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    console.log("✅ Token hash generated successfully");
+
+    // Criar link customizado que NÃO passa pelo /auth/v1/verify do Supabase
+    // O app vai usar verifyOtp com token_hash para validar
+    const customResetLink = `https://app.kambafy.com/reset-password?token_hash=${encodeURIComponent(tokenHash)}&type=recovery`;
+
+    console.log("🔗 Custom reset link created (token_hash based)");
 
     // Buscar nome (best-effort)
     const { data: profile } = await supabase
@@ -119,7 +133,11 @@ const handler = async (req: Request): Promise<Response> => {
       "Usuário";
 
     // Info do vendedor (opcional)
-    let sellerInfo: { memberAreaName: string; sellerName: string; sellerEmail: string } | null = null;
+    let sellerInfo: {
+      memberAreaName: string;
+      sellerName: string;
+      sellerEmail: string;
+    } | null = null;
     if (memberAreaId) {
       const { data: memberArea } = await supabase
         .from("member_areas")
@@ -130,57 +148,51 @@ const handler = async (req: Request): Promise<Response> => {
       if (memberArea) {
         sellerInfo = {
           memberAreaName: memberArea.name,
-          sellerName: memberArea.profiles.full_name,
-          sellerEmail: memberArea.profiles.email,
+          sellerName: (memberArea.profiles as any).full_name,
+          sellerEmail: (memberArea.profiles as any).email,
         };
       }
     }
 
-    const loginUrl = "https://app.kambafy.com/auth";
-
-    console.log("📧 Sending new-password email (no recovery link)...");
+    console.log("📧 Sending password reset email with custom link...");
     const { data: emailData, error: emailError } = await resend.emails.send({
       from: "Kambafy <noreply@kambafy.com>",
       to: [normalizedEmail],
       subject: sellerInfo
-        ? `🔐 Nova Senha - ${sellerInfo.memberAreaName}`
-        : "🔐 Nova Senha - Kambafy",
+        ? `🔐 Redefinir Senha - ${sellerInfo.memberAreaName}`
+        : "🔐 Redefinir Senha - Kambafy",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff;">
           <div style="text-align: center; margin-bottom: 24px;">
             <div style="background-color: #16a34a; color: white; width: 56px; height: 56px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 10px;">
               <span style="font-size: 22px; font-weight: bold;">K</span>
             </div>
-            <h1 style="color: #16a34a; margin: 0 0 6px;">Nova Senha Gerada</h1>
-            <p style="color: #64748b; font-size: 14px; margin: 0;">Sua senha foi redefinida com sucesso</p>
+            <h1 style="color: #16a34a; margin: 0 0 6px;">Redefinir Senha</h1>
+            <p style="color: #64748b; font-size: 14px; margin: 0;">Clique no botão abaixo para criar uma nova senha</p>
             ${sellerInfo ? `<p style="color:#475569;font-size:13px;margin:10px 0 0;">Para: <strong>${sellerInfo.memberAreaName}</strong></p>` : ""}
           </div>
 
           <p style="font-size: 15px; color: #1e293b; margin: 0 0 10px;">Olá <strong>${userName}</strong>,</p>
           <p style="font-size: 13px; color: #64748b; line-height: 1.6; margin: 0 0 18px;">
-            Por segurança, enviamos uma senha temporária (sem links) para evitar que seu email marque o link como usado/expirado automaticamente.
+            Recebemos uma solicitação para redefinir a senha da sua conta. Clique no botão abaixo para criar uma nova senha segura.
           </p>
 
-          <div style="background-color: #fef3cd; border: 1px solid #fbbf24; border-radius: 10px; padding: 18px; margin: 0 0 18px;">
-            <div style="font-size: 13px; color: #475569; margin-bottom: 8px;"><strong>📧 Email</strong></div>
-            <div style="font-family: 'Courier New', monospace; color: #0f172a; margin-bottom: 14px;">${normalizedEmail}</div>
-
-            <div style="font-size: 13px; color: #475569; margin-bottom: 8px;"><strong>🔑 Nova senha temporária</strong></div>
-            <div style="font-family: 'Courier New', monospace; font-size: 18px; font-weight: 700; background: #fff; border-radius: 8px; padding: 12px; color: #0f172a;">${temporaryPassword}</div>
-
-            <div style="background-color: #dc2626; color: white; border-radius: 8px; padding: 12px; margin-top: 14px; font-size: 12px; line-height: 1.6;">
-              <strong>⚠️ Importante:</strong> após entrar, altere esta senha.
-            </div>
-          </div>
-
-          <div style="text-align: center; margin: 18px 0 10px;">
-            <a href="${loginUrl}"
-              style="background-color: #16a34a; color: white; padding: 12px 26px; text-decoration: none; border-radius: 10px; font-weight: 700; display: inline-block; font-size: 14px;">
-              Fazer login agora
+          <div style="text-align: center; margin: 24px 0;">
+            <a href="${customResetLink}"
+              style="background-color: #16a34a; color: white; padding: 14px 32px; text-decoration: none; border-radius: 10px; font-weight: 700; display: inline-block; font-size: 15px;">
+              Criar Nova Senha
             </a>
           </div>
-          <p style="color:#6b7280;font-size:12px;text-align:center;margin:10px 0 0;">
-            Link de login: <span style="word-break:break-all;color:#16a34a;">${loginUrl}</span>
+
+          <div style="background-color: #fef3cd; border: 1px solid #fbbf24; border-radius: 10px; padding: 14px; margin: 18px 0;">
+            <p style="color: #92400e; font-size: 13px; margin: 0; line-height: 1.5;">
+              <strong>⏰ Importante:</strong> Este link expira em <strong>1 hora</strong> por motivos de segurança.
+            </p>
+          </div>
+
+          <p style="color:#6b7280;font-size:12px;text-align:center;margin:14px 0 0;">
+            Se o botão não funcionar, copie e cole este link no navegador:<br>
+            <span style="word-break:break-all;color:#16a34a;font-size:11px;">${customResetLink}</span>
           </p>
 
           ${sellerInfo ? `
@@ -196,7 +208,7 @@ const handler = async (req: Request): Promise<Response> => {
 
           <div style="border-top: 1px solid #e2e8f0; padding-top: 16px; margin-top: 18px;">
             <p style="color:#94a3b8;font-size:12px;text-align:center;margin:0;">
-              Se você não solicitou a redefinição, entre em contato com o suporte imediatamente.
+              Se você não solicitou a redefinição, ignore este email ou entre em contato com o suporte.
             </p>
           </div>
         </div>
@@ -211,12 +223,12 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    console.log("✅ Email sent:", emailData);
+    console.log("✅ Password reset email sent:", emailData);
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: "Nova senha enviada com sucesso",
+        message: "Email de recuperação enviado com sucesso",
       }),
       {
         status: 200,
