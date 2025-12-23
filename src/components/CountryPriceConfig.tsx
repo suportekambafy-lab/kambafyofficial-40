@@ -16,7 +16,9 @@ const allCountries = [
   { code: 'PT', name: 'Portugal', currency: 'EUR', flag: '🇵🇹' },
   { code: 'MZ', name: 'Moçambique', currency: 'MZN', flag: '🇲🇿' },
   { code: 'GB', name: 'Reino Unido', currency: 'GBP', flag: '🇬🇧' },
-  { code: 'US', name: 'Estados Unidos', currency: 'USD', flag: '🇺🇸' }
+  { code: 'US', name: 'Estados Unidos', currency: 'USD', flag: '🇺🇸' },
+  { code: 'CL', name: 'Chile', currency: 'CLP', flag: '🇨🇱' },
+  { code: 'MX', name: 'México', currency: 'MXN', flag: '🇲🇽' }
 ];
 
 // Filtrar Angola (moeda base) das opções de preços personalizados
@@ -80,7 +82,9 @@ export default function CountryPriceConfig({
       'PT': (basePriceNumber * 0.00095).toFixed(2), // KZ para EUR
       'MZ': (basePriceNumber * 0.0722).toFixed(2), // KZ para MZN
       'GB': (gbpValue < 1 ? 1 : gbpValue).toFixed(2), // KZ para GBP (mínimo £1)
-      'US': (usdValue < 1 ? 1 : usdValue).toFixed(2) // KZ para USD (mínimo $1)
+      'US': (usdValue < 1 ? 1 : usdValue).toFixed(2), // KZ para USD (mínimo $1)
+      'CL': Math.round(basePriceNumber * 1.05).toString(), // KZ para CLP (peso chileno)
+      'MX': (basePriceNumber * 0.019).toFixed(2) // KZ para MXN (peso mexicano)
     };
   };
 
