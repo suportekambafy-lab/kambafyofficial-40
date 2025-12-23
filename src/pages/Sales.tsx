@@ -652,81 +652,79 @@ export default function Sales() {
                           </div>
                         </div>
                         
-                        <div className="flex flex-col lg:items-end gap-2">
+                        <div className="flex flex-col lg:items-end gap-1.5">
+                          {/* Linha 1: Valor + Status */}
                           <div className="flex items-center gap-2">
-                            <div className="text-right">
-                              {sale.sale_type === 'affiliate' ? <div>
-                                  <div className="font-bold text-base md:text-lg text-blue-600">
-                                    {formatCurrency(parseFloat(sale.affiliate_commission?.toString() || '0'))}
-                                  </div>
-                                   <div className="text-xs text-muted-foreground">
-                                     {formatPrice(sale)}
-                                   </div>
-                                </div> : sale.sale_type === 'recovered' ? <div>
-                                   <div className="font-bold text-base md:text-lg text-green-600">
-                                     {formatCurrency(parseFloat(sale.amount) * 0.8, sale.currency)}
-                                   </div>
-                                    <div className="text-xs text-muted-foreground">
-                                      {formatPrice(sale)}
-                                    </div>
-                                 </div> : sale.affiliate_code && sale.seller_commission ? <div>
-                                  <div className="font-bold text-base md:text-lg text-green-600">
-                                    {formatCurrency(parseFloat(sale.seller_commission?.toString() || '0'))}
-                                  </div>
-                                   <div className="text-xs text-muted-foreground">
-                                     {formatPrice(sale)}
-                                   </div>
-                                </div> : <div className="font-bold text-base md:text-lg">
-                                   {formatPrice(sale)}
-                                 </div>}
-                            </div>
-                            <div className="flex flex-col items-end gap-1">
-                              {getStatusBadge(sale.status)}
-                              {getPaymentMethodBadge(sale.payment_method)}
-                            </div>
-                          </div>
-                          
-                          <div className="flex flex-wrap items-center gap-1">
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <Calendar className="h-3 w-3" />
-                              <span>
-                                {new Date(sale.created_at).toLocaleDateString('pt-BR')} às {new Date(sale.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                            {sale.sale_type === 'affiliate' ? (
+                              <span className="font-bold text-base md:text-lg text-blue-600">
+                                {formatCurrency(parseFloat(sale.affiliate_commission?.toString() || '0'))}
                               </span>
-                            </div>
+                            ) : sale.sale_type === 'recovered' ? (
+                              <span className="font-bold text-base md:text-lg text-green-600">
+                                {formatCurrency(parseFloat(sale.amount) * 0.8, sale.currency)}
+                              </span>
+                            ) : sale.affiliate_code && sale.seller_commission ? (
+                              <span className="font-bold text-base md:text-lg text-green-600">
+                                {formatCurrency(parseFloat(sale.seller_commission?.toString() || '0'))}
+                              </span>
+                            ) : (
+                              <span className="font-bold text-base md:text-lg">
+                                {formatPrice(sale)}
+                              </span>
+                            )}
+                            {getStatusBadge(sale.status)}
                           </div>
                           
-                          <div className="flex flex-wrap gap-1">
-                            {sale.sale_type === 'module' ? <Badge variant="outline" className="text-xs bg-cyan-50 text-cyan-700 border-cyan-200">
-                                <User className="h-3 w-3 mr-1" />
-                                Pagamento de Módulo
-                              </Badge> : sale.sale_type === 'affiliate' ? <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-200">
-                                <User className="h-3 w-3 mr-1" />
-                                Comissão Afiliado
-                              </Badge> : sale.sale_type === 'recovered' ? <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700 border-orange-200">
-                                <User className="h-3 w-3 mr-1" />
-                                Recuperado (-20%)
-                              </Badge> : sale.affiliate_code ? <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
-                                <User className="h-3 w-3 mr-1" />
-                                Com Afiliado
-                              </Badge> : null}
+                          {/* Linha 2: Método de pagamento + Data */}
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            {getPaymentMethodBadge(sale.payment_method)}
+                            <span className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              {new Date(sale.created_at).toLocaleDateString('pt-BR')}
+                            </span>
+                          </div>
+                          
+                          {/* Linha 3: Badges (País + Tipo de venda) */}
+                          <div className="flex items-center gap-1">
                             {(() => {
-                          // Usar customer_country se disponível, senão inferir pelo método de pagamento
-                          const countryInfo = sale.customer_country 
-                            ? getCountryFlag(sale.customer_country)
-                            : getCountryByPaymentMethod(sale.payment_method);
-                          return <Badge variant="outline" className="text-xs">
+                              const countryInfo = sale.customer_country 
+                                ? getCountryFlag(sale.customer_country)
+                                : getCountryByPaymentMethod(sale.payment_method);
+                              return (
+                                <Badge variant="outline" className="text-xs">
                                   <span className="mr-1">{countryInfo.flag}</span>
                                   {countryInfo.name}
-                                </Badge>;
-                        })()}
+                                </Badge>
+                              );
+                            })()}
+                            {sale.sale_type === 'module' && (
+                              <Badge variant="outline" className="text-xs bg-cyan-50 text-cyan-700 border-cyan-200">
+                                Módulo
+                              </Badge>
+                            )}
+                            {sale.sale_type === 'affiliate' && (
+                              <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-200">
+                                Afiliado
+                              </Badge>
+                            )}
+                            {sale.sale_type === 'recovered' && (
+                              <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700 border-orange-200">
+                                -20%
+                              </Badge>
+                            )}
+                            {sale.sale_type !== 'affiliate' && sale.affiliate_code && (
+                              <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                                C/ Afiliado
+                              </Badge>
+                            )}
                           </div>
                           
                           {/* Botão Ver Detalhes com Dialog */}
                           <Dialog>
                             <DialogTrigger asChild>
-                              <Button variant="outline" size="sm" className="mt-2 text-xs">
+                              <Button variant="ghost" size="sm" className="text-xs h-7 px-2">
                                 <Eye className="h-3 w-3 mr-1" />
-                                Ver Detalhes
+                                Detalhes
                               </Button>
                             </DialogTrigger>
                             <DialogContent className="max-w-md">
