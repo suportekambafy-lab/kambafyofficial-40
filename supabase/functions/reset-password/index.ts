@@ -49,54 +49,26 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Buscar usuário no Auth (paginação para não falhar em projetos com muitos usuários)
-    const perPage = 1000;
-    const maxPages = 25;
+    // Usar getUserByEmail ao invés de listUsers para evitar erros de banco de dados
+    const { data: userData, error: userError } = await supabase.auth.admin.getUserByEmail(normalizedEmail);
 
-    let existingUser:
-      | { id: string; email?: string | null; user_metadata?: Record<string, unknown> }
-      | null = null;
-
-    for (let page = 1; page <= maxPages; page++) {
-      const { data: usersPage, error: usersError } = await supabase.auth.admin
-        .listUsers({ page, perPage });
-
-      if (usersError) {
-        console.error("❌ Error listing users:", usersError);
-        return new Response(JSON.stringify({ error: "Erro ao buscar usuário" }), {
-          status: 500,
+    if (userError || !userData?.user) {
+      console.error("❌ User not found or error:", userError?.message ?? "User not found");
+      // Por segurança, retornamos sucesso mesmo se o usuário não existe
+      // para não revelar se o email existe no sistema
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: "Se o email existir, você receberá instruções de recuperação",
+        }),
+        {
+          status: 200,
           headers: { "Content-Type": "application/json", ...corsHeaders },
-        });
-      }
-
-      const found = usersPage.users.find(
-        (u) => (u.email ?? "").toLowerCase() === normalizedEmail
+        }
       );
-
-      if (found) {
-        existingUser = found as any;
-        break;
-      }
-
-      // Se não veio uma página completa, não há mais páginas
-      if (usersPage.users.length < perPage) {
-        break;
-      }
-
-      // Se o total existe e já passamos do total estimado, parar
-      if (usersPage.total && page >= Math.ceil(usersPage.total / perPage)) {
-        break;
-      }
     }
 
-    if (!existingUser) {
-      console.error("❌ User not found:", normalizedEmail);
-      return new Response(JSON.stringify({ error: "Usuário não encontrado" }), {
-        status: 404,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      });
-    }
-
+    const existingUser = userData.user;
     console.log("✅ User found:", existingUser.id);
 
     // Gerar link de recuperação usando generateLink
