@@ -36,11 +36,32 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
     return total;
   }, [selectedOrderBumps]);
 
+  // Obter código de telefone inicial baseado no país do cache
+  const getInitialPhoneData = () => {
+    try {
+      const cachedCountry = localStorage.getItem('userCountry');
+      if (cachedCountry) {
+        const phoneCodes: Record<string, string> = {
+          'AO': '+244', 'PT': '+351', 'MZ': '+258', 'BR': '+55', 'US': '+1',
+          'ES': '+34', 'FR': '+33', 'GB': '+44', 'DE': '+49', 'IT': '+39',
+          'ZA': '+27', 'CV': '+238', 'MX': '+52', 'CL': '+56'
+        };
+        return {
+          phoneCountry: cachedCountry,
+          phone: (phoneCodes[cachedCountry] || '+244') + ' '
+        };
+      }
+    } catch {}
+    return { phoneCountry: '', phone: '' };
+  };
+
+  const initialPhoneData = getInitialPhoneData();
+  
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
-    phone: "",
-    phoneCountry: "" // Será definido dinamicamente pelo país detectado
+    phone: initialPhoneData.phone,
+    phoneCountry: initialPhoneData.phoneCountry
   });
 
   const { 
@@ -497,24 +518,31 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
     }
   }, [geoReady, product]);
 
-  // Definir phoneCountry com base no país detectado
+  // Definir phoneCountry com base no país detectado - sempre sincronizar quando geo muda
   useEffect(() => {
-    if (geoReady && userCountry && !formData.phoneCountry) {
-      console.log('🌍 Auto-applying detected country to phone:', userCountry.code);
+    if (geoReady && userCountry) {
       const phoneCodes: Record<string, string> = {
         'AO': '+244', 'PT': '+351', 'MZ': '+258', 'BR': '+55', 'US': '+1',
         'ES': '+34', 'FR': '+33', 'GB': '+44', 'DE': '+49', 'IT': '+39',
         'ZA': '+27', 'CV': '+238', 'MX': '+52', 'CL': '+56'
       };
-      const phoneCode = phoneCodes[userCountry.code] || '+244';
+      const expectedPhoneCode = phoneCodes[userCountry.code] || '+244';
       
-      setFormData(prev => ({
-        ...prev,
-        phoneCountry: userCountry.code,
-        phone: phoneCode + " "
-      }));
+      // Verificar se precisa atualizar (country mudou ou phone não corresponde ao country)
+      const currentPhoneCode = formData.phone.split(' ')[0];
+      const isPhoneOutOfSync = formData.phoneCountry !== userCountry.code || 
+                               (currentPhoneCode && currentPhoneCode !== expectedPhoneCode);
+      
+      if (!formData.phoneCountry || isPhoneOutOfSync) {
+        console.log('🌍 Syncing phone with detected country:', userCountry.code, expectedPhoneCode);
+        setFormData(prev => ({
+          ...prev,
+          phoneCountry: userCountry.code,
+          phone: expectedPhoneCode + " "
+        }));
+      }
     }
-  }, [geoReady, userCountry, formData.phoneCountry]);
+  }, [geoReady, userCountry?.code]);
 
   // Handler para aplicar cupom
   const handleCouponApplied = useCallback((coupon: any, discountAmount: number) => {

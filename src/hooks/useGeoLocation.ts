@@ -87,12 +87,18 @@ const getInitialCountry = (): CountryInfo => {
       console.log('🌍 Using cached country:', storedCountry);
       return SUPPORTED_COUNTRIES[storedCountry];
     }
+    
+    // Se temos país armazenado mas sem detecção recente, ainda usar o país armazenado
+    // (será atualizado pela detecção de IP em background)
+    if (storedCountry && SUPPORTED_COUNTRIES[storedCountry]) {
+      console.log('🌍 Using stored country (pending IP refresh):', storedCountry);
+      return SUPPORTED_COUNTRIES[storedCountry];
+    }
   } catch {
     // localStorage indisponível
   }
-  // Retornar null - será definido pela detecção de IP
-  // Usar AO temporariamente enquanto carrega (será sobrescrito)
-  return SUPPORTED_COUNTRIES.AO;
+  // Retornar US como fallback internacional (será sobrescrito pela detecção de IP)
+  return SUPPORTED_COUNTRIES.US;
 };
 
 // Função para obter taxas iniciais do cache
