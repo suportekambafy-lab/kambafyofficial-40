@@ -314,8 +314,20 @@ export default function AdminUsers() {
     console.log('✅ Senha temporária recebida, fazendo login...');
 
     try {
-      // Fazer logout do admin primeiro
-      await supabase.auth.signOut();
+      // ✅ Backup da sessão Supabase do admin para restaurar após sair do impersonation
+      const { data: adminAuthData } = await supabase.auth.getSession();
+      if (adminAuthData.session) {
+        localStorage.setItem(
+          'admin_supabase_session_backup',
+          JSON.stringify({
+            access_token: adminAuthData.session.access_token,
+            refresh_token: adminAuthData.session.refresh_token,
+          })
+        );
+      }
+
+      // Fazer logout LOCAL do admin (não revoga refresh token, permitindo restore)
+      await supabase.auth.signOut({ scope: 'local' });
 
       // Fazer login com a senha temporária
       const { error: loginError } = await supabase.auth.signInWithPassword({
