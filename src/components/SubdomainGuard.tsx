@@ -240,22 +240,29 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
         }
       }
     } else if (currentSubdomain === 'admin') {
-      // admin.kambafy.com: FORÇAR apenas rotas /admin
-      // EXCEÇÃO: permitir /vendedor para impersonation (quando admin entra como usuário)
-      if (!currentPath.startsWith('/admin') && !currentPath.startsWith('/vendedor') && !currentPath.startsWith('/auth')) {
-        console.log('Admin subdomain: redirecting non-admin route to /admin/login');
-        shouldRedirect = true;
+      // admin.kambafy.com: por padrão, FORÇAR apenas rotas /admin
+      // EXCEÇÃO: durante impersonation, permitir /vendedor no MESMO subdomínio para manter a sessão do Supabase
+      const isImpersonating = !!localStorage.getItem('impersonation_data');
+
+      if (currentPath.startsWith('/vendedor')) {
+        if (isImpersonating) {
+          console.log('✅ SubdomainGuard: Admin impersonation ativa - permitindo /vendedor no admin', {
+            currentPath,
+            currentSubdomain
+          });
+          return;
+        }
+
+        console.log('🚫 SubdomainGuard: /vendedor no admin sem impersonation - voltando ao login admin', {
+          currentPath
+        });
         window.location.href = window.location.protocol + '//' + window.location.host + '/admin/login';
         return;
       }
-      // Se é /vendedor ou /auth no admin, redirecionar para app.kambafy.com
-      if (currentPath.startsWith('/vendedor') || currentPath.startsWith('/auth')) {
-        const targetUrl = `${window.location.protocol}//app.kambafy.com${currentPath}`;
-        console.log('🔄 SubdomainGuard: Admin impersonation - redirecionando para app.kambafy.com', {
-          from: window.location.href,
-          to: targetUrl
-        });
-        window.location.href = targetUrl;
+
+      if (!currentPath.startsWith('/admin')) {
+        console.log('Admin subdomain: redirecting non-admin route to /admin/login');
+        window.location.href = window.location.protocol + '//' + window.location.host + '/admin/login';
         return;
       }
     }
