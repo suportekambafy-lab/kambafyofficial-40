@@ -1,5 +1,8 @@
 project_id = "hcbkqygdtzpxvctfdqbd"
 
+[functions.update-user-email]
+verify_jwt = false
+
 [functions.fix-user-email]
 verify_jwt = false
 
