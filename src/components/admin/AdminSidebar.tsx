@@ -139,7 +139,7 @@ export function AdminSidebar({ collapsed = false, onToggle }: AdminSidebarProps)
           <img 
             src="/kambafy-icon-light.png" 
             alt="Kambafy" 
-            className={`w-8 h-8 transition-all duration-300 ${collapsed ? 'opacity-100 scale-100' : 'opacity-0 scale-75 absolute'}`}
+            className={`w-10 h-10 object-contain transition-all duration-300 ${collapsed ? 'opacity-100 scale-100' : 'opacity-0 scale-75 absolute'}`}
           />
         </div>
         <button 
