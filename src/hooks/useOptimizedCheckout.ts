@@ -501,9 +501,17 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
   useEffect(() => {
     if (geoReady && userCountry && !formData.phoneCountry) {
       console.log('🌍 Auto-applying detected country to phone:', userCountry.code);
+      const phoneCodes: Record<string, string> = {
+        'AO': '+244', 'PT': '+351', 'MZ': '+258', 'BR': '+55', 'US': '+1',
+        'ES': '+34', 'FR': '+33', 'GB': '+44', 'DE': '+49', 'IT': '+39',
+        'ZA': '+27', 'CV': '+238', 'MX': '+52', 'CL': '+56'
+      };
+      const phoneCode = phoneCodes[userCountry.code] || '+244';
+      
       setFormData(prev => ({
         ...prev,
-        phoneCountry: userCountry.code
+        phoneCountry: userCountry.code,
+        phone: phoneCode + " "
       }));
     }
   }, [geoReady, userCountry, formData.phoneCountry]);

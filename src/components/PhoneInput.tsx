@@ -23,7 +23,9 @@ const countries: Country[] = [
   { code: "IT", name: "Itália", flag: "🇮🇹", dialCode: "+39" },
   { code: "ZA", name: "África do Sul", flag: "🇿🇦", dialCode: "+27" },
   { code: "CV", name: "Cabo Verde", flag: "🇨🇻", dialCode: "+238" },
-  { code: "CN", name: "China", flag: "🇨🇳", dialCode: "+86" }
+  { code: "CN", name: "China", flag: "🇨🇳", dialCode: "+86" },
+  { code: "MX", name: "México", flag: "🇲🇽", dialCode: "+52" },
+  { code: "CL", name: "Chile", flag: "🇨🇱", dialCode: "+56" }
 ];
 
 interface PhoneInputProps {

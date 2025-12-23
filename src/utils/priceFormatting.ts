@@ -36,6 +36,10 @@ export const formatPrice = (
           return `£${formatWithMaxTwoDecimals(customPrice)}`;
         case 'USD':
           return `$${formatWithMaxTwoDecimals(customPrice)}`;
+        case 'MXN':
+          return `$${customPrice.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN`;
+        case 'CLP':
+          return `$${Math.round(customPrice).toLocaleString('es-CL')} CLP`;
         case 'MZN':
           return `${formatWithMaxTwoDecimals(customPrice)} MZN`;
         case 'KZ':
@@ -65,6 +69,10 @@ export const formatPrice = (
       return `£${formatWithMaxTwoDecimals(convertedPrice)}`;
     case 'USD':
       return `$${formatWithMaxTwoDecimals(convertedPrice)}`;
+    case 'MXN':
+      return `$${convertedPrice.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN`;
+    case 'CLP':
+      return `$${Math.round(convertedPrice).toLocaleString('es-CL')} CLP`;
     case 'MZN':
       return `${formatWithMaxTwoDecimals(convertedPrice)} MZN`;
     case 'KZ':
