@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { PageSkeleton } from '@/components/ui/page-skeleton';
 import { AdminLayout } from '@/components/admin/AdminLayout';
+import { AdminActionBadge } from '@/components/admin/AdminActionBadge';
 import { 
   CheckCircle, 
   XCircle, 
@@ -54,6 +55,8 @@ interface RefundRequest {
   refund_deadline: string;
   created_at: string;
   updated_at: string;
+  processed_by_admin_id?: string;
+  processed_by_admin_name?: string;
   products?: { name: string };
   profiles?: { full_name: string; email: string };
   orders?: { has_active_refund: boolean };
@@ -432,6 +435,14 @@ export default function AdminRefunds() {
                             <p><span className="font-medium">Admin:</span> {refund.admin_comment}</p>
                           </div>
                         )}
+                        
+                        {/* Badge do admin que processou - visível apenas para super admins */}
+                        <AdminActionBadge 
+                          adminName={refund.processed_by_admin_name}
+                          adminId={refund.processed_by_admin_id}
+                          actionLabel={refund.status?.includes('approved') ? 'Aprovado por' : 'Rejeitado por'}
+                          className="mt-1"
+                        />
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-semibold">
