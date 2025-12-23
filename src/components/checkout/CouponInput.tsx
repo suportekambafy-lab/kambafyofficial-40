@@ -171,7 +171,7 @@ export const CouponInput = memo(({
         <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
           type="text"
-          placeholder="Código do cupom"
+          placeholder={t('coupon.placeholder') || 'COUPON CODE'}
           value={couponCode}
           onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
           className="pl-10 uppercase"
@@ -187,7 +187,7 @@ export const CouponInput = memo(({
         {isValidating ? (
           <Loader2 className="w-4 h-4 animate-spin" />
         ) : (
-          'Aplicar'
+          t('coupon.apply') || 'Apply'
         )}
       </Button>
     </div>
