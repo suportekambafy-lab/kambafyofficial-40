@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ShoppingCart, Search, RefreshCw, CheckCircle, Clock, XCircle, CreditCard, Banknote, Building, Calendar, Package, User, DollarSign, Download } from "lucide-react";
+import { ShoppingCart, Search, RefreshCw, CheckCircle, Clock, XCircle, CreditCard, Banknote, Building, Calendar, Package, User, DollarSign, Download, Mail, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import { supabase } from "@/integrations/supabase/client";
@@ -101,6 +101,7 @@ export default function Sales() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(200); // Mostrar todas as vendas
   const [showAllPaymentMethods, setShowAllPaymentMethods] = useState(false);
+  const [resendingAccessFor, setResendingAccessFor] = useState<string | null>(null); // ID da venda sendo processada
   const {
     loadOrdersWithStats,
     totalCount
@@ -251,6 +252,65 @@ export default function Sales() {
     console.log('🔄 Refresh manual solicitado');
     loadSales(); // Chama diretamente, não reseta hasLoadedRef
   }, [loadSales]);
+
+  // Função para reenviar acesso ao cliente
+  const resendCustomerAccess = async (sale: Sale) => {
+    if (!sale || sale.status !== 'completed') {
+      toast({
+        title: 'Erro',
+        description: 'Só é possível reenviar acesso para vendas pagas.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      setResendingAccessFor(sale.id);
+      
+      console.log('🔄 Reenviando acesso para:', sale.customer_email);
+      
+      const { data, error } = await supabase.functions.invoke('resend-purchase-access', {
+        body: { orderIds: [sale.id] }
+      });
+
+      if (error) throw error;
+
+      console.log('✅ Resultado do reenvio:', data);
+
+      if (data?.results && data.results.length > 0) {
+        const result = data.results[0];
+        if (result.success) {
+          if (result.error === 'already_has_access') {
+            toast({
+              title: 'Cliente já tem acesso',
+              description: `O cliente ${sale.customer_email} já possui acesso ativo a este produto.`,
+            });
+          } else {
+            toast({
+              title: 'Acesso concedido com sucesso',
+              description: `Acesso concedido e email enviado para ${sale.customer_email}${result.account_created ? ' (nova conta criada)' : ''}`,
+            });
+          }
+        } else {
+          throw new Error(result.error || 'Falha ao reenviar acesso');
+        }
+      } else {
+        toast({
+          title: 'Acesso reenviado',
+          description: `Email de acesso enviado para ${sale.customer_email}`,
+        });
+      }
+    } catch (error: any) {
+      console.error('❌ Erro ao reenviar acesso:', error);
+      toast({
+        title: 'Erro ao reenviar acesso',
+        description: error.message || 'Não foi possível reenviar o acesso.',
+        variant: 'destructive',
+      });
+    } finally {
+      setResendingAccessFor(null);
+    }
+  };
 
   // Reset page when filters change
   useEffect(() => {
@@ -669,6 +729,29 @@ export default function Sales() {
                                 </Badge>;
                         })()}
                           </div>
+                          
+                          {/* Botão para reenviar acesso - só mostra para vendas pagas */}
+                          {sale.status === 'completed' && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => resendCustomerAccess(sale)}
+                              disabled={resendingAccessFor === sale.id}
+                              className="mt-2 text-xs"
+                            >
+                              {resendingAccessFor === sale.id ? (
+                                <>
+                                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                                  Enviando...
+                                </>
+                              ) : (
+                                <>
+                                  <Mail className="h-3 w-3 mr-1" />
+                                  Reenviar Acesso
+                                </>
+                              )}
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </div>
