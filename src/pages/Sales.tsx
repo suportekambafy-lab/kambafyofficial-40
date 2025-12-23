@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ShoppingCart, Search, RefreshCw, CheckCircle, Clock, XCircle, CreditCard, Banknote, Building, Calendar, Package, User, DollarSign, Download, Mail, Loader2, Eye } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import { supabase } from "@/integrations/supabase/client";
@@ -283,13 +283,13 @@ export default function Sales() {
         if (result.success) {
           if (result.error === 'already_has_access') {
             toast({
-              title: 'Cliente já tem acesso',
-              description: `O cliente ${sale.customer_email} já possui acesso ativo a este produto.`,
+              title: 'Acesso reenviado',
+              description: `O cliente já tinha acesso — reenviamos o email para ${sale.customer_email}.`,
             });
           } else {
             toast({
-              title: 'Acesso concedido com sucesso',
-              description: `Acesso concedido e email enviado para ${sale.customer_email}${result.account_created ? ' (nova conta criada)' : ''}`,
+              title: 'Acesso reenviado com sucesso',
+              description: `Email enviado para ${sale.customer_email}${result.account_created ? ' (nova conta criada)' : ''}`,
             });
           }
         } else {
@@ -730,6 +730,9 @@ export default function Sales() {
                             <DialogContent className="max-w-md">
                               <DialogHeader>
                                 <DialogTitle>Detalhes da Venda</DialogTitle>
+                                <DialogDescription>
+                                  Informações completas do cliente e desta venda.
+                                </DialogDescription>
                               </DialogHeader>
                               <div className="space-y-4">
                                 {/* Info do Produto */}

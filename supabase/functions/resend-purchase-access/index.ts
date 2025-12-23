@@ -141,7 +141,7 @@ const handler = async (req: Request): Promise<Response> => {
         const normalizedEmail = order.customer_email.toLowerCase().trim();
         console.log(`\n🔄 Processing order ${order.order_id} for ${normalizedEmail}`);
 
-        // 0) Segurança: não reenviar se já existe acesso
+        // 0) Verificar se já existe acesso (se existir, ainda assim reenviamos o email)
         const { data: existingAccess, error: accessCheckError } = await supabase
           .from('customer_access')
           .select('id, is_active')
@@ -153,16 +153,9 @@ const handler = async (req: Request): Promise<Response> => {
           throw accessCheckError;
         }
 
-        if (existingAccess?.id && existingAccess.is_active) {
-          console.log('ℹ️ Access already exists for this order, skipping');
-          results.push({
-            order_id: order.order_id,
-            email: normalizedEmail,
-            success: true,
-            account_created: false,
-            error: 'already_has_access'
-          });
-          continue;
+        const hasActiveAccessForOrder = Boolean(existingAccess?.id && existingAccess.is_active);
+        if (hasActiveAccessForOrder) {
+          console.log('ℹ️ Access already exists for this order (will resend email)');
         }
 
         // 1) Criar conta (se ainda não existir). Se já existir, seguimos normalmente.
@@ -200,36 +193,40 @@ const handler = async (req: Request): Promise<Response> => {
           continue;
         }
 
-        // 2) Conceder acesso (customer_access)
+        // 2) Conceder acesso (customer_access) - se ainda não existe
         const product = order.products as any;
 
-        console.log('🔑 Creating customer_access...');
-        const { error: grantAccessError } = await supabase.rpc('create_customer_access_manual', {
-          p_customer_email: normalizedEmail,
-          p_customer_name: order.customer_name,
-          p_order_id: order.order_id,
-          p_product_id: order.product_id,
-        });
-
-        if (grantAccessError && grantAccessError.code !== '23505') {
-          console.error('❌ Error creating customer_access:', grantAccessError);
-          throw grantAccessError;
-        }
-
-        // 3) Adicionar na área de membros (se existir)
-        if (product?.member_area_id) {
-          console.log('👨‍🎓 Adding student to member area...');
-          const { error: addStudentError } = await supabase.rpc('admin_add_student_to_member_area', {
-            p_member_area_id: product.member_area_id,
-            p_student_email: normalizedEmail,
-            p_student_name: order.customer_name,
-            p_cohort_id: (order as any).cohort_id || null,
+        if (!hasActiveAccessForOrder) {
+          console.log('🔑 Creating customer_access...');
+          const { error: grantAccessError } = await supabase.rpc('create_customer_access_manual', {
+            p_customer_email: normalizedEmail,
+            p_customer_name: order.customer_name,
+            p_order_id: order.order_id,
+            p_product_id: order.product_id,
           });
 
-          if (addStudentError) {
-            console.error('❌ Error adding student:', addStudentError);
-            throw addStudentError;
+          if (grantAccessError && grantAccessError.code !== '23505') {
+            console.error('❌ Error creating customer_access:', grantAccessError);
+            throw grantAccessError;
           }
+
+          // 3) Adicionar na área de membros (se existir)
+          if (product?.member_area_id) {
+            console.log('👨‍🎓 Adding student to member area...');
+            const { error: addStudentError } = await supabase.rpc('admin_add_student_to_member_area', {
+              p_member_area_id: product.member_area_id,
+              p_student_email: normalizedEmail,
+              p_student_name: order.customer_name,
+              p_cohort_id: (order as any).cohort_id || null,
+            });
+
+            if (addStudentError) {
+              console.error('❌ Error adding student:', addStudentError);
+              throw addStudentError;
+            }
+          }
+        } else {
+          console.log('ℹ️ Skipping customer_access + member area insert (already active)');
         }
 
         // 4) Enviar email do produto principal
@@ -305,45 +302,48 @@ const handler = async (req: Request): Promise<Response> => {
                 .eq('product_id', bumpProduct.id)
                 .maybeSingle();
 
-              if (existingBumpAccess) {
-                console.log('ℹ️ Customer already has access to bump product');
-                continue;
+              const bumpAlreadyHasAccess = Boolean(existingBumpAccess?.id);
+              if (bumpAlreadyHasAccess) {
+                console.log('ℹ️ Customer already has access to bump product (will resend email)');
               }
 
-              // Criar acesso para o produto do bump
               const bumpOrderId = `${order.order_id}-bump-${bumpProduct.id.substring(0, 8)}`;
-              
-              const { error: bumpAccessError } = await supabase
-                .from('customer_access')
-                .insert({
-                  customer_email: normalizedEmail,
-                  customer_name: order.customer_name,
-                  order_id: bumpOrderId,
-                  product_id: bumpProduct.id,
-                  is_active: true,
-                  access_expires_at: null,
-                });
 
-              if (bumpAccessError && bumpAccessError.code !== '23505') {
-                console.error('❌ Error creating bump access:', bumpAccessError);
-                continue;
-              }
+              if (!bumpAlreadyHasAccess) {
+                // Criar acesso para o produto do bump
+                const { error: bumpAccessError } = await supabase
+                  .from('customer_access')
+                  .insert({
+                    customer_email: normalizedEmail,
+                    customer_name: order.customer_name,
+                    order_id: bumpOrderId,
+                    product_id: bumpProduct.id,
+                    is_active: true,
+                    access_expires_at: null,
+                  });
 
-              console.log('✅ Bump product access granted');
-
-              // Adicionar na área de membros do bump (se existir)
-              if (bumpProduct.member_area_id) {
-                console.log('👨‍🎓 Adding student to bump member area...');
-                const { error: addBumpStudentError } = await supabase.rpc('admin_add_student_to_member_area', {
-                  p_member_area_id: bumpProduct.member_area_id,
-                  p_student_email: normalizedEmail,
-                  p_student_name: order.customer_name,
-                  p_cohort_id: null,
-                });
-
-                if (addBumpStudentError) {
-                  console.error('❌ Error adding student to bump member area:', addBumpStudentError);
+                if (bumpAccessError && bumpAccessError.code !== '23505') {
+                  console.error('❌ Error creating bump access:', bumpAccessError);
+                } else {
+                  console.log('✅ Bump product access granted');
                 }
+
+                // Adicionar na área de membros do bump (se existir)
+                if (bumpProduct.member_area_id) {
+                  console.log('👨‍🎓 Adding student to bump member area...');
+                  const { error: addBumpStudentError } = await supabase.rpc('admin_add_student_to_member_area', {
+                    p_member_area_id: bumpProduct.member_area_id,
+                    p_student_email: normalizedEmail,
+                    p_student_name: order.customer_name,
+                    p_cohort_id: null,
+                  });
+
+                  if (addBumpStudentError) {
+                    console.error('❌ Error adding student to bump member area:', addBumpStudentError);
+                  }
+                }
+              } else {
+                console.log('ℹ️ Skipping bump access + member area insert (already active)');
               }
 
               // Enviar email de acesso para o bump product
@@ -376,8 +376,9 @@ const handler = async (req: Request): Promise<Response> => {
         results.push({
           order_id: order.order_id,
           email: normalizedEmail,
-          success: true,
+          success: !emailError,
           account_created: isNewAccount,
+          error: emailError ? `Failed to send emails: ${emailError.message || 'Unknown error'}` : (hasActiveAccessForOrder ? 'already_has_access' : undefined),
         });
       } catch (orderError) {
         console.error(`❌ Error processing order ${order.order_id}:`, orderError);
