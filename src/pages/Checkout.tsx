@@ -381,11 +381,24 @@ const Checkout = () => {
   // Atualizar código de telefone automaticamente baseado no país detectado
   useEffect(() => {
     if (userCountry && !geoLoading) {
-      setFormData(prev => ({
-        ...prev,
-        phoneCountry: userCountry.code,
-        phone: prev.phone.startsWith('+') ? prev.phone : `${getPhoneCodeByCountry(userCountry.code)} `
-      }));
+      const expectedCode = getPhoneCodeByCountry(userCountry.code);
+      setFormData(prev => {
+        const prevPhone = (prev.phone || '').trim();
+        const parts = prevPhone.split(' ');
+        const currentCode = parts[0] || '';
+        const rest = parts.slice(1).join(' ').trim();
+
+        const shouldReplaceCode = !currentCode.startsWith('+') || currentCode !== expectedCode;
+        const nextPhone = shouldReplaceCode
+          ? `${expectedCode}${rest ? ` ${rest}` : ' '}`
+          : prev.phone;
+
+        return {
+          ...prev,
+          phoneCountry: userCountry.code,
+          phone: nextPhone
+        };
+      });
     }
   }, [userCountry, geoLoading]);
 
@@ -404,7 +417,9 @@ const Checkout = () => {
       'IT': '+39',
       'ZA': '+27',
       'CV': '+238',
-      'ST': '+239'
+      'ST': '+239',
+      'MX': '+52',
+      'CL': '+56'
     };
     return phoneCodes[countryCode] || '+244';
   };
@@ -424,6 +439,16 @@ const Checkout = () => {
       if (userCountry?.currency === 'USD') {
         const displayPrice = `$${priceInKZ.toFixed(2)}`;
         console.log(`🚨 getDisplayPrice - VALOR JÁ CONVERTIDO USD: ${displayPrice}`);
+        return displayPrice;
+      }
+      if (userCountry?.currency === 'MXN') {
+        const displayPrice = `$${priceInKZ.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN`;
+        console.log(`🚨 getDisplayPrice - VALOR JÁ CONVERTIDO MXN: ${displayPrice}`);
+        return displayPrice;
+      }
+      if (userCountry?.currency === 'CLP') {
+        const displayPrice = `$${Math.round(priceInKZ).toLocaleString('es-CL')} CLP`;
+        console.log(`🚨 getDisplayPrice - VALOR JÁ CONVERTIDO CLP: ${displayPrice}`);
         return displayPrice;
       }
       if (userCountry?.currency === 'MZN') {
@@ -453,6 +478,10 @@ const Checkout = () => {
         displayPrice = `£${customPrice.toFixed(2)}`;
       } else if (userCountry.currency === 'USD') {
         displayPrice = `$${customPrice.toFixed(2)}`;
+      } else if (userCountry.currency === 'MXN') {
+        displayPrice = `$${customPrice.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN`;
+      } else if (userCountry.currency === 'CLP') {
+        displayPrice = `$${Math.round(customPrice).toLocaleString('es-CL')} CLP`;
       } else if (userCountry.currency === 'MZN') {
         displayPrice = `${customPrice.toFixed(2)} MZN`;
       } else {
@@ -491,6 +520,10 @@ const Checkout = () => {
       return `£${price.toFixed(2)}`;
     } else if (userCountry.currency === 'USD') {
       return `$${price.toFixed(2)}`;
+    } else if (userCountry.currency === 'MXN') {
+      return `$${price.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN`;
+    } else if (userCountry.currency === 'CLP') {
+      return `$${Math.round(price).toLocaleString('es-CL')} CLP`;
     } else if (userCountry.currency === 'MZN') {
       return `${price.toFixed(2)} MZN`;
     } else {
