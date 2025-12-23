@@ -387,6 +387,26 @@ export default function Sales() {
         <span>{methodText}</span>
       </div>;
   };
+  
+  const getPaymentMethodIcon = (paymentMethod: string) => {
+    // Retorna apenas o ícone/logo do método de pagamento
+    const methodLower = paymentMethod?.toLowerCase() || '';
+    
+    if (methodLower.includes('stripe') || methodLower.includes('card') || methodLower.includes('klarna')) {
+      return <CreditCard className="h-4 w-4 text-primary" />;
+    } else if (methodLower.includes('multicaixa') || methodLower.includes('express')) {
+      return <img src="/lovable-uploads/a0d34969-5a71-4a9b-808b-cd7a0f8c9e7f.png" alt="Multicaixa" className="h-5 w-auto" />;
+    } else if (methodLower.includes('pix')) {
+      return <img src="https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_Pix.png" alt="PIX" className="h-4 w-auto" />;
+    } else if (methodLower.includes('reference') || methodLower.includes('referencia')) {
+      return <Building className="h-4 w-4 text-muted-foreground" />;
+    } else if (methodLower.includes('balance') || methodLower.includes('saldo')) {
+      return <DollarSign className="h-4 w-4 text-green-600" />;
+    } else if (methodLower.includes('paypal')) {
+      return <CreditCard className="h-4 w-4 text-blue-600" />;
+    }
+    return <Banknote className="h-4 w-4 text-muted-foreground" />;
+  };
   const formatCurrency = (amount: number, currency: string = 'KZ') => {
     return formatPriceForSeller(amount, currency);
   };
@@ -781,9 +801,11 @@ export default function Sales() {
                                       <span className="text-muted-foreground">Status:</span>
                                       {getStatusBadge(sale.status)}
                                     </div>
-                                    <div className="flex justify-between">
+                                    <div className="flex justify-between items-center">
                                       <span className="text-muted-foreground">Método:</span>
-                                      {getPaymentMethodBadge(sale.payment_method)}
+                                      <div className="flex items-center gap-1">
+                                        {getPaymentMethodIcon(sale.payment_method)}
+                                      </div>
                                     </div>
                                     <div className="flex justify-between">
                                       <span className="text-muted-foreground">Data:</span>
