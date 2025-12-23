@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,88 +24,51 @@ const ResetPassword = () => {
   const [error, setError] = useState('');
   const [isValid, setIsValid] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [tokenHash, setTokenHash] = useState<string | null>(null);
 
   useEffect(() => {
-    const verifyToken = async () => {
-      console.log('🔍 ResetPassword: Verificando token...');
-      console.log('🔍 URL completa:', window.location.href);
-      
-      // Verificar se há token_hash na query string (novo método)
-      const tokenHash = searchParams.get('token_hash');
+    const setup = async () => {
+      // Novo fluxo: token_hash na query string
+      const tokenHashParam = searchParams.get('token_hash');
       const type = searchParams.get('type');
-      
-      if (tokenHash && type === 'recovery') {
-        console.log('🔑 Token hash encontrado, verificando via verifyOtp...');
-        
-        try {
-          // Usar verifyOtp com token_hash para validar e criar sessão
-          const { data, error: verifyError } = await supabase.auth.verifyOtp({
-            token_hash: tokenHash,
-            type: 'recovery',
-          });
-          
-          if (verifyError) {
-            console.error('❌ Erro ao verificar token:', verifyError);
-            
-            if (verifyError.message?.includes('expired')) {
-              setError('O link de recuperação expirou. Por favor, solicite um novo link.');
-            } else {
-              setError('Link de recuperação inválido. Por favor, solicite um novo link.');
-            }
-            setVerifying(false);
-            return;
-          }
-          
-          if (data.session) {
-            console.log('✅ Token válido, sessão criada');
-            setIsValid(true);
-          } else {
-            console.error('❌ Nenhuma sessão retornada');
-            setError('Erro ao validar link. Por favor, solicite um novo link.');
-          }
-        } catch (err: any) {
-          console.error('❌ Erro inesperado:', err);
-          setError('Erro ao processar link de recuperação.');
-        }
-        
-        setVerifying(false);
-        return;
-      }
-      
-      // Verificar se há erro na URL (hash params - método antigo)
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const errorCode = hashParams.get('error');
-      const errorDescription = hashParams.get('error_description');
-      
-      if (errorCode) {
-        console.error('❌ Erro na URL:', { errorCode, errorDescription });
-        
-        if (errorCode === 'access_denied' && errorDescription?.includes('expired')) {
-          setError('O link de recuperação expirou. Por favor, solicite um novo link.');
-        } else {
-          setError(`Link inválido: ${errorDescription || errorCode}. Por favor, solicite um novo link.`);
-        }
-        setVerifying(false);
-        return;
-      }
-      
-      // Verificar se já existe uma sessão válida (método antigo via redirect)
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session) {
-        console.log('✅ Sessão válida encontrada via redirect');
+
+      if (tokenHashParam && type === 'recovery') {
+        // IMPORTANTE: não chamamos verifyOtp aqui para evitar que scanners consumam o token.
+        setTokenHash(tokenHashParam);
         setIsValid(true);
         setVerifying(false);
         return;
       }
-      
-      // Se não há token_hash nem sessão, link inválido
-      console.error('❌ Nenhum token ou sessão encontrada');
+
+      // Fluxo antigo: redirect do Supabase com hash (pode vir com erros)
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const errorCode = hashParams.get('error');
+      const errorDescription = hashParams.get('error_description');
+
+      if (errorCode) {
+        if (errorCode === 'access_denied' && errorDescription?.includes('expired')) {
+          setError('O link de recuperação expirou. Por favor, solicite um novo link.');
+        } else {
+          setError('Link inválido. Por favor, solicite um novo link.');
+        }
+        setVerifying(false);
+        return;
+      }
+
+      // Verificar se existe sessão (fluxo antigo)
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (session) {
+        setIsValid(true);
+        setVerifying(false);
+        return;
+      }
+
       setError('Link de redefinição inválido ou expirado. Por favor, solicite um novo link.');
       setVerifying(false);
     };
 
-    verifyToken();
+    setup();
   }, [searchParams]);
 
   const handleResetPassword = async (e: React.FormEvent) => {
@@ -124,18 +88,34 @@ const ResetPassword = () => {
     setError('');
 
     try {
-      console.log('🔄 Atualizando senha...');
+      // Se estamos no fluxo token_hash, validar e criar sessão AGORA (no submit)
+      if (tokenHash) {
+        const { data, error: verifyError } = await supabase.auth.verifyOtp({
+          token_hash: tokenHash,
+          type: 'recovery',
+        });
 
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: password
-      });
+        if (verifyError) {
+          if (verifyError.message?.includes('expired')) {
+            setError('O link de recuperação expirou. Por favor, solicite um novo link.');
+          } else {
+            setError('Link de recuperação inválido. Por favor, solicite um novo link.');
+          }
+          return;
+        }
 
-      if (updateError) {
-        console.error('❌ Erro ao atualizar senha:', updateError);
-        throw updateError;
+        if (!data.session) {
+          setError('Não foi possível validar o link. Por favor, solicite um novo link.');
+          return;
+        }
       }
 
-      console.log('✅ Senha atualizada com sucesso!');
+      const { error: updateError } = await supabase.auth.updateUser({
+        password,
+      });
+
+      if (updateError) throw updateError;
+
       setSuccess(true);
 
       toast({
@@ -143,16 +123,13 @@ const ResetPassword = () => {
         title: 'Sucesso!',
         message: 'Senha redefinida com sucesso!'
       });
-      
-      // Sign out and redirect to auth page
+
       await supabase.auth.signOut();
       setTimeout(() => {
         navigate('/auth', { replace: true });
       }, 3000);
-
-    } catch (error: any) {
-      console.error('❌ Erro ao definir senha:', error);
-      setError(error.message || 'Erro ao definir nova senha. Tente novamente.');
+    } catch (err: any) {
+      setError(err?.message || 'Erro ao definir nova senha. Tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -161,41 +138,52 @@ const ResetPassword = () => {
   // Loading state
   if (verifying) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Card className="w-full max-w-md">
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-            <p className="text-muted-foreground">Verificando link de recuperação...</p>
-          </CardContent>
-        </Card>
-      </div>
+      <>
+        <Helmet>
+          <title>Redefinir senha | Kambafy</title>
+          <meta name="description" content="Verificando seu link para redefinir a senha da conta Kambafy." />
+          <link rel="canonical" href="https://app.kambafy.com/reset-password" />
+        </Helmet>
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <Card className="w-full max-w-md">
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+              <p className="text-muted-foreground">Verificando link de recuperação...</p>
+            </CardContent>
+          </Card>
+        </div>
+      </>
     );
   }
 
   // Success state
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-              <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
-            </div>
-            <CardTitle className="text-2xl">Senha Redefinida!</CardTitle>
-            <CardDescription>
-              Sua senha foi alterada com sucesso. Você será redirecionado para o login.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button 
-              onClick={() => navigate('/auth')}
-              className="w-full"
-            >
-              Ir para Login
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <>
+        <Helmet>
+          <title>Redefinir senha | Kambafy</title>
+          <meta name="description" content="Crie uma nova senha para acessar sua conta Kambafy com segurança." />
+          <link rel="canonical" href="https://app.kambafy.com/reset-password" />
+        </Helmet>
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <Card className="w-full max-w-md">
+            <CardHeader className="text-center">
+              <div className="mx-auto mb-4 w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+                <CheckCircle className="w-8 h-8 text-primary" />
+              </div>
+              <CardTitle className="text-2xl">Senha Redefinida!</CardTitle>
+              <CardDescription>
+                Sua senha foi alterada com sucesso. Você será redirecionado para o login.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={() => navigate('/auth')} className="w-full">
+                Ir para Login
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </>
     );
   }
 
