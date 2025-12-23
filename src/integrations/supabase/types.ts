@@ -4512,6 +4512,7 @@ export type Database = {
           user_id: string
           verified_at: string
           verified_by: string
+          verified_by_name: string
         }[]
       }
       get_all_withdrawal_requests_for_admin: {
@@ -4519,6 +4520,7 @@ export type Database = {
         Returns: {
           admin_notes: string
           admin_processed_by: string
+          admin_processed_by_name: string
           amount: number
           created_at: string
           id: string

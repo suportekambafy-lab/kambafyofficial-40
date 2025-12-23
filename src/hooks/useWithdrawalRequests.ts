@@ -17,6 +17,7 @@ interface WithdrawalWithProfile {
   created_at: string;
   admin_notes: string | null;
   admin_processed_by: string | null;
+  admin_processed_by_name: string | null;
   seller_balance?: number;
   profiles?: {
     full_name: string;
