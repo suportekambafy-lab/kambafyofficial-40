@@ -96,6 +96,48 @@ export const useAdminAuthHook = () => {
       if (adminData) {
         const parsedAdmin = JSON.parse(adminData);
         console.log('✅ [ADMIN-AUTH] Admin session encontrada:', parsedAdmin);
+
+        // ✅ Se saímos do impersonation e a sessão do Supabase Auth não é do admin, restaurar
+        const isImpersonating = !!localStorage.getItem('impersonation_data');
+
+        // Durante impersonation, NÃO revalidar no banco (RLS vai falhar com o user impersonado)
+        if (isImpersonating) {
+          console.log('🎭 [ADMIN-AUTH] Impersonation ativa - mantendo sessão admin sem revalidar');
+          setAdmin(parsedAdmin);
+          return;
+        }
+
+        const backupSessionRaw = localStorage.getItem('admin_supabase_session_backup');
+
+        if (backupSessionRaw) {
+          try {
+            const needsRestore =
+              !authData.session ||
+              (authData.session.user?.email && authData.session.user.email !== parsedAdmin.email);
+
+            if (needsRestore) {
+              const backup = JSON.parse(backupSessionRaw) as {
+                access_token: string;
+                refresh_token: string;
+              };
+
+              console.log('🔁 [ADMIN-AUTH] Restaurando sessão Supabase do admin...');
+              const { error: restoreError } = await supabase.auth.setSession({
+                access_token: backup.access_token,
+                refresh_token: backup.refresh_token,
+              });
+
+              if (restoreError) {
+                console.error('❌ [ADMIN-AUTH] Falha ao restaurar sessão Supabase:', restoreError);
+              } else {
+                console.log('✅ [ADMIN-AUTH] Sessão Supabase do admin restaurada');
+                localStorage.removeItem('admin_supabase_session_backup');
+              }
+            }
+          } catch (e) {
+            console.error('❌ [ADMIN-AUTH] Erro ao restaurar sessão backup:', e);
+          }
+        }
         
         // Buscar dados atualizados do banco para verificar se mudou
         const { data, error } = await supabase
@@ -331,6 +373,7 @@ export const useAdminAuthHook = () => {
     localStorage.removeItem('admin_session');
     localStorage.removeItem('admin_jwt');
     localStorage.removeItem('admin_permissions_timestamp');
+    localStorage.removeItem('admin_supabase_session_backup');
     localStorage.removeItem('impersonation_data');
     setPendingLoginData(null);
     setLoginStep('credentials');
