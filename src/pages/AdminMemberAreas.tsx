@@ -45,16 +45,10 @@ export default function AdminMemberAreas() {
     try {
       setIsLoading(true);
 
-      // Buscar todas as áreas de membros com contagens
+      // Buscar todas as áreas de membros
       const { data: areas, error } = await supabase
         .from('member_areas')
-        .select(`
-          *,
-          profiles:user_id (
-            full_name,
-            email
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -63,9 +57,16 @@ export default function AdminMemberAreas() {
         return;
       }
 
-      // Buscar contagens para cada área
+      // Buscar perfis e contagens para cada área
       const areasWithCounts = await Promise.all(
         (areas || []).map(async (area: any) => {
+          // Buscar perfil do dono
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('full_name, email')
+            .eq('id', area.user_id)
+            .maybeSingle();
+
           // Contar estudantes
           const { count: studentsCount } = await supabase
             .from('member_area_students')
@@ -86,8 +87,8 @@ export default function AdminMemberAreas() {
 
           return {
             ...area,
-            owner_email: area.profiles?.email,
-            owner_name: area.profiles?.full_name,
+            owner_email: profile?.email,
+            owner_name: profile?.full_name,
             students_count: studentsCount || 0,
             modules_count: modulesCount || 0,
             lessons_count: lessonsCount || 0,
