@@ -7,7 +7,7 @@ interface TrustBadgesSectionProps {
 
 // Default translations for Portuguese (fallback)
 const defaultTranslations: Record<string, string> = {
-  'checkout.trustBadges.title': '🔒 COMPRA 100% SEGURA',
+  'checkout.trustBadges.title': 'COMPRA 100% SEGURA',
   'checkout.trustBadges.ssl': 'SSL Criptografado',
   'checkout.trustBadges.guarantee': 'Garantia 7 Dias',
   'checkout.trustBadges.support': 'Suporte 24/7',
@@ -18,7 +18,7 @@ const defaultTranslations: Record<string, string> = {
 
 // English translations
 const englishTranslations: Record<string, string> = {
-  'checkout.trustBadges.title': '🔒 100% SECURE PURCHASE',
+  'checkout.trustBadges.title': '100% SECURE PURCHASE',
   'checkout.trustBadges.ssl': 'SSL Encrypted',
   'checkout.trustBadges.guarantee': '7 Day Guarantee',
   'checkout.trustBadges.support': '24/7 Support',
