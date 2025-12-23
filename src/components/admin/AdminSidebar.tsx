@@ -129,22 +129,24 @@ export function AdminSidebar({ collapsed = false, onToggle }: AdminSidebarProps)
       collapsed ? "w-20" : "w-64"
     )}>
       {/* Logo */}
-      <div className="p-5 flex items-center justify-between border-b border-[hsl(var(--admin-border))]">
-        <div className="flex items-center gap-3">
-          {collapsed ? (
-            <img src={kambabyLogo} alt="Kambafy" className="h-12 w-12 object-contain" />
-          ) : (
-            <img src={kambabyLogo} alt="Kambafy" className="h-14 object-contain" />
-          )}
-        </div>
+      <div className="h-[70px] flex items-center justify-between px-4 border-b border-[hsl(var(--admin-border))]">
+        {!collapsed ? (
+          <img src={kambabyLogo} alt="Kambafy" className="h-[60px] w-auto" />
+        ) : (
+          <img 
+            src="/kambafy-icon-light.png" 
+            alt="Kambafy" 
+            className="w-8 h-8 mx-auto"
+          />
+        )}
         <button 
           onClick={onToggle}
-          className="p-2 hover:bg-[hsl(var(--admin-bg))] rounded-lg transition-colors"
+          className="flex-shrink-0 w-8 h-8 flex items-center justify-center hover:bg-[hsl(var(--admin-bg))] rounded-lg transition-colors"
         >
           {collapsed ? (
-            <PanelLeft className="h-5 w-5 text-[hsl(var(--admin-text-secondary))]" />
+            <PanelLeft className="h-4 w-4 text-[hsl(var(--admin-text-secondary))]" />
           ) : (
-            <PanelLeftClose className="h-5 w-5 text-[hsl(var(--admin-text-secondary))]" />
+            <PanelLeftClose className="h-4 w-4 text-[hsl(var(--admin-text-secondary))]" />
           )}
         </button>
       </div>
