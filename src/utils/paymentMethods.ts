@@ -12,6 +12,8 @@ export interface PaymentMethod {
   isPortugal?: boolean;
   isUK?: boolean;
   isUS?: boolean;
+  isMexico?: boolean;
+  isChile?: boolean;
   countryFlag?: string;
   countryName?: string;
 }
@@ -124,6 +126,24 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
     isUS: true,
     countryFlag: "🇺🇸",
     countryName: "United States"
+  },
+  {
+    id: "card_mx",
+    name: "Pago con Tarjeta",
+    image: getPaymentMethodImage("card_us"),
+    enabled: true,
+    isMexico: true,
+    countryFlag: "🇲🇽",
+    countryName: "México"
+  },
+  {
+    id: "card_cl",
+    name: "Pago con Tarjeta",
+    image: getPaymentMethodImage("card_us"),
+    enabled: true,
+    isChile: true,
+    countryFlag: "🇨🇱",
+    countryName: "Chile"
   }
 ];
 
@@ -150,6 +170,12 @@ export const getCountryByPaymentMethod = (paymentMethod: string) => {
     
     // Estados Unidos
     'card_us': { code: 'US', name: 'United States', flag: '🇺🇸' },
+    
+    // México
+    'card_mx': { code: 'MX', name: 'México', flag: '🇲🇽' },
+    
+    // Chile
+    'card_cl': { code: 'CL', name: 'Chile', flag: '🇨🇱' },
   };
   
   return paymentToCountry[paymentMethod] || { code: 'AO', name: 'Angola', flag: '🇦🇴' };
@@ -188,6 +214,14 @@ export const getUSPaymentMethods = (): PaymentMethod[] => {
   return PAYMENT_METHODS.filter(method => method.isUS);
 };
 
+export const getMexicoPaymentMethods = (): PaymentMethod[] => {
+  return PAYMENT_METHODS.filter(method => method.isMexico);
+};
+
+export const getChilePaymentMethods = (): PaymentMethod[] => {
+  return PAYMENT_METHODS.filter(method => method.isChile);
+};
+
 export const getPaymentMethodsByCountry = (countryCode: string): PaymentMethod[] => {
   switch (countryCode) {
     case 'AO':
@@ -200,6 +234,10 @@ export const getPaymentMethodsByCountry = (countryCode: string): PaymentMethod[]
       return getUKPaymentMethods();
     case 'US':
       return getUSPaymentMethods();
+    case 'MX':
+      return getMexicoPaymentMethods();
+    case 'CL':
+      return getChilePaymentMethods();
     default:
       return [];
   }
@@ -247,6 +285,11 @@ export const getCountryFlag = (countryCode: string | null | undefined): { code: 
     'CV': { code: 'CV', name: 'Cabo Verde', flag: '🇨🇻' },
     'Cabo Verde': { code: 'CV', name: 'Cabo Verde', flag: '🇨🇻' },
     'Cape Verde': { code: 'CV', name: 'Cabo Verde', flag: '🇨🇻' },
+    'MX': { code: 'MX', name: 'México', flag: '🇲🇽' },
+    'Mexico': { code: 'MX', name: 'México', flag: '🇲🇽' },
+    'México': { code: 'MX', name: 'México', flag: '🇲🇽' },
+    'CL': { code: 'CL', name: 'Chile', flag: '🇨🇱' },
+    'Chile': { code: 'CL', name: 'Chile', flag: '🇨🇱' },
   };
   
   return countryMap[countryCode] || { code: countryCode, name: countryCode, flag: '🌍' };

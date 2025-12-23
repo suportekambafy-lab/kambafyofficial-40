@@ -337,7 +337,7 @@ export function ChatTokenPurchaseModal({
       }
 
       // Stripe payments (card, multibanco, klarna, mbway) - show inline form
-      if (['card', 'klarna', 'multibanco', 'mbway', 'card_uk', 'klarna_uk', 'card_us'].includes(selectedPaymentMethod)) {
+      if (['card', 'klarna', 'multibanco', 'mbway', 'card_uk', 'klarna_uk', 'card_us', 'card_mx', 'card_cl'].includes(selectedPaymentMethod)) {
         setShowStripeForm(true);
         setProcessing(false);
         return;

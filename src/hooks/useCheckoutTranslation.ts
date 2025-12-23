@@ -1,7 +1,11 @@
 import { useMemo } from 'react';
 import { CountryInfo } from '@/utils/priceFormatting';
 
-type CheckoutLanguage = 'pt' | 'en';
+type CheckoutLanguage = 'pt' | 'en' | 'es';
+
+// Países por idioma
+const ENGLISH_COUNTRIES = ['US', 'GB'];
+const SPANISH_COUNTRIES = ['MX', 'CL'];
 
 // Traduções específicas do checkout
 const CHECKOUT_TRANSLATIONS: Record<CheckoutLanguage, Record<string, string>> = {
@@ -286,24 +290,168 @@ const CHECKOUT_TRANSLATIONS: Record<CheckoutLanguage, Record<string, string>> = 
     'checkout.termsOfUse': 'Terms of use',
     'checkout.privacyPolicy': 'Privacy policy',
     'checkout.refundPolicy': 'Refund policy',
+  },
+  es: {
+    // Header
+    'checkout.secure': '100% Seguro',
+    'checkout.sales': 'ventas',
+    'checkout.per': 'por',
+    'checkout.instantDelivery': 'Entrega instantánea',
+    
+    // Form labels
+    'checkout.billing': 'Información de Facturación',
+    'checkout.fullName': 'Nombre completo',
+    'checkout.fullName.placeholder': 'Ingresa tu nombre completo',
+    'checkout.email': 'Correo electrónico',
+    'checkout.email.placeholder': 'Ingresa tu correo para recibir la compra',
+    'checkout.country': 'País',
+    'checkout.phone': 'Teléfono o WhatsApp',
+    'checkout.phone.placeholder': 'Ingresa tu teléfono',
+    'checkout.phone.optional': '(opcional)',
+    'checkout.phone.required': '* requerido',
+    
+    // Validation messages
+    'checkout.validation.nameValid': '✓ Nombre válido',
+    'checkout.validation.nameInvalid': 'El nombre debe tener al menos 3 caracteres',
+    'checkout.validation.emailValid': '✓ Correo válido',
+    'checkout.validation.emailInvalid': 'Por favor, ingresa un correo válido',
+    'checkout.validation.phoneValid': '✓ Teléfono válido',
+    'checkout.validation.phoneRequired': 'Teléfono requerido para este método de pago',
+    
+    // Payment
+    'checkout.payment': 'Pago',
+    'checkout.paymentMethod': 'Método de Pago',
+    'checkout.payWith': 'Pagar con:',
+    'checkout.selectPayment': 'Selecciona tu método de pago preferido',
+    'checkout.noPaymentMethods': 'Métodos de pago no disponibles para',
+    'checkout.comingSoon': 'Próximamente opciones de pago para tu región.',
+    'checkout.coupon': 'Cupón de Descuento',
+    'checkout.subtotal': 'Subtotal',
+    'checkout.discount': 'Descuento',
+    'checkout.discountApplied': 'Descuento aplicado:',
+    'checkout.total': 'Total',
+    'checkout.orderSummary': 'Resumen del pedido',
+    'checkout.product': 'Producto',
+    
+    // Buttons
+    'checkout.buyNow': 'COMPRAR AHORA',
+    'checkout.processing': 'PROCESANDO...',
+    'checkout.completePurchase': 'Finalizar Compra',
+    'checkout.subscribe': 'Suscribirse Ahora',
+    'checkout.subscribing': 'Procesando Suscripción...',
+    'checkout.tryAgain': 'Intentar de nuevo',
+    'checkout.generateReference': 'GENERAR REFERENCIA',
+    
+    // Status
+    'checkout.offerExpired': 'Oferta Expirada',
+    'checkout.offerExpiredDesc': 'Lamentablemente, esta oferta ya no está disponible.',
+    'checkout.productNotFound': 'Producto no encontrado',
+    'checkout.loading': 'Cargando...',
+    
+    // Trust badges
+    'checkout.securePayment': 'Pago Seguro',
+    'checkout.moneyBack': 'Garantía de Devolución',
+    'checkout.instantAccess': 'Acceso Inmediato',
+    'checkout.support': 'Soporte 24/7',
+    'checkout.trustBadges.title': '🔒 COMPRA 100% SEGURA',
+    'checkout.trustBadges.ssl': 'SSL Encriptado',
+    'checkout.trustBadges.guarantee': 'Garantía 7 Días',
+    'checkout.trustBadges.support': 'Soporte 24/7',
+    'checkout.trustBadges.buyers': 'Compradores',
+    'checkout.trustBadges.verified': 'Producto Verificado',
+    'checkout.trustBadges.footer': 'Tus datos están protegidos y tu compra es 100% segura',
+    
+    // Subscription
+    'checkout.subscription.recurring': 'Pago recurrente vía Stripe. Puedes cancelar en cualquier momento.',
+    'checkout.subscription.interval.day': 'día',
+    'checkout.subscription.interval.days': 'días',
+    'checkout.subscription.interval.week': 'semana',
+    'checkout.subscription.interval.weeks': 'semanas',
+    'checkout.subscription.interval.month': 'mes',
+    'checkout.subscription.interval.months': 'meses',
+    'checkout.subscription.interval.year': 'año',
+    'checkout.subscription.interval.years': 'años',
+    
+    // Order bumps
+    'checkout.specialOffer': 'Oferta Especial',
+    'checkout.addToOrder': 'Agregar al Pedido',
+    
+    // Multicaixa Express (not applicable for MX/CL)
+    'checkout.express.attention': 'ATENCIÓN: Después de hacer clic en el botón',
+    'checkout.express.instruction': 'abre la app Multicaixa Express y busca el botón →',
+    'checkout.express.pendingOp': 'Operación Pendiente',
+    'checkout.express.finalize': 'haz clic en el botón, selecciona el pago pendiente y finaliza el pago.',
+    'checkout.express.phoneLabel': 'Por favor, ingresa el número de teléfono activo de Multicaixa Express.',
+    
+    // Reference payment
+    'checkout.reference.success': '¡Referencia generada con éxito!',
+    'checkout.reference.instructions': 'Usa los datos a continuación para realizar el pago en cualquier banco o ATM',
+    'checkout.reference.entity': 'Entidad:',
+    'checkout.reference.number': 'Referencia:',
+    'checkout.reference.amount': 'Monto:',
+    'checkout.reference.expires': 'Válido hasta:',
+    
+    // Errors
+    'checkout.error.requiredFields': 'Campos requeridos',
+    'checkout.error.fillAllFields': 'Por favor, completa todos los campos requeridos.',
+    'checkout.error.unavailable': 'Sistema no disponible',
+    'checkout.error.contactSupport': 'Contacta a soporte.',
+    'checkout.error.paymentError': 'Error en el pago',
+    'checkout.error.invalidResponse': 'Respuesta inválida del sistema de pago.',
+    'checkout.error.configError': 'Error de configuración',
+    
+    // Stripe
+    'checkout.stripe.securePayment': 'Pago Seguro',
+    'checkout.stripe.processedBy': 'Procesado de forma segura por Stripe',
+    'checkout.stripe.pay': 'Pagar',
+    'checkout.stripe.currency': 'Moneda',
+    'checkout.stripe.poweredBy': 'Powered by',
+    
+    // Live viewers
+    'checkout.liveViewers': 'personas están viendo este producto ahora',
+    
+    // Country selector
+    'checkout.selectCountry': 'Seleccionar país',
+    
+    // Coupon
+    'coupon.placeholder': 'CÓDIGO DE CUPÓN',
+    'coupon.apply': 'Aplicar',
+    'coupon.enterCode': 'Ingresa un código de cupón',
+    'coupon.applied': '¡Cupón aplicado con éxito!',
+    'coupon.removed': 'Cupón eliminado',
+    'coupon.error': 'Error al validar cupón',
+    'coupon.maxUsesReached': 'Este cupón ha alcanzado su límite de usos',
+    'coupon.alreadyUsed': 'Ya has usado este cupón',
+    'coupon.minPurchase': 'Compra mínima de',
+    
+    // Footer
+    'checkout.allRightsReserved': 'Todos los derechos reservados.',
+    'checkout.termsNotice': 'Al hacer clic en Comprar ahora, declaro que he leído y acepto (1) que Kambafy está procesando este pedido en nombre de',
+    'checkout.termsNotice2': 'no es responsable del contenido y/o no realiza control previo del mismo (li) con los',
+    'checkout.termsOfUse': 'Términos de uso',
+    'checkout.privacyPolicy': 'Política de privacidad',
+    'checkout.refundPolicy': 'Política de reembolso',
   }
 };
 
-// Países que usam inglês
-const ENGLISH_COUNTRIES = ['US', 'GB'];
 
 export const useCheckoutTranslation = (userCountry?: CountryInfo | null) => {
   const language = useMemo<CheckoutLanguage>(() => {
     const countryCode = userCountry?.code;
     const isEnglishCountry = countryCode && ENGLISH_COUNTRIES.includes(countryCode);
+    const isSpanishCountry = countryCode && SPANISH_COUNTRIES.includes(countryCode);
     
     console.log('🌐 CHECKOUT TRANSLATION DEBUG:', {
       countryCode,
       isEnglishCountry,
-      language: isEnglishCountry ? 'en' : 'pt',
+      isSpanishCountry,
+      language: isSpanishCountry ? 'es' : (isEnglishCountry ? 'en' : 'pt'),
       userCountry
     });
     
+    if (isSpanishCountry) {
+      return 'es';
+    }
     if (isEnglishCountry) {
       return 'en';
     }
@@ -338,6 +486,7 @@ export const useCheckoutTranslation = (userCountry?: CountryInfo | null) => {
     tc,
     language,
     isEnglish: language === 'en',
+    isSpanish: language === 'es',
     getSubscriptionInterval
   };
 };

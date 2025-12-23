@@ -110,6 +110,15 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
         } else if (userCountry.code === 'GB') {
           // UK usa card e klarna
           return ['card_uk', 'klarna_uk'].includes(method.id);
+        } else if (userCountry.code === 'US') {
+          // US usa apenas card
+          return ['card_us'].includes(method.id);
+        } else if (userCountry.code === 'MX') {
+          // México usa apenas Stripe card
+          return ['card_mx'].includes(method.id);
+        } else if (userCountry.code === 'CL') {
+          // Chile usa apenas Stripe card
+          return ['card_cl'].includes(method.id);
         }
         return false;
       });
@@ -315,7 +324,7 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
     const phoneCodes: Record<string, string> = {
       'AO': '+244', 'PT': '+351', 'MZ': '+258', 'BR': '+55', 'US': '+1',
       'ES': '+34', 'FR': '+33', 'GB': '+44', 'DE': '+49', 'IT': '+39',
-      'ZA': '+27', 'CV': '+238'
+      'ZA': '+27', 'CV': '+238', 'MX': '+52', 'CL': '+56'
     };
     const phoneCode = phoneCodes[countryCode] || '+244';
     
@@ -332,7 +341,7 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
     const phoneCodes: Record<string, string> = {
       'AO': '+244', 'PT': '+351', 'MZ': '+258', 'BR': '+55', 'US': '+1',
       'ES': '+34', 'FR': '+33', 'GB': '+44', 'DE': '+49', 'IT': '+39',
-      'ZA': '+27', 'CV': '+238'
+      'ZA': '+27', 'CV': '+238', 'MX': '+52', 'CL': '+56'
     };
     const phoneCode = phoneCodes[countryCode] || '+244';
     
