@@ -4241,10 +4241,16 @@ export type Database = {
         }
         Returns: Json
       }
-      admin_process_transfer_request: {
-        Args: { p_action: string; p_transfer_id: string }
-        Returns: Json
-      }
+      admin_process_transfer_request:
+        | { Args: { p_action: string; p_transfer_id: string }; Returns: Json }
+        | {
+            Args: {
+              p_action: string
+              p_admin_email?: string
+              p_transfer_id: string
+            }
+            Returns: Json
+          }
       admin_process_withdrawal_request: {
         Args: {
           admin_id?: string

@@ -19,6 +19,7 @@ import { getProductImageUrl } from '@/utils/imageUtils';
 import { getFileUrl } from '@/utils/fileUtils';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { AdminPageSkeleton } from '@/components/admin/AdminPageSkeleton';
+import { AdminActionBadge } from '@/components/admin/AdminActionBadge';
 
 interface ProductWithProfile {
   id: string;
@@ -39,6 +40,10 @@ interface ProductWithProfile {
   revision_explanation?: string;
   revision_documents?: any; // Json type from database
   share_link?: string;
+  approved_by_admin_id?: string | null;
+  approved_by_admin_name?: string | null;
+  banned_by_admin_id?: string | null;
+  banned_by_admin_name?: string | null;
   member_areas?: {
     id: string;
     name: string;
@@ -1006,6 +1011,24 @@ export default function AdminProducts() {
                   <div className="bg-red-50 border border-red-200 rounded-md p-2 text-xs text-red-800 mb-3">
                     <span className="font-medium">Motivo do banimento:</span> {product.ban_reason}
                   </div>
+                )}
+
+                {/* Badge do admin que processou - visível apenas para super admins */}
+                {product.status === 'Ativo' && product.admin_approved && (
+                  <AdminActionBadge 
+                    adminName={product.approved_by_admin_name}
+                    adminId={product.approved_by_admin_id}
+                    actionLabel="Aprovado por"
+                    className="mb-3"
+                  />
+                )}
+                {product.status === 'Banido' && (
+                  <AdminActionBadge 
+                    adminName={product.banned_by_admin_name}
+                    adminId={product.banned_by_admin_id}
+                    actionLabel="Banido por"
+                    className="mb-3"
+                  />
                 )}
 
                 <div className="space-y-2">
