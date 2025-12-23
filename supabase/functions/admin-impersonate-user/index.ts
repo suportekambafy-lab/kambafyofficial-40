@@ -53,50 +53,60 @@ Deno.serve(async (req) => {
       }
     )
 
-    // ========== AUTENTICAÇÃO VIA JWT ==========
+    // ========== AUTENTICAÇÃO (adminJwt OU Supabase Auth) ==========
     const { targetUserId, adminJwt } = await req.json()
-    
-    // Primeiro tentar JWT do body, depois do header
-    let token = adminJwt
-    if (!token) {
-      const authHeader = req.headers.get('Authorization')
-      if (authHeader && authHeader.startsWith('Bearer ')) {
-        token = authHeader.replace('Bearer ', '')
+
+    let adminEmail: string | null = null
+
+    // 1) Tentar JWT customizado (admin-login) se fornecido
+    if (adminJwt) {
+      const adminPayload = await verifyAdminJWT(adminJwt)
+      if (adminPayload?.email) {
+        adminEmail = adminPayload.email
+      } else {
+        console.warn('⚠️ adminJwt inválido/expirado - tentando Supabase Auth token')
       }
     }
-    
-    if (!token) {
-      console.error('❌ Token de autenticação ausente')
+
+    // 2) Fallback: usar token do Supabase Auth (Authorization header)
+    if (!adminEmail) {
+      const authHeader = req.headers.get('Authorization')
+      const accessToken =
+        authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice('Bearer '.length) : null
+
+      if (accessToken) {
+        const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(accessToken)
+        if (userError) {
+          console.error('❌ Falha ao validar Supabase Auth token:', userError.message)
+        } else if (userData?.user?.email) {
+          adminEmail = userData.user.email
+          console.log('✅ Admin autenticado via Supabase Auth token:', adminEmail)
+        }
+      }
+    }
+
+    if (!adminEmail) {
+      console.error('❌ Admin não autenticado (adminJwt inválido e sem Supabase Auth token)')
       return new Response(
-        JSON.stringify({ success: false, error: 'Token de autenticação necessário' }),
+        JSON.stringify({ success: false, error: 'Admin não autenticado. Faça login novamente.' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    const adminPayload = await verifyAdminJWT(token)
-    
-    if (!adminPayload) {
-      console.error('❌ Token JWT inválido ou expirado')
-      return new Response(
-        JSON.stringify({ success: false, error: 'Token inválido ou expirado' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    const adminEmail = adminPayload.email
+    const adminEmailNormalized = adminEmail.trim().toLowerCase()
     // ========== FIM DA AUTENTICAÇÃO ==========
 
     if (!targetUserId) {
       throw new Error('targetUserId é obrigatório')
     }
 
-    console.log(`🎭 Admin ${adminEmail} tentando impersonar usuário: ${targetUserId}`)
+    console.log(`🎭 Admin ${adminEmailNormalized} tentando impersonar usuário: ${targetUserId}`)
 
     // 1. Verificar se o admin existe e está ativo no banco
     const { data: adminUser, error: adminError } = await supabaseAdmin
       .from('admin_users')
       .select('id, email, is_active')
-      .eq('email', adminEmail)
+      .ilike('email', adminEmailNormalized)
       .eq('is_active', true)
       .single()
 
@@ -105,9 +115,8 @@ Deno.serve(async (req) => {
       throw new Error('Acesso negado: Privilégios de admin necessários')
     }
 
-    console.log('✅ Admin verificado via JWT, prosseguindo com impersonation')
+    console.log('✅ Admin verificado no banco, prosseguindo com impersonation')
 
-    // 2. Buscar dados do usuário alvo
     const { data: targetUser, error: userError } = await supabaseAdmin.auth.admin.getUserById(targetUserId)
 
     if (userError || !targetUser) {
