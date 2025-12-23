@@ -49,6 +49,7 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
     formatPrice, 
     convertPrice,
     changeCountry, 
+    supportedCountries,
     isReady: geoReady
   } = useGeoLocation();
 
@@ -539,6 +540,7 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
     geoReady,
     formatPrice,
     convertPrice,
+    supportedCountries,
     
     // Afiliados
     affiliateCode,

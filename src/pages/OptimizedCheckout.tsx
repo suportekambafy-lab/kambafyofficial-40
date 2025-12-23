@@ -245,6 +245,7 @@ const OptimizedCheckout = () => {
     geoReady,
     formatPrice,
     convertPrice,
+    supportedCountries,
     affiliateCode,
     hasAffiliate,
     markAsValidAffiliate,
@@ -719,11 +720,7 @@ const OptimizedCheckout = () => {
                             exchangeRate: 1 
                           }}
                           onCountryChange={handleCountryChange}
-                          supportedCountries={{
-                            AO: { code: 'AO', name: 'Angola', currency: 'KZ', flag: '🇦🇴', exchangeRate: 1 },
-                            PT: { code: 'PT', name: 'Portugal', currency: 'EUR', flag: '🇵🇹', exchangeRate: 0.0015 },
-                            MZ: { code: 'MZ', name: 'Moçambique', currency: 'MZN', flag: '🇲🇿', exchangeRate: 0.096 }
-                          }}
+                          supportedCountries={supportedCountries}
                         />
                       </div>
 
