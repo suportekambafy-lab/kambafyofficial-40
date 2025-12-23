@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
@@ -49,27 +49,9 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Usar getUserByEmail ao invés de listUsers para evitar erros de banco de dados
-    const { data: userData, error: userError } = await supabase.auth.admin.getUserByEmail(normalizedEmail);
-
-    if (userError || !userData?.user) {
-      console.error("❌ User not found or error:", userError?.message ?? "User not found");
-      // Por segurança, retornamos sucesso mesmo se o usuário não existe
-      // para não revelar se o email existe no sistema
-      return new Response(
-        JSON.stringify({
-          success: true,
-          message: "Se o email existir, você receberá instruções de recuperação",
-        }),
-        {
-          status: 200,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
-      );
-    }
-
-    const existingUser = userData.user;
-    console.log("✅ User found:", existingUser.id);
+    // Gerar link de recuperação diretamente usando generateLink
+    // Se o email não existe, o generateLink irá falhar - trataremos isso silenciosamente
+    console.log("🔗 Generating recovery link...");
 
     // Gerar link de recuperação usando generateLink
     // O link gerado contém token_hash que extraímos para enviar um link customizado
@@ -84,14 +66,23 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (linkError) {
       console.error("❌ Error generating link:", linkError);
+      // Por segurança, retornamos sucesso mesmo se o usuário não existe
+      // para não revelar se o email existe no sistema
       return new Response(
-        JSON.stringify({ error: "Erro ao gerar link de recuperação" }),
+        JSON.stringify({
+          success: true,
+          message: "Se o email existir, você receberá instruções de recuperação",
+        }),
         {
-          status: 500,
+          status: 200,
           headers: { "Content-Type": "application/json", ...corsHeaders },
         }
       );
     }
+
+    // O usuário retornado pelo generateLink
+    const existingUser = linkData.user;
+    console.log("✅ User found:", existingUser?.id);
 
     // Extrair token_hash da action_link gerada
     // A URL gerada é algo como: https://...supabase.co/auth/v1/verify?token=XXX&type=recovery&redirect_to=...
@@ -118,15 +109,18 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("🔗 Custom reset link created (token_hash based)");
 
     // Buscar nome (best-effort)
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("full_name")
-      .eq("user_id", existingUser.id)
-      .maybeSingle();
+    let userName = "Usuário";
+    if (existingUser?.id) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("user_id", existingUser.id)
+        .maybeSingle();
 
-    const userName = profile?.full_name ||
-      existingUser.user_metadata?.full_name ||
-      "Usuário";
+      userName = profile?.full_name ||
+        existingUser.user_metadata?.full_name as string ||
+        "Usuário";
+    }
 
     // Info do vendedor (opcional)
     let sellerInfo: {
