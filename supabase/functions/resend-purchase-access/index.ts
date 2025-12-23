@@ -85,67 +85,89 @@ const handler = async (req: Request): Promise<Response> => {
       try {
         const normalizedEmail = order.customer_email.toLowerCase().trim();
         console.log(`\n🔄 Processing order ${order.order_id} for ${normalizedEmail}`);
-        
-        // Check if user already has auth account using getUserByEmail (more efficient)
-        const { data: existingUserData } = await supabase.auth.admin.getUserById
-        let existingUser = null;
-        
-        // Try to get user by email directly
-        const { data: userListData } = await supabase
-          .from('profiles')
-          .select('user_id')
-          .eq('email', normalizedEmail)
-          .maybeSingle();
-        
-        if (userListData?.user_id) {
-          const { data: userData } = await supabase.auth.admin.getUserById(userListData.user_id);
-          existingUser = userData?.user;
-        }
-        
+
+        // Criar conta (se ainda não existir). Se já existir, seguimos normalmente.
         let isNewAccount = false;
-        let temporaryPassword = '';
-        
-        if (!existingUser) {
-          // Try to create account with temporary password
-          const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
-          temporaryPassword = '';
-          for (let i = 0; i < 10; i++) {
-            temporaryPassword += chars.charAt(Math.floor(Math.random() * chars.length));
-          }
-          
-          console.log('👤 Creating account for:', normalizedEmail);
-          
-          const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
-            email: normalizedEmail,
-            password: temporaryPassword,
-            email_confirm: true,
-            user_metadata: {
-              full_name: order.customer_name
-            }
-          });
+        let temporaryPassword: string | undefined;
 
-          if (createError) {
-            // If user already exists, just continue with sending emails
-            if (createError.message?.includes('already been registered')) {
-              console.log('ℹ️ Account already exists, continuing with email send');
-            } else {
-              console.error('❌ Error creating account:', createError);
-              results.push({
-                order_id: order.order_id,
-                email: normalizedEmail,
-                success: false,
-                error: 'Failed to create account'
-              });
-              continue;
-            }
-          } else {
-            console.log('✅ Account created');
-            isNewAccount = true;
-          }
-        } else {
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+        const generatedPassword = Array.from({ length: 10 }, () => chars.charAt(Math.floor(Math.random() * chars.length))).join('');
+
+        const { error: createError } = await supabase.auth.admin.createUser({
+          email: normalizedEmail,
+          password: generatedPassword,
+          email_confirm: true,
+          user_metadata: {
+            full_name: order.customer_name,
+          },
+        });
+
+        if (!createError) {
+          console.log('✅ Account created');
+          isNewAccount = true;
+          temporaryPassword = generatedPassword;
+        } else if (createError.code === 'email_exists' || createError.status === 422) {
           console.log('ℹ️ Account already exists');
+        } else {
+          console.error('❌ Error creating account:', createError);
+          results.push({
+            order_id: order.order_id,
+            email: normalizedEmail,
+            success: false,
+            error: `Failed to create account: ${createError.message}`,
+          });
+          continue;
         }
 
+        // Send panel access email
+        const product = order.products;
+
+        console.log('📧 Invoking send-purchase-confirmation...');
+        const { error: emailError } = await supabase.functions.invoke('send-purchase-confirmation', {
+          body: {
+            customerName: order.customer_name,
+            customerEmail: normalizedEmail,
+            customerPhone: order.customer_phone,
+            productName: product.name,
+            orderId: order.order_id,
+            amount: order.amount,
+            currency: order.currency,
+            productId: order.product_id,
+            memberAreaId: product.member_area_id,
+            sellerId: product.user_id,
+            paymentStatus: 'completed',
+            isNewAccount,
+            temporaryPassword,
+          },
+        });
+
+        if (emailError) {
+          console.error('❌ Error sending emails:', emailError);
+          results.push({
+            order_id: order.order_id,
+            email: normalizedEmail,
+            success: false,
+            error: `Failed to send emails: ${emailError.message}`,
+          });
+        } else {
+          console.log('✅ Emails sent successfully');
+          results.push({
+            order_id: order.order_id,
+            email: normalizedEmail,
+            success: true,
+            account_created: isNewAccount,
+          });
+        }
+      } catch (orderError) {
+        console.error(`❌ Error processing order ${order.order_id}:`, orderError);
+        results.push({
+          order_id: order.order_id,
+          email: order.customer_email,
+          success: false,
+          error: (orderError as Error).message,
+        });
+      }
+    }
         // Send panel access email
         const product = order.products;
         const sellerProfile = product.profiles;
