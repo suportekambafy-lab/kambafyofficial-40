@@ -54,7 +54,7 @@ const handler = async (req: Request): Promise<Response> => {
       .eq('status', 'completed');
 
     if (orderIds && orderIds.length > 0) {
-      query = query.in('order_id', orderIds);
+      query = query.in('id', orderIds);
     }
 
     const { data: orders, error: ordersError } = await query;
@@ -77,7 +77,53 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    console.log(`📦 Processing ${orders.length} orders`);
+    console.log(`📦 Found ${orders.length} completed orders`);
+
+    // Se resendAll=true, filtrar apenas pedidos SEM acesso existente em customer_access
+    let ordersToProcess = orders;
+    
+    if (resendAll) {
+      // Buscar todos os order_ids que já têm acesso concedido
+      const orderIds = orders.map(o => o.order_id);
+      const { data: existingAccess, error: accessError } = await supabase
+        .from('customer_access')
+        .select('order_id')
+        .in('order_id', orderIds);
+
+      if (accessError) {
+        console.error('❌ Error checking existing access:', accessError);
+        throw accessError;
+      }
+
+      const existingOrderIds = new Set(existingAccess?.map(a => a.order_id) || []);
+      
+      // Filtrar apenas pedidos que NÃO têm acesso
+      ordersToProcess = orders.filter(order => !existingOrderIds.has(order.order_id));
+      
+      console.log(`🔍 Filtered: ${orders.length} total orders, ${existingOrderIds.size} already have access, ${ordersToProcess.length} need access`);
+
+      if (ordersToProcess.length === 0) {
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            message: "Todos os clientes já têm acesso",
+            results: [],
+            summary: {
+              total: 0,
+              successful: 0,
+              failed: 0,
+              already_have_access: existingOrderIds.size
+            }
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          }
+        );
+      }
+    }
+
+    console.log(`📦 Processing ${ordersToProcess.length} orders`);
 
     const results: Array<{
       order_id: string;
@@ -87,7 +133,7 @@ const handler = async (req: Request): Promise<Response> => {
       account_created?: boolean;
     }> = [];
 
-    for (const order of orders) {
+    for (const order of ordersToProcess) {
       try {
         const normalizedEmail = order.customer_email.toLowerCase().trim();
         console.log(`\n🔄 Processing order ${order.order_id} for ${normalizedEmail}`);
