@@ -33,7 +33,7 @@ import { TermsModal } from "@/components/checkout/TermsModal";
 import { PrivacyModal } from "@/components/checkout/PrivacyModal";
 import { RefundPolicyModal } from "@/components/checkout/RefundPolicyModal";
 import { countTotalSales } from "@/utils/orderUtils";
-import { CouponInput } from "@/components/checkout/CouponInput";
+import { CollapsibleCouponSection } from "@/components/checkout/CollapsibleCouponSection";
 import { LiveChatWidget } from "@/components/apps/live-chat/LiveChatWidget";
 
 // Importar componentes otimizados
@@ -2531,21 +2531,16 @@ const Checkout = () => {
 
               <OptimizedOrderBump productId={productId || ''} position="after_payment_method" onToggle={handleOrderBumpToggle} userCountry={userCountry} formatPrice={formatPrice} resetSelection={resetOrderBumps} />
 
-              {/* Campo de Cupom de Desconto */}
+              {/* Campo de Cupom de Desconto - Collapsible */}
               {product?.id && (
-                <div className="mt-4 mb-4">
-                  <Label className="text-sm font-medium mb-2 block text-gray-700">
-                    {tc('checkout.coupon')}
-                  </Label>
-                  <CouponInput
-                    productId={product.id}
-                    customerEmail={formData.email || ''}
-                    totalAmount={finalProductPrice + totalOrderBumpPrice}
-                    currency={userCountry?.currency || 'KZ'}
-                    onCouponApplied={handleCouponApplied}
-                    t={tc}
-                  />
-                </div>
+                <CollapsibleCouponSection
+                  productId={product.id}
+                  customerEmail={formData.email || ''}
+                  totalAmount={finalProductPrice + totalOrderBumpPrice}
+                  currency={userCountry?.currency || 'KZ'}
+                  onCouponApplied={handleCouponApplied}
+                  tc={tc}
+                />
               )}
 
               {/* Mostrar desconto aplicado */}

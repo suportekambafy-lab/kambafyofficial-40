@@ -141,6 +141,7 @@ const CHECKOUT_TRANSLATIONS: Record<CheckoutLanguage, Record<string, string>> = 
     'coupon.maxUsesReached': 'Este cupom atingiu o limite de usos',
     'coupon.alreadyUsed': 'Você já usou este cupom',
     'coupon.minPurchase': 'Compra mínima de',
+    'coupon.haveCoupon': 'Tem cupom? Clique aqui',
     
     // Footer
     'checkout.allRightsReserved': 'Todos os direitos reservados.',
@@ -283,6 +284,7 @@ const CHECKOUT_TRANSLATIONS: Record<CheckoutLanguage, Record<string, string>> = 
     'coupon.maxUsesReached': 'This coupon has reached its usage limit',
     'coupon.alreadyUsed': 'You have already used this coupon',
     'coupon.minPurchase': 'Minimum purchase of',
+    'coupon.haveCoupon': 'Have a coupon? Click here',
     
     // Footer
     'checkout.allRightsReserved': 'All rights reserved.',
@@ -425,6 +427,7 @@ const CHECKOUT_TRANSLATIONS: Record<CheckoutLanguage, Record<string, string>> = 
     'coupon.maxUsesReached': 'Este cupón ha alcanzado su límite de usos',
     'coupon.alreadyUsed': 'Ya has usado este cupón',
     'coupon.minPurchase': 'Compra mínima de',
+    'coupon.haveCoupon': '¿Tienes cupón? Haz clic aquí',
     
     // Footer
     'checkout.allRightsReserved': 'Todos los derechos reservados.',
