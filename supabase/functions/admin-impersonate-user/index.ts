@@ -20,11 +20,18 @@ async function verifyAdminJWT(token: string): Promise<{ email: string } | null> 
   try {
     const secret = new TextEncoder().encode(JWT_SECRET)
     const { payload } = await jose.jwtVerify(token, secret)
+    console.log('🔐 JWT verificado - payload:', { email: payload.email, role: payload.role, exp: payload.exp })
+    
+    // Verificar se tem email e role admin
     if (payload.email && payload.role === 'admin') {
+      console.log('✅ JWT válido para admin:', payload.email)
       return { email: payload.email as string }
     }
+    
+    console.error('❌ JWT não tem permissão admin:', { email: payload.email, role: payload.role })
     return null
-  } catch {
+  } catch (error) {
+    console.error('❌ Erro ao verificar JWT:', error.message)
     return null
   }
 }
