@@ -86,15 +86,27 @@ const handler = async (req: Request): Promise<Response> => {
         const normalizedEmail = order.customer_email.toLowerCase().trim();
         console.log(`\n🔄 Processing order ${order.order_id} for ${normalizedEmail}`);
         
-        // Check if user already has auth account
-        const { data: listResponse } = await supabase.auth.admin.listUsers();
-        const existingUser = listResponse?.users.find(user => user.email?.toLowerCase() === normalizedEmail);
+        // Check if user already has auth account using getUserByEmail (more efficient)
+        const { data: existingUserData } = await supabase.auth.admin.getUserById
+        let existingUser = null;
+        
+        // Try to get user by email directly
+        const { data: userListData } = await supabase
+          .from('profiles')
+          .select('user_id')
+          .eq('email', normalizedEmail)
+          .maybeSingle();
+        
+        if (userListData?.user_id) {
+          const { data: userData } = await supabase.auth.admin.getUserById(userListData.user_id);
+          existingUser = userData?.user;
+        }
         
         let isNewAccount = false;
         let temporaryPassword = '';
         
         if (!existingUser) {
-          // Create account with temporary password
+          // Try to create account with temporary password
           const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
           temporaryPassword = '';
           for (let i = 0; i < 10; i++) {
@@ -113,18 +125,23 @@ const handler = async (req: Request): Promise<Response> => {
           });
 
           if (createError) {
-            console.error('❌ Error creating account:', createError);
-            results.push({
-              order_id: order.order_id,
-              email: normalizedEmail,
-              success: false,
-              error: 'Failed to create account'
-            });
-            continue;
+            // If user already exists, just continue with sending emails
+            if (createError.message?.includes('already been registered')) {
+              console.log('ℹ️ Account already exists, continuing with email send');
+            } else {
+              console.error('❌ Error creating account:', createError);
+              results.push({
+                order_id: order.order_id,
+                email: normalizedEmail,
+                success: false,
+                error: 'Failed to create account'
+              });
+              continue;
+            }
+          } else {
+            console.log('✅ Account created');
+            isNewAccount = true;
           }
-
-          console.log('✅ Account created');
-          isNewAccount = true;
         } else {
           console.log('ℹ️ Account already exists');
         }
