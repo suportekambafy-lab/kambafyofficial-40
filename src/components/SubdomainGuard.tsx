@@ -241,10 +241,21 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
       }
     } else if (currentSubdomain === 'admin') {
       // admin.kambafy.com: FORÇAR apenas rotas /admin
-      if (!currentPath.startsWith('/admin')) {
+      // EXCEÇÃO: permitir /vendedor para impersonation (quando admin entra como usuário)
+      if (!currentPath.startsWith('/admin') && !currentPath.startsWith('/vendedor') && !currentPath.startsWith('/auth')) {
         console.log('Admin subdomain: redirecting non-admin route to /admin/login');
         shouldRedirect = true;
         window.location.href = window.location.protocol + '//' + window.location.host + '/admin/login';
+        return;
+      }
+      // Se é /vendedor ou /auth no admin, redirecionar para app.kambafy.com
+      if (currentPath.startsWith('/vendedor') || currentPath.startsWith('/auth')) {
+        const targetUrl = `${window.location.protocol}//app.kambafy.com${currentPath}`;
+        console.log('🔄 SubdomainGuard: Admin impersonation - redirecionando para app.kambafy.com', {
+          from: window.location.href,
+          to: targetUrl
+        });
+        window.location.href = targetUrl;
         return;
       }
     }
