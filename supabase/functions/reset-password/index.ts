@@ -49,21 +49,45 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Buscar usuário no Auth usando getUserByEmail (mais eficiente que listUsers)
-    const { data: userData, error: userError } = await supabase.auth.admin
-      .listUsers();
+    // Buscar usuário no Auth (paginação para não falhar em projetos com muitos usuários)
+    const perPage = 1000;
+    const maxPages = 25;
 
-    if (userError) {
-      console.error("❌ Error listing users:", userError);
-      return new Response(JSON.stringify({ error: "Erro ao buscar usuário" }), {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      });
+    let existingUser:
+      | { id: string; email?: string | null; user_metadata?: Record<string, unknown> }
+      | null = null;
+
+    for (let page = 1; page <= maxPages; page++) {
+      const { data: usersPage, error: usersError } = await supabase.auth.admin
+        .listUsers({ page, perPage });
+
+      if (usersError) {
+        console.error("❌ Error listing users:", usersError);
+        return new Response(JSON.stringify({ error: "Erro ao buscar usuário" }), {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        });
+      }
+
+      const found = usersPage.users.find(
+        (u) => (u.email ?? "").toLowerCase() === normalizedEmail
+      );
+
+      if (found) {
+        existingUser = found as any;
+        break;
+      }
+
+      // Se não veio uma página completa, não há mais páginas
+      if (usersPage.users.length < perPage) {
+        break;
+      }
+
+      // Se o total existe e já passamos do total estimado, parar
+      if (usersPage.total && page >= Math.ceil(usersPage.total / perPage)) {
+        break;
+      }
     }
-
-    const existingUser = userData.users.find((u) =>
-      (u.email ?? "").toLowerCase() === normalizedEmail
-    );
 
     if (!existingUser) {
       console.error("❌ User not found:", normalizedEmail);
