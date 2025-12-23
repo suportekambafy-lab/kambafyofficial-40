@@ -225,7 +225,9 @@ Deno.serve(async (req) => {
       'EUR': 1100, // 1 EUR = ~1100 KZ (atualizado)
       'MZN': 14.3, // 1 MZN = ~14.3 KZ  
       'USD': 825,  // 1 USD = ~825 KZ
-      'GBP': 1300  // 1 GBP = ~1300 KZ
+      'GBP': 1300, // 1 GBP = ~1300 KZ
+      'MXN': 45,   // 1 MXN = ~45 KZ
+      'CLP': 0.9   // 1 CLP = ~0.9 KZ
     };
     
     let finalAmount: string;
