@@ -51,7 +51,6 @@ const handler = async (req: Request): Promise<Response> => {
           name,
           member_area_id,
           user_id,
-          access_duration_days,
           profiles!inner(full_name, email)
         )
       `)
@@ -289,7 +288,7 @@ const handler = async (req: Request): Promise<Response> => {
               // Buscar dados do produto do bump
               const { data: bumpProduct, error: bumpProductError } = await supabase
                 .from('products')
-                .select('id, name, member_area_id, user_id, access_duration_days')
+                .select('id, name, member_area_id, user_id')
                 .eq('id', bump.bump_product_id)
                 .maybeSingle();
 
@@ -311,14 +310,6 @@ const handler = async (req: Request): Promise<Response> => {
                 continue;
               }
 
-              // Calcular expiração do bump
-              let bumpExpiresAt: string | null = null;
-              if (bumpProduct.access_duration_days) {
-                const expirationDate = new Date();
-                expirationDate.setDate(expirationDate.getDate() + bumpProduct.access_duration_days);
-                bumpExpiresAt = expirationDate.toISOString();
-              }
-
               // Criar acesso para o produto do bump
               const bumpOrderId = `${order.order_id}-bump-${bumpProduct.id.substring(0, 8)}`;
               
@@ -330,7 +321,7 @@ const handler = async (req: Request): Promise<Response> => {
                   order_id: bumpOrderId,
                   product_id: bumpProduct.id,
                   is_active: true,
-                  access_expires_at: bumpExpiresAt,
+                  access_expires_at: null,
                 });
 
               if (bumpAccessError && bumpAccessError.code !== '23505') {
