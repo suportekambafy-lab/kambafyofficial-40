@@ -348,8 +348,8 @@ export default function AdminUsers() {
         description: `Você está entrando como ${user.full_name || user.email}`,
       });
 
-      // Redirecionar para a página do vendedor
-      window.location.href = '/app';
+      // Redirecionar para o painel do vendedor
+      window.location.href = '/vendedor';
     } catch (error: any) {
       console.error('❌ Erro ao completar impersonation:', error);
       toast({
