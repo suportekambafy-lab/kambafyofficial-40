@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { User, Calendar, DollarSign, CheckCircle, XCircle, CreditCard, Wallet, Globe, Bitcoin, Building } from 'lucide-react';
+import { AdminActionBadge } from './AdminActionBadge';
 
 interface WithdrawalMethod {
   type: string;
@@ -20,6 +21,7 @@ interface WithdrawalWithProfile {
   created_at: string;
   admin_notes: string | null;
   admin_processed_by: string | null;
+  admin_processed_by_name: string | null;
   profiles?: {
     full_name: string;
     email: string;
@@ -283,6 +285,15 @@ export function WithdrawalRequestCard({
             <p className="text-sm font-medium mb-2 text-blue-900">Observações do Administrador:</p>
             <p className="text-sm text-blue-800">{request.admin_notes}</p>
           </div>
+        )}
+        {/* Badge de admin que processou - visível apenas para super admins */}
+        {request.status !== 'pendente' && (
+          <AdminActionBadge 
+            adminName={request.admin_processed_by_name}
+            adminId={request.admin_processed_by}
+            actionLabel={request.status === 'aprovado' ? 'Aprovado por' : 'Rejeitado por'}
+            className="mt-3"
+          />
         )}
       </CardContent>
     </Card>

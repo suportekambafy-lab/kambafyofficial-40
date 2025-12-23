@@ -15,6 +15,7 @@ import { SEO } from '@/components/SEO';
 import { BanUserDialog } from '@/components/BanUserDialog';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { AdminPageSkeleton } from '@/components/admin/AdminPageSkeleton';
+import { AdminActionBadge } from '@/components/admin/AdminActionBadge';
 import { 
   Shield, 
   CheckCircle, 
@@ -48,6 +49,9 @@ interface IdentityVerification {
   rejection_reason?: string;
   created_at: string;
   updated_at: string;
+  verified_at?: string;
+  verified_by?: string;
+  verified_by_name?: string;
   profiles?: {
     full_name: string;
     email: string;
@@ -773,6 +777,16 @@ export default function AdminIdentityVerification() {
                       <p className="text-red-800 font-medium mb-1 text-xs sm:text-sm">Motivo da rejeição:</p>
                       <p className="text-red-700 text-xs sm:text-sm">{verification.rejection_reason}</p>
                     </div>
+                  )}
+
+                  {/* Badge do admin que processou - visível apenas para super admins */}
+                  {verification.status !== 'pendente' && (
+                    <AdminActionBadge 
+                      adminName={verification.verified_by_name}
+                      adminId={verification.verified_by}
+                      actionLabel={verification.status === 'aprovado' ? 'Aprovado por' : 'Rejeitado por'}
+                      className="mb-4"
+                    />
                   )}
 
                   <div className="flex flex-wrap items-center gap-2 mb-4">
