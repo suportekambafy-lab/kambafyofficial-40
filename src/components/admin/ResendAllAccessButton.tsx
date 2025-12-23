@@ -21,6 +21,13 @@ export function ResendAllAccessButton() {
   const handleResendAll = async () => {
     setIsLoading(true);
     try {
+      const adminJwt = localStorage.getItem('admin_jwt');
+      if (!adminJwt) {
+        toast.error('Sessão de admin expirada. Faça login novamente.');
+        setIsLoading(false);
+        return;
+      }
+
       toast.info('🔄 Processando...', {
         description: 'Buscando todos os pedidos completados e reenviando acessos...'
       });
@@ -30,6 +37,9 @@ export function ResendAllAccessButton() {
       const { data, error } = await supabase.functions.invoke('resend-purchase-access', {
         body: {
           resendAll: true
+        },
+        headers: {
+          Authorization: `Bearer ${adminJwt}`
         }
       });
 
