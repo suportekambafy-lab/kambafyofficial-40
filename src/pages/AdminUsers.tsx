@@ -348,8 +348,13 @@ export default function AdminUsers() {
         description: `Você está entrando como ${user.full_name || user.email}`,
       });
 
-      // Redirecionar para o painel do vendedor
-      window.location.href = '/vendedor';
+      // Redirecionar diretamente para app.kambafy.com/vendedor em produção
+      const hostname = window.location.hostname;
+      if (hostname.includes('kambafy.com')) {
+        window.location.href = 'https://app.kambafy.com/vendedor';
+      } else {
+        window.location.href = '/vendedor';
+      }
     } catch (error: any) {
       console.error('❌ Erro ao completar impersonation:', error);
       toast({
