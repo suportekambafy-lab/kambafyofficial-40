@@ -7,7 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { 
   Search, Download, ShoppingCart, CheckCircle, XCircle, 
   Loader2, MoreHorizontal, Hash, RefreshCcw, ChevronLeft, ChevronRight,
-  SlidersHorizontal, Columns3, Eye
+  SlidersHorizontal, Columns3, Eye, Send, Mail
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Navigate } from 'react-router-dom';
@@ -93,6 +93,9 @@ export default function AdminSales() {
   const [statusFilter, setStatusFilter] = useState<string>('todos');
   const [selectedOrder, setSelectedOrder] = useState<OrderDetails | null>(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [resendingAccess, setResendingAccess] = useState(false);
 
   useEffect(() => {
     if (admin) {
@@ -263,6 +266,22 @@ export default function AdminSales() {
     });
   }, [orders, searchTerm, statusFilter]);
 
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter]);
+
+  // Paginação calculada
+  const paginatedOrders = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredOrders.slice(startIndex, endIndex);
+  }, [filteredOrders, currentPage, itemsPerPage]);
+
+  const totalPages = useMemo(() => {
+    return Math.ceil(filteredOrders.length / itemsPerPage);
+  }, [filteredOrders.length, itemsPerPage]);
+
   // Estatísticas
   const stats = useMemo(() => {
     const totalSales = orders.length;
@@ -283,6 +302,58 @@ export default function AdminSales() {
       failedSales,
     };
   }, [orders]);
+
+  // Função para reenviar acesso ao cliente
+  const resendCustomerAccess = async (order: OrderDetails) => {
+    if (!order || order.status !== 'completed') {
+      toast({
+        title: 'Erro',
+        description: 'Só é possível reenviar acesso para pedidos pagos.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      setResendingAccess(true);
+      
+      console.log('🔄 Reenviando acesso para:', order.customer_email);
+      
+      const { data, error } = await supabase.functions.invoke('resend-purchase-access', {
+        body: { orderIds: [order.id] }
+      });
+
+      if (error) throw error;
+
+      console.log('✅ Resultado do reenvio:', data);
+
+      if (data?.results && data.results.length > 0) {
+        const result = data.results[0];
+        if (result.success) {
+          toast({
+            title: 'Acesso reenviado',
+            description: `Email enviado para ${order.customer_email}${result.account_created ? ' (nova conta criada)' : ''}`,
+          });
+        } else {
+          throw new Error(result.error || 'Falha ao reenviar acesso');
+        }
+      } else {
+        toast({
+          title: 'Acesso reenviado',
+          description: `Email de acesso enviado para ${order.customer_email}`,
+        });
+      }
+    } catch (error: any) {
+      console.error('❌ Erro ao reenviar acesso:', error);
+      toast({
+        title: 'Erro ao reenviar acesso',
+        description: error.message || 'Não foi possível reenviar o acesso.',
+        variant: 'destructive',
+      });
+    } finally {
+      setResendingAccess(false);
+    }
+  };
 
   const getStatusBadge = (status: string) => {
     const statusMap: Record<string, { label: string; className: string }> = {
@@ -500,14 +571,14 @@ export default function AdminSales() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredOrders.length === 0 ? (
+              {paginatedOrders.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-12 text-[hsl(var(--admin-text-secondary))]">
                     Nenhuma transação encontrada
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredOrders.slice(0, 10).map((order) => (
+                paginatedOrders.map((order) => (
                   <TableRow key={order.id} className="border-b border-[hsl(var(--admin-border))] hover:bg-[hsl(var(--admin-bg))]/50">
                     <TableCell className="font-mono text-sm text-[hsl(var(--admin-text))]">
                       {order.order_id?.slice(0, 12) || 'N/A'}
@@ -551,23 +622,48 @@ export default function AdminSales() {
         {/* Pagination */}
         <div className="p-4 flex items-center justify-between border-t border-[hsl(var(--admin-border))]">
           <p className="text-sm text-[hsl(var(--admin-text-secondary))]">
-            1-{Math.min(10, filteredOrders.length)} of {filteredOrders.length.toLocaleString()}
+            {filteredOrders.length > 0 
+              ? `${(currentPage - 1) * itemsPerPage + 1}-${Math.min(currentPage * itemsPerPage, filteredOrders.length)} de ${filteredOrders.length.toLocaleString()}`
+              : '0 resultados'
+            }
           </p>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" className="h-8 w-8 border-[hsl(var(--admin-border))]" disabled>
+            <Button 
+              variant="outline" 
+              size="icon" 
+              className="h-8 w-8 border-[hsl(var(--admin-border))]" 
+              disabled={currentPage <= 1}
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <Button variant="outline" size="icon" className="h-8 w-8 border-[hsl(var(--admin-border))]">
+            <span className="text-sm text-[hsl(var(--admin-text-secondary))] min-w-[80px] text-center">
+              Página {currentPage} de {totalPages || 1}
+            </span>
+            <Button 
+              variant="outline" 
+              size="icon" 
+              className="h-8 w-8 border-[hsl(var(--admin-border))]"
+              disabled={currentPage >= totalPages}
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            >
               <ChevronRight className="h-4 w-4" />
             </Button>
-            <Select defaultValue="10">
-              <SelectTrigger className="w-16 h-8 border-[hsl(var(--admin-border))]">
+            <Select 
+              value={itemsPerPage.toString()} 
+              onValueChange={(value) => {
+                setItemsPerPage(Number(value));
+                setCurrentPage(1);
+              }}
+            >
+              <SelectTrigger className="w-20 h-8 border-[hsl(var(--admin-border))]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="10">10</SelectItem>
                 <SelectItem value="25">25</SelectItem>
                 <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -585,7 +681,7 @@ export default function AdminSales() {
           </DialogHeader>
           
           {selectedOrder && (
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-[hsl(var(--admin-text-secondary))]">ID do Pedido</p>
@@ -622,6 +718,32 @@ export default function AdminSales() {
                   </p>
                 </div>
               </div>
+
+              {/* Botão para reenviar acesso - só mostra para pedidos pagos */}
+              {selectedOrder.status === 'completed' && (
+                <div className="pt-4 border-t border-[hsl(var(--admin-border))]">
+                  <Button 
+                    onClick={() => resendCustomerAccess(selectedOrder)}
+                    disabled={resendingAccess}
+                    className="w-full bg-[hsl(var(--admin-primary))] hover:bg-[hsl(var(--admin-primary))]/90 text-white"
+                  >
+                    {resendingAccess ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Reenviando acesso...
+                      </>
+                    ) : (
+                      <>
+                        <Mail className="h-4 w-4 mr-2" />
+                        Reenviar Acesso ao Cliente
+                      </>
+                    )}
+                  </Button>
+                  <p className="text-xs text-[hsl(var(--admin-text-secondary))] mt-2 text-center">
+                    Isso enviará um email com acesso ao painel e concederá acesso ao produto
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </DialogContent>
