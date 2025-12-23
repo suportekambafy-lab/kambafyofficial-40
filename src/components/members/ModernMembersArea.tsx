@@ -215,6 +215,27 @@ export default function ModernMembersArea({ memberAreaId: propMemberAreaId, isEm
     const urlParams = new URLSearchParams(window.location.search);
     const isVerified = urlParams.get('verified') === 'true';
     const emailParam = urlParams.get('email');
+    const isAdminAccess = urlParams.get('admin_access') === 'true';
+    
+    // ✅ Verificar acesso de admin via localStorage
+    if (isAdminAccess && memberAreaId) {
+      const adminAccessKey = `admin_member_area_access_${memberAreaId}`;
+      const adminAccess = localStorage.getItem(adminAccessKey);
+      if (adminAccess) {
+        try {
+          const parsed = JSON.parse(adminAccess);
+          const accessedAt = new Date(parsed.accessedAt);
+          const now = new Date();
+          const diffHours = (now.getTime() - accessedAt.getTime()) / (1000 * 60 * 60);
+          if (parsed.isAdmin && diffHours < 24) {
+            console.log('🔑 Acesso admin autorizado via localStorage');
+            return; // Permitir acesso sem autenticação
+          }
+        } catch (e) {
+          // Ignorar erro
+        }
+      }
+    }
     
     // ✅ CRÍTICO: Se tem verified=true na URL OU está embutido no app, NUNCA redirecionar
     // Esperar o ModernMembersAuth processar e criar a sessão virtual
@@ -224,7 +245,7 @@ export default function ModernMembersArea({ memberAreaId: propMemberAreaId, isEm
     }
     
     // Só redirecionar se NÃO for acesso verificado E não estiver autenticado E não estiver embutido no app
-    if (!authLoading && !isAuthenticated) {
+    if (!authLoading && !isAuthenticated && !isAdminAccess) {
       console.log('🔄 ModernMembersArea: Navegando para login - não autenticado e sem verificação', {
         authLoading,
         isAuthenticated,
@@ -248,6 +269,28 @@ export default function ModernMembersArea({ memberAreaId: propMemberAreaId, isEm
     const urlParams = new URLSearchParams(window.location.search);
     const isVerified = urlParams.get('verified') === 'true';
     const emailParam = urlParams.get('email');
+    const isAdminAccess = urlParams.get('admin_access') === 'true';
+    
+    // Verificar acesso admin
+    let hasAdminAccess = false;
+    if (isAdminAccess && memberAreaId) {
+      const adminAccessKey = `admin_member_area_access_${memberAreaId}`;
+      const adminAccess = localStorage.getItem(adminAccessKey);
+      if (adminAccess) {
+        try {
+          const parsed = JSON.parse(adminAccess);
+          const accessedAt = new Date(parsed.accessedAt);
+          const now = new Date();
+          const diffHours = (now.getTime() - accessedAt.getTime()) / (1000 * 60 * 60);
+          if (parsed.isAdmin && diffHours < 24) {
+            hasAdminAccess = true;
+            console.log('🔑 Carregando conteúdo com acesso admin');
+          }
+        } catch (e) {
+          // Ignorar erro
+        }
+      }
+    }
     
     // Permitir carregamento sempre que tiver memberAreaId
     if (!memberAreaId) {

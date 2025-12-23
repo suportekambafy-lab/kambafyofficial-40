@@ -248,6 +248,7 @@ const App = () => {
                          <Route path="live" element={<AdminPermissionRoute requiredPermission="view_analytics"><OptimizedRoutes.AdminLiveView /></AdminPermissionRoute>} />
                          <Route path="refunds" element={<AdminPermissionRoute requiredPermission="manage_withdrawals"><OptimizedRoutes.AdminRefunds /></AdminPermissionRoute>} />
                          <Route path="apps" element={<AdminPermissionRoute requiredPermission="view_analytics"><OptimizedRoutes.AdminApps /></AdminPermissionRoute>} />
+                         <Route path="member-areas" element={<AdminPermissionRoute requiredPermission="manage_products"><OptimizedRoutes.AdminMemberAreas /></AdminPermissionRoute>} />
                         </Route>
                       
                        {/* Partner Routes */}
