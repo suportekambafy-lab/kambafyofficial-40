@@ -2488,6 +2488,8 @@ export type Database = {
           affiliate_code: string | null
           affiliate_commission: number | null
           amount: string
+          approved_by_admin_id: string | null
+          approved_by_admin_name: string | null
           appypay_transaction_id: string | null
           cancellation_reason: string | null
           cohort_id: string | null
@@ -2521,6 +2523,8 @@ export type Database = {
           affiliate_code?: string | null
           affiliate_commission?: number | null
           amount: string
+          approved_by_admin_id?: string | null
+          approved_by_admin_name?: string | null
           appypay_transaction_id?: string | null
           cancellation_reason?: string | null
           cohort_id?: string | null
@@ -2554,6 +2558,8 @@ export type Database = {
           affiliate_code?: string | null
           affiliate_commission?: number | null
           amount?: string
+          approved_by_admin_id?: string | null
+          approved_by_admin_name?: string | null
           appypay_transaction_id?: string | null
           cancellation_reason?: string | null
           cohort_id?: string | null
@@ -2584,6 +2590,13 @@ export type Database = {
           utm_params?: Json | null
         }
         Relationships: [
+          {
+            foreignKeyName: "orders_approved_by_admin_id_fkey"
+            columns: ["approved_by_admin_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "orders_cohort_id_fkey"
             columns: ["cohort_id"]
@@ -2767,7 +2780,11 @@ export type Database = {
           admin_approved: boolean | null
           allow_affiliates: boolean | null
           allow_custom_price: boolean | null
+          approved_by_admin_id: string | null
+          approved_by_admin_name: string | null
           ban_reason: string | null
+          banned_by_admin_id: string | null
+          banned_by_admin_name: string | null
           category: string | null
           chat_config: Json | null
           chat_enabled: boolean | null
@@ -2814,7 +2831,11 @@ export type Database = {
           admin_approved?: boolean | null
           allow_affiliates?: boolean | null
           allow_custom_price?: boolean | null
+          approved_by_admin_id?: string | null
+          approved_by_admin_name?: string | null
           ban_reason?: string | null
+          banned_by_admin_id?: string | null
+          banned_by_admin_name?: string | null
           category?: string | null
           chat_config?: Json | null
           chat_enabled?: boolean | null
@@ -2861,7 +2882,11 @@ export type Database = {
           admin_approved?: boolean | null
           allow_affiliates?: boolean | null
           allow_custom_price?: boolean | null
+          approved_by_admin_id?: string | null
+          approved_by_admin_name?: string | null
           ban_reason?: string | null
+          banned_by_admin_id?: string | null
+          banned_by_admin_name?: string | null
           category?: string | null
           chat_config?: Json | null
           chat_enabled?: boolean | null
@@ -2902,6 +2927,20 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "products_approved_by_admin_id_fkey"
+            columns: ["approved_by_admin_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_banned_by_admin_id_fkey"
+            columns: ["banned_by_admin_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "products_impersonation_session_id_fkey"
             columns: ["impersonation_session_id"]
@@ -3296,6 +3335,8 @@ export type Database = {
           id: string
           order_id: string
           processed_at: string | null
+          processed_by_admin_id: string | null
+          processed_by_admin_name: string | null
           product_id: string | null
           reason: string
           refund_deadline: string
@@ -3314,6 +3355,8 @@ export type Database = {
           id?: string
           order_id: string
           processed_at?: string | null
+          processed_by_admin_id?: string | null
+          processed_by_admin_name?: string | null
           product_id?: string | null
           reason: string
           refund_deadline: string
@@ -3332,6 +3375,8 @@ export type Database = {
           id?: string
           order_id?: string
           processed_at?: string | null
+          processed_by_admin_id?: string | null
+          processed_by_admin_name?: string | null
           product_id?: string | null
           reason?: string
           refund_deadline?: string
@@ -3341,6 +3386,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "refund_requests_processed_by_admin_id_fkey"
+            columns: ["processed_by_admin_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "refund_requests_product_id_fkey"
             columns: ["product_id"]
