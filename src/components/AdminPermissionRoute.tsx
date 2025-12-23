@@ -79,24 +79,52 @@ export default function AdminPermissionRoute({
 
       // Verificar se o admin tem a permissão específica usando RPC para bypassar RLS
       try {
-        console.log('🔍 [ADMIN-PERMISSION-ROUTE] Buscando permissões do admin usando RPC...');
-        
-        // Usar RPC function que bypassa RLS
-        const { data, error } = await supabase.rpc('admin_has_permission', {
-          admin_email: admin.email,
-          required_permission: requiredPermission
+        const permissionAliases: Record<string, string[]> = {
+          // Compatibilidade (permissões antigas vs novas)
+          manage_users: ['users'],
+          manage_products: ['products'],
+          manage_verifications: ['identity_verification'],
+          view_analytics: ['analytics'],
+
+          // Páginas financeiras (compatibilidade)
+          manage_withdrawals: ['manage_transactions', 'orders'],
+          manage_transfers: ['manage_transactions', 'orders'],
+        };
+
+        const permissionsToCheck = Array.from(
+          new Set([requiredPermission, ...(permissionAliases[requiredPermission] ?? [])])
+        );
+
+        console.log('🔍 [ADMIN-PERMISSION-ROUTE] Buscando permissões do admin usando RPC...', {
+          permissionsToCheck,
         });
 
-        console.log('📋 [ADMIN-PERMISSION-ROUTE] Resultado da RPC:', { data, error });
+        const results = await Promise.all(
+          permissionsToCheck.map((permission) =>
+            supabase.rpc('admin_has_permission', {
+              admin_email: admin.email,
+              required_permission: permission,
+            })
+          )
+        );
 
-        if (error) {
-          console.error('❌ [ADMIN-PERMISSION-ROUTE] Erro ao verificar permissão:', error);
-          setHasPermission(false);
-        } else {
-          const hasAccess = data === true;
-          console.log(hasAccess ? '✅ [ADMIN-PERMISSION-ROUTE] Permissão encontrada' : '❌ [ADMIN-PERMISSION-ROUTE] Permissão não encontrada');
-          setHasPermission(hasAccess);
-        }
+        console.log('📋 [ADMIN-PERMISSION-ROUTE] Resultado da(s) RPC(s):', results);
+
+        const hasAccess = results.some(({ data, error }) => {
+          if (error) {
+            console.error('❌ [ADMIN-PERMISSION-ROUTE] Erro ao verificar permissão:', error);
+            return false;
+          }
+          return data === true;
+        });
+
+        console.log(
+          hasAccess
+            ? '✅ [ADMIN-PERMISSION-ROUTE] Permissão encontrada'
+            : '❌ [ADMIN-PERMISSION-ROUTE] Permissão não encontrada'
+        );
+
+        setHasPermission(hasAccess);
       } catch (error) {
         console.error('❌ [ADMIN-PERMISSION-ROUTE] Erro ao verificar permissão:', error);
         setHasPermission(false);
