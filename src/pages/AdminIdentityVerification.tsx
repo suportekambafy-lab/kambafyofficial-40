@@ -179,23 +179,40 @@ export default function AdminIdentityVerification() {
 
       console.log('✅ Total de verificações após filtro:', filteredVerifications.length);
 
-      // Get user profiles for each verification
-      const userIds = filteredVerifications.map(v => v.user_id) || [];
+      // Get user profiles for each verification (em lotes para evitar erro de URL muito longa)
+      const userIds = [...new Set(filteredVerifications.map(v => v.user_id))];
+      let allProfiles: any[] = [];
+      
       if (userIds.length > 0) {
-        const { data: profiles, error: profilesError } = await supabase
-          .from('profiles')
-          .select('user_id, full_name, email')
-          .in('user_id', userIds);
-
-        if (profilesError) {
-          console.error('❌ Erro ao buscar perfis:', profilesError);
-          throw profilesError;
+        // Dividir em lotes de 50 para evitar URL muito longa
+        const BATCH_SIZE = 50;
+        const batches = [];
+        for (let i = 0; i < userIds.length; i += BATCH_SIZE) {
+          batches.push(userIds.slice(i, i + BATCH_SIZE));
         }
+
+        console.log(`📦 Buscando perfis em ${batches.length} lotes...`);
+
+        for (const batch of batches) {
+          const { data: profiles, error: profilesError } = await supabase
+            .from('profiles')
+            .select('user_id, full_name, email')
+            .in('user_id', batch);
+
+          if (profilesError) {
+            console.error('❌ Erro ao buscar perfis (lote):', profilesError);
+            // Continuar mesmo com erro em um lote
+          } else if (profiles) {
+            allProfiles = [...allProfiles, ...profiles];
+          }
+        }
+
+        console.log(`✅ Total de perfis carregados: ${allProfiles.length}`);
 
         // Combine data
         let verificationsWithProfiles = filteredVerifications.map(verification => ({
           ...verification,
-          profiles: profiles?.find(p => p.user_id === verification.user_id)
+          profiles: allProfiles.find(p => p.user_id === verification.user_id)
         }));
 
         // Apply search filter on name and email after combining with profiles
