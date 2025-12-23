@@ -142,7 +142,7 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
 
       let confirmResult;
       
-      if (paymentMethod === 'card' || paymentMethod === 'card_uk' || paymentMethod === 'card_us') {
+      if (paymentMethod === 'card' || paymentMethod === 'card_uk' || paymentMethod === 'card_us' || paymentMethod === 'card_mx' || paymentMethod === 'card_cl') {
         const cardElement = elements.getElement(CardElement);
         if (!cardElement) {
           throw new Error('Elemento do cartão não encontrado');
@@ -386,6 +386,9 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
       case 'card_uk':
       case 'card_us':
         return 'CARD';
+      case 'card_mx':
+      case 'card_cl':
+        return 'TARJETA';
       case 'klarna':
       case 'klarna_uk':
         return 'KLARNA';
@@ -400,13 +403,14 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {(paymentMethod === 'card' || paymentMethod === 'card_uk' || paymentMethod === 'card_us') && (
+      {(paymentMethod === 'card' || paymentMethod === 'card_uk' || paymentMethod === 'card_us' || paymentMethod === 'card_mx' || paymentMethod === 'card_cl') && (
         <Card className="border-gray-200">
           <CardContent className="p-4">
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
                 <CreditCard className="w-4 h-4" />
-                {(paymentMethod === 'card_uk' || paymentMethod === 'card_us') ? 'Card Details' : 'Informações do Cartão'}
+                {paymentMethod === 'card_mx' || paymentMethod === 'card_cl' ? 'Datos de la Tarjeta' : 
+                 (paymentMethod === 'card_uk' || paymentMethod === 'card_us') ? 'Card Details' : 'Informações do Cartão'}
               </div>
               
               <div className="p-3 border border-gray-300 rounded-md bg-white">
