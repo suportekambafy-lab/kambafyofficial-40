@@ -105,6 +105,8 @@ const getInitialRates = (): Record<string, CountryInfo> => {
       if (rates.EUR) countries.PT.exchangeRate = rates.EUR;
       if (rates.MZN) countries.MZ.exchangeRate = rates.MZN;
       if (rates.GBP) countries.GB.exchangeRate = rates.GBP;
+      if (rates.MXN) countries.MX.exchangeRate = rates.MXN;
+      if (rates.CLP) countries.CL.exchangeRate = rates.CLP;
       return countries;
     }
   } catch {
