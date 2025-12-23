@@ -18,6 +18,7 @@ import { CouponInput } from "@/components/checkout/CouponInput";
 import { StripePaymentForm } from "@/components/checkout/StripePaymentForm";
 import { useOptimizedCheckout } from "@/hooks/useOptimizedCheckout";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useCheckoutTranslation } from "@/hooks/useCheckoutTranslation";
 import { usePaymentMethods } from "@/hooks/usePaymentMethods";
 import { OptimizedContainer } from "@/components/ui/optimized-containers";
 import professionalManImage from "@/assets/professional-man.jpg";
@@ -64,7 +65,7 @@ const KambaPayCheckoutOption = lazy(() =>
 // Apple Pay removido
 
 // Componente otimizado do header do produto
-const ProductHeader = memo(({ product, formatPrice, userCountry }: any) => {
+const ProductHeader = memo(({ product, formatPrice, userCountry, tc }: any) => {
   const getProductImage = (cover: string) => {
     if (!cover) return professionalManImage;
     if (cover.startsWith('data:')) return cover;
@@ -108,7 +109,7 @@ const ProductHeader = memo(({ product, formatPrice, userCountry }: any) => {
         <div className="w-full md:w-2/3">
           <div className="flex items-center gap-2 mb-2">
             <Shield className="w-4 h-4 text-checkout-secure" />
-            <span className="text-xs text-checkout-secure font-medium">100% Seguro</span>
+            <span className="text-xs text-checkout-secure font-medium">{tc('checkout.secure')}</span>
           </div>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
             {product.name}
@@ -128,7 +129,7 @@ const ProductHeader = memo(({ product, formatPrice, userCountry }: any) => {
             {product.sales && (
               <div className="flex items-center gap-1">
                 <CheckCircle className="w-4 h-4 text-green-600" />
-                <span className="text-sm text-gray-600">{product.sales} vendas</span>
+                <span className="text-sm text-gray-600">{product.sales} {tc('checkout.sales')}</span>
               </div>
             )}
           </div>
@@ -136,6 +137,11 @@ const ProductHeader = memo(({ product, formatPrice, userCountry }: any) => {
       </div>
     </div>
   );
+});
+
+// ProductHeader wrapper that receives tc
+const ProductHeaderWithTranslation = memo(({ product, formatPrice, userCountry, tc }: any) => {
+  return <ProductHeader product={product} formatPrice={formatPrice} userCountry={userCountry} tc={tc} />;
 });
 
 // Componente otimizado dos métodos de pagamento
@@ -257,6 +263,9 @@ const OptimizedCheckout = () => {
     fetchBalanceByEmail
   } = useOptimizedCheckout({ productId: productId || '' });
 
+  // Hook de tradução baseado no país (US/UK = inglês)
+  const { tc, isEnglish, getSubscriptionInterval } = useCheckoutTranslation(userCountry);
+
   console.log('🔍 HOOK RETORNOU PRODUCT:', {
     productName: product?.name,
     productId: product?.id,
@@ -264,7 +273,8 @@ const OptimizedCheckout = () => {
     customPricesValue: product?.custom_prices,
     customPricesType: typeof product?.custom_prices,
     customPricesKeys: product?.custom_prices ? Object.keys(product.custom_prices) : 'N/A',
-    fullProduct: product
+    fullProduct: product,
+    checkoutLanguage: isEnglish ? 'en' : 'pt'
   });
 
   // Hook para métodos de pagamento específicos por país
@@ -470,7 +480,7 @@ const OptimizedCheckout = () => {
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
           <OptimizedContainer error={error} className="text-center">
             <Button onClick={() => window.location.reload()} className="mt-4">
-              {isTranslationReady ? t('button.loading') : 'Tentar novamente'}
+              {tc('checkout.tryAgain')}
             </Button>
           </OptimizedContainer>
         </div>
@@ -482,7 +492,7 @@ const OptimizedCheckout = () => {
     return (
       <ThemeProvider forceLightMode={true}>
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <OptimizedContainer empty emptyMessage={isTranslationReady ? t('error.load') : 'Produto não encontrado'}>
+          <OptimizedContainer empty emptyMessage={tc('checkout.productNotFound')}>
             <div></div>
           </OptimizedContainer>
         </div>
@@ -499,9 +509,9 @@ const OptimizedCheckout = () => {
             <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center mx-auto mb-4">
               <AlertTriangle className="w-8 h-8 text-orange-600" />
             </div>
-            <h1 className="text-xl sm:text-2xl font-bold mb-4 text-gray-900">Oferta Expirada</h1>
+            <h1 className="text-xl sm:text-2xl font-bold mb-4 text-gray-900">{tc('checkout.offerExpired')}</h1>
             <p className="text-sm sm:text-base text-gray-600 mb-6">
-              Infelizmente, esta oferta não está mais disponível.
+              {tc('checkout.offerExpiredDesc')}
             </p>
           </div>
         </div>
@@ -575,6 +585,7 @@ const OptimizedCheckout = () => {
                 formatPrice={formatPrice}
                 userCountry={userCountry}
                 t={t}
+                tc={tc}
               />
             </Suspense>
           )}
@@ -655,17 +666,17 @@ const OptimizedCheckout = () => {
             <CardContent className="p-6">
               <div className="grid md:grid-cols-2 gap-8">
                 <div>
-                  <h2 className="text-xl font-semibold mb-6">{isTranslationReady ? t('form.title') : 'Informações de Cobrança'}</h2>
+                  <h2 className="text-xl font-semibold mb-6">{tc('checkout.billing')}</h2>
                   
                   {showingSkeleton ? (
                     <SkeletonForm />
                   ) : (
                      <div className="space-y-4">
                       <div>
-                        <Label htmlFor="fullName">{isTranslationReady ? t('form.name') : 'Nome Completo'} *</Label>
+                        <Label htmlFor="fullName">{tc('checkout.fullName')} *</Label>
                         <Input
                           id="fullName"
-                          placeholder={isTranslationReady ? t('form.name.placeholder') : 'Digite seu nome completo'}
+                          placeholder={tc('checkout.fullName.placeholder')}
                           value={formData.fullName}
                           onChange={(e) => handleInputChange('fullName', e.target.value)}
                           onBlur={() => setFieldTouched(prev => ({ ...prev, fullName: true }))}
@@ -674,17 +685,17 @@ const OptimizedCheckout = () => {
                         />
                         <ValidationFeedback 
                           isValid={isNameValid}
-                          message={isNameValid ? '✓ Nome válido' : 'Nome deve ter pelo menos 3 caracteres'}
+                          message={isNameValid ? tc('checkout.validation.nameValid') : tc('checkout.validation.nameInvalid')}
                           show={fieldTouched.fullName}
                         />
                       </div>
 
                       <div>
-                        <Label htmlFor="email">{isTranslationReady ? t('form.email') : 'Email'} *</Label>
+                        <Label htmlFor="email">{tc('checkout.email')} *</Label>
                         <Input
                           id="email"
                           type="email"
-                          placeholder={isTranslationReady ? t('form.email.placeholder') : 'Digite seu email'}
+                          placeholder={tc('checkout.email.placeholder')}
                           value={formData.email}
                           onChange={(e) => handleInputChange('email', e.target.value)}
                           onBlur={() => setFieldTouched(prev => ({ ...prev, email: true }))}
@@ -693,13 +704,13 @@ const OptimizedCheckout = () => {
                         />
                         <ValidationFeedback 
                           isValid={isEmailValid}
-                          message={isEmailValid ? '✓ Email válido' : 'Por favor, insira um email válido'}
+                          message={isEmailValid ? tc('checkout.validation.emailValid') : tc('checkout.validation.emailInvalid')}
                           show={fieldTouched.email}
                         />
                       </div>
 
                       <div>
-                        <Label>País</Label>
+                        <Label>{tc('checkout.country')}</Label>
                         <CountrySelector 
                           selectedCountry={userCountry || { 
                             code: 'AO', 
@@ -719,8 +730,8 @@ const OptimizedCheckout = () => {
 
                       <div>
                         <Label htmlFor="phone">
-                          {isTranslationReady ? t('form.phone') : 'Telefone'} {isPhoneRequired && '*'}
-                          {!isPhoneRequired && <span className="text-xs text-gray-500">(opcional)</span>}
+                          {tc('checkout.phone')} {isPhoneRequired && '*'}
+                          {!isPhoneRequired && <span className="text-xs text-gray-500">{tc('checkout.phone.optional')}</span>}
                         </Label>
                         <PhoneInput
                           value={formData.phone}
@@ -731,7 +742,7 @@ const OptimizedCheckout = () => {
                         {isPhoneRequired && (
                           <ValidationFeedback 
                             isValid={isPhoneValid}
-                            message={isPhoneValid ? '✓ Telefone válido' : 'Telefone obrigatório para este método de pagamento'}
+                            message={isPhoneValid ? tc('checkout.validation.phoneValid') : tc('checkout.validation.phoneRequired')}
                             show={fieldTouched.phone || isPhoneRequired}
                           />
                         )}
@@ -742,7 +753,7 @@ const OptimizedCheckout = () => {
 
                 {/* Métodos de pagamento - FORÇADO A APARECER */}
                 <div data-payment-section>
-                  <h2 className="text-xl font-semibold mb-6">{isTranslationReady ? t('payment.title') : 'Pagamento'}</h2>
+                  <h2 className="text-xl font-semibold mb-6">{tc('checkout.payment')}</h2>
                   
                   <PaymentMethods
                     availablePaymentMethods={finalPaymentMethods}
@@ -758,7 +769,7 @@ const OptimizedCheckout = () => {
                   {product?.id && (
                     <div className="mb-6">
                       <Label className="text-sm font-medium mb-2 block">
-                        {t('coupon.title') || 'Cupom de Desconto'}
+                        {tc('checkout.coupon')}
                       </Label>
                       <CouponInput
                         productId={product.id}
@@ -775,19 +786,19 @@ const OptimizedCheckout = () => {
                   {couponDiscount > 0 && (
                     <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
                       <div className="flex justify-between items-center mb-2 text-sm">
-                        <span className="text-muted-foreground">{t('coupon.subtotal') || 'Subtotal'}:</span>
+                        <span className="text-muted-foreground">{tc('checkout.subtotal')}:</span>
                         <span className="text-muted-foreground line-through">
                           {formatPrice(parseFloat(product?.price || '0') + productExtraPrice + accessExtensionPrice, userCountry, product?.custom_prices)}
                         </span>
                       </div>
                       <div className="flex justify-between items-center mb-2 text-sm">
-                        <span className="text-green-600 font-medium">{t('coupon.discount') || 'Desconto'}:</span>
+                        <span className="text-green-600 font-medium">{tc('checkout.discount')}:</span>
                         <span className="text-green-600 font-medium">
                           -{formatPrice(couponDiscount, userCountry)}
                         </span>
                       </div>
                       <div className="flex justify-between items-center pt-2 border-t border-green-200">
-                        <span className="font-semibold">Total:</span>
+                        <span className="font-semibold">{tc('checkout.total')}:</span>
                         <span className="text-xl font-bold text-primary">
                           {formatPrice(Math.max(0, parseFloat(product?.price || '0') + productExtraPrice + accessExtensionPrice - couponDiscount), userCountry, product?.custom_prices)}
                         </span>
@@ -889,14 +900,14 @@ const OptimizedCheckout = () => {
                             {processing ? (
                               <div className="flex items-center justify-center">
                                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                                PROCESSANDO...
+                                {tc('checkout.subscribing')}
                               </div>
                             ) : (
                               <>
-                                ASSINAR POR {totalPrice}
+                                {tc('checkout.subscribe')} - {totalPrice}
                                 {product.subscription_config.interval && (
                                   <span className="ml-1">
-                                    / {getSubscriptionIntervalText(
+                                    / {getSubscriptionInterval(
                                       product.subscription_config.interval,
                                       product.subscription_config.interval_count || 1
                                     )}
@@ -906,7 +917,7 @@ const OptimizedCheckout = () => {
                             )}
                           </Button>
                           <p className="text-xs text-center text-gray-500">
-                            Pagamento recorrente via Stripe. Pode cancelar a qualquer momento.
+                            {tc('checkout.subscription.recurring')}
                           </p>
                         </div>
                       )}
@@ -1017,16 +1028,16 @@ const OptimizedCheckout = () => {
                         <div className="space-y-4 p-4 border rounded-lg bg-blue-50">
                           <div className="text-center">
                             <p className="text-sm font-medium text-blue-900">
-                              ATENÇÃO: Após clicar no botão <strong>Comprar Agora</strong>
+                              {tc('checkout.express.attention')} <strong>{tc('checkout.buyNow')}</strong>
                             </p>
                             <p className="text-sm text-blue-800">
-                              → abra o aplicativo Multicaixa Express, e encontre o botão → <span className="text-red-600 font-bold">Operação por Autorizar</span> clica no botão, selecione o pagamento pendente e <strong>finalize o pagamento.</strong>
+                              → {tc('checkout.express.instruction')} <span className="text-red-600 font-bold">{tc('checkout.express.pendingOp')}</span> {tc('checkout.express.finalize')}
                             </p>
                           </div>
                           
                           <div className="space-y-2">
                             <label className="block text-sm font-medium text-gray-700">
-                              Por favor, insira o número de telefone ativo do Multicaixa Express.
+                              {tc('checkout.express.phoneLabel')}
                             </label>
                             <PhoneInput
                               value={formData.phone}
@@ -1036,7 +1047,7 @@ const OptimizedCheckout = () => {
                               className="w-full"
                               formatForMulticaixa={true}
                             />
-                            <p className="text-sm text-red-600">Telefone é obrigatório</p>
+                            <p className="text-sm text-red-600">{tc('checkout.phone.required')}</p>
                           </div>
                           
                           <Button 
@@ -1272,7 +1283,7 @@ const OptimizedCheckout = () => {
                             disabled={processing}
                             className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                           >
-                            {processing ? "Processando..." : "Comprar Agora"}
+                            {processing ? tc('checkout.processing') : tc('checkout.buyNow')}
                           </Button>
                         </div>
                       )}
@@ -1341,7 +1352,7 @@ const OptimizedCheckout = () => {
             paymentSection.scrollIntoView({ behavior: 'smooth' });
           }
         }}
-        buttonText="Finalizar Compra"
+        buttonText={tc('checkout.completePurchase')}
       />
 
       {/* Live Chat AI Widget */}
