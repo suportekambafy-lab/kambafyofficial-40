@@ -17,6 +17,65 @@ import { useNavigate } from "react-router-dom";
 
 const stripePromise = loadStripe('pk_live_51Sb4mRGfoQ3QRz9Av3PFK6zMS4wVFOCxbb331dYoWryYmzGHT9hGbB0TS6Fgvj9E5JgOU9YH9ynMIm1oPc46NRK5004WEaLu4y');
 
+// Traduções para o componente Stripe
+const STRIPE_TRANSLATIONS = {
+  pt: {
+    cardDetails: 'Informações do Cartão',
+    sslProtection: 'Seus dados estão protegidos com criptografia SSL',
+    processing: 'PROCESSANDO PAGAMENTO...',
+    payWith: 'PAGAR',
+    with: 'COM',
+    paymentSuccess: 'Pagamento realizado com sucesso!',
+    paymentSuccessDesc: 'Seu pedido foi processado.',
+    paymentRejected: 'Pagamento recusado',
+    paymentRejectedDesc: 'O pagamento foi recusado. Por favor, tente novamente.',
+    confirmOnPhone: 'Confirme no seu telemóvel',
+    confirmOnPhoneDesc: 'Por favor, confirme o pagamento na aplicação MB Way.',
+    cardNotFound: 'Elemento do cartão não encontrado',
+    unexpectedError: 'Erro inesperado'
+  },
+  en: {
+    cardDetails: 'Card Details',
+    sslProtection: 'Your data is protected with SSL encryption',
+    processing: 'PROCESSING PAYMENT...',
+    payWith: 'PAY',
+    with: 'WITH',
+    paymentSuccess: 'Payment successful!',
+    paymentSuccessDesc: 'Your order has been processed.',
+    paymentRejected: 'Payment rejected',
+    paymentRejectedDesc: 'The payment was rejected. Please try again.',
+    confirmOnPhone: 'Confirm on your phone',
+    confirmOnPhoneDesc: 'Please confirm the payment in the MB Way app.',
+    cardNotFound: 'Card element not found',
+    unexpectedError: 'Unexpected error'
+  },
+  es: {
+    cardDetails: 'Datos de la Tarjeta',
+    sslProtection: 'Tus datos están protegidos con encriptación SSL',
+    processing: 'PROCESANDO PAGO...',
+    payWith: 'PAGAR',
+    with: 'CON',
+    paymentSuccess: '¡Pago realizado con éxito!',
+    paymentSuccessDesc: 'Tu pedido ha sido procesado.',
+    paymentRejected: 'Pago rechazado',
+    paymentRejectedDesc: 'El pago fue rechazado. Por favor, intenta nuevamente.',
+    confirmOnPhone: 'Confirma en tu teléfono',
+    confirmOnPhoneDesc: 'Por favor, confirma el pago en la aplicación.',
+    cardNotFound: 'Elemento de tarjeta no encontrado',
+    unexpectedError: 'Error inesperado'
+  }
+};
+
+const getStripeLocale = (paymentMethod: string): 'pt' | 'en' | 'es' => {
+  if (paymentMethod === 'card_mx' || paymentMethod === 'card_cl') {
+    return 'es';
+  }
+  if (paymentMethod === 'card_uk' || paymentMethod === 'card_us') {
+    return 'en';
+  }
+  return 'pt';
+};
+
 const CARD_ELEMENT_OPTIONS = {
   style: {
     base: {
@@ -83,6 +142,10 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
   const navigate = useNavigate();
   const [cardError, setCardError] = useState<string>('');
   const [localMbwayPhone, setLocalMbwayPhone] = useState<string>(mbwayPhone || '');
+  
+  // Get translations based on payment method
+  const locale = getStripeLocale(paymentMethod);
+  const t = STRIPE_TRANSLATIONS[locale];
 
   const getStripeCurrency = (fromCurrency: string): string => {
     if (fromCurrency === 'EUR') {
@@ -149,7 +212,7 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
       if (paymentMethod === 'card' || paymentMethod === 'card_uk' || paymentMethod === 'card_us' || paymentMethod === 'card_mx' || paymentMethod === 'card_cl') {
         const cardElement = elements.getElement(CardElement);
         if (!cardElement) {
-          throw new Error('Elemento do cartão não encontrado');
+          throw new Error(t.cardNotFound);
         }
 
         confirmResult = await stripe.confirmCardPayment(
@@ -283,8 +346,8 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
           } else if (status === 'requires_action') {
             // MB Way requires user to confirm on phone - show message
             toast({
-              title: "Confirme no seu telemóvel",
-              description: "Por favor, confirme o pagamento na aplicação MB Way.",
+              title: t.confirmOnPhone,
+              description: t.confirmOnPhoneDesc,
             });
             // Don't redirect, wait for confirmation
             return;
@@ -292,8 +355,8 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
             // Payment was rejected/canceled/failed
             console.log('❌ MB Way payment rejected with status:', status);
             toast({
-              title: "Pagamento recusado",
-              description: "O pagamento MB Way foi recusado ou expirou. Por favor, tente novamente.",
+              title: t.paymentRejected,
+              description: t.paymentRejectedDesc,
               variant: "destructive"
             });
             setProcessing(false);
@@ -303,8 +366,8 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
           // Handle error from confirmPayment
           console.error('❌ MB Way payment error:', confirmResult.error);
           toast({
-            title: "Pagamento recusado",
-            description: confirmResult.error.message || "O pagamento foi recusado. Por favor, tente novamente.",
+            title: t.paymentRejected,
+            description: confirmResult.error.message || t.paymentRejectedDesc,
             variant: "destructive"
           });
           setCardError(confirmResult.error.message || 'Erro ao processar pagamento');
@@ -321,7 +384,7 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
         
         // Show toast for payment rejection (especially for MB Way)
         toast({
-          title: "Pagamento recusado",
+          title: t.paymentRejected,
           description: errorMessage,
           variant: "destructive"
         });
@@ -367,15 +430,15 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
         } else if (confirmResult.paymentIntent.status === 'succeeded') {
           console.log('Payment succeeded:', confirmResult.paymentIntent);
           toast({
-            title: "Pagamento realizado com sucesso!",
-            description: "Seu pedido foi processado.",
+            title: t.paymentSuccess,
+            description: t.paymentSuccessDesc,
           });
           onSuccess(confirmResult.paymentIntent);
         }
       }
     } catch (error) {
       console.error('Erro no pagamento:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Erro inesperado';
+      const errorMessage = error instanceof Error ? error.message : t.unexpectedError;
       setCardError(errorMessage);
       onError(errorMessage);
     } finally {
@@ -413,8 +476,7 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
                 <CreditCard className="w-4 h-4" />
-                {paymentMethod === 'card_mx' || paymentMethod === 'card_cl' ? 'Datos de la Tarjeta' : 
-                 (paymentMethod === 'card_uk' || paymentMethod === 'card_us') ? 'Card Details' : 'Informações do Cartão'}
+                {t.cardDetails}
               </div>
               
               <div className="p-3 border border-gray-300 rounded-md bg-white">
@@ -430,7 +492,7 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
 
               <div className="flex items-center gap-2 text-xs text-gray-500">
                 <Lock className="w-3 h-3" />
-                {(paymentMethod === 'card_uk' || paymentMethod === 'card_us') ? 'Your data is protected with SSL encryption' : 'Seus dados estão protegidos com criptografia SSL'}
+                {t.sslProtection}
               </div>
             </div>
           </CardContent>
@@ -516,10 +578,10 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
           <div className="flex items-center justify-center">
             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2">
             </div>
-            PROCESSANDO PAGAMENTO...
+            {t.processing}
           </div>
         ) : (
-          `PAGAR ${displayPrice} COM ${getPaymentMethodName()}`
+          `${t.payWith} ${displayPrice} ${t.with} ${getPaymentMethodName()}`
         )}
       </Button>
     </form>
@@ -548,8 +610,19 @@ interface StripeCardPaymentProps {
 }
 
 const StripeCardPayment: React.FC<StripeCardPaymentProps> = (props) => {
+  // Determinar o locale para o Stripe Elements baseado no método de pagamento
+  const getStripeElementsLocale = (): 'pt' | 'en' | 'es' | 'auto' => {
+    if (props.paymentMethod === 'card_mx' || props.paymentMethod === 'card_cl') {
+      return 'es';
+    }
+    if (props.paymentMethod === 'card_uk' || props.paymentMethod === 'card_us') {
+      return 'en';
+    }
+    return 'pt';
+  };
+
   return (
-    <Elements stripe={stripePromise}>
+    <Elements stripe={stripePromise} options={{ locale: getStripeElementsLocale() }}>
       <StripeCardForm {...props} />
     </Elements>
   );
