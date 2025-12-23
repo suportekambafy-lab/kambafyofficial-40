@@ -18,7 +18,8 @@ import {
   Wrench,
   Radio,
   RefreshCw,
-  Sparkles
+  Sparkles,
+  GraduationCap
 } from 'lucide-react';
 import kambabyLogo from '@/assets/kambafy-logo.png';
 import { useAdminPendingCounts } from '@/hooks/useAdminPendingCounts';
@@ -61,6 +62,11 @@ const menuItems = [
     label: 'Produtos',
     icon: Package,
     badgeKey: 'products' as const
+  },
+  {
+    href: '/admin/member-areas',
+    label: 'Áreas de Membros',
+    icon: GraduationCap,
   },
   {
     href: '/admin/withdrawals',

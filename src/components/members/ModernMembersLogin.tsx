@@ -135,17 +135,6 @@ export default function ModernMembersLogin() {
     setIsSubmitting(true);
     try {
       const normalizedEmail = email.toLowerCase().trim();
-      if (normalizedEmail === 'validar@kambafy.com') {
-        toast({
-          title: "✅ Acesso de validação autorizado!",
-          message: "Bem-vindo à área de membros",
-          variant: "success"
-        });
-        setTimeout(() => {
-          navigate(`/area/${memberAreaId}?verified=true&email=${encodeURIComponent(normalizedEmail)}`);
-        }, 800);
-        return;
-      }
       if (ownerEmail && normalizedEmail === ownerEmail) {
         setPendingEmail(normalizedEmail);
         setIs2FAForOwner(true);

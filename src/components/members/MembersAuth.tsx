@@ -102,7 +102,7 @@ export function MembersAuthProvider({ children }: MembersAuthProviderProps) {
 
       // Normalizar email
       const normalizedEmail = email.toLowerCase().trim();
-      const studentName = normalizedEmail === 'validar@kambafy.com' ? 'Validação Kambafy' : name;
+      const studentName = name;
 
       // Chamar edge function que faz toda a verificação de acesso
       // A edge function verifica: member_area_students, orders com produto vinculado, e se é criador

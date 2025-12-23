@@ -462,11 +462,17 @@ export default function AdminProducts() {
         return;
       }
 
-      // Se for um curso/área de membros, abrir a URL da área
+      // Se for um curso/área de membros, abrir a URL da área com acesso admin
       if (product.member_areas && product.member_areas.id) {
-        const memberAreaLinks = createMemberAreaLinks();
-        const url = memberAreaLinks.getMemberAreaUrl(product.member_areas.id);
-        console.log('🌐 Abrindo URL da área de membros:', url);
+        // Marcar acesso como admin no localStorage para bypass de login
+        const adminAccessKey = `admin_member_area_access_${product.member_areas.id}`;
+        localStorage.setItem(adminAccessKey, JSON.stringify({
+          accessedAt: new Date().toISOString(),
+          isAdmin: true
+        }));
+
+        const url = `/members/area/${product.member_areas.id}?admin_access=true`;
+        console.log('🌐 Abrindo URL da área de membros com acesso admin:', url);
         
         const newWindow = window.open(url, '_blank');
         if (!newWindow) {

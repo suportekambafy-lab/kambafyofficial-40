@@ -218,9 +218,25 @@ export function ModernMembersAuthProvider({ children, memberAreaId }: ModernMemb
       // Normalizar email para lowercase
       const normalizedEmail = user.email.toLowerCase().trim();
       
-      // Verificar se é o email de validação especial
-      if (normalizedEmail === 'validar@kambafy.com') {
-        return true; // Email de validação tem acesso a todas as áreas
+      // Verificar se é acesso de admin (via localStorage)
+      const adminAccessKey = `admin_member_area_access_${memberAreaId}`;
+      const adminAccess = localStorage.getItem(adminAccessKey);
+      if (adminAccess) {
+        try {
+          const parsed = JSON.parse(adminAccess);
+          // Acesso admin válido por 24 horas
+          const accessedAt = new Date(parsed.accessedAt);
+          const now = new Date();
+          const diffHours = (now.getTime() - accessedAt.getTime()) / (1000 * 60 * 60);
+          if (parsed.isAdmin && diffHours < 24) {
+            console.log('✅ ModernAuth: Acesso administrativo autorizado');
+            return true;
+          } else {
+            localStorage.removeItem(adminAccessKey); // Limpar acesso expirado
+          }
+        } catch (e) {
+          localStorage.removeItem(adminAccessKey);
+        }
       }
       
       // Usar função RPC segura para verificar acesso (não expõe lista de estudantes)
