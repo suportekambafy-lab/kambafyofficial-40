@@ -747,13 +747,13 @@ export default function Sales() {
                             {getStatusBadge(sale.status)}
                           </div>
                           
-                          {/* Linha 2: Método de pagamento + Data */}
+                          {/* Linha 2: Data + Método de pagamento */}
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            {getPaymentMethodIconWithTooltip(sale.payment_method)}
                             <span className="flex items-center gap-1">
                               <Calendar className="h-3 w-3" />
                               {new Date(sale.created_at).toLocaleDateString('pt-BR')}
                             </span>
+                            {getPaymentMethodIconWithTooltip(sale.payment_method)}
                           </div>
                           
                           {/* Linha 3: Badges (País + Tipo de venda) */}
