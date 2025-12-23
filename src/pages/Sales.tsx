@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ShoppingCart, Search, RefreshCw, CheckCircle, Clock, XCircle, CreditCard, Banknote, Building, Calendar, Package, User, DollarSign, Download, Mail, Loader2 } from "lucide-react";
+import { ShoppingCart, Search, RefreshCw, CheckCircle, Clock, XCircle, CreditCard, Banknote, Building, Calendar, Package, User, DollarSign, Download, Mail, Loader2, Eye } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import { supabase } from "@/integrations/supabase/client";
@@ -648,16 +649,6 @@ export default function Sales() {
                               <User className="h-3 w-3 md:h-4 md:w-4" />
                               <span className="truncate">{sale.customer_name}</span>
                             </div>
-                            {sale.customer_email && (
-                              <div className="text-xs text-muted-foreground pl-3 md:pl-5 truncate">
-                                {sale.customer_email}
-                              </div>
-                            )}
-                            {sale.customer_phone && (
-                              <div className="text-xs text-muted-foreground pl-3 md:pl-5">
-                                {sale.customer_phone}
-                              </div>
-                            )}
                           </div>
                         </div>
                         
@@ -730,62 +721,135 @@ export default function Sales() {
                         })()}
                           </div>
                           
-                          {/* Botão para reenviar acesso - só mostra para vendas pagas */}
-                          {sale.status === 'completed' && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => resendCustomerAccess(sale)}
-                              disabled={resendingAccessFor === sale.id}
-                              className="mt-2 text-xs"
-                            >
-                              {resendingAccessFor === sale.id ? (
-                                <>
-                                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                                  Enviando...
-                                </>
-                              ) : (
-                                <>
-                                  <Mail className="h-3 w-3 mr-1" />
-                                  Reenviar Acesso
-                                </>
-                              )}
-                            </Button>
-                          )}
+                          {/* Botão Ver Detalhes com Dialog */}
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button variant="outline" size="sm" className="mt-2 text-xs">
+                                <Eye className="h-3 w-3 mr-1" />
+                                Ver Detalhes
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-md">
+                              <DialogHeader>
+                                <DialogTitle>Detalhes da Venda</DialogTitle>
+                              </DialogHeader>
+                              <div className="space-y-4">
+                                {/* Info do Produto */}
+                                <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                                  <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                                    <img src={getProductImage(sale.products?.cover || '')} alt={sale.products?.name || 'Produto'} className="w-full h-full object-cover" />
+                                  </div>
+                                  <div>
+                                    <h4 className="font-semibold text-sm">{sale.products?.name || 'Produto'}</h4>
+                                    <p className="text-xs text-muted-foreground">Pedido #{sale.order_id}</p>
+                                  </div>
+                                </div>
+                                
+                                {/* Dados do Cliente */}
+                                <div className="space-y-2">
+                                  <h4 className="font-semibold text-sm">Dados do Cliente</h4>
+                                  <div className="space-y-1 text-sm">
+                                    <div className="flex items-center gap-2">
+                                      <User className="h-4 w-4 text-muted-foreground" />
+                                      <span>{sale.customer_name}</span>
+                                    </div>
+                                    {sale.customer_email && (
+                                      <div className="flex items-center gap-2">
+                                        <Mail className="h-4 w-4 text-muted-foreground" />
+                                        <span className="break-all">{sale.customer_email}</span>
+                                      </div>
+                                    )}
+                                    {sale.customer_phone && (
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-muted-foreground">📞</span>
+                                        <span>{sale.customer_phone}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                                
+                                {/* Dados do Pagamento */}
+                                <div className="space-y-2">
+                                  <h4 className="font-semibold text-sm">Dados do Pagamento</h4>
+                                  <div className="space-y-1 text-sm">
+                                    <div className="flex justify-between">
+                                      <span className="text-muted-foreground">Valor:</span>
+                                      <span className="font-bold">{formatPrice(sale)}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-muted-foreground">Status:</span>
+                                      {getStatusBadge(sale.status)}
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-muted-foreground">Método:</span>
+                                      {getPaymentMethodBadge(sale.payment_method)}
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-muted-foreground">Data:</span>
+                                      <span>{new Date(sale.created_at).toLocaleDateString('pt-BR')} às {new Date(sale.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                {/* Order Bumps no Dialog */}
+                                {sale.order_bump_data && Array.isArray(sale.order_bump_data) && sale.order_bump_data.length > 0 && (
+                                  <div className="space-y-2">
+                                    <h4 className="font-semibold text-sm">Order Bumps ({sale.order_bump_data.length})</h4>
+                                    <div className="space-y-2">
+                                      {sale.order_bump_data.map((bump: any, index: number) => (
+                                        <div key={index} className="flex items-center justify-between text-xs bg-muted/50 p-2 rounded">
+                                          <div className="flex items-center gap-2">
+                                            <div className="w-8 h-8 rounded overflow-hidden bg-background flex-shrink-0">
+                                              {bump.bump_product_image && (
+                                                <img 
+                                                  src={getProductImage(bump.bump_product_image)} 
+                                                  alt={bump.bump_product_name || 'Order Bump'} 
+                                                  className="w-full h-full object-cover" 
+                                                />
+                                              )}
+                                            </div>
+                                            <span className="font-medium">{bump.bump_product_name || 'Order Bump'}</span>
+                                          </div>
+                                          <span className="font-bold text-green-600">
+                                            {formatCurrency(parseFloat(bump.bump_product_price || '0'))}
+                                          </span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                                
+                                {/* Botão Reenviar Acesso no Dialog */}
+                                {sale.status === 'completed' && (
+                                  <div className="pt-2 border-t">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => resendCustomerAccess(sale)}
+                                      disabled={resendingAccessFor === sale.id}
+                                      className="w-full"
+                                    >
+                                      {resendingAccessFor === sale.id ? (
+                                        <>
+                                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                          Enviando...
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Mail className="h-4 w-4 mr-2" />
+                                          Reenviar Acesso ao Cliente
+                                        </>
+                                      )}
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
+                            </DialogContent>
+                          </Dialog>
                         </div>
                       </div>
                     </div>
                   </div>
-                  
-                  {/* Order Bumps */}
-                  {sale.order_bump_data && Array.isArray(sale.order_bump_data) && sale.order_bump_data.length > 0 && (
-                    <div className="mt-4 pt-4 border-t border-border">
-                      <p className="text-xs font-semibold text-muted-foreground mb-2">
-                        Order Bumps ({sale.order_bump_data.length})
-                      </p>
-                      <div className="space-y-2">
-                        {sale.order_bump_data.map((bump: any, index: number) => (
-                          <div key={index} className="flex items-center justify-between text-xs bg-muted/50 p-2 rounded">
-                            <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 rounded overflow-hidden bg-background flex-shrink-0">
-                                {bump.bump_product_image && (
-                                  <img 
-                                    src={getProductImage(bump.bump_product_image)} 
-                                    alt={bump.bump_product_name || 'Order Bump'} 
-                                    className="w-full h-full object-cover" 
-                                  />
-                                )}
-                              </div>
-                              <span className="font-medium">{bump.bump_product_name || 'Order Bump'}</span>
-                            </div>
-                            <span className="font-bold text-green-600">
-                              {formatCurrency(parseFloat(bump.bump_product_price || '0'))}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </CardContent>
               </Card>)}
           </div>
