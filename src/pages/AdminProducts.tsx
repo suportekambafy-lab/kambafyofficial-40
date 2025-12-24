@@ -77,37 +77,18 @@ export default function AdminProducts() {
 
   const loadProducts = async () => {
     try {
-      console.log('Carregando produtos...');
+      console.log('Carregando produtos via RPC admin...');
       
-      // Buscar TODOS os produtos usando paginação (bypass limite de 1000)
-      const BATCH_SIZE = 1000;
-      let allProducts: any[] = [];
-      let offset = 0;
-      let hasMore = true;
+      // Buscar TODOS os produtos usando RPC (bypassa RLS)
+      const { data: allProducts, error: productsError } = await supabase.rpc('get_all_products_for_admin');
 
-      while (hasMore) {
-        const { data: batch, error: batchError } = await supabase
-          .from('products')
-          .select('*, member_areas(id, name, url)')
-          .order('created_at', { ascending: false })
-          .range(offset, offset + BATCH_SIZE - 1);
-
-        if (batchError) {
-          console.error('Erro ao carregar produtos:', batchError);
-          toast.error('Erro ao carregar produtos');
-          return;
-        }
-
-        if (!batch || batch.length === 0) {
-          hasMore = false;
-        } else {
-          allProducts = [...allProducts, ...batch];
-          offset += BATCH_SIZE;
-          hasMore = batch.length === BATCH_SIZE;
-        }
+      if (productsError) {
+        console.error('Erro ao carregar produtos:', productsError);
+        toast.error('Erro ao carregar produtos: ' + productsError.message);
+        return;
       }
 
-      const productsData = allProducts;
+      const productsData = allProducts || [];
       console.log('Produtos encontrados:', productsData.length);
 
       // Depois buscar os perfis dos usuários (em lotes para evitar URL muito longa)

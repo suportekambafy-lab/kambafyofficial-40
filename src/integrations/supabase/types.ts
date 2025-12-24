@@ -4387,6 +4387,7 @@ export type Database = {
       cleanup_expired_member_sessions: { Args: never; Returns: undefined }
       cleanup_passwordless_users: { Args: never; Returns: undefined }
       complete_refund: { Args: { p_refund_id: string }; Returns: undefined }
+      count_all_products_for_admin: { Args: never; Returns: number }
       count_duplicate_withdrawals: { Args: never; Returns: number }
       count_member_area_students: {
         Args: { p_member_area_id: string }
@@ -4529,6 +4530,29 @@ export type Database = {
           verified_at: string
           verified_by: string
           verified_by_name: string
+        }[]
+      }
+      get_all_products_for_admin: {
+        Args: never
+        Returns: {
+          admin_approved: boolean
+          approved_at: string
+          approved_by_admin_id: string
+          approved_by_admin_name: string
+          checkout_url: string
+          created_at: string
+          currency: string
+          description: string
+          id: string
+          image_url: string
+          name: string
+          price: string
+          revision_notes: string
+          revision_requested: boolean
+          status: string
+          type: string
+          updated_at: string
+          user_id: string
         }[]
       }
       get_all_profiles_for_admin: {
