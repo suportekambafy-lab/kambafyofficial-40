@@ -1461,6 +1461,7 @@ export type Database = {
           user_id: string
           verified_at: string | null
           verified_by: string | null
+          verified_by_name: string | null
         }
         Insert: {
           address_city?: string | null
@@ -1485,6 +1486,7 @@ export type Database = {
           user_id: string
           verified_at?: string | null
           verified_by?: string | null
+          verified_by_name?: string | null
         }
         Update: {
           address_city?: string | null
@@ -1509,6 +1511,7 @@ export type Database = {
           user_id?: string
           verified_at?: string | null
           verified_by?: string | null
+          verified_by_name?: string | null
         }
         Relationships: []
       }
