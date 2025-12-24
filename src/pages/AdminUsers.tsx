@@ -45,6 +45,7 @@ interface UserProfile {
 export default function AdminUsers() {
   const { admin } = useAdminAuth();
   const { toast } = useToast();
+
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
@@ -53,40 +54,90 @@ export default function AdminUsers() {
   const [sendingEmails, setSendingEmails] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Contagens (evita limite padrão de 1000 linhas)
+  const [totalUsersCount, setTotalUsersCount] = useState(0);
+  const [bannedUsersCount, setBannedUsersCount] = useState(0);
+  const [creatorsCount, setCreatorsCount] = useState(0);
+  const [filteredCount, setFilteredCount] = useState(0);
+
   const itemsPerPage = 10;
 
   useEffect(() => {
-    if (admin) {
-      console.log('Admin logado, carregando usuários...');
-      loadUsers();
-    }
+    if (!admin) return;
+    console.log('Admin logado, carregando usuários...');
+    void refreshStats();
   }, [admin]);
+
+  useEffect(() => {
+    if (!admin) return;
+    void loadUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [admin, currentPage, searchTerm]);
+
+  const refreshStats = async () => {
+    try {
+      const [totalRes, bannedRes, creatorsRes] = await Promise.all([
+        supabase.rpc('get_all_profiles_for_admin', {}, { count: 'exact', head: true }),
+        supabase
+          .rpc('get_all_profiles_for_admin', {}, { count: 'exact', head: true })
+          .eq('banned', true),
+        supabase
+          .rpc('get_all_profiles_for_admin', {}, { count: 'exact', head: true })
+          .eq('is_creator', true),
+      ]);
+
+      if (totalRes.error) throw totalRes.error;
+      if (bannedRes.error) throw bannedRes.error;
+      if (creatorsRes.error) throw creatorsRes.error;
+
+      setTotalUsersCount(totalRes.count ?? 0);
+      setBannedUsersCount(bannedRes.count ?? 0);
+      setCreatorsCount(creatorsRes.count ?? 0);
+    } catch (error: any) {
+      console.error('Erro ao carregar contagens de usuários:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao carregar estatísticas de utilizadores',
+        variant: 'destructive',
+      });
+    }
+  };
 
   const loadUsers = async () => {
     try {
-      console.log('Carregando todos os usuários via RPC admin...');
-      
-      // Usar função RPC que bypassa RLS
-      const { data, error } = await supabase.rpc('get_all_profiles_for_admin');
+      setLoading(true);
+
+      const from = (currentPage - 1) * itemsPerPage;
+      const to = from + itemsPerPage - 1;
+
+      let query = supabase.rpc('get_all_profiles_for_admin', {}, { count: 'exact' });
+
+      const term = searchTerm.trim();
+      if (term) {
+        query = query.or(`full_name.ilike.%${term}%,email.ilike.%${term}%`);
+      }
+
+      const { data, error, count } = await query.range(from, to);
 
       if (error) {
         console.error('Erro ao carregar usuários via RPC:', error);
         toast({
           title: 'Erro',
           description: 'Erro ao carregar usuários: ' + error.message,
-          variant: 'destructive'
+          variant: 'destructive',
         });
         return;
       }
 
-      console.log(`✅ Total de usuários carregados: ${data?.length || 0}`);
-      setUsers(data || []);
+      setUsers((data as UserProfile[]) || []);
+      setFilteredCount(count ?? 0);
     } catch (error) {
       console.error('Error loading users:', error);
       toast({
         title: 'Erro',
         description: 'Erro inesperado ao carregar usuários',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
