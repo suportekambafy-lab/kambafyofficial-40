@@ -61,10 +61,8 @@ export default function AdminSellers() {
         return;
       }
 
-      // Buscar todos os produtos de uma vez
-      const { data: allProducts } = await supabase
-        .from('products')
-        .select('id, user_id, status, admin_approved');
+      // Buscar todos os produtos de uma vez usando RPC (bypassa RLS)
+      const { data: allProducts } = await supabase.rpc('get_all_products_for_admin');
 
       // Buscar todas as vendas de uma vez (orders pelos product_id dos produtos)
       const productIds = allProducts?.map(p => p.id) || [];
