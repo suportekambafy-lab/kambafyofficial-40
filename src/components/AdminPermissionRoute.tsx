@@ -21,21 +21,35 @@ export default function AdminPermissionRoute({
   const { admin, loading: authLoading, loginStep } = useAdminAuth();
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
-  const [permissionsTimestamp, setPermissionsTimestamp] = useState<string | null>(null);
+  const [permissionsTimestamp, setPermissionsTimestamp] = useState<string | null>(() =>
+    localStorage.getItem('admin_permissions_timestamp')
+  );
+
+  const triggerRevalidation = () => {
+    const ts = new Date().toISOString();
+    localStorage.setItem('admin_permissions_timestamp', ts);
+    setPermissionsTimestamp(ts);
+    setHasPermission(null);
+    setLoading(true);
+  };
 
   useEffect(() => {
-    // Verificar timestamp para forçar revalidação
-    const timestamp = localStorage.getItem('admin_permissions_timestamp');
-    if (timestamp !== permissionsTimestamp) {
-      console.log('🔄 [ADMIN-PERMISSION-ROUTE] Novo timestamp detectado, forçando revalidação');
-      setPermissionsTimestamp(timestamp);
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== 'admin_permissions_timestamp') return;
+      setPermissionsTimestamp(e.newValue);
       setHasPermission(null);
       setLoading(true);
-    }
-  }, [admin]);
+    };
+
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
 
   useEffect(() => {
     async function checkPermission() {
+      setHasPermission(null);
+      setLoading(true);
+
       console.log('🔐 [ADMIN-PERMISSION-ROUTE] Iniciando verificação de permissões');
       
       if (!admin) {
@@ -80,15 +94,23 @@ export default function AdminPermissionRoute({
       // Verificar se o admin tem a permissão específica usando RPC para bypassar RLS
       try {
         const permissionAliases: Record<string, string[]> = {
-          // Compatibilidade (permissões antigas vs novas)
+          // Compatibilidade (permissões antigas vs novas) - dois sentidos
           manage_users: ['users'],
+          users: ['manage_users'],
+
           manage_products: ['products'],
+          products: ['manage_products'],
+
           manage_verifications: ['identity_verification'],
+          identity_verification: ['manage_verifications'],
+
           view_analytics: ['analytics'],
+          analytics: ['view_analytics'],
 
           // Páginas financeiras (compatibilidade)
           manage_withdrawals: ['manage_transactions', 'orders'],
           manage_transfers: ['manage_transactions', 'orders'],
+          manage_transactions: ['manage_withdrawals', 'manage_transfers', 'orders'],
         };
 
         const permissionsToCheck = Array.from(
@@ -141,7 +163,7 @@ export default function AdminPermissionRoute({
   if (authLoading || loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-checkout-green"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -172,45 +194,50 @@ export default function AdminPermissionRoute({
   if (hasPermission === false) {
     console.log('❌ [ADMIN-PERMISSION-ROUTE] Acesso negado - exibindo tela de erro');
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50 p-4">
-        <Card className="max-w-md w-full">
-          <CardHeader className="text-center">
-            <div className="mx-auto w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
-              <AlertCircle className="w-6 h-6 text-red-600" />
-            </div>
-            <CardTitle className="text-2xl">Acesso Negado</CardTitle>
-            <CardDescription className="text-base">
-              Você não tem permissão para acessar esta página
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm text-gray-600 text-center">
-              {requireSuperAdmin 
-                ? 'Esta página requer privilégios de Super Admin.'
-                : `Esta página requer a permissão: ${requiredPermission}`
-              }
-            </p>
-            <p className="text-sm text-gray-600 text-center">
-              Entre em contato com um Super Admin para solicitar acesso.
-            </p>
-            <div className="flex gap-2">
-              <Button 
-                onClick={() => window.history.back()}
-                variant="outline"
-                className="flex-1"
-              >
-                Voltar
+        <div className="flex items-center justify-center min-h-screen bg-background p-4">
+          <Card className="max-w-md w-full">
+            <CardHeader className="text-center">
+              <div className="mx-auto w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center mb-4">
+                <AlertCircle className="w-6 h-6 text-destructive" />
+              </div>
+              <CardTitle className="text-2xl">Acesso Negado</CardTitle>
+              <CardDescription className="text-base">
+                Você não tem permissão para acessar esta página
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground text-center">
+                {requireSuperAdmin 
+                  ? 'Esta página requer privilégios de Super Admin.'
+                  : `Esta página requer a permissão: ${requiredPermission}`
+                }
+              </p>
+              <p className="text-sm text-muted-foreground text-center">
+                Entre em contato com um Super Admin para solicitar acesso.
+              </p>
+
+              <Button onClick={triggerRevalidation} variant="outline" className="w-full">
+                Revalidar permissões
               </Button>
-              <Button 
-                onClick={() => navigate('/admin')}
-                className="flex-1"
-              >
-                Ir para Dashboard
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+
+              <div className="flex gap-2">
+                <Button 
+                  onClick={() => window.history.back()}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Voltar
+                </Button>
+                <Button 
+                  onClick={() => navigate('/admin')}
+                  className="flex-1"
+                >
+                  Ir para Dashboard
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
     );
   }
 
