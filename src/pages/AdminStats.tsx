@@ -53,19 +53,30 @@ export default function AdminStats() {
         dateFilter = startOfDay(subDays(new Date(), days));
       }
 
-      // Fetch KYC stats from identity_verification (real data)
-      const kycQuery = supabase
+      // Fetch KYC stats - using verified_by_name since verified_by may not be set
+      const kycApprovedQuery = supabase
         .from('identity_verification')
-        .select('verified_by, status, updated_at')
-        .not('verified_by', 'is', null)
-        .in('status', ['aprovado', 'rejeitado']);
+        .select('verified_by_name, updated_at')
+        .eq('status', 'aprovado')
+        .not('verified_by_name', 'is', null);
       
       if (dateFilter) {
-        kycQuery.gte('updated_at', format(dateFilter, 'yyyy-MM-dd'));
+        kycApprovedQuery.gte('updated_at', format(dateFilter, 'yyyy-MM-dd'));
       }
-      const { data: kycData } = await kycQuery;
+      const { data: kycApprovedData } = await kycApprovedQuery;
 
-      // Fetch withdrawal stats from withdrawal_requests (real data)
+      // KYC rejeitados - não têm verified_by preenchido, contar total apenas
+      const kycRejectedQuery = supabase
+        .from('identity_verification')
+        .select('updated_at')
+        .eq('status', 'rejeitado');
+      
+      if (dateFilter) {
+        kycRejectedQuery.gte('updated_at', format(dateFilter, 'yyyy-MM-dd'));
+      }
+      const { data: kycRejectedData } = await kycRejectedQuery;
+
+      // Fetch withdrawal stats from withdrawal_requests (uses admin_processed_by UUID)
       const withdrawalQuery = supabase
         .from('withdrawal_requests')
         .select('admin_processed_by, status, updated_at')
@@ -76,28 +87,28 @@ export default function AdminStats() {
       }
       const { data: withdrawalData } = await withdrawalQuery;
 
-      // Fetch product approval stats from products (real data)
+      // Fetch product approval stats from products
       const productsApprovedQuery = supabase
         .from('products')
-        .select('approved_by_admin_id, admin_approved, updated_at')
-        .not('approved_by_admin_id', 'is', null)
-        .eq('admin_approved', true);
+        .select('approved_by_admin_name, updated_at')
+        .eq('admin_approved', true)
+        .not('approved_by_admin_name', 'is', null);
       
       if (dateFilter) {
         productsApprovedQuery.gte('updated_at', format(dateFilter, 'yyyy-MM-dd'));
       }
       const { data: productsApprovedData } = await productsApprovedQuery;
 
-      // Fetch banned products stats
-      const productsBannedQuery = supabase
-        .from('products')
-        .select('banned_by_admin_id, ban_reason, updated_at')
-        .not('banned_by_admin_id', 'is', null);
+      // Fetch banned products from admin_action_logs (product_ban action)
+      const bansQuery = supabase
+        .from('admin_action_logs')
+        .select('admin_email, created_at')
+        .eq('action', 'product_ban');
       
       if (dateFilter) {
-        productsBannedQuery.gte('updated_at', format(dateFilter, 'yyyy-MM-dd'));
+        bansQuery.gte('created_at', format(dateFilter, 'yyyy-MM-dd'));
       }
-      const { data: productsBannedData } = await productsBannedQuery;
+      const { data: bansData } = await bansQuery;
 
       // Fetch logins from admin_logs
       const logsQuery = supabase
@@ -109,6 +120,17 @@ export default function AdminStats() {
         logsQuery.gte('created_at', format(dateFilter, 'yyyy-MM-dd'));
       }
       const { data: logsData } = await logsQuery;
+
+      // Create maps for name/email lookup
+      const adminByName = new Map<string, string>();
+      const adminByEmail = new Map<string, string>();
+      
+      admins?.forEach(admin => {
+        if (admin.full_name) {
+          adminByName.set(admin.full_name.toLowerCase(), admin.id);
+        }
+        adminByEmail.set(admin.email.toLowerCase(), admin.id);
+      });
 
       // Aggregate stats
       const statsMap = new Map<string, AdminStat>();
@@ -130,20 +152,19 @@ export default function AdminStats() {
         });
       });
 
-      // Process KYC data
-      kycData?.forEach(item => {
-        const stat = statsMap.get(item.verified_by);
-        if (stat) {
-          if (item.status === 'aprovado') {
+      // Process KYC approved data by name
+      kycApprovedData?.forEach(item => {
+        const adminId = adminByName.get(item.verified_by_name?.toLowerCase() || '');
+        if (adminId) {
+          const stat = statsMap.get(adminId);
+          if (stat) {
             stat.kyc_aprovacoes++;
-          } else if (item.status === 'rejeitado') {
-            stat.kyc_rejeicoes++;
+            stat.total_acoes++;
           }
-          stat.total_acoes++;
         }
       });
 
-      // Process withdrawal data
+      // Process withdrawal data by admin_processed_by (UUID)
       withdrawalData?.forEach(item => {
         const stat = statsMap.get(item.admin_processed_by);
         if (stat) {
@@ -156,22 +177,27 @@ export default function AdminStats() {
         }
       });
 
-      // Process products approved data
+      // Process products approved data by name
       productsApprovedData?.forEach(item => {
-        const stat = statsMap.get(item.approved_by_admin_id);
-        if (stat) {
-          stat.produtos_aprovados++;
-          stat.total_acoes++;
+        const adminId = adminByName.get(item.approved_by_admin_name?.toLowerCase() || '');
+        if (adminId) {
+          const stat = statsMap.get(adminId);
+          if (stat) {
+            stat.produtos_aprovados++;
+            stat.total_acoes++;
+          }
         }
       });
 
-      // Process products banned data
-      productsBannedData?.forEach(item => {
-        const stat = statsMap.get(item.banned_by_admin_id);
-        if (stat) {
-          stat.banimentos++;
-          stat.produtos_banidos++;
-          stat.total_acoes++;
+      // Process bans data by email
+      bansData?.forEach(item => {
+        const adminId = adminByEmail.get(item.admin_email?.toLowerCase() || '');
+        if (adminId) {
+          const stat = statsMap.get(adminId);
+          if (stat) {
+            stat.banimentos++;
+            stat.total_acoes++;
+          }
         }
       });
 
@@ -184,14 +210,23 @@ export default function AdminStats() {
         }
       });
 
-      return Array.from(statsMap.values())
-        .filter(s => s.total_acoes > 0)
-        .sort((a, b) => b.total_acoes - a.total_acoes);
+      // Store total rejected KYC for summary
+      const totalRejectedKyc = kycRejectedData?.length || 0;
+
+      return {
+        adminStats: Array.from(statsMap.values())
+          .filter(s => s.total_acoes > 0)
+          .sort((a, b) => b.total_acoes - a.total_acoes),
+        totalRejectedKyc
+      };
     }
   });
 
   // Calculate totals
-  const totals = stats?.reduce((acc, stat) => ({
+  const adminStats = stats?.adminStats || [];
+  const totalRejectedKyc = stats?.totalRejectedKyc || 0;
+  
+  const totals = adminStats.reduce((acc, stat) => ({
     kyc_aprovacoes: acc.kyc_aprovacoes + stat.kyc_aprovacoes,
     kyc_rejeicoes: acc.kyc_rejeicoes + stat.kyc_rejeicoes,
     banimentos: acc.banimentos + stat.banimentos,
@@ -263,7 +298,7 @@ export default function AdminStats() {
                 <UserX className="h-4 w-4 text-red-600" />
                 <span className="text-xs text-red-700">KYC Rejeitados</span>
               </div>
-              <p className="text-2xl font-bold text-red-800 mt-1">{totals?.kyc_rejeicoes || 0}</p>
+              <p className="text-2xl font-bold text-red-800 mt-1">{totalRejectedKyc}</p>
             </CardContent>
           </Card>
           
@@ -343,7 +378,7 @@ export default function AdminStats() {
                   </tr>
                 </thead>
                 <tbody>
-                  {stats?.map((stat, index) => (
+                  {adminStats.map((stat, index) => (
                     <tr key={stat.admin_id} className={index % 2 === 0 ? 'bg-muted/30' : ''}>
                       <td className="py-3 px-2">
                         <div>
@@ -421,7 +456,7 @@ export default function AdminStats() {
                       </td>
                     </tr>
                   ))}
-                  {(!stats || stats.length === 0) && (
+                  {adminStats.length === 0 && (
                     <tr>
                       <td colSpan={9} className="text-center py-8 text-muted-foreground">
                         Nenhuma ação registrada no período selecionado
