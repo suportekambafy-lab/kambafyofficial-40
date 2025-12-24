@@ -121,15 +121,29 @@ export default function AdminStats() {
       withdrawalQuery = applyDateFilter(withdrawalQuery, 'updated_at');
       const { data: withdrawalData } = await withdrawalQuery;
 
-      // Fetch product approval stats from products
+      // Get products with approved_by_admin_id for attribution
       let productsApprovedQuery = supabase
         .from('products')
-        .select('approved_by_admin_name, updated_at')
+        .select('approved_by_admin_id, updated_at')
         .eq('admin_approved', true)
-        .not('approved_by_admin_name', 'is', null);
+        .not('approved_by_admin_id', 'is', null);
       
       productsApprovedQuery = applyDateFilter(productsApprovedQuery, 'updated_at');
       const { data: productsApprovedData } = await productsApprovedQuery;
+
+      // Get total approved products count (for summary card)
+      let totalApprovedProductsQuery = supabase
+        .from('products')
+        .select('id', { count: 'exact', head: true })
+        .eq('admin_approved', true);
+      
+      if (dateFilterStart) {
+        totalApprovedProductsQuery.gte('updated_at', format(dateFilterStart, "yyyy-MM-dd'T'HH:mm:ss"));
+      }
+      if (dateFilterEnd) {
+        totalApprovedProductsQuery.lte('updated_at', format(dateFilterEnd, "yyyy-MM-dd'T'HH:mm:ss"));
+      }
+      const { count: totalApprovedProducts } = await totalApprovedProductsQuery;
 
       // Fetch banned products from admin_action_logs (product_ban action)
       let bansQuery = supabase
@@ -205,11 +219,11 @@ export default function AdminStats() {
         }
       });
 
-      // Process products approved data by name
+      // Process products approved data - use approved_by_admin_id from products table
+      // This is the most reliable source for attributing approvals to specific admins
       productsApprovedData?.forEach(item => {
-        const adminId = adminByName.get(item.approved_by_admin_name?.toLowerCase() || '');
-        if (adminId) {
-          const stat = statsMap.get(adminId);
+        if (item.approved_by_admin_id) {
+          const stat = statsMap.get(item.approved_by_admin_id);
           if (stat) {
             stat.produtos_aprovados++;
             stat.total_acoes++;
@@ -238,14 +252,16 @@ export default function AdminStats() {
         }
       });
 
-      // Store total rejected KYC for summary
+      // Store totals for summary
       const totalRejectedKyc = kycRejectedData?.length || 0;
+      const totalApprovedProductsCount = totalApprovedProducts || 0;
 
       return {
         adminStats: Array.from(statsMap.values())
           .filter(s => s.total_acoes > 0)
           .sort((a, b) => b.total_acoes - a.total_acoes),
-        totalRejectedKyc
+        totalRejectedKyc,
+        totalApprovedProducts: totalApprovedProductsCount
       };
     }
   });
@@ -253,6 +269,7 @@ export default function AdminStats() {
   // Calculate totals
   const adminStats = stats?.adminStats || [];
   const totalRejectedKyc = stats?.totalRejectedKyc || 0;
+  const totalApprovedProducts = stats?.totalApprovedProducts || 0;
   
   const totals = adminStats.reduce((acc, stat) => ({
     kyc_aprovacoes: acc.kyc_aprovacoes + stat.kyc_aprovacoes,
@@ -408,7 +425,7 @@ export default function AdminStats() {
                 <CheckCircle className="h-4 w-4 text-blue-600" />
                 <span className="text-xs text-blue-700">Produtos Aprov.</span>
               </div>
-              <p className="text-2xl font-bold text-blue-800 mt-1">{totals?.produtos_aprovados || 0}</p>
+              <p className="text-2xl font-bold text-blue-800 mt-1">{totalApprovedProducts}</p>
             </CardContent>
           </Card>
           
