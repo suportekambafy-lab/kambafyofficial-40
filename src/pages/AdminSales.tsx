@@ -7,7 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { 
   Search, Download, ShoppingCart, CheckCircle, XCircle, 
   Loader2, MoreHorizontal, Hash, RefreshCcw, ChevronLeft, ChevronRight,
-  SlidersHorizontal, Columns3, Eye, Send, Mail
+  SlidersHorizontal, Columns3, Eye, Send, Mail, Wallet, Activity
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Navigate } from 'react-router-dom';
@@ -69,6 +69,34 @@ interface OrderDetails extends Order {
   } | null;
 }
 
+interface Withdrawal {
+  id: string;
+  user_id: string;
+  amount: number;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  admin_notes?: string | null;
+  profiles?: {
+    full_name: string;
+    email: string;
+  } | null;
+}
+
+interface ActivityItem {
+  id: string;
+  type: 'sale' | 'withdrawal' | 'refund';
+  description: string;
+  amount: number;
+  currency: string;
+  status: string;
+  created_at: string;
+  user_name: string;
+  user_email?: string;
+}
+
+type TabType = 'entradas' | 'repasses' | 'atividades';
+
 // Helper function to convert currency code
 const formatCurrency = (amount: number, currencyCode: string) => {
   // Convert KZ to AOA (valid ISO 4217 code)
@@ -87,7 +115,10 @@ const formatCurrency = (amount: number, currencyCode: string) => {
 
 export default function AdminSales() {
   const { admin } = useAdminAuth();
+  const [activeTab, setActiveTab] = useState<TabType>('entradas');
   const [orders, setOrders] = useState<Order[]>([]);
+  const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
+  const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('todos');
@@ -104,6 +135,7 @@ export default function AdminSales() {
     completedSales: 0,
     refundedSales: 0,
     failedSales: 0,
+    approvedWithdrawals: 0,
   });
   const [debouncedSearch, setDebouncedSearch] = useState('');
 
@@ -128,22 +160,29 @@ export default function AdminSales() {
     }
   }, [admin]);
 
-  // Load orders when page/filters change
+  // Load data based on active tab
   useEffect(() => {
     if (admin) {
-      loadOrders();
+      if (activeTab === 'entradas') {
+        loadOrders();
+      } else if (activeTab === 'repasses') {
+        loadWithdrawals();
+      } else if (activeTab === 'atividades') {
+        loadActivities();
+      }
     }
-  }, [admin, currentPage, itemsPerPage, statusFilter, debouncedSearch]);
+  }, [admin, activeTab, currentPage, itemsPerPage, statusFilter, debouncedSearch]);
 
   const loadStats = async () => {
     try {
       // Buscar contagens por status em paralelo usando count
-      const [completedRes, pendingRes, refundedRes, failedRes, totalRes] = await Promise.all([
+      const [completedRes, pendingRes, refundedRes, failedRes, totalRes, withdrawalsRes] = await Promise.all([
         supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'completed'),
         supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
         supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'refunded'),
         supabase.from('orders').select('*', { count: 'exact', head: true }).in('status', ['failed', 'canceled', 'cancelled']),
         supabase.from('orders').select('*', { count: 'exact', head: true }),
+        supabase.from('withdrawal_requests').select('*', { count: 'exact', head: true }).eq('status', 'approved'),
       ]);
 
       setStats({
@@ -152,10 +191,158 @@ export default function AdminSales() {
         pendingSales: pendingRes.count || 0,
         refundedSales: refundedRes.count || 0,
         failedSales: failedRes.count || 0,
-        totalRevenue: 0, // Não calculamos mais para evitar lentidão
+        totalRevenue: 0,
+        approvedWithdrawals: withdrawalsRes.count || 0,
       });
     } catch (error) {
       console.error('Erro ao carregar estatísticas:', error);
+    }
+  };
+
+  const loadWithdrawals = async () => {
+    try {
+      setLoading(true);
+      
+      const from = (currentPage - 1) * itemsPerPage;
+      const to = from + itemsPerPage - 1;
+
+      // Primeiro buscar os saques aprovados
+      let query = supabase
+        .from('withdrawal_requests')
+        .select('*', { count: 'exact' })
+        .eq('status', 'approved');
+
+      const { data: withdrawalData, error, count } = await query
+        .order('updated_at', { ascending: false })
+        .range(from, to);
+
+      if (error) throw error;
+      
+      // Buscar profiles dos usuários
+      const userIds = [...new Set((withdrawalData || []).map(w => w.user_id).filter(Boolean))];
+      let profilesMap = new Map();
+      
+      if (userIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('user_id, full_name, email')
+          .in('user_id', userIds);
+        profilesMap = new Map(profiles?.map(p => [p.user_id, { full_name: p.full_name, email: p.email }]) || []);
+      }
+
+      // Combinar dados
+      const withdrawalsWithProfiles = (withdrawalData || []).map(w => ({
+        ...w,
+        profiles: profilesMap.get(w.user_id) || null,
+      }));
+      
+      setWithdrawals(withdrawalsWithProfiles as any);
+      setTotalCount(count || 0);
+    } catch (error) {
+      console.error('Erro ao carregar saques:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível carregar os saques.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadActivities = async () => {
+    try {
+      setLoading(true);
+      
+      const from = (currentPage - 1) * itemsPerPage;
+      const to = from + itemsPerPage - 1;
+
+      // Carregar vendas e saques em paralelo
+      const [ordersRes, withdrawalsRes] = await Promise.all([
+        supabase
+          .from('orders')
+          .select(`
+            id,
+            order_id,
+            customer_name,
+            amount,
+            currency,
+            status,
+            created_at
+          `)
+          .order('created_at', { ascending: false })
+          .limit(100),
+        supabase
+          .from('withdrawal_requests')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(100),
+      ]);
+
+      // Buscar profiles dos usuários dos saques
+      const userIds = [...new Set((withdrawalsRes.data || []).map(w => w.user_id).filter(Boolean))];
+      let profilesMap = new Map();
+      
+      if (userIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('user_id, full_name, email')
+          .in('user_id', userIds);
+        profilesMap = new Map(profiles?.map(p => [p.user_id, { full_name: p.full_name, email: p.email }]) || []);
+      }
+
+      // Combinar e ordenar por data
+      const allActivities: ActivityItem[] = [];
+
+      // Adicionar vendas
+      (ordersRes.data || []).forEach(order => {
+        allActivities.push({
+          id: order.id,
+          type: order.status === 'refunded' ? 'refund' : 'sale',
+          description: order.status === 'refunded' 
+            ? `Reembolso - ${order.order_id}` 
+            : `Venda - ${order.order_id}`,
+          amount: parseFloat(order.amount),
+          currency: order.currency || 'KZ',
+          status: order.status,
+          created_at: order.created_at,
+          user_name: order.customer_name,
+        });
+      });
+
+      // Adicionar saques
+      (withdrawalsRes.data || []).forEach(withdrawal => {
+        const profile = profilesMap.get(withdrawal.user_id);
+        allActivities.push({
+          id: withdrawal.id,
+          type: 'withdrawal',
+          description: `Saque - ${withdrawal.status === 'approved' ? 'Aprovado' : withdrawal.status}`,
+          amount: withdrawal.amount,
+          currency: 'KZ',
+          status: withdrawal.status,
+          created_at: withdrawal.created_at,
+          user_name: profile?.full_name || 'N/A',
+          user_email: profile?.email,
+        });
+      });
+
+      // Ordenar por data decrescente
+      allActivities.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      // Aplicar paginação
+      const paginatedActivities = allActivities.slice(from, to + 1);
+      
+      setActivities(paginatedActivities);
+      setTotalCount(allActivities.length);
+    } catch (error) {
+      console.error('Erro ao carregar atividades:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível carregar as atividades.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -452,15 +639,45 @@ export default function AdminSales() {
       {/* Tabs */}
       <div className="flex gap-2 mb-6">
         <Button 
-          className="bg-[hsl(var(--admin-primary))] hover:bg-[hsl(var(--admin-primary))]/90 text-white rounded-full px-5"
+          onClick={() => { setActiveTab('entradas'); setCurrentPage(1); }}
+          className={cn(
+            "rounded-full px-5",
+            activeTab === 'entradas' 
+              ? "bg-[hsl(var(--admin-primary))] hover:bg-[hsl(var(--admin-primary))]/90 text-white"
+              : "bg-transparent text-[hsl(var(--admin-text-secondary))] hover:bg-[hsl(var(--admin-bg))]"
+          )}
+          variant={activeTab === 'entradas' ? 'default' : 'ghost'}
         >
           <ShoppingCart className="h-4 w-4 mr-2" />
           Entradas
         </Button>
-        <Button variant="ghost" className="text-[hsl(var(--admin-text-secondary))] rounded-full px-5">
+        <Button 
+          onClick={() => { setActiveTab('repasses'); setCurrentPage(1); }}
+          className={cn(
+            "rounded-full px-5",
+            activeTab === 'repasses' 
+              ? "bg-[hsl(var(--admin-primary))] hover:bg-[hsl(var(--admin-primary))]/90 text-white"
+              : "bg-transparent text-[hsl(var(--admin-text-secondary))] hover:bg-[hsl(var(--admin-bg))]"
+          )}
+          variant={activeTab === 'repasses' ? 'default' : 'ghost'}
+        >
+          <Wallet className="h-4 w-4 mr-2" />
           Repasses
+          {stats.approvedWithdrawals > 0 && (
+            <Badge className="ml-2 bg-emerald-500 text-white text-xs">{stats.approvedWithdrawals}</Badge>
+          )}
         </Button>
-        <Button variant="ghost" className="text-[hsl(var(--admin-text-secondary))] rounded-full px-5">
+        <Button 
+          onClick={() => { setActiveTab('atividades'); setCurrentPage(1); }}
+          className={cn(
+            "rounded-full px-5",
+            activeTab === 'atividades' 
+              ? "bg-[hsl(var(--admin-primary))] hover:bg-[hsl(var(--admin-primary))]/90 text-white"
+              : "bg-transparent text-[hsl(var(--admin-text-secondary))] hover:bg-[hsl(var(--admin-bg))]"
+          )}
+          variant={activeTab === 'atividades' ? 'default' : 'ghost'}
+        >
+          <Activity className="h-4 w-4 mr-2" />
           Todas as Atividades
         </Button>
       </div>
@@ -512,13 +729,17 @@ export default function AdminSales() {
       <div className="bg-white rounded-2xl border border-[hsl(var(--admin-border))]">
         {/* Table Header */}
         <div className="p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[hsl(var(--admin-border))]">
-          <h3 className="font-semibold text-[hsl(var(--admin-text))]">Atividade de entradas</h3>
+          <h3 className="font-semibold text-[hsl(var(--admin-text))]">
+            {activeTab === 'entradas' && 'Atividade de entradas'}
+            {activeTab === 'repasses' && 'Saques aprovados'}
+            {activeTab === 'atividades' && 'Todas as atividades'}
+          </h3>
           
           <div className="flex flex-wrap items-center gap-3">
             {/* Search */}
             <div className="relative">
               <Input
-                placeholder="Pesquisar transação..."
+                placeholder="Pesquisar..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-52 pl-3 pr-10 h-9 bg-white border-[hsl(var(--admin-border))] rounded-lg"
@@ -526,31 +747,28 @@ export default function AdminSales() {
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(var(--admin-text-secondary))]" />
             </div>
 
-            {/* Columns */}
-            <Button variant="outline" size="sm" className="h-9 gap-2 border-[hsl(var(--admin-border))]">
-              <Columns3 className="h-4 w-4" />
-              Colunas
-              <Badge className="bg-[hsl(var(--admin-primary))] text-white text-xs px-1.5">7</Badge>
-            </Button>
-
-            {/* Filters */}
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-28 h-9 border-[hsl(var(--admin-border))]">
-                <SlidersHorizontal className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Filtros" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos</SelectItem>
-                <SelectItem value="completed">Sucesso</SelectItem>
-                <SelectItem value="pending">Pendente</SelectItem>
-                <SelectItem value="failed">Falhou</SelectItem>
-              </SelectContent>
-            </Select>
+            {/* Filters - apenas para entradas */}
+            {activeTab === 'entradas' && (
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-28 h-9 border-[hsl(var(--admin-border))]">
+                  <SlidersHorizontal className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Filtros" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos</SelectItem>
+                  <SelectItem value="completed">Sucesso</SelectItem>
+                  <SelectItem value="pending">Pendente</SelectItem>
+                  <SelectItem value="failed">Falhou</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
 
             {/* Export */}
-            <Button variant="outline" size="sm" onClick={exportToCSV} className="h-9 border-[hsl(var(--admin-border))]">
-              <Download className="h-4 w-4" />
-            </Button>
+            {activeTab === 'entradas' && (
+              <Button variant="outline" size="sm" onClick={exportToCSV} className="h-9 border-[hsl(var(--admin-border))]">
+                <Download className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </div>
 
@@ -559,59 +777,166 @@ export default function AdminSales() {
           <Table>
             <TableHeader>
               <TableRow className="border-b border-[hsl(var(--admin-border))] hover:bg-transparent">
-                <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">ID da transação</TableHead>
-                <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">Produto</TableHead>
-                <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">Montante ↑</TableHead>
-                <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">Data ↓</TableHead>
-                <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">Método de pagamento</TableHead>
-                <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">Estado</TableHead>
-                <TableHead className="w-10"></TableHead>
+                {activeTab === 'entradas' && (
+                  <>
+                    <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">ID da transação</TableHead>
+                    <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">Produto</TableHead>
+                    <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">Montante</TableHead>
+                    <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">Data</TableHead>
+                    <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">Método</TableHead>
+                    <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">Estado</TableHead>
+                    <TableHead className="w-10"></TableHead>
+                  </>
+                )}
+                {activeTab === 'repasses' && (
+                  <>
+                    <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">ID</TableHead>
+                    <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">Vendedor</TableHead>
+                    <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">Montante</TableHead>
+                    <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">Data</TableHead>
+                    <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">Estado</TableHead>
+                  </>
+                )}
+                {activeTab === 'atividades' && (
+                  <>
+                    <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">Tipo</TableHead>
+                    <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">Descrição</TableHead>
+                    <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">Usuário</TableHead>
+                    <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">Montante</TableHead>
+                    <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">Data</TableHead>
+                    <TableHead className="text-[hsl(var(--admin-text-secondary))] font-medium text-sm">Estado</TableHead>
+                  </>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
-              {orders.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-12 text-[hsl(var(--admin-text-secondary))]">
-                    {loading ? 'Carregando...' : 'Nenhuma transação encontrada'}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                orders.map((order) => (
-                  <TableRow key={order.id} className="border-b border-[hsl(var(--admin-border))] hover:bg-[hsl(var(--admin-bg))]/50">
-                    <TableCell className="font-mono text-sm text-[hsl(var(--admin-text))]">
-                      {order.order_id?.slice(0, 12) || 'N/A'}
+              {/* Tab Entradas */}
+              {activeTab === 'entradas' && (
+                orders.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-12 text-[hsl(var(--admin-text-secondary))]">
+                      {loading ? 'Carregando...' : 'Nenhuma transação encontrada'}
                     </TableCell>
-                    <TableCell className="text-[hsl(var(--admin-text))] max-w-[200px] truncate" title={order.products?.name || 'N/A'}>
-                      {order.products?.name || 'N/A'}
-                    </TableCell>
-                    <TableCell className="font-medium text-[hsl(var(--admin-text))]">
-                      {formatCurrency(parseFloat(order.amount), order.currency || 'KZ')}
-                    </TableCell>
-                    <TableCell className="text-[hsl(var(--admin-text-secondary))]">
-                      {format(new Date(order.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
+                  </TableRow>
+                ) : (
+                  orders.map((order) => (
+                    <TableRow key={order.id} className="border-b border-[hsl(var(--admin-border))] hover:bg-[hsl(var(--admin-bg))]/50">
+                      <TableCell className="font-mono text-sm text-[hsl(var(--admin-text))]">
+                        {order.order_id?.slice(0, 12) || 'N/A'}
+                      </TableCell>
+                      <TableCell className="text-[hsl(var(--admin-text))] max-w-[200px] truncate" title={order.products?.name || 'N/A'}>
+                        {order.products?.name || 'N/A'}
+                      </TableCell>
+                      <TableCell className="font-medium text-[hsl(var(--admin-text))]">
+                        {formatCurrency(parseFloat(order.amount), order.currency || 'KZ')}
+                      </TableCell>
+                      <TableCell className="text-[hsl(var(--admin-text-secondary))]">
+                        {format(new Date(order.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                      </TableCell>
+                      <TableCell>
                         <span className="text-[hsl(var(--admin-text))]">
                           {order.payment_method?.replace('_', ' ') || 'N/A'}
                         </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {getStatusBadge(order.status)}
-                    </TableCell>
-                    <TableCell>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8"
-                        onClick={() => loadOrderDetails(order.id)}
-                      >
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
+                      </TableCell>
+                      <TableCell>
+                        {getStatusBadge(order.status)}
+                      </TableCell>
+                      <TableCell>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8"
+                          onClick={() => loadOrderDetails(order.id)}
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )
+              )}
+
+              {/* Tab Repasses */}
+              {activeTab === 'repasses' && (
+                withdrawals.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-12 text-[hsl(var(--admin-text-secondary))]">
+                      {loading ? 'Carregando...' : 'Nenhum saque aprovado encontrado'}
                     </TableCell>
                   </TableRow>
-                ))
+                ) : (
+                  withdrawals.map((withdrawal) => (
+                    <TableRow key={withdrawal.id} className="border-b border-[hsl(var(--admin-border))] hover:bg-[hsl(var(--admin-bg))]/50">
+                      <TableCell className="font-mono text-sm text-[hsl(var(--admin-text))]">
+                        {withdrawal.id.slice(0, 8)}
+                      </TableCell>
+                      <TableCell className="text-[hsl(var(--admin-text))]">
+                        <div>
+                          <p className="font-medium">{withdrawal.profiles?.full_name || 'N/A'}</p>
+                          <p className="text-xs text-[hsl(var(--admin-text-secondary))]">{withdrawal.profiles?.email || ''}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-medium text-emerald-600">
+                        {formatCurrency(withdrawal.amount, 'KZ')}
+                      </TableCell>
+                      <TableCell className="text-[hsl(var(--admin-text-secondary))]">
+                        {format(new Date(withdrawal.updated_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                      </TableCell>
+                      <TableCell>
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border bg-emerald-100 text-emerald-700 border-emerald-200">
+                          Aprovado
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )
+              )}
+
+              {/* Tab Atividades */}
+              {activeTab === 'atividades' && (
+                activities.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-12 text-[hsl(var(--admin-text-secondary))]">
+                      {loading ? 'Carregando...' : 'Nenhuma atividade encontrada'}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  activities.map((activity) => (
+                    <TableRow key={`${activity.type}-${activity.id}`} className="border-b border-[hsl(var(--admin-border))] hover:bg-[hsl(var(--admin-bg))]/50">
+                      <TableCell>
+                        <Badge className={cn(
+                          "text-xs",
+                          activity.type === 'sale' && "bg-blue-100 text-blue-700",
+                          activity.type === 'withdrawal' && "bg-emerald-100 text-emerald-700",
+                          activity.type === 'refund' && "bg-amber-100 text-amber-700"
+                        )}>
+                          {activity.type === 'sale' && 'Venda'}
+                          {activity.type === 'withdrawal' && 'Saque'}
+                          {activity.type === 'refund' && 'Reembolso'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-[hsl(var(--admin-text))] max-w-[200px] truncate">
+                        {activity.description}
+                      </TableCell>
+                      <TableCell className="text-[hsl(var(--admin-text))]">
+                        {activity.user_name}
+                      </TableCell>
+                      <TableCell className={cn(
+                        "font-medium",
+                        activity.type === 'refund' ? "text-amber-600" : activity.type === 'withdrawal' ? "text-emerald-600" : "text-[hsl(var(--admin-text))]"
+                      )}>
+                        {activity.type === 'refund' && '-'}
+                        {formatCurrency(activity.amount, activity.currency)}
+                      </TableCell>
+                      <TableCell className="text-[hsl(var(--admin-text-secondary))]">
+                        {format(new Date(activity.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                      </TableCell>
+                      <TableCell>
+                        {getStatusBadge(activity.status)}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )
               )}
             </TableBody>
           </Table>
