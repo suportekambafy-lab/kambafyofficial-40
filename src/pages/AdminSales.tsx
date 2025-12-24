@@ -94,75 +94,130 @@ export default function AdminSales() {
   const [selectedOrder, setSelectedOrder] = useState<OrderDetails | null>(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
   const [resendingAccess, setResendingAccess] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
+  const [stats, setStats] = useState({
+    totalSales: 0,
+    totalRevenue: 0,
+    pendingSales: 0,
+    completedSales: 0,
+    refundedSales: 0,
+    failedSales: 0,
+  });
+  const [debouncedSearch, setDebouncedSearch] = useState('');
 
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setCurrentPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Reset page on filter change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter]);
+
+  // Load stats once on mount
+  useEffect(() => {
+    if (admin) {
+      loadStats();
+    }
+  }, [admin]);
+
+  // Load orders when page/filters change
   useEffect(() => {
     if (admin) {
       loadOrders();
     }
-  }, [admin]);
+  }, [admin, currentPage, itemsPerPage, statusFilter, debouncedSearch]);
+
+  const loadStats = async () => {
+    try {
+      // Buscar contagens por status em paralelo usando count
+      const [completedRes, pendingRes, refundedRes, failedRes, totalRes] = await Promise.all([
+        supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'completed'),
+        supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+        supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'refunded'),
+        supabase.from('orders').select('*', { count: 'exact', head: true }).in('status', ['failed', 'canceled', 'cancelled']),
+        supabase.from('orders').select('*', { count: 'exact', head: true }),
+      ]);
+
+      setStats({
+        totalSales: totalRes.count || 0,
+        completedSales: completedRes.count || 0,
+        pendingSales: pendingRes.count || 0,
+        refundedSales: refundedRes.count || 0,
+        failedSales: failedRes.count || 0,
+        totalRevenue: 0, // Não calculamos mais para evitar lentidão
+      });
+    } catch (error) {
+      console.error('Erro ao carregar estatísticas:', error);
+    }
+  };
 
   const loadOrders = async () => {
     try {
       setLoading(true);
       
-      // Buscar todas as vendas (SEM LIMITE)
-      let allOrders: any[] = [];
-      let offset = 0;
-      const limit = 1000;
-      let hasMore = true;
+      const from = (currentPage - 1) * itemsPerPage;
+      const to = from + itemsPerPage - 1;
 
-      while (hasMore) {
-        const { data, error } = await supabase
-          .from('orders')
-          .select(`
-            *,
-            products (
-              name
-            )
-          `)
-          .order('created_at', { ascending: false })
-          .range(offset, offset + limit - 1);
+      // Build query
+      let query = supabase
+        .from('orders')
+        .select(`
+          *,
+          products (
+            name
+          )
+        `, { count: 'exact' });
 
-        if (error) throw error;
-        
-        if (data && data.length > 0) {
-          allOrders = [...allOrders, ...data];
-          offset += limit;
-          hasMore = data.length === limit;
+      // Apply status filter
+      if (statusFilter !== 'todos') {
+        if (statusFilter === 'failed') {
+          query = query.in('status', ['failed', 'canceled', 'cancelled']);
         } else {
-          hasMore = false;
+          query = query.eq('status', statusFilter);
         }
       }
 
-      console.log(`✅ Admin Sales: Carregadas ${allOrders.length} vendas totais`);
+      // Apply search filter
+      if (debouncedSearch) {
+        query = query.or(`customer_name.ilike.%${debouncedSearch}%,customer_email.ilike.%${debouncedSearch}%,order_id.ilike.%${debouncedSearch}%`);
+      }
+
+      // Order and paginate
+      const { data, error, count } = await query
+        .order('created_at', { ascending: false })
+        .range(from, to);
+
+      if (error) throw error;
       
-      // Obter IDs únicos de usuários/vendedores
-      const userIds = [...new Set(allOrders.map(order => order.user_id).filter(Boolean))];
+      setTotalCount(count || 0);
+
+      // Get seller profiles for this page only
+      const userIds = [...new Set((data || []).map(order => order.user_id).filter(Boolean))];
       
-      // Buscar profiles dos vendedores
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('user_id, full_name')
-        .in('user_id', userIds);
+      let profilesMap = new Map();
+      if (userIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('user_id, full_name')
+          .in('user_id', userIds);
+        profilesMap = new Map(profiles?.map(p => [p.user_id, p.full_name]) || []);
+      }
       
-      // Criar um mapa de user_id para full_name
-      const profilesMap = new Map(profiles?.map(p => [p.user_id, p.full_name]) || []);
-      
-      // Adicionar informação do vendedor a cada pedido
-      const ordersWithSeller = allOrders.map(order => ({
+      const ordersWithSeller = (data || []).map(order => ({
         ...order,
         seller: order.user_id ? { full_name: profilesMap.get(order.user_id) || 'N/A' } : null
       }));
       
       setOrders(ordersWithSeller);
-      
-      console.log(`📊 Estatísticas:`, {
-        total: ordersWithSeller.length,
-        completed: ordersWithSeller.filter(o => o.status === 'completed').length,
-        pending: ordersWithSeller.filter(o => o.status === 'pending').length,
-      });
+      console.log(`✅ Admin Sales: Carregadas ${ordersWithSeller.length} de ${count} vendas`);
     } catch (error) {
       console.error('Erro ao carregar vendas:', error);
       toast({
@@ -231,78 +286,13 @@ export default function AdminSales() {
     }
   };
 
-  // Filtrar e buscar vendas
-  const filteredOrders = useMemo(() => {
-    const search = searchTerm.toLowerCase().trim();
-    
-    return orders.filter((order) => {
-      // Verificar se o termo de busca está vazio
-      if (!search) {
-        const matchesStatus = statusFilter === 'todos' || order.status === statusFilter;
-        return matchesStatus;
-      }
-      
-      // Buscar por nome, email, ID do pedido ou ID do produto (com null checks)
-      const customerName = (order.customer_name || '').toLowerCase();
-      const customerEmail = (order.customer_email || '').toLowerCase();
-      const orderId = (order.order_id || '').toLowerCase();
-      const orderDbId = (order.id || '').toLowerCase();
-      const customerPhone = (order.customer_phone || '').toLowerCase();
-      const productName = (order.products?.name || '').toLowerCase();
-      const sellerName = (order.seller?.full_name || '').toLowerCase();
-      
-      const matchesSearch = 
-        customerName.includes(search) ||
-        customerEmail.includes(search) ||
-        orderId.includes(search) ||
-        orderDbId.includes(search) ||
-        customerPhone.includes(search) ||
-        productName.includes(search) ||
-        sellerName.includes(search);
-      
-      const matchesStatus = statusFilter === 'todos' || order.status === statusFilter;
-      
-      return matchesSearch && matchesStatus;
-    });
-  }, [orders, searchTerm, statusFilter]);
+  // Com paginação server-side, não precisamos mais filtrar no cliente
+  // Os filtros são aplicados na query do banco
 
-  // Reset page when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, statusFilter]);
-
-  // Paginação calculada
-  const paginatedOrders = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return filteredOrders.slice(startIndex, endIndex);
-  }, [filteredOrders, currentPage, itemsPerPage]);
-
+  // Total de páginas calculado a partir do count do servidor
   const totalPages = useMemo(() => {
-    return Math.ceil(filteredOrders.length / itemsPerPage);
-  }, [filteredOrders.length, itemsPerPage]);
-
-  // Estatísticas
-  const stats = useMemo(() => {
-    const totalSales = orders.length;
-    const totalRevenue = orders
-      .filter(o => o.status === 'completed')
-      .reduce((sum, order) => sum + parseFloat(order.amount || '0'), 0);
-    const pendingSales = orders.filter(o => o.status === 'pending').length;
-    const completedSales = orders.filter(o => o.status === 'completed').length;
-    const refundedSales = orders.filter(o => o.status === 'refunded').length;
-    const failedSales = orders.filter(o => o.status === 'failed' || o.status === 'canceled' || o.status === 'cancelled').length;
-    
-    return {
-      totalSales,
-      totalRevenue,
-      pendingSales,
-      completedSales,
-      refundedSales,
-      failedSales,
-    };
-  }, [orders]);
-
+    return Math.ceil(totalCount / itemsPerPage);
+  }, [totalCount, itemsPerPage]);
   // Função para reenviar acesso ao cliente
   const resendCustomerAccess = async (order: OrderDetails) => {
     if (!order || order.status !== 'completed') {
@@ -405,7 +395,7 @@ export default function AdminSales() {
 
   const exportToCSV = () => {
     const headers = ['ID Pedido', 'Cliente', 'Email', 'Telefone', 'Produto', 'Vendedor', 'Valor', 'Moeda', 'Status', 'Método', 'Data'];
-    const rows = filteredOrders.map(order => [
+    const rows = orders.map(order => [
       order.order_id,
       order.customer_name,
       order.customer_email,
@@ -579,14 +569,14 @@ export default function AdminSales() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedOrders.length === 0 ? (
+              {orders.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-12 text-[hsl(var(--admin-text-secondary))]">
-                    Nenhuma transação encontrada
+                    {loading ? 'Carregando...' : 'Nenhuma transação encontrada'}
                   </TableCell>
                 </TableRow>
               ) : (
-                paginatedOrders.map((order) => (
+                orders.map((order) => (
                   <TableRow key={order.id} className="border-b border-[hsl(var(--admin-border))] hover:bg-[hsl(var(--admin-bg))]/50">
                     <TableCell className="font-mono text-sm text-[hsl(var(--admin-text))]">
                       {order.order_id?.slice(0, 12) || 'N/A'}
@@ -630,8 +620,8 @@ export default function AdminSales() {
         {/* Pagination */}
         <div className="p-4 flex items-center justify-between border-t border-[hsl(var(--admin-border))]">
           <p className="text-sm text-[hsl(var(--admin-text-secondary))]">
-            {filteredOrders.length > 0 
-              ? `${(currentPage - 1) * itemsPerPage + 1}-${Math.min(currentPage * itemsPerPage, filteredOrders.length)} de ${filteredOrders.length.toLocaleString()}`
+            {totalCount > 0 
+              ? `${(currentPage - 1) * itemsPerPage + 1}-${Math.min(currentPage * itemsPerPage, totalCount)} de ${totalCount.toLocaleString()}`
               : '0 resultados'
             }
           </p>
