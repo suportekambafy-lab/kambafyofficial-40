@@ -249,7 +249,7 @@ const App = () => {
                           <Route path="refunds" element={<AdminPermissionRoute requireSuperAdmin={true}><OptimizedRoutes.AdminRefunds /></AdminPermissionRoute>} />
                           <Route path="apps" element={<OptimizedRoutes.AdminApps />} />
                           <Route path="member-areas" element={<OptimizedRoutes.AdminMemberAreas />} />
-                          <Route path="stats" element={<AdminPermissionRoute requireSuperAdmin={true}><OptimizedRoutes.AdminStats /></AdminPermissionRoute>} />
+                          <Route path="stats" element={<AdminPermissionRoute requiredPermission="analytics"><OptimizedRoutes.AdminStats /></AdminPermissionRoute>} />
                         </Route>
                       
                        {/* Partner Routes */}
