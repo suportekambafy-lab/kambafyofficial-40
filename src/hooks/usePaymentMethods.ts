@@ -1,10 +1,26 @@
 import { useMemo } from 'react';
 
-// Países que devem usar apenas pagamento por cartão (Stripe) - removido
-const CARD_ONLY_COUNTRIES: string[] = [];
+// Países que devem usar apenas pagamento por cartão (Stripe)
+const CARD_ONLY_COUNTRIES: string[] = ['US', 'GB', 'MX', 'CL', 'AR'];
 
-// Métodos de pagamento por cartão para países específicos
-const CARD_PAYMENT_METHODS: never[] = [];
+// Nomes do método cartão por idioma
+const CARD_METHOD_NAMES: Record<string, string> = {
+  'US': 'Credit/Debit Card',
+  'GB': 'Credit/Debit Card',
+  'MX': 'Tarjeta de Crédito/Débito',
+  'CL': 'Tarjeta de Crédito/Débito',
+  'AR': 'Tarjeta de Crédito/Débito'
+};
+
+// Função para obter métodos de pagamento por cartão com nome localizado
+const getCardPaymentMethods = (countryCode?: string) => [
+  {
+    id: 'card',
+    name: CARD_METHOD_NAMES[countryCode || 'US'] || 'Credit/Debit Card',
+    image: '/lovable-uploads/card-payment.png',
+    enabled: true
+  }
+];
 
 // Métodos de pagamento padrão (Angola, Portugal, Moçambique)
 const DEFAULT_PAYMENT_METHODS = [
@@ -41,9 +57,10 @@ export const usePaymentMethods = (countryCode?: string, productPaymentMethods?: 
     
     // Se é um país que usa apenas cartão
     if (countryCode && CARD_ONLY_COUNTRIES.includes(countryCode)) {
+      const cardMethods = getCardPaymentMethods(countryCode);
       console.log('✅✅✅ FORÇANDO CARTÃO PARA PAÍS:', countryCode);
-      console.log('✅✅✅ MÉTODOS RETORNADOS:', CARD_PAYMENT_METHODS);
-      return CARD_PAYMENT_METHODS;
+      console.log('✅✅✅ MÉTODOS RETORNADOS:', cardMethods);
+      return cardMethods;
     }
     
     // Definir ordem dos métodos por país
