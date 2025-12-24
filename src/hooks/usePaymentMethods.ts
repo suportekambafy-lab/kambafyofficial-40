@@ -17,8 +17,10 @@ const getCardPaymentMethods = (countryCode?: string) => [
   {
     id: 'card',
     name: CARD_METHOD_NAMES[countryCode || 'US'] || 'Credit/Debit Card',
-    image: '/lovable-uploads/card-payment.png',
-    enabled: true
+    image: '/lovable-uploads/3253c01d-89da-4a32-846f-4861dd03645c.png',
+    enabled: true,
+    countryFlag: countryCode === 'AR' ? '🇦🇷' : countryCode === 'MX' ? '🇲🇽' : countryCode === 'CL' ? '🇨🇱' : countryCode === 'GB' ? '🇬🇧' : '🇺🇸',
+    countryName: countryCode === 'AR' ? 'Argentina' : countryCode === 'MX' ? 'México' : countryCode === 'CL' ? 'Chile' : countryCode === 'GB' ? 'United Kingdom' : 'United States'
   }
 ];
 
