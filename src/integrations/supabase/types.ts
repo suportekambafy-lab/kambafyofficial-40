@@ -4392,6 +4392,10 @@ export type Database = {
         Args: { p_member_area_id: string }
         Returns: number
       }
+      count_products_approved_for_admin_stats: {
+        Args: { p_end_date?: string; p_start_date?: string }
+        Returns: number
+      }
       create_admin_user:
         | {
             Args: {
@@ -4700,6 +4704,14 @@ export type Database = {
           subscription_config: Json
           suggested_price: number
           type: string
+        }[]
+      }
+      get_products_approved_for_admin_stats: {
+        Args: { p_end_date?: string; p_start_date?: string }
+        Returns: {
+          approved_at: string
+          approved_by_admin_id: string
+          id: string
         }[]
       }
       get_public_product_data: {
