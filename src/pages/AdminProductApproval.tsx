@@ -46,7 +46,7 @@ export default function AdminProductApproval() {
   const queryClient = useQueryClient();
   const { admin } = useAdminAuth();
   const [searchTerm, setSearchTerm] = useState("");
-  const [approvedByFilter, setApprovedByFilter] = useState<string>("all");
+  const [adminActionFilter, setAdminActionFilter] = useState<string>("all");
 
   const { data: products, isLoading } = useQuery({
     queryKey: ["admin-all-products"],
@@ -119,23 +119,33 @@ export default function AdminProductApproval() {
     },
   });
 
-  // Calcular admins que aprovaram e suas contagens
-  const adminApprovalStats = useMemo(() => {
+  // Calcular admins e suas contagens de ações
+  const adminActionStats = useMemo(() => {
     if (!products) return [];
     
-    const stats: Record<string, { name: string; count: number }> = {};
+    const stats: Record<string, { name: string; approved: number; rejected: number }> = {};
     
     products.forEach((product) => {
+      // Contagem de aprovações
       if (product.admin_approved && product.approved_by_admin_name) {
         const name = product.approved_by_admin_name;
         if (!stats[name]) {
-          stats[name] = { name, count: 0 };
+          stats[name] = { name, approved: 0, rejected: 0 };
         }
-        stats[name].count++;
+        stats[name].approved++;
+      }
+      
+      // Contagem de rejeições (não aprovados com admin_name mas não approved)
+      if (!product.admin_approved && product.approved_by_admin_name) {
+        const name = product.approved_by_admin_name;
+        if (!stats[name]) {
+          stats[name] = { name, approved: 0, rejected: 0 };
+        }
+        stats[name].rejected++;
       }
     });
     
-    return Object.values(stats).sort((a, b) => b.count - a.count);
+    return Object.values(stats).sort((a, b) => (b.approved + b.rejected) - (a.approved + a.rejected));
   }, [products]);
 
   const filteredProducts = products?.filter((product) => {
@@ -144,12 +154,14 @@ export default function AdminProductApproval() {
       product.profiles.business_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.profiles.full_name?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesApprovedBy = 
-      approvedByFilter === "all" ||
-      (approvedByFilter === "pending" && !product.admin_approved) ||
-      (product.approved_by_admin_name === approvedByFilter);
+    const matchesAdminAction = 
+      adminActionFilter === "all" ||
+      (adminActionFilter === "pending" && !product.admin_approved && !product.approved_by_admin_name) ||
+      (adminActionFilter === "approved" && product.admin_approved) ||
+      (adminActionFilter === "rejected" && !product.admin_approved && product.approved_by_admin_name) ||
+      (product.approved_by_admin_name === adminActionFilter);
     
-    return matchesSearch && matchesApprovedBy;
+    return matchesSearch && matchesAdminAction;
   });
 
   const formatPrice = (price: string) => {
@@ -209,20 +221,33 @@ export default function AdminProductApproval() {
           className="max-w-md"
         />
         
-        <Select value={approvedByFilter} onValueChange={setApprovedByFilter}>
-          <SelectTrigger className="w-[220px]">
-            <SelectValue placeholder="Aprovado por..." />
+        <Select value={adminActionFilter} onValueChange={setAdminActionFilter}>
+          <SelectTrigger className="w-[250px]">
+            <SelectValue placeholder="Ação por admin..." />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos</SelectItem>
             <SelectItem value="pending">
-              Pendentes ({products?.filter(p => !p.admin_approved).length || 0})
+              Pendentes ({products?.filter(p => !p.admin_approved && !p.approved_by_admin_name).length || 0})
             </SelectItem>
-            {adminApprovalStats.map((stat) => (
-              <SelectItem key={stat.name} value={stat.name}>
-                {stat.name} ({stat.count})
-              </SelectItem>
-            ))}
+            <SelectItem value="approved">
+              Aprovados ({products?.filter(p => p.admin_approved).length || 0})
+            </SelectItem>
+            <SelectItem value="rejected">
+              Rejeitados ({products?.filter(p => !p.admin_approved && p.approved_by_admin_name).length || 0})
+            </SelectItem>
+            {adminActionStats.length > 0 && (
+              <>
+                <SelectItem value="" disabled className="font-semibold text-muted-foreground">
+                  — Por Admin —
+                </SelectItem>
+                {adminActionStats.map((stat) => (
+                  <SelectItem key={stat.name} value={stat.name}>
+                    {stat.name} ({stat.approved + stat.rejected})
+                  </SelectItem>
+                ))}
+              </>
+            )}
           </SelectContent>
         </Select>
         
