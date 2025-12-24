@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
     // Verificar se o usuário é admin
     const { data: adminData, error: adminError } = await supabaseAdmin
       .from('admin_users')
-      .select('id, email, role, is_active')
+      .select('id, email, role, is_active, full_name')
       .eq('email', adminEmail)
       .eq('is_active', true)
       .single()
@@ -45,10 +45,18 @@ Deno.serve(async (req) => {
 
     console.log('Admin verificado:', adminData)
 
-    // Atualizar o produto
+    // Atualizar o produto com informações do admin que aprovou
+    const updateData: any = { admin_approved: isApproved }
+    
+    // Se está aprovando, salvar quem aprovou
+    if (isApproved) {
+      updateData.approved_by_admin_id = adminData.id
+      updateData.approved_by_admin_name = adminData.full_name || adminData.email
+    }
+    
     const { error: updateError } = await supabaseAdmin
       .from('products')
-      .update({ admin_approved: isApproved })
+      .update(updateData)
       .eq('id', productId)
 
     if (updateError) {

@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { AdminPageSkeleton } from "@/components/admin/AdminPageSkeleton";
+import { AdminActionBadgeCompact } from "@/components/admin/AdminActionBadge";
 
 interface Product {
   id: string;
@@ -24,6 +25,8 @@ interface Product {
   admin_approved: boolean;
   created_at: string;
   sales: number;
+  approved_by_admin_id: string | null;
+  approved_by_admin_name: string | null;
   profiles: {
     full_name: string | null;
     business_name: string | null;
@@ -52,6 +55,8 @@ export default function AdminProductApproval() {
           type,
           status,
           admin_approved,
+          approved_by_admin_id,
+          approved_by_admin_name,
           sales,
           created_at,
           profiles!inner(
@@ -238,9 +243,17 @@ export default function AdminProductApproval() {
                       <p className="text-sm font-medium mb-1">
                         {product.admin_approved ? "Visível" : "Oculto"}
                       </p>
-                      <p className="text-xs text-muted-foreground">
-                        no marketplace
-                      </p>
+                      {product.admin_approved && product.approved_by_admin_name ? (
+                        <AdminActionBadgeCompact
+                          adminName={product.approved_by_admin_name}
+                          adminId={product.approved_by_admin_id}
+                          actionLabel="Por"
+                        />
+                      ) : (
+                        <p className="text-xs text-muted-foreground">
+                          no marketplace
+                        </p>
+                      )}
                     </div>
                     <Switch
                       checked={product.admin_approved}
