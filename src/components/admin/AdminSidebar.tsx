@@ -219,22 +219,12 @@ export function AdminSidebar({ collapsed = false, onToggle }: AdminSidebarProps)
         </ul>
       </nav>
 
-      {/* Admin Info Block */}
+      {/* Admin Info Block - Compact */}
       {!collapsed && (
-        <div className="p-4">
-          <div className="bg-gradient-to-br from-[hsl(var(--checkout-green-dark))] to-[hsl(var(--checkout-green-dark)/0.85)] rounded-2xl p-5 text-white">
-            <div className="h-10 w-10 bg-white/20 rounded-xl flex items-center justify-center mb-4">
-              <Shield className="h-5 w-5" />
-            </div>
-            <h4 className="font-semibold text-sm mb-1">
-              Painel Administrativo
-            </h4>
-            <p className="text-xs text-white/80 mb-4">
-              Gerencie toda a plataforma Kambafy
-            </p>
-            <div className="text-xs text-white/70">
-              v2.0 • Admin System
-            </div>
+        <div className="p-3 border-t border-border/50">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Shield className="h-4 w-4" />
+            <span className="text-xs font-medium">Painel Administrativo</span>
           </div>
         </div>
       )}
