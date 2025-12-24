@@ -64,41 +64,23 @@ export default function AdminUsers() {
 
   const loadUsers = async () => {
     try {
-      console.log('Carregando todos os usuários com paginação...');
-      let allUsers: UserProfile[] = [];
-      let from = 0;
-      const pageSize = 1000;
-      let hasMore = true;
+      console.log('Carregando todos os usuários via RPC admin...');
+      
+      // Usar função RPC que bypassa RLS
+      const { data, error } = await supabase.rpc('get_all_profiles_for_admin');
 
-      while (hasMore) {
-        const { data, error, count } = await supabase
-          .from('profiles')
-          .select('id, user_id, full_name, email, banned, is_creator, avatar_url, bio, account_holder, ban_reason, created_at', { count: 'exact' })
-          .order('created_at', { ascending: false })
-          .range(from, from + pageSize - 1);
-
-        if (error) {
-          console.error('Erro ao carregar usuários:', error);
-          toast({
-            title: 'Erro',
-            description: 'Erro ao carregar usuários',
-            variant: 'destructive'
-          });
-          return;
-        }
-
-        if (data) {
-          allUsers = [...allUsers, ...data];
-          console.log(`Carregados ${data.length} usuários (total: ${allUsers.length})`);
-        }
-
-        // Verificar se há mais dados
-        hasMore = data && data.length === pageSize;
-        from += pageSize;
+      if (error) {
+        console.error('Erro ao carregar usuários via RPC:', error);
+        toast({
+          title: 'Erro',
+          description: 'Erro ao carregar usuários: ' + error.message,
+          variant: 'destructive'
+        });
+        return;
       }
 
-      console.log(`✅ Total de usuários carregados: ${allUsers.length}`);
-      setUsers(allUsers);
+      console.log(`✅ Total de usuários carregados: ${data?.length || 0}`);
+      setUsers(data || []);
     } catch (error) {
       console.error('Error loading users:', error);
       toast({
