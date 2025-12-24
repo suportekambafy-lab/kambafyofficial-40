@@ -4527,6 +4527,22 @@ export type Database = {
           verified_by_name: string
         }[]
       }
+      get_all_profiles_for_admin: {
+        Args: never
+        Returns: {
+          account_holder: string
+          avatar_url: string
+          ban_reason: string
+          banned: boolean
+          bio: string
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          is_creator: boolean
+          user_id: string
+        }[]
+      }
       get_all_withdrawal_requests_for_admin: {
         Args: never
         Returns: {
