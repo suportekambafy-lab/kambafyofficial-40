@@ -40,24 +40,75 @@ export default function AdminStats() {
   const { data: stats, isLoading } = useQuery({
     queryKey: ['admin-stats', periodFilter],
     queryFn: async () => {
-      // Fetch logs with period filter
-      const logsQuery = supabase
-        .from('admin_logs')
-        .select('admin_id, action, created_at');
-      
-      if (periodFilter !== 'all') {
-        const days = parseInt(periodFilter);
-        const startDate = format(startOfDay(subDays(new Date(), days)), 'yyyy-MM-dd');
-        logsQuery.gte('created_at', startDate);
-      }
-
-      const { data: logs, error: logsError } = await logsQuery;
-      if (logsError) throw logsError;
-
+      // Get all admins first
       const { data: admins, error: adminsError } = await supabase
         .from('admin_users')
         .select('id, full_name, email');
       if (adminsError) throw adminsError;
+
+      // Build date filter
+      let dateFilter: Date | null = null;
+      if (periodFilter !== 'all') {
+        const days = parseInt(periodFilter);
+        dateFilter = startOfDay(subDays(new Date(), days));
+      }
+
+      // Fetch KYC stats from identity_verification (real data)
+      const kycQuery = supabase
+        .from('identity_verification')
+        .select('verified_by, status, updated_at')
+        .not('verified_by', 'is', null)
+        .in('status', ['aprovado', 'rejeitado']);
+      
+      if (dateFilter) {
+        kycQuery.gte('updated_at', format(dateFilter, 'yyyy-MM-dd'));
+      }
+      const { data: kycData } = await kycQuery;
+
+      // Fetch withdrawal stats from withdrawal_requests (real data)
+      const withdrawalQuery = supabase
+        .from('withdrawal_requests')
+        .select('admin_processed_by, status, updated_at')
+        .not('admin_processed_by', 'is', null);
+      
+      if (dateFilter) {
+        withdrawalQuery.gte('updated_at', format(dateFilter, 'yyyy-MM-dd'));
+      }
+      const { data: withdrawalData } = await withdrawalQuery;
+
+      // Fetch product approval stats from products (real data)
+      const productsApprovedQuery = supabase
+        .from('products')
+        .select('approved_by_admin_id, admin_approved, updated_at')
+        .not('approved_by_admin_id', 'is', null)
+        .eq('admin_approved', true);
+      
+      if (dateFilter) {
+        productsApprovedQuery.gte('updated_at', format(dateFilter, 'yyyy-MM-dd'));
+      }
+      const { data: productsApprovedData } = await productsApprovedQuery;
+
+      // Fetch banned products stats
+      const productsBannedQuery = supabase
+        .from('products')
+        .select('banned_by_admin_id, ban_reason, updated_at')
+        .not('banned_by_admin_id', 'is', null);
+      
+      if (dateFilter) {
+        productsBannedQuery.gte('updated_at', format(dateFilter, 'yyyy-MM-dd'));
+      }
+      const { data: productsBannedData } = await productsBannedQuery;
+
+      // Fetch logins from admin_logs
+      const logsQuery = supabase
+        .from('admin_logs')
+        .select('admin_id, action, created_at')
+        .eq('action', 'admin_login');
+      
+      if (dateFilter) {
+        logsQuery.gte('created_at', format(dateFilter, 'yyyy-MM-dd'));
+      }
+      const { data: logsData } = await logsQuery;
 
       // Aggregate stats
       const statsMap = new Map<string, AdminStat>();
@@ -79,36 +130,57 @@ export default function AdminStats() {
         });
       });
 
-      logs?.forEach(log => {
-        const stat = statsMap.get(log.admin_id);
+      // Process KYC data
+      kycData?.forEach(item => {
+        const stat = statsMap.get(item.verified_by);
         if (stat) {
-          stat.total_acoes++;
-          switch (log.action) {
-            case 'kyc_approve':
-              stat.kyc_aprovacoes++;
-              break;
-            case 'kyc_reject':
-              stat.kyc_rejeicoes++;
-              break;
-            case 'product_ban':
-              stat.banimentos++;
-              stat.produtos_banidos++;
-              break;
-            case 'withdrawal_aprovado':
-            case 'withdrawals_bulk_aprovado':
-              stat.saques_aprovados++;
-              break;
-            case 'withdrawal_rejeitado':
-            case 'withdrawals_bulk_rejeitado':
-              stat.saques_rejeitados++;
-              break;
-            case 'product_approve':
-              stat.produtos_aprovados++;
-              break;
-            case 'admin_login':
-              stat.logins++;
-              break;
+          if (item.status === 'aprovado') {
+            stat.kyc_aprovacoes++;
+          } else if (item.status === 'rejeitado') {
+            stat.kyc_rejeicoes++;
           }
+          stat.total_acoes++;
+        }
+      });
+
+      // Process withdrawal data
+      withdrawalData?.forEach(item => {
+        const stat = statsMap.get(item.admin_processed_by);
+        if (stat) {
+          if (item.status === 'completed' || item.status === 'approved' || item.status === 'aprovado') {
+            stat.saques_aprovados++;
+          } else if (item.status === 'rejected' || item.status === 'rejeitado') {
+            stat.saques_rejeitados++;
+          }
+          stat.total_acoes++;
+        }
+      });
+
+      // Process products approved data
+      productsApprovedData?.forEach(item => {
+        const stat = statsMap.get(item.approved_by_admin_id);
+        if (stat) {
+          stat.produtos_aprovados++;
+          stat.total_acoes++;
+        }
+      });
+
+      // Process products banned data
+      productsBannedData?.forEach(item => {
+        const stat = statsMap.get(item.banned_by_admin_id);
+        if (stat) {
+          stat.banimentos++;
+          stat.produtos_banidos++;
+          stat.total_acoes++;
+        }
+      });
+
+      // Process login data
+      logsData?.forEach(item => {
+        const stat = statsMap.get(item.admin_id);
+        if (stat) {
+          stat.logins++;
+          stat.total_acoes++;
         }
       });
 
