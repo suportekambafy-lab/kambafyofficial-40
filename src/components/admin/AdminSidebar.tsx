@@ -19,7 +19,8 @@ import {
   Radio,
   RefreshCw,
   Sparkles,
-  GraduationCap
+  GraduationCap,
+  BarChart3
 } from 'lucide-react';
 import kambabyLogo from '@/assets/kambafy-logo.png';
 import { useAdminPendingCounts } from '@/hooks/useAdminPendingCounts';
@@ -105,6 +106,11 @@ const menuItems = [
     href: '/admin/extras',
     label: 'Extras',
     icon: Wrench,
+  },
+  {
+    href: '/admin/stats',
+    label: 'Estatísticas Admins',
+    icon: BarChart3,
   },
   {
     href: '/admin/management',
