@@ -83,32 +83,35 @@ export default function AdminStats() {
       const { start: dateFilterStart, end: dateFilterEnd } = getDateRange();
 
       // Helper function to apply date filter
+      // IMPORTANT: Use ISO strings (with timezone) to avoid timezone-related off-by-one-day issues.
       const applyDateFilter = (query: any, dateField: string) => {
         if (dateFilterStart) {
-          query.gte(dateField, format(dateFilterStart, "yyyy-MM-dd'T'HH:mm:ss"));
+          query = query.gte(dateField, dateFilterStart.toISOString());
         }
         if (dateFilterEnd) {
-          query.lte(dateField, format(dateFilterEnd, "yyyy-MM-dd'T'HH:mm:ss"));
+          query = query.lte(dateField, dateFilterEnd.toISOString());
         }
         return query;
       };
 
-      // Fetch KYC stats - using verified_by_name since verified_by may not be set
+      // Fetch KYC stats
+      // IMPORTANT: For "Hoje" we must filter by the action timestamp (verified_at),
+      // not updated_at (which can be changed by system updates/backfills).
       let kycApprovedQuery = supabase
         .from('identity_verification')
-        .select('verified_by_name, updated_at')
+        .select('verified_by, verified_by_name, verified_at')
         .eq('status', 'aprovado')
-        .not('verified_by_name', 'is', null);
-      
-      kycApprovedQuery = applyDateFilter(kycApprovedQuery, 'updated_at');
+        .not('verified_at', 'is', null);
+
+      kycApprovedQuery = applyDateFilter(kycApprovedQuery, 'verified_at');
       const { data: kycApprovedData } = await kycApprovedQuery;
 
-      // KYC rejeitados - não têm verified_by preenchido, contar total apenas
+      // KYC rejeitados - não existe rejected_at; usamos updated_at como aproximação
       let kycRejectedQuery = supabase
         .from('identity_verification')
         .select('updated_at')
         .eq('status', 'rejeitado');
-      
+
       kycRejectedQuery = applyDateFilter(kycRejectedQuery, 'updated_at');
       const { data: kycRejectedData } = await kycRejectedQuery;
 
@@ -136,13 +139,8 @@ export default function AdminStats() {
         .from('products')
         .select('id', { count: 'exact', head: true })
         .eq('admin_approved', true);
-      
-      if (dateFilterStart) {
-        totalApprovedProductsQuery.gte('updated_at', format(dateFilterStart, "yyyy-MM-dd'T'HH:mm:ss"));
-      }
-      if (dateFilterEnd) {
-        totalApprovedProductsQuery.lte('updated_at', format(dateFilterEnd, "yyyy-MM-dd'T'HH:mm:ss"));
-      }
+
+      totalApprovedProductsQuery = applyDateFilter(totalApprovedProductsQuery, 'updated_at');
       const { count: totalApprovedProducts } = await totalApprovedProductsQuery;
 
       // Fetch banned products from admin_action_logs (product_ban action)
@@ -194,9 +192,19 @@ export default function AdminStats() {
         });
       });
 
-      // Process KYC approved data by name
-      kycApprovedData?.forEach(item => {
-        const adminId = adminByName.get(item.verified_by_name?.toLowerCase() || '');
+      // Process KYC approved data
+      // Prefer verified_by (UUID) for correct attribution; fallback to name if needed.
+      kycApprovedData?.forEach((item: any) => {
+        if (item.verified_by) {
+          const stat = statsMap.get(item.verified_by);
+          if (stat) {
+            stat.kyc_aprovacoes++;
+            stat.total_acoes++;
+            return;
+          }
+        }
+
+        const adminId = adminByName.get((item.verified_by_name || '').toLowerCase());
         if (adminId) {
           const stat = statsMap.get(adminId);
           if (stat) {
