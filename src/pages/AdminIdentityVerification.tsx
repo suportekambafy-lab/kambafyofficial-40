@@ -779,12 +779,13 @@ export default function AdminIdentityVerification() {
                     </div>
                   )}
 
-                  {/* Badge do admin que processou - visível apenas para super admins */}
-                  {verification.status !== 'pendente' && (
+                  {/* Badge do admin que processou - visível para todos os admins */}
+                  {verification.status !== 'pendente' && verification.verified_by_name && (
                     <AdminActionBadge 
                       adminName={verification.verified_by_name}
                       adminId={verification.verified_by}
                       actionLabel={verification.status === 'aprovado' ? 'Aprovado por' : 'Rejeitado por'}
+                      variant={verification.status === 'rejeitado' ? 'rejected' : 'approved'}
                       className="mb-4"
                     />
                   )}
