@@ -354,7 +354,10 @@ export const useGeoLocation = () => {
           case 'CLP':
             return `$${Math.round(customPrice).toLocaleString('es-CL')} CLP`;
           case 'ARS':
-            return `$${customPrice.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ARS`;
+            const hasDecimalsCustomGeo = customPrice % 1 !== 0;
+            return hasDecimalsCustomGeo 
+              ? `$${customPrice.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ARS`
+              : `$${Math.round(customPrice).toLocaleString('es-AR')} ARS`;
           case 'MZN':
             return `${customPrice.toFixed(2)} MZN`;
           case 'KZ':
@@ -379,7 +382,10 @@ export const useGeoLocation = () => {
       case 'CLP':
         return `$${Math.round(convertedPrice).toLocaleString('es-CL')} CLP`;
       case 'ARS':
-        return `$${convertedPrice.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ARS`;
+        const hasDecimalsConvertedGeo = convertedPrice % 1 !== 0;
+        return hasDecimalsConvertedGeo 
+          ? `$${convertedPrice.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ARS`
+          : `$${Math.round(convertedPrice).toLocaleString('es-AR')} ARS`;
       case 'MZN':
         return `${convertedPrice.toFixed(2)} MZN`;
       case 'KZ':

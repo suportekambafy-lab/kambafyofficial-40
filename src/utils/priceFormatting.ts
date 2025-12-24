@@ -43,7 +43,10 @@ export const formatPrice = (
         case 'MZN':
           return `${formatWithMaxTwoDecimals(customPrice)} MZN`;
         case 'ARS':
-          return `$${customPrice.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ARS`;
+          const hasDecimalsCustom = customPrice % 1 !== 0;
+          return hasDecimalsCustom 
+            ? `$${customPrice.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ARS`
+            : `$${Math.round(customPrice).toLocaleString('es-AR')} ARS`;
         case 'KZ':
         default:
           return `${formatWithMaxTwoDecimals(customPrice)} KZ`;
@@ -78,7 +81,10 @@ export const formatPrice = (
     case 'MZN':
       return `${formatWithMaxTwoDecimals(convertedPrice)} MZN`;
     case 'ARS':
-      return `$${convertedPrice.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ARS`;
+      const hasDecimalsConverted = convertedPrice % 1 !== 0;
+      return hasDecimalsConverted 
+        ? `$${convertedPrice.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ARS`
+        : `$${Math.round(convertedPrice).toLocaleString('es-AR')} ARS`;
     case 'KZ':
     default:
       return `${formatWithMaxTwoDecimals(priceInKZ)} KZ`;

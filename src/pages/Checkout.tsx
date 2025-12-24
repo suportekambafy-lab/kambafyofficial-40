@@ -452,7 +452,10 @@ const Checkout = () => {
         return displayPrice;
       }
       if (userCountry?.currency === 'ARS') {
-        const displayPrice = `$${priceInKZ.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ARS`;
+        const hasDecimals = priceInKZ % 1 !== 0;
+        const displayPrice = hasDecimals 
+          ? `$${priceInKZ.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ARS`
+          : `$${Math.round(priceInKZ).toLocaleString('es-AR')} ARS`;
         console.log(`🚨 getDisplayPrice - VALOR JÁ CONVERTIDO ARS: ${displayPrice}`);
         return displayPrice;
       }
@@ -488,7 +491,10 @@ const Checkout = () => {
       } else if (userCountry.currency === 'CLP') {
         displayPrice = `$${Math.round(customPrice).toLocaleString('es-CL')} CLP`;
       } else if (userCountry.currency === 'ARS') {
-        displayPrice = `$${customPrice.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ARS`;
+        const hasDecimals = customPrice % 1 !== 0;
+        displayPrice = hasDecimals 
+          ? `$${customPrice.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ARS`
+          : `$${Math.round(customPrice).toLocaleString('es-AR')} ARS`;
       } else if (userCountry.currency === 'MZN') {
         displayPrice = `${customPrice.toFixed(2)} MZN`;
       } else {
@@ -532,7 +538,10 @@ const Checkout = () => {
     } else if (userCountry.currency === 'CLP') {
       return `$${Math.round(price).toLocaleString('es-CL')} CLP`;
     } else if (userCountry.currency === 'ARS') {
-      return `$${price.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ARS`;
+      const hasDecimals = price % 1 !== 0;
+      return hasDecimals 
+        ? `$${price.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ARS`
+        : `$${Math.round(price).toLocaleString('es-AR')} ARS`;
     } else if (userCountry.currency === 'MZN') {
       return `${price.toFixed(2)} MZN`;
     } else {
