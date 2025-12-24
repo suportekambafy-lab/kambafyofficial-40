@@ -899,6 +899,20 @@ const Checkout = () => {
   const availablePaymentMethods = useMemo(() => {
     if (!userCountry) return [];
 
+    // ✅ Argentina: sempre disponibilizar cartão (Stripe) para qualquer produto
+    if (userCountry.code === 'AR') {
+      return [
+        {
+          id: 'card',
+          name: 'Tarjeta de Crédito/Débito',
+          image: getPaymentMethodImage('card') || getPaymentMethodImage('card_us'),
+          enabled: true,
+          countryFlag: '🇦🇷',
+          countryName: 'Argentina'
+        }
+      ];
+    }
+
     // Definir ordem dos métodos por país
     const paymentOrder: Record<string, string[]> = {
       'AO': ['express', 'reference', 'transfer'],
