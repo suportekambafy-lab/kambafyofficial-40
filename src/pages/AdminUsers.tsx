@@ -77,30 +77,18 @@ export default function AdminUsers() {
 
   const refreshStats = async () => {
     try {
+      // Count queries separadas para contornar limite de 1000
       const [totalRes, bannedRes, creatorsRes] = await Promise.all([
-        supabase.rpc('get_all_profiles_for_admin', {}, { count: 'exact', head: true }),
-        supabase
-          .rpc('get_all_profiles_for_admin', {}, { count: 'exact', head: true })
-          .eq('banned', true),
-        supabase
-          .rpc('get_all_profiles_for_admin', {}, { count: 'exact', head: true })
-          .eq('is_creator', true),
+        supabase.from('profiles').select('*', { count: 'exact', head: true }),
+        supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('banned', true),
+        supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('is_creator', true),
       ]);
-
-      if (totalRes.error) throw totalRes.error;
-      if (bannedRes.error) throw bannedRes.error;
-      if (creatorsRes.error) throw creatorsRes.error;
 
       setTotalUsersCount(totalRes.count ?? 0);
       setBannedUsersCount(bannedRes.count ?? 0);
       setCreatorsCount(creatorsRes.count ?? 0);
     } catch (error: any) {
       console.error('Erro ao carregar contagens de usuários:', error);
-      toast({
-        title: 'Erro',
-        description: 'Erro ao carregar estatísticas de utilizadores',
-        variant: 'destructive',
-      });
     }
   };
 
@@ -111,27 +99,33 @@ export default function AdminUsers() {
       const from = (currentPage - 1) * itemsPerPage;
       const to = from + itemsPerPage - 1;
 
-      let query = supabase.rpc('get_all_profiles_for_admin', {}, { count: 'exact' });
+      // Usar RPC para buscar usuários paginados (bypassa RLS)
+      const { data: allData, error: rpcError } = await supabase.rpc('get_all_profiles_for_admin');
 
-      const term = searchTerm.trim();
-      if (term) {
-        query = query.or(`full_name.ilike.%${term}%,email.ilike.%${term}%`);
-      }
-
-      const { data, error, count } = await query.range(from, to);
-
-      if (error) {
-        console.error('Erro ao carregar usuários via RPC:', error);
+      if (rpcError) {
+        console.error('Erro ao carregar usuários via RPC:', rpcError);
         toast({
           title: 'Erro',
-          description: 'Erro ao carregar usuários: ' + error.message,
+          description: 'Erro ao carregar usuários: ' + rpcError.message,
           variant: 'destructive',
         });
         return;
       }
 
-      setUsers((data as UserProfile[]) || []);
-      setFilteredCount(count ?? 0);
+      let filtered = (allData as UserProfile[]) || [];
+
+      // Filtrar por termo de busca no cliente
+      const term = searchTerm.trim().toLowerCase();
+      if (term) {
+        filtered = filtered.filter(
+          (u) =>
+            u.full_name?.toLowerCase().includes(term) ||
+            u.email?.toLowerCase().includes(term)
+        );
+      }
+
+      setFilteredCount(filtered.length);
+      setUsers(filtered.slice(from, to + 1));
     } catch (error) {
       console.error('Error loading users:', error);
       toast({
@@ -428,26 +422,11 @@ export default function AdminUsers() {
     );
   };
 
-  // Filtrar usuários baseado na busca
-  const filteredUsers = users.filter(user => {
-    const searchLower = searchTerm.toLowerCase();
-    const nameMatch = user.full_name?.toLowerCase().includes(searchLower);
-    const emailMatch = user.email?.toLowerCase().includes(searchLower);
-    return nameMatch || emailMatch;
-  });
+  // Pagination - usa contagem filteredCount do backend
+  const totalPages = Math.ceil(filteredCount / itemsPerPage) || 1;
 
-  // Pagination
-  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
-  const paginatedUsers = filteredUsers.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  // Stats
-  const totalUsers = users.length;
-  const activeUsers = users.filter(u => !u.banned).length;
-  const bannedUsers = users.filter(u => u.banned).length;
-  const creators = users.filter(u => u.is_creator).length;
+  // Stats - usa contagens separadas carregadas via count queries
+  const activeUsersCount = totalUsersCount - bannedUsersCount;
 
   if (loading) {
     return (
@@ -470,7 +449,7 @@ export default function AdminUsers() {
           </div>
           <div>
             <p className="text-sm text-[hsl(var(--admin-text-secondary))]">Total de utilizadores</p>
-            <p className="text-2xl font-bold text-[hsl(var(--admin-text))]">{totalUsers.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-[hsl(var(--admin-text))]">{totalUsersCount.toLocaleString()}</p>
           </div>
         </div>
 
@@ -480,7 +459,7 @@ export default function AdminUsers() {
           </div>
           <div>
             <p className="text-sm text-[hsl(var(--admin-text-secondary))]">Ativos</p>
-            <p className="text-2xl font-bold text-[hsl(var(--admin-text))]">{activeUsers.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-[hsl(var(--admin-text))]">{activeUsersCount.toLocaleString()}</p>
           </div>
         </div>
 
@@ -490,7 +469,7 @@ export default function AdminUsers() {
           </div>
           <div>
             <p className="text-sm text-[hsl(var(--admin-text-secondary))]">Banidos</p>
-            <p className="text-2xl font-bold text-[hsl(var(--admin-text))]">{bannedUsers.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-[hsl(var(--admin-text))]">{bannedUsersCount.toLocaleString()}</p>
           </div>
         </div>
 
@@ -500,7 +479,7 @@ export default function AdminUsers() {
           </div>
           <div>
             <p className="text-sm text-[hsl(var(--admin-text-secondary))]">Criadores</p>
-            <p className="text-2xl font-bold text-[hsl(var(--admin-text))]">{creators.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-[hsl(var(--admin-text))]">{creatorsCount.toLocaleString()}</p>
           </div>
         </div>
       </div>
@@ -548,14 +527,14 @@ export default function AdminUsers() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedUsers.length === 0 ? (
+              {users.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-12 text-[hsl(var(--admin-text-secondary))]">
                     Nenhum utilizador encontrado
                   </TableCell>
                 </TableRow>
               ) : (
-                paginatedUsers.map((user) => (
+                users.map((user) => (
                   <TableRow key={user.id} className="border-b border-[hsl(var(--admin-border))] hover:bg-[hsl(var(--admin-bg))]/50">
                     <TableCell>
                       <div className="flex items-center gap-3">
@@ -639,7 +618,7 @@ export default function AdminUsers() {
         {/* Pagination */}
         <div className="p-4 flex items-center justify-between border-t border-[hsl(var(--admin-border))]">
           <p className="text-sm text-[hsl(var(--admin-text-secondary))]">
-            {(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, filteredUsers.length)} de {filteredUsers.length.toLocaleString()}
+            {(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, filteredCount)} de {filteredCount.toLocaleString()}
           </p>
           <div className="flex items-center gap-2">
             <Button 
