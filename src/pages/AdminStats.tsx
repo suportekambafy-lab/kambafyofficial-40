@@ -266,7 +266,6 @@ export default function AdminStats() {
 
       return {
         adminStats: Array.from(statsMap.values())
-          .filter(s => s.total_acoes > 0)
           .sort((a, b) => b.total_acoes - a.total_acoes),
         totalRejectedKyc,
         totalApprovedProducts: totalApprovedProductsCount
