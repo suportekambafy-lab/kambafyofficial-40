@@ -48,10 +48,11 @@ Deno.serve(async (req) => {
     // Atualizar o produto com informações do admin que aprovou
     const updateData: any = { admin_approved: isApproved }
     
-    // Se está aprovando, salvar quem aprovou
+    // Se está aprovando, salvar quem aprovou e quando
     if (isApproved) {
       updateData.approved_by_admin_id = adminData.id
       updateData.approved_by_admin_name = adminData.full_name || adminData.email
+      updateData.approved_at = new Date().toISOString()
     }
     
     const { error: updateError } = await supabaseAdmin

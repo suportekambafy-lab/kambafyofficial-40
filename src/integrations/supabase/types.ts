@@ -2783,6 +2783,7 @@ export type Database = {
           admin_approved: boolean | null
           allow_affiliates: boolean | null
           allow_custom_price: boolean | null
+          approved_at: string | null
           approved_by_admin_id: string | null
           approved_by_admin_name: string | null
           ban_reason: string | null
@@ -2834,6 +2835,7 @@ export type Database = {
           admin_approved?: boolean | null
           allow_affiliates?: boolean | null
           allow_custom_price?: boolean | null
+          approved_at?: string | null
           approved_by_admin_id?: string | null
           approved_by_admin_name?: string | null
           ban_reason?: string | null
@@ -2885,6 +2887,7 @@ export type Database = {
           admin_approved?: boolean | null
           allow_affiliates?: boolean | null
           allow_custom_price?: boolean | null
+          approved_at?: string | null
           approved_by_admin_id?: string | null
           approved_by_admin_name?: string | null
           ban_reason?: string | null
