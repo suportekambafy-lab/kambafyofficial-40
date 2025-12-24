@@ -106,14 +106,23 @@ export default function AdminStats() {
       kycApprovedQuery = applyDateFilter(kycApprovedQuery, 'verified_at');
       const { data: kycApprovedData } = await kycApprovedQuery;
 
-      // KYC rejeitados - não existe rejected_at; usamos updated_at como aproximação
+      // KYC rejeitados - usar verified_at quando disponível, senão updated_at
+      // Também buscar verified_by para atribuição por admin
       let kycRejectedQuery = supabase
         .from('identity_verification')
-        .select('updated_at')
+        .select('verified_by, verified_by_name, verified_at, updated_at')
         .eq('status', 'rejeitado');
 
-      kycRejectedQuery = applyDateFilter(kycRejectedQuery, 'updated_at');
-      const { data: kycRejectedData } = await kycRejectedQuery;
+      // Filtrar por verified_at se existir, senão updated_at (feito no cliente)
+      const { data: kycRejectedDataRaw } = await kycRejectedQuery;
+      
+      // Filtrar manualmente pela data usando COALESCE(verified_at, updated_at)
+      const kycRejectedData = kycRejectedDataRaw?.filter(item => {
+        const actionDate = item.verified_at ? new Date(item.verified_at) : new Date(item.updated_at);
+        if (dateFilterStart && actionDate < dateFilterStart) return false;
+        if (dateFilterEnd && actionDate > dateFilterEnd) return false;
+        return true;
+      });
 
       // Fetch withdrawal stats from withdrawal_requests (uses admin_processed_by UUID)
       let withdrawalQuery = supabase
@@ -202,6 +211,27 @@ export default function AdminStats() {
           const stat = statsMap.get(adminId);
           if (stat) {
             stat.kyc_aprovacoes++;
+            stat.total_acoes++;
+          }
+        }
+      });
+
+      // Process KYC rejected data - atribuir rejeições por admin
+      kycRejectedData?.forEach((item: any) => {
+        if (item.verified_by) {
+          const stat = statsMap.get(item.verified_by);
+          if (stat) {
+            stat.kyc_rejeicoes++;
+            stat.total_acoes++;
+            return;
+          }
+        }
+
+        const adminId = adminByName.get((item.verified_by_name || '').toLowerCase());
+        if (adminId) {
+          const stat = statsMap.get(adminId);
+          if (stat) {
+            stat.kyc_rejeicoes++;
             stat.total_acoes++;
           }
         }
