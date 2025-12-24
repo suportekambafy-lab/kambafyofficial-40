@@ -210,7 +210,7 @@ export default function AdminSales() {
       let query = supabase
         .from('withdrawal_requests')
         .select('*', { count: 'exact' })
-        .eq('status', 'approved');
+        .eq('status', 'aprovado');
 
       const { data: withdrawalData, error, count } = await query
         .order('updated_at', { ascending: false })
@@ -316,7 +316,7 @@ export default function AdminSales() {
         allActivities.push({
           id: withdrawal.id,
           type: 'withdrawal',
-          description: `Saque - ${withdrawal.status === 'approved' ? 'Aprovado' : withdrawal.status}`,
+          description: `Saque - ${withdrawal.status === 'aprovado' ? 'Aprovado' : withdrawal.status === 'rejeitado' ? 'Rejeitado' : 'Pendente'}`,
           amount: withdrawal.amount,
           currency: 'KZ',
           status: withdrawal.status,
