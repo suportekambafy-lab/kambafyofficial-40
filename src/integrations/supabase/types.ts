@@ -4539,16 +4539,26 @@ export type Database = {
           approved_at: string
           approved_by_admin_id: string
           approved_by_admin_name: string
+          ban_reason: string
+          banned_by_admin_id: string
+          banned_by_admin_name: string
           checkout_url: string
+          cover: string
           created_at: string
           currency: string
           description: string
+          fantasy_name: string
           id: string
           image_url: string
           name: string
           price: string
+          revision_documents: Json
+          revision_explanation: string
           revision_notes: string
           revision_requested: boolean
+          revision_requested_at: string
+          sales: number
+          share_link: string
           status: string
           type: string
           updated_at: string

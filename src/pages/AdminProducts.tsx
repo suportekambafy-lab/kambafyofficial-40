@@ -114,9 +114,34 @@ export default function AdminProducts() {
 
         console.log('Perfis encontrados:', allProfiles.length);
 
-        // Combinar os dados
-        const productsWithProfiles = productsData.map(product => ({
-          ...product,
+        // Combinar os dados e garantir campos esperados
+        const productsWithProfiles: ProductWithProfile[] = productsData.map((product: any) => ({
+          id: product.id,
+          user_id: product.user_id,
+          name: product.name,
+          description: product.description,
+          price: product.price,
+          currency: product.currency,
+          type: product.type,
+          status: product.status,
+          image_url: product.image_url,
+          checkout_url: product.checkout_url,
+          admin_approved: product.admin_approved,
+          approved_by_admin_id: product.approved_by_admin_id,
+          approved_by_admin_name: product.approved_by_admin_name,
+          revision_requested: product.revision_requested,
+          revision_notes: product.revision_notes,
+          revision_requested_at: product.revision_requested_at,
+          revision_explanation: product.revision_explanation,
+          revision_documents: product.revision_documents,
+          cover: product.cover,
+          fantasy_name: product.fantasy_name,
+          sales: product.sales,
+          ban_reason: product.ban_reason,
+          banned_by_admin_id: product.banned_by_admin_id,
+          banned_by_admin_name: product.banned_by_admin_name,
+          share_link: product.share_link,
+          created_at: product.created_at,
           profiles: allProfiles.find(p => p.user_id === product.user_id) || null
         }));
 
