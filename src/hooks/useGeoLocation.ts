@@ -58,6 +58,13 @@ const SUPPORTED_COUNTRIES: Record<string, CountryInfo> = {
     currency: 'CLP',
     flag: '🇨🇱',
     exchangeRate: 1.05
+  },
+  AR: {
+    code: 'AR',
+    name: 'Argentina',
+    currency: 'ARS',
+    flag: '🇦🇷',
+    exchangeRate: 1.10
   }
 };
 
@@ -68,7 +75,8 @@ const COUNTRY_LANGUAGES: Record<string, string> = {
   'GB': 'en',
   'US': 'en',
   'MX': 'es',
-  'CL': 'es'
+  'CL': 'es',
+  'AR': 'es'
 };
 
 const SAFETY_MARGIN = 1.05;
@@ -113,6 +121,7 @@ const getInitialRates = (): Record<string, CountryInfo> => {
       if (rates.GBP) countries.GB.exchangeRate = rates.GBP;
       if (rates.MXN) countries.MX.exchangeRate = rates.MXN;
       if (rates.CLP) countries.CL.exchangeRate = rates.CLP;
+      if (rates.ARS) countries.AR.exchangeRate = rates.ARS;
       return countries;
     }
   } catch {
@@ -174,6 +183,10 @@ export const useGeoLocation = () => {
       if (data.rates.CLP) {
         updatedCountries.CL.exchangeRate = data.rates.CLP * SAFETY_MARGIN;
       }
+
+      if (data.rates.ARS) {
+        updatedCountries.AR.exchangeRate = data.rates.ARS * SAFETY_MARGIN;
+      }
       
       setSupportedCountries(updatedCountries);
       
@@ -182,7 +195,8 @@ export const useGeoLocation = () => {
         MZN: updatedCountries.MZ.exchangeRate,
         GBP: updatedCountries.GB.exchangeRate,
         MXN: updatedCountries.MX.exchangeRate,
-        CLP: updatedCountries.CL.exchangeRate
+        CLP: updatedCountries.CL.exchangeRate,
+        ARS: updatedCountries.AR.exchangeRate
       }));
       localStorage.setItem('ratesLastUpdate', Date.now().toString());
       
@@ -339,6 +353,8 @@ export const useGeoLocation = () => {
             return `$${customPrice.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN`;
           case 'CLP':
             return `$${Math.round(customPrice).toLocaleString('es-CL')} CLP`;
+          case 'ARS':
+            return `$${customPrice.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ARS`;
           case 'MZN':
             return `${customPrice.toFixed(2)} MZN`;
           case 'KZ':
@@ -362,6 +378,8 @@ export const useGeoLocation = () => {
         return `$${convertedPrice.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN`;
       case 'CLP':
         return `$${Math.round(convertedPrice).toLocaleString('es-CL')} CLP`;
+      case 'ARS':
+        return `$${convertedPrice.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ARS`;
       case 'MZN':
         return `${convertedPrice.toFixed(2)} MZN`;
       case 'KZ':
