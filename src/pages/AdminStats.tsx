@@ -6,6 +6,9 @@ import { AdminPageSkeleton } from '@/components/admin/AdminPageSkeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
 import { 
   BarChart3, 
   UserCheck, 
@@ -17,7 +20,10 @@ import {
   Shield,
   Activity
 } from 'lucide-react';
-import { format, subDays, startOfDay } from 'date-fns';
+import { format, subDays, startOfDay, endOfDay } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { CalendarIcon } from 'lucide-react';
+import { DateRange } from 'react-day-picker';
 
 interface AdminStat {
   admin_id: string;
@@ -36,9 +42,36 @@ interface AdminStat {
 
 export default function AdminStats() {
   const [periodFilter, setPeriodFilter] = useState<string>('all');
+  const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>(undefined);
+
+  // Calculate date range based on filter
+  const getDateRange = (): { start: Date | null; end: Date | null } => {
+    const now = new Date();
+    
+    switch (periodFilter) {
+      case 'today':
+        return { start: startOfDay(now), end: endOfDay(now) };
+      case 'yesterday':
+        const yesterday = subDays(now, 1);
+        return { start: startOfDay(yesterday), end: endOfDay(yesterday) };
+      case 'custom':
+        if (customDateRange?.from) {
+          return { 
+            start: startOfDay(customDateRange.from), 
+            end: customDateRange.to ? endOfDay(customDateRange.to) : endOfDay(customDateRange.from) 
+          };
+        }
+        return { start: null, end: null };
+      case 'all':
+        return { start: null, end: null };
+      default:
+        const days = parseInt(periodFilter);
+        return { start: startOfDay(subDays(now, days)), end: null };
+    }
+  };
 
   const { data: stats, isLoading } = useQuery({
-    queryKey: ['admin-stats', periodFilter],
+    queryKey: ['admin-stats', periodFilter, customDateRange?.from?.toISOString(), customDateRange?.to?.toISOString()],
     queryFn: async () => {
       // Get all admins first
       const { data: admins, error: adminsError } = await supabase
@@ -47,78 +80,73 @@ export default function AdminStats() {
       if (adminsError) throw adminsError;
 
       // Build date filter
-      let dateFilter: Date | null = null;
-      if (periodFilter !== 'all') {
-        const days = parseInt(periodFilter);
-        dateFilter = startOfDay(subDays(new Date(), days));
-      }
+      const { start: dateFilterStart, end: dateFilterEnd } = getDateRange();
+
+      // Helper function to apply date filter
+      const applyDateFilter = (query: any, dateField: string) => {
+        if (dateFilterStart) {
+          query.gte(dateField, format(dateFilterStart, "yyyy-MM-dd'T'HH:mm:ss"));
+        }
+        if (dateFilterEnd) {
+          query.lte(dateField, format(dateFilterEnd, "yyyy-MM-dd'T'HH:mm:ss"));
+        }
+        return query;
+      };
 
       // Fetch KYC stats - using verified_by_name since verified_by may not be set
-      const kycApprovedQuery = supabase
+      let kycApprovedQuery = supabase
         .from('identity_verification')
         .select('verified_by_name, updated_at')
         .eq('status', 'aprovado')
         .not('verified_by_name', 'is', null);
       
-      if (dateFilter) {
-        kycApprovedQuery.gte('updated_at', format(dateFilter, 'yyyy-MM-dd'));
-      }
+      kycApprovedQuery = applyDateFilter(kycApprovedQuery, 'updated_at');
       const { data: kycApprovedData } = await kycApprovedQuery;
 
       // KYC rejeitados - não têm verified_by preenchido, contar total apenas
-      const kycRejectedQuery = supabase
+      let kycRejectedQuery = supabase
         .from('identity_verification')
         .select('updated_at')
         .eq('status', 'rejeitado');
       
-      if (dateFilter) {
-        kycRejectedQuery.gte('updated_at', format(dateFilter, 'yyyy-MM-dd'));
-      }
+      kycRejectedQuery = applyDateFilter(kycRejectedQuery, 'updated_at');
       const { data: kycRejectedData } = await kycRejectedQuery;
 
       // Fetch withdrawal stats from withdrawal_requests (uses admin_processed_by UUID)
-      const withdrawalQuery = supabase
+      let withdrawalQuery = supabase
         .from('withdrawal_requests')
         .select('admin_processed_by, status, updated_at')
         .not('admin_processed_by', 'is', null);
       
-      if (dateFilter) {
-        withdrawalQuery.gte('updated_at', format(dateFilter, 'yyyy-MM-dd'));
-      }
+      withdrawalQuery = applyDateFilter(withdrawalQuery, 'updated_at');
       const { data: withdrawalData } = await withdrawalQuery;
 
       // Fetch product approval stats from products
-      const productsApprovedQuery = supabase
+      let productsApprovedQuery = supabase
         .from('products')
         .select('approved_by_admin_name, updated_at')
         .eq('admin_approved', true)
         .not('approved_by_admin_name', 'is', null);
       
-      if (dateFilter) {
-        productsApprovedQuery.gte('updated_at', format(dateFilter, 'yyyy-MM-dd'));
-      }
+      productsApprovedQuery = applyDateFilter(productsApprovedQuery, 'updated_at');
       const { data: productsApprovedData } = await productsApprovedQuery;
 
       // Fetch banned products from admin_action_logs (product_ban action)
-      const bansQuery = supabase
+      let bansQuery = supabase
         .from('admin_action_logs')
         .select('admin_email, created_at')
         .eq('action', 'product_ban');
       
-      if (dateFilter) {
-        bansQuery.gte('created_at', format(dateFilter, 'yyyy-MM-dd'));
-      }
+      bansQuery = applyDateFilter(bansQuery, 'created_at');
       const { data: bansData } = await bansQuery;
 
       // Fetch logins from admin_logs
-      const logsQuery = supabase
+      let logsQuery = supabase
         .from('admin_logs')
         .select('admin_id, action, created_at')
         .eq('action', 'admin_login');
       
-      if (dateFilter) {
-        logsQuery.gte('created_at', format(dateFilter, 'yyyy-MM-dd'));
-      }
+      logsQuery = applyDateFilter(logsQuery, 'created_at');
       const { data: logsData } = await logsQuery;
 
       // Create maps for name/email lookup
@@ -267,17 +295,59 @@ export default function AdminStats() {
             </p>
           </div>
           
-          <Select value={periodFilter} onValueChange={setPeriodFilter}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Período" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todo período</SelectItem>
-              <SelectItem value="7">Últimos 7 dias</SelectItem>
-              <SelectItem value="30">Últimos 30 dias</SelectItem>
-              <SelectItem value="90">Últimos 90 dias</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2">
+            <Select value={periodFilter} onValueChange={(value) => {
+              setPeriodFilter(value);
+              if (value !== 'custom') {
+                setCustomDateRange(undefined);
+              }
+            }}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Período" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todo período</SelectItem>
+                <SelectItem value="today">Hoje</SelectItem>
+                <SelectItem value="yesterday">Ontem</SelectItem>
+                <SelectItem value="7">Últimos 7 dias</SelectItem>
+                <SelectItem value="30">Últimos 30 dias</SelectItem>
+                <SelectItem value="90">Últimos 90 dias</SelectItem>
+                <SelectItem value="custom">Personalizado</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {periodFilter === 'custom' && (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="gap-2">
+                    <CalendarIcon className="h-4 w-4" />
+                    {customDateRange?.from ? (
+                      customDateRange.to ? (
+                        <>
+                          {format(customDateRange.from, 'dd/MM/yyyy', { locale: ptBR })} - {format(customDateRange.to, 'dd/MM/yyyy', { locale: ptBR })}
+                        </>
+                      ) : (
+                        format(customDateRange.from, 'dd/MM/yyyy', { locale: ptBR })
+                      )
+                    ) : (
+                      'Selecionar datas'
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    initialFocus
+                    mode="range"
+                    defaultMonth={customDateRange?.from}
+                    selected={customDateRange}
+                    onSelect={setCustomDateRange}
+                    numberOfMonths={2}
+                    locale={ptBR}
+                  />
+                </PopoverContent>
+              </Popover>
+            )}
+          </div>
         </div>
 
         {/* Summary Cards */}
