@@ -125,22 +125,26 @@ export default function AdminStats() {
       const { data: withdrawalData } = await withdrawalQuery;
 
       // Get products with approved_by_admin_id for attribution
+      // Use approved_at for date filtering (tracks actual approval date, not last update)
       let productsApprovedQuery = supabase
         .from('products')
-        .select('approved_by_admin_id, updated_at')
+        .select('approved_by_admin_id, approved_at')
         .eq('admin_approved', true)
-        .not('approved_by_admin_id', 'is', null);
-      
-      productsApprovedQuery = applyDateFilter(productsApprovedQuery, 'updated_at');
+        .not('approved_by_admin_id', 'is', null)
+        .not('approved_at', 'is', null);
+
+      productsApprovedQuery = applyDateFilter(productsApprovedQuery, 'approved_at');
       const { data: productsApprovedData } = await productsApprovedQuery;
 
-      // Get total approved products count (for summary card)
+      // Get total approved products count (for summary card) - only those with approved_by_admin_id
       let totalApprovedProductsQuery = supabase
         .from('products')
         .select('id', { count: 'exact', head: true })
-        .eq('admin_approved', true);
+        .eq('admin_approved', true)
+        .not('approved_by_admin_id', 'is', null)
+        .not('approved_at', 'is', null);
 
-      totalApprovedProductsQuery = applyDateFilter(totalApprovedProductsQuery, 'updated_at');
+      totalApprovedProductsQuery = applyDateFilter(totalApprovedProductsQuery, 'approved_at');
       const { count: totalApprovedProducts } = await totalApprovedProductsQuery;
 
       // Fetch banned products from admin_action_logs (product_ban action)
