@@ -105,8 +105,8 @@ const getInitialCountry = (): CountryInfo => {
   } catch {
     // localStorage indisponível
   }
-  // Retornar US como fallback internacional (será sobrescrito pela detecção de IP)
-  return SUPPORTED_COUNTRIES.US;
+  // Retornar AO como fallback (maioria dos utilizadores são de Angola)
+  return SUPPORTED_COUNTRIES.AO;
 };
 
 // Função para obter taxas iniciais do cache
@@ -128,6 +128,120 @@ const getInitialRates = (): Record<string, CountryInfo> => {
     // localStorage indisponível
   }
   return SUPPORTED_COUNTRIES;
+};
+
+// Lista de APIs de geolocalização ordenadas por confiabilidade
+const GEO_APIS = [
+  {
+    url: 'https://ipapi.co/json/',
+    getCountryCode: (data: any) => data.country_code,
+    timeout: 3000
+  },
+  {
+    url: 'https://ipwho.is/',
+    getCountryCode: (data: any) => data.country_code,
+    timeout: 3000
+  },
+  {
+    url: 'https://ip-api.com/json/?fields=countryCode',
+    getCountryCode: (data: any) => data.countryCode,
+    timeout: 3000
+  },
+  {
+    url: 'https://api.country.is/',
+    getCountryCode: (data: any) => data.country,
+    timeout: 3000
+  },
+  {
+    url: 'https://freeipapi.com/api/json',
+    getCountryCode: (data: any) => data.countryCode,
+    timeout: 3000
+  }
+];
+
+// Função para fazer request com timeout
+const fetchWithTimeout = async (url: string, timeout: number): Promise<Response> => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+  
+  try {
+    const response = await fetch(url, { 
+      signal: controller.signal,
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    throw error;
+  }
+};
+
+// Função robusta para detectar país com múltiplos fallbacks
+const detectCountryRobust = async (): Promise<string | null> => {
+  console.log('🌍 Starting robust IP detection...');
+  
+  // Tentar todas as APIs em paralelo para máxima velocidade
+  const promises = GEO_APIS.map(async (api, index) => {
+    try {
+      const response = await fetchWithTimeout(api.url, api.timeout);
+      
+      if (!response.ok) {
+        console.log(`⚠️ API ${index + 1} returned status:`, response.status);
+        return null;
+      }
+      
+      const data = await response.json();
+      const countryCode = api.getCountryCode(data);
+      
+      if (countryCode && typeof countryCode === 'string' && countryCode.length === 2) {
+        console.log(`✅ API ${index + 1} (${api.url}) detected:`, countryCode);
+        return countryCode.toUpperCase();
+      }
+      
+      console.log(`⚠️ API ${index + 1} returned invalid country code:`, countryCode);
+      return null;
+    } catch (error) {
+      console.log(`⚠️ API ${index + 1} (${api.url}) failed:`, error instanceof Error ? error.message : 'Unknown error');
+      return null;
+    }
+  });
+  
+  // Usar Promise.allSettled para obter todos os resultados
+  const results = await Promise.allSettled(promises);
+  
+  // Filtrar resultados válidos
+  const validResults = results
+    .filter((r): r is PromiseFulfilledResult<string> => r.status === 'fulfilled' && r.value !== null)
+    .map(r => r.value);
+  
+  if (validResults.length === 0) {
+    console.log('❌ All APIs failed to detect country');
+    return null;
+  }
+  
+  // Contar ocorrências de cada país para votação por maioria
+  const countryVotes: Record<string, number> = {};
+  validResults.forEach(country => {
+    countryVotes[country] = (countryVotes[country] || 0) + 1;
+  });
+  
+  // Encontrar o país com mais votos
+  let mostVotedCountry = validResults[0];
+  let maxVotes = 1;
+  
+  for (const [country, votes] of Object.entries(countryVotes)) {
+    if (votes > maxVotes) {
+      mostVotedCountry = country;
+      maxVotes = votes;
+    }
+  }
+  
+  console.log('🗳️ Country votes:', countryVotes, '-> Winner:', mostVotedCountry);
+  
+  return mostVotedCountry;
 };
 
 export const useGeoLocation = () => {
@@ -211,79 +325,57 @@ export const useGeoLocation = () => {
 
   const detectCountryByIP = async () => {
     try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 5000);
+      console.log('🌍 Iniciando detecção de país por IP...');
       
-      // Tentar múltiplas APIs em sequência
-      const apis = [
-        'https://ipapi.co/json/',
-        'https://ip-api.com/json/?fields=countryCode',
-        'https://ipwho.is/'
-      ];
-      
-      let countryCode: string | null = null;
-      
-      for (const api of apis) {
-        try {
-          const response = await fetch(api, {
-            signal: controller.signal
-          });
-          
-          if (!response.ok) continue;
-          
-          const data = await response.json();
-          
-          // Diferentes APIs retornam o país em diferentes campos
-          countryCode = data.country_code || data.countryCode || data.country;
-          
-          if (countryCode) {
-            console.log(`✅ País detectado via ${api}:`, countryCode);
-            break;
-          }
-        } catch (apiError) {
-          console.log(`⚠️ API ${api} falhou, tentando próxima...`);
-          continue;
-        }
-      }
-      
-      clearTimeout(timeout);
+      // Usar a função robusta de detecção
+      const countryCode = await detectCountryRobust();
       
       if (countryCode) {
         const detectedCountry = supportedCountries[countryCode];
         
         if (detectedCountry) {
+          console.log('✅ País detectado e suportado:', countryCode);
           setUserCountry(detectedCountry);
           localStorage.setItem('userCountry', countryCode);
+          localStorage.setItem('lastIpDetection', Date.now().toString());
+          
           const language = COUNTRY_LANGUAGES[countryCode] || 'pt';
           setDetectedLanguage(language);
           applyLanguage(language);
         } else {
-          // País não suportado - usar USD como padrão internacional
-          console.log('🌍 País não suportado, usando USD como padrão:', countryCode);
-          setUserCountry(supportedCountries.US);
-          localStorage.setItem('userCountry', 'US');
-          setDetectedLanguage('en');
-          applyLanguage('en');
+          // País não suportado - usar Angola como padrão (maioria dos users)
+          console.log('🌍 País não suportado, usando AO como padrão:', countryCode);
+          setUserCountry(supportedCountries.AO);
+          localStorage.setItem('userCountry', 'AO');
+          localStorage.setItem('detectedButUnsupported', countryCode);
+          localStorage.setItem('lastIpDetection', Date.now().toString());
+          setDetectedLanguage('pt');
+          applyLanguage('pt');
         }
       } else {
-        // Nenhuma API funcionou - usar USD como fallback internacional
-        console.log('⚠️ APIs de IP falharam, usando USD como fallback');
-        if (!localStorage.getItem('userCountry')) {
-          setUserCountry(supportedCountries.US);
-          localStorage.setItem('userCountry', 'US');
-          setDetectedLanguage('en');
-          applyLanguage('en');
+        // Nenhuma API funcionou - usar Angola como fallback (maioria dos utilizadores)
+        console.log('⚠️ Todas as APIs de IP falharam, usando AO como fallback');
+        const storedCountry = localStorage.getItem('userCountry');
+        
+        // Só atualizar se não tivermos nenhum país guardado
+        if (!storedCountry) {
+          setUserCountry(supportedCountries.AO);
+          localStorage.setItem('userCountry', 'AO');
+          localStorage.setItem('lastIpDetection', Date.now().toString());
+          setDetectedLanguage('pt');
+          applyLanguage('pt');
         }
       }
     } catch (err) {
-      console.error('Erro ao detectar país por IP:', err);
-      // Em caso de erro - usar USD como fallback internacional
-      if (!localStorage.getItem('userCountry')) {
-        console.log('⚠️ Erro na detecção, usando USD como fallback');
-        setUserCountry(supportedCountries.US);
-        localStorage.setItem('userCountry', 'US');
-        setDetectedLanguage('en');
-        applyLanguage('en');
+      console.error('❌ Erro ao detectar país por IP:', err);
+      // Em caso de erro - manter país existente ou usar Angola
+      const storedCountry = localStorage.getItem('userCountry');
+      if (!storedCountry) {
+        console.log('⚠️ Erro na detecção, usando AO como fallback');
+        setUserCountry(supportedCountries.AO);
+        localStorage.setItem('userCountry', 'AO');
+        setDetectedLanguage('pt');
+        applyLanguage('pt');
       }
     } finally {
       setLoading(false);
@@ -399,6 +491,7 @@ export const useGeoLocation = () => {
     if (country) {
       setUserCountry(country);
       localStorage.setItem('userCountry', countryCode);
+      localStorage.setItem('lastIpDetection', Date.now().toString());
       
       const language = COUNTRY_LANGUAGES[countryCode] || 'pt';
       setDetectedLanguage(language);
@@ -449,7 +542,6 @@ export const useGeoLocation = () => {
       // Detectar país por IP (primeira visita ou cache expirado após 24h)
       console.log('🌍 Detecting country by IP (no recent cache)...');
       await detectCountryByIP();
-      localStorage.setItem('lastIpDetection', now.toString());
       fetchExchangeRates();
     };
     
