@@ -5,7 +5,7 @@ type CheckoutLanguage = 'pt' | 'en' | 'es';
 
 // Países por idioma
 const ENGLISH_COUNTRIES = ['US', 'GB'];
-const SPANISH_COUNTRIES = ['MX', 'CL'];
+const SPANISH_COUNTRIES = ['MX', 'CL', 'AR'];
 
 // Traduções específicas do checkout
 const CHECKOUT_TRANSLATIONS: Record<CheckoutLanguage, Record<string, string>> = {
