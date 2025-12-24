@@ -124,28 +124,17 @@ export default function AdminStats() {
       withdrawalQuery = applyDateFilter(withdrawalQuery, 'updated_at');
       const { data: withdrawalData } = await withdrawalQuery;
 
-      // Get products with approved_by_admin_id for attribution
-      // Use approved_at for date filtering (tracks actual approval date, not last update)
-      let productsApprovedQuery = supabase
-        .from('products')
-        .select('approved_by_admin_id, approved_at')
-        .eq('admin_approved', true)
-        .not('approved_by_admin_id', 'is', null)
-        .not('approved_at', 'is', null);
+      // Get products with approved_by_admin_id for attribution using RPC (bypasses RLS)
+      const { data: productsApprovedData } = await supabase.rpc('get_products_approved_for_admin_stats', {
+        p_start_date: dateFilterStart?.toISOString() || null,
+        p_end_date: dateFilterEnd?.toISOString() || null
+      });
 
-      productsApprovedQuery = applyDateFilter(productsApprovedQuery, 'approved_at');
-      const { data: productsApprovedData } = await productsApprovedQuery;
-
-      // Get total approved products count (for summary card) - only those with approved_by_admin_id
-      let totalApprovedProductsQuery = supabase
-        .from('products')
-        .select('id', { count: 'exact', head: true })
-        .eq('admin_approved', true)
-        .not('approved_by_admin_id', 'is', null)
-        .not('approved_at', 'is', null);
-
-      totalApprovedProductsQuery = applyDateFilter(totalApprovedProductsQuery, 'approved_at');
-      const { count: totalApprovedProducts } = await totalApprovedProductsQuery;
+      // Get total approved products count using RPC (bypasses RLS)
+      const { data: totalApprovedProducts } = await supabase.rpc('count_products_approved_for_admin_stats', {
+        p_start_date: dateFilterStart?.toISOString() || null,
+        p_end_date: dateFilterEnd?.toISOString() || null
+      });
 
       // Fetch banned products from admin_action_logs (product_ban action)
       let bansQuery = supabase
