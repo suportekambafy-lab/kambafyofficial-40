@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,6 +12,13 @@ import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { AdminPageSkeleton } from "@/components/admin/AdminPageSkeleton";
 import { AdminActionBadgeCompact } from "@/components/admin/AdminActionBadge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Product {
   id: string;
@@ -39,6 +46,7 @@ export default function AdminProductApproval() {
   const queryClient = useQueryClient();
   const { admin } = useAdminAuth();
   const [searchTerm, setSearchTerm] = useState("");
+  const [approvedByFilter, setApprovedByFilter] = useState<string>("all");
 
   const { data: products, isLoading } = useQuery({
     queryKey: ["admin-all-products"],
@@ -111,11 +119,38 @@ export default function AdminProductApproval() {
     },
   });
 
-  const filteredProducts = products?.filter((product) =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.profiles.business_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.profiles.full_name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Calcular admins que aprovaram e suas contagens
+  const adminApprovalStats = useMemo(() => {
+    if (!products) return [];
+    
+    const stats: Record<string, { name: string; count: number }> = {};
+    
+    products.forEach((product) => {
+      if (product.admin_approved && product.approved_by_admin_name) {
+        const name = product.approved_by_admin_name;
+        if (!stats[name]) {
+          stats[name] = { name, count: 0 };
+        }
+        stats[name].count++;
+      }
+    });
+    
+    return Object.values(stats).sort((a, b) => b.count - a.count);
+  }, [products]);
+
+  const filteredProducts = products?.filter((product) => {
+    const matchesSearch = 
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.profiles.business_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.profiles.full_name?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesApprovedBy = 
+      approvedByFilter === "all" ||
+      (approvedByFilter === "pending" && !product.admin_approved) ||
+      (product.approved_by_admin_name === approvedByFilter);
+    
+    return matchesSearch && matchesApprovedBy;
+  });
 
   const formatPrice = (price: string) => {
     const numPrice = parseFloat(price);
@@ -166,13 +201,31 @@ export default function AdminProductApproval() {
 
   return (
     <AdminLayout title="Controle do Marketplace" description={`Gerencie quais produtos aparecem no marketplace - Total: ${products?.length || 0} produtos`}>
-      <div className="flex items-center gap-4 mb-6">
+      <div className="flex flex-wrap items-center gap-4 mb-6">
         <Input
           placeholder="Buscar por nome do produto ou vendedor..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="max-w-md"
         />
+        
+        <Select value={approvedByFilter} onValueChange={setApprovedByFilter}>
+          <SelectTrigger className="w-[220px]">
+            <SelectValue placeholder="Aprovado por..." />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos</SelectItem>
+            <SelectItem value="pending">
+              Pendentes ({products?.filter(p => !p.admin_approved).length || 0})
+            </SelectItem>
+            {adminApprovalStats.map((stat) => (
+              <SelectItem key={stat.name} value={stat.name}>
+                {stat.name} ({stat.count})
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        
         <Button
           onClick={handleApproveAll}
           disabled={toggleMarketplaceMutation.isPending || (filteredProducts?.filter(p => !p.admin_approved).length === 0)}
