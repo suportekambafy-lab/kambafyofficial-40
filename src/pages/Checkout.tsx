@@ -451,6 +451,11 @@ const Checkout = () => {
         console.log(`🚨 getDisplayPrice - VALOR JÁ CONVERTIDO CLP: ${displayPrice}`);
         return displayPrice;
       }
+      if (userCountry?.currency === 'ARS') {
+        const displayPrice = `$${priceInKZ.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ARS`;
+        console.log(`🚨 getDisplayPrice - VALOR JÁ CONVERTIDO ARS: ${displayPrice}`);
+        return displayPrice;
+      }
       if (userCountry?.currency === 'MZN') {
         const displayPrice = `${priceInKZ.toFixed(2)} MZN`;
         console.log(`🚨 getDisplayPrice - VALOR JÁ CONVERTIDO MZN: ${displayPrice}`);
@@ -482,6 +487,8 @@ const Checkout = () => {
         displayPrice = `$${customPrice.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN`;
       } else if (userCountry.currency === 'CLP') {
         displayPrice = `$${Math.round(customPrice).toLocaleString('es-CL')} CLP`;
+      } else if (userCountry.currency === 'ARS') {
+        displayPrice = `$${customPrice.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ARS`;
       } else if (userCountry.currency === 'MZN') {
         displayPrice = `${customPrice.toFixed(2)} MZN`;
       } else {
@@ -524,6 +531,8 @@ const Checkout = () => {
       return `$${price.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN`;
     } else if (userCountry.currency === 'CLP') {
       return `$${Math.round(price).toLocaleString('es-CL')} CLP`;
+    } else if (userCountry.currency === 'ARS') {
+      return `$${price.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ARS`;
     } else if (userCountry.currency === 'MZN') {
       return `${price.toFixed(2)} MZN`;
     } else {
@@ -2563,7 +2572,7 @@ const Checkout = () => {
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-green-700 font-medium">{tc('checkout.discountApplied')}</span>
                     <span className="text-green-700 font-bold">
-                      -{formatPrice(couponDiscount)}
+                      -{getDisplayPrice(couponDiscount, true)}
                     </span>
                   </div>
                 </div>
