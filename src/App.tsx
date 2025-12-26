@@ -226,31 +226,33 @@ const App = () => {
                          
                         
                         {/* Admin Routes - Login separado */}
-                       <Route path="/admin/login" element={<OptimizedRoutes.AdminLogin />} />
-                       
-                       {/* Admin Routes - Layout persistente com Outlet */}
-                       <Route path="/admin" element={<AdminProtectedRoute><AdminLayoutWrapper /></AdminProtectedRoute>}>
-                          <Route index element={<OptimizedRoutes.AdminDashboard />} />
-                          <Route path="sales" element={<OptimizedRoutes.AdminSales />} />
-                          <Route path="withdrawals" element={<AdminPermissionRoute requireSuperAdmin={true}><OptimizedRoutes.AdminWithdrawals /></AdminPermissionRoute>} />
-                          <Route path="products" element={<OptimizedRoutes.AdminProducts />} />
-                          <Route path="marketplace" element={<OptimizedRoutes.AdminProductApproval />} />
-                          <Route path="users" element={<OptimizedRoutes.AdminUsers />} />
-                          <Route path="logs" element={<OptimizedRoutes.AdminLogs />} />
-                          <Route path="sellers" element={<OptimizedRoutes.AdminSellers />} />
-                          <Route path="identity" element={<OptimizedRoutes.AdminIdentityVerification />} />
-                          <Route path="management" element={<AdminPermissionRoute requireSuperAdmin={true}><OptimizedRoutes.AdminManagement /></AdminPermissionRoute>} />
-                          <Route path="partners" element={<OptimizedRoutes.AdminPartners />} />
-                          <Route path="seller-reports" element={<OptimizedRoutes.AdminSellerReports />} />
-                          <Route path="retention" element={<AdminPermissionRoute requireSuperAdmin={true}><OptimizedRoutes.AdminRetentionManagement /></AdminPermissionRoute>} />
-                          <Route path="payment-approvals" element={<AdminPermissionRoute requireSuperAdmin={true}><OptimizedRoutes.AdminPaymentApprovals /></AdminPermissionRoute>} />
-                          <Route path="extras" element={<OptimizedRoutes.AdminExtras />} />
-                          <Route path="live" element={<OptimizedRoutes.AdminLiveView />} />
-                          <Route path="refunds" element={<OptimizedRoutes.AdminRefunds />} />
-                          <Route path="apps" element={<OptimizedRoutes.AdminApps />} />
-                          <Route path="member-areas" element={<OptimizedRoutes.AdminMemberAreas />} />
-                          <Route path="stats" element={<AdminPermissionRoute requiredPermission="analytics"><OptimizedRoutes.AdminStats /></AdminPermissionRoute>} />
-                        </Route>
+                        <Route path="/admin/login" element={<OptimizedRoutes.AdminLogin />} />
+                        
+                        {/* Admin Routes - Layout persistente com Outlet */}
+                        <Route path="/admin" element={<AdminProtectedRoute><AdminLayoutWrapper /></AdminProtectedRoute>}>
+                           <Route index element={<OptimizedRoutes.AdminDashboard />} />
+                           <Route path="sales" element={<OptimizedRoutes.AdminSales />} />
+                           <Route path="withdrawals" element={<AdminPermissionRoute requireSuperAdmin={true}><OptimizedRoutes.AdminWithdrawals /></AdminPermissionRoute>} />
+                           <Route path="products" element={<OptimizedRoutes.AdminProducts />} />
+                           <Route path="marketplace" element={<OptimizedRoutes.AdminProductApproval />} />
+                           <Route path="users" element={<OptimizedRoutes.AdminUsers />} />
+                           {/* Compat: rota antiga usada por builds/cache */}
+                           <Route path="usuarios" element={<OptimizedRoutes.AdminUsers />} />
+                           <Route path="logs" element={<OptimizedRoutes.AdminLogs />} />
+                           <Route path="sellers" element={<OptimizedRoutes.AdminSellers />} />
+                           <Route path="identity" element={<OptimizedRoutes.AdminIdentityVerification />} />
+                           <Route path="management" element={<AdminPermissionRoute requireSuperAdmin={true}><OptimizedRoutes.AdminManagement /></AdminPermissionRoute>} />
+                           <Route path="partners" element={<OptimizedRoutes.AdminPartners />} />
+                           <Route path="seller-reports" element={<OptimizedRoutes.AdminSellerReports />} />
+                           <Route path="retention" element={<AdminPermissionRoute requireSuperAdmin={true}><OptimizedRoutes.AdminRetentionManagement /></AdminPermissionRoute>} />
+                           <Route path="payment-approvals" element={<AdminPermissionRoute requireSuperAdmin={true}><OptimizedRoutes.AdminPaymentApprovals /></AdminPermissionRoute>} />
+                           <Route path="extras" element={<OptimizedRoutes.AdminExtras />} />
+                           <Route path="live" element={<OptimizedRoutes.AdminLiveView />} />
+                           <Route path="refunds" element={<OptimizedRoutes.AdminRefunds />} />
+                           <Route path="apps" element={<OptimizedRoutes.AdminApps />} />
+                           <Route path="member-areas" element={<OptimizedRoutes.AdminMemberAreas />} />
+                           <Route path="stats" element={<AdminPermissionRoute requiredPermission="analytics"><OptimizedRoutes.AdminStats /></AdminPermissionRoute>} />
+                         </Route>
                       
                        {/* Partner Routes */}
                        <Route path="/partners/apply" element={<OptimizedRoutes.PartnersApply />} />
