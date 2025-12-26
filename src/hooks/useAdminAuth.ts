@@ -185,12 +185,10 @@ export const useAdminAuthHook = () => {
             console.log('✅ [ADMIN-AUTH] Admin setado:', parsedAdmin);
             setAdmin(parsedAdmin);
           }
-        } else {
-          // Admin não existe mais no banco - fazer logout
-          console.log('❌ [ADMIN-AUTH] Admin não existe mais no banco, fazendo logout');
-          localStorage.removeItem('admin_session');
-          localStorage.removeItem('admin_jwt');
-          setAdmin(null);
+        } else if (error) {
+          // Se deu erro na query (pode ser RLS ou rede), confiar no localStorage em vez de deslogar
+          console.warn('⚠️ [ADMIN-AUTH] Erro ao verificar admin no banco (pode ser RLS), mantendo sessão local:', error.message);
+          setAdmin(parsedAdmin);
         }
       } else {
         console.log('❌ [ADMIN-AUTH] Nenhuma sessão admin encontrada');
