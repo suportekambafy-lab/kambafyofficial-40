@@ -5,6 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from '@/components/ui/pagination';
 import { supabase } from '@/integrations/supabase/client';
 import { FileText, Eye, Download, Filter, Copy, Search, Loader2, LayoutGrid, List } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -67,6 +76,8 @@ export default function AdminProducts() {
   const [selectedProductForReview, setSelectedProductForReview] = useState<ProductWithProfile | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 50;
 
   useEffect(() => {
     if (admin) {
@@ -666,6 +677,7 @@ export default function AdminProducts() {
   };
 
   // Filtrar produtos baseado no filtro selecionado e termo de pesquisa
+  // Por padrão, exclui rascunhos (a menos que o filtro seja explicitamente "rascunho")
   const filteredProducts = products.filter(product => {
     // Filtro por status
     let statusMatch = true;
@@ -676,6 +688,10 @@ export default function AdminProducts() {
     else if (statusFilter === 'em_revisao') statusMatch = product.status === 'Em Revisão';
     else if (statusFilter === 'revisao') statusMatch = product.revision_requested === true;
     else if (statusFilter === 'pendente') statusMatch = product.status === 'Pendente';
+    else if (statusFilter === 'todos') {
+      // No filtro "todos", excluir rascunhos
+      statusMatch = product.status !== 'Rascunho';
+    }
     
     // Filtro por pesquisa
     if (!searchTerm.trim()) return statusMatch;
@@ -691,6 +707,50 @@ export default function AdminProducts() {
     
     return statusMatch && searchMatch;
   });
+
+  // Paginação
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
+
+  // Reset página quando filtros mudam
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter, searchTerm]);
+
+  // Gerar array de páginas para exibição
+  const getPageNumbers = () => {
+    const pages: (number | 'ellipsis')[] = [];
+    const maxVisiblePages = 5;
+    
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      pages.push(1);
+      
+      if (currentPage > 3) {
+        pages.push('ellipsis');
+      }
+      
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+      
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+      
+      if (currentPage < totalPages - 2) {
+        pages.push('ellipsis');
+      }
+      
+      pages.push(totalPages);
+    }
+    
+    return pages;
+  };
 
   if (!admin) {
     return <Navigate to="/admin/login" replace />;
@@ -729,7 +789,7 @@ export default function AdminProducts() {
               <SelectValue placeholder="Filtrar por status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="todos">Todos ({products.length})</SelectItem>
+              <SelectItem value="todos">Todos ({products.filter(p => p.status !== 'Rascunho').length})</SelectItem>
               <SelectItem value="pendente">Aprovar Produtos ({products.filter(p => p.status === 'Pendente' || (!p.admin_approved && p.status !== 'Banido' && p.status !== 'Rascunho' && p.status !== 'Em Revisão' && !p.revision_requested)).length})</SelectItem>
               <SelectItem value="rascunho">Rascunhos ({products.filter(p => p.status === 'Rascunho').length})</SelectItem>
               <SelectItem value="ativo">Ativos ({products.filter(p => p.status === 'Ativo').length})</SelectItem>
@@ -791,7 +851,7 @@ export default function AdminProducts() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredProducts.map((product) => (
+              {paginatedProducts.map((product) => (
                 <TableRow key={product.id}>
                   <TableCell>
                     {product.cover ? (
@@ -917,7 +977,7 @@ export default function AdminProducts() {
                   </TableCell>
                 </TableRow>
               ))}
-              {filteredProducts.length === 0 && (
+              {paginatedProducts.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={9} className="text-center py-12">
                     <div className="h-12 w-12 bg-slate-200 rounded-lg mx-auto mb-3 flex items-center justify-center">
@@ -934,7 +994,7 @@ export default function AdminProducts() {
       ) : (
         /* View Mode: Grid */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filteredProducts.map((product) => (
+          {paginatedProducts.map((product) => (
             <Card key={product.id} className="shadow-sm border hover:shadow-md transition-shadow">
               <CardHeader className="pb-2 p-4">
                 <div className="flex justify-between items-start mb-2">
@@ -1128,7 +1188,7 @@ export default function AdminProducts() {
             </Card>
           ))}
           
-            {filteredProducts.length === 0 && (
+            {paginatedProducts.length === 0 && (
             <Card className="col-span-full shadow-sm border">
               <CardContent className="text-center py-12">
                 <div className="h-12 w-12 bg-slate-200 rounded-lg mx-auto mb-3 flex items-center justify-center">
@@ -1139,6 +1199,48 @@ export default function AdminProducts() {
               </CardContent>
             </Card>
           )}
+        </div>
+      )}
+
+      {/* Paginação */}
+      {totalPages > 1 && (
+        <div className="mt-6 flex flex-col items-center gap-4">
+          <div className="text-sm text-muted-foreground">
+            Exibindo {startIndex + 1}-{Math.min(endIndex, filteredProducts.length)} de {filteredProducts.length} produtos
+          </div>
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious 
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                />
+              </PaginationItem>
+              
+              {getPageNumbers().map((page, index) => (
+                <PaginationItem key={index}>
+                  {page === 'ellipsis' ? (
+                    <PaginationEllipsis />
+                  ) : (
+                    <PaginationLink
+                      onClick={() => setCurrentPage(page)}
+                      isActive={currentPage === page}
+                      className="cursor-pointer"
+                    >
+                      {page}
+                    </PaginationLink>
+                  )}
+                </PaginationItem>
+              ))}
+              
+              <PaginationItem>
+                <PaginationNext 
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
         </div>
       )}
       {/* Modal de Banimento */}
