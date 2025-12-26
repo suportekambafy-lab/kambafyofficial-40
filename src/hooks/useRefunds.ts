@@ -73,6 +73,57 @@ export function useRefunds(userType: 'buyer' | 'seller' | 'admin') {
 
       if (error) throw error;
 
+      // Buscar dados para enviar notificação ao vendedor
+      try {
+        const { data: orderData } = await supabase
+          .from('orders')
+          .select(`
+            id,
+            customer_name,
+            customer_email,
+            amount,
+            currency,
+            product_id,
+            products!inner(name, user_id)
+          `)
+          .eq('id', orderId)
+          .single();
+
+        if (orderData) {
+          // Buscar email do vendedor
+          const { data: sellerProfile } = await supabase
+            .from('profiles')
+            .select('email, full_name')
+            .eq('user_id', orderData.products?.user_id)
+            .single();
+
+          if (sellerProfile?.email) {
+            // Calcular deadline (7 dias)
+            const deadline = new Date();
+            deadline.setDate(deadline.getDate() + 7);
+
+            await supabase.functions.invoke('send-refund-request-notification', {
+              body: {
+                sellerEmail: sellerProfile.email,
+                sellerName: sellerProfile.full_name || 'Vendedor',
+                buyerName: orderData.customer_name,
+                buyerEmail: orderData.customer_email,
+                productName: orderData.products?.name || 'Produto',
+                orderId: orderId,
+                amount: orderData.amount,
+                currency: orderData.currency || 'KZ',
+                reason: reason,
+                refundDeadline: deadline.toISOString(),
+              }
+            });
+            console.log('✅ Notificação de pedido de reembolso enviada ao vendedor');
+          }
+        }
+      } catch (notifyError) {
+        console.error('Erro ao enviar notificação de reembolso:', notifyError);
+        // Não falhar a operação por causa da notificação
+      }
+
       toast({
         title: "Solicitação Enviada",
         description: "Sua solicitação de reembolso foi enviada ao vendedor",
@@ -120,6 +171,16 @@ export function useRefunds(userType: 'buyer' | 'seller' | 'admin') {
 
   const sellerProcessRefund = async (refundId: string, action: 'approve' | 'reject', comment?: string) => {
     try {
+      // Buscar dados do reembolso ANTES de processar
+      const { data: refundData } = await supabase
+        .from('refund_requests')
+        .select(`
+          *,
+          products(name, user_id)
+        `)
+        .eq('id', refundId)
+        .single();
+
       const { data, error } = await supabase.rpc('seller_process_refund', {
         p_refund_id: refundId,
         p_action: action,
@@ -127,6 +188,35 @@ export function useRefunds(userType: 'buyer' | 'seller' | 'admin') {
       });
 
       if (error) throw error;
+
+      // Enviar notificação ao cliente
+      if (refundData) {
+        try {
+          // Buscar nome do vendedor
+          const { data: sellerProfile } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('user_id', refundData.seller_user_id)
+            .single();
+
+          await supabase.functions.invoke('send-refund-response-notification', {
+            body: {
+              buyerEmail: refundData.buyer_email,
+              buyerName: refundData.buyer_email?.split('@')[0] || 'Cliente',
+              sellerName: sellerProfile?.full_name || 'Vendedor',
+              productName: refundData.products?.name || 'Produto',
+              orderId: refundData.order_id,
+              amount: refundData.amount,
+              currency: refundData.currency || 'KZ',
+              status: action === 'approve' ? 'approved' : 'rejected',
+              sellerComment: comment,
+            }
+          });
+          console.log('✅ Notificação de resposta de reembolso enviada ao cliente');
+        } catch (notifyError) {
+          console.error('Erro ao enviar notificação ao cliente:', notifyError);
+        }
+      }
 
       toast({
         title: action === 'approve' ? "Reembolso Aprovado" : "Reembolso Rejeitado",
@@ -150,6 +240,16 @@ export function useRefunds(userType: 'buyer' | 'seller' | 'admin') {
 
   const adminProcessRefund = async (refundId: string, action: 'approve' | 'reject', comment?: string, adminEmail?: string) => {
     try {
+      // Buscar dados do reembolso ANTES de processar
+      const { data: refundData } = await supabase
+        .from('refund_requests')
+        .select(`
+          *,
+          products(name, user_id)
+        `)
+        .eq('id', refundId)
+        .single();
+
       const { data, error } = await supabase.rpc('admin_process_refund', {
         p_refund_id: refundId,
         p_action: action,
@@ -158,6 +258,35 @@ export function useRefunds(userType: 'buyer' | 'seller' | 'admin') {
       });
 
       if (error) throw error;
+
+      // Enviar notificação ao cliente
+      if (refundData) {
+        try {
+          // Buscar nome do vendedor
+          const { data: sellerProfile } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('user_id', refundData.seller_user_id)
+            .single();
+
+          await supabase.functions.invoke('send-refund-response-notification', {
+            body: {
+              buyerEmail: refundData.buyer_email,
+              buyerName: refundData.buyer_email?.split('@')[0] || 'Cliente',
+              sellerName: sellerProfile?.full_name || 'Vendedor',
+              productName: refundData.products?.name || 'Produto',
+              orderId: refundData.order_id,
+              amount: refundData.amount,
+              currency: refundData.currency || 'KZ',
+              status: action === 'approve' ? 'approved' : 'rejected',
+              adminComment: comment,
+            }
+          });
+          console.log('✅ Notificação de resposta de reembolso (admin) enviada ao cliente');
+        } catch (notifyError) {
+          console.error('Erro ao enviar notificação ao cliente:', notifyError);
+        }
+      }
 
       toast({
         title: action === 'approve' ? "Reembolso Aprovado pelo Admin" : "Reembolso Rejeitado pelo Admin",

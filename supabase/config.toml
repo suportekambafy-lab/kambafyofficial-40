@@ -239,3 +239,9 @@ verify_jwt = false
 
 [functions.auto-process-missing-access]
 verify_jwt = false
+
+[functions.send-refund-request-notification]
+verify_jwt = false
+
+[functions.send-refund-response-notification]
+verify_jwt = false
