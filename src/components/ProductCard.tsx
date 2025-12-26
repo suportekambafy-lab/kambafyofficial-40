@@ -207,8 +207,31 @@ export const ProductCard = memo(({ product, onEdit, onShare, onDelete, onToggleS
                   </div>
                 )}
               </div>
+
+              {/* Botão de Pedir Revisão para produtos banidos */}
+              {product.status === 'Banido' && !product.revision_requested && onRequestRevision && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onRequestRevision(product)}
+                  className="w-full text-xs h-8 text-orange-600 border-orange-300 hover:bg-orange-50"
+                >
+                  <AlertCircle className="w-3 h-3 mr-1" />
+                  <span>Pedir Revisão</span>
+                </Button>
+              )}
               
-              {/* Second row - Share and Delete (no revision request option) */}
+              {/* Mensagem se revisão já foi solicitada */}
+              {product.status === 'Banido' && product.revision_requested && (
+                <div className="w-full bg-blue-50 border border-blue-200 rounded-md px-3 py-2 text-center">
+                  <p className="text-xs text-blue-700 font-medium flex items-center justify-center gap-1">
+                    <RefreshCw className="w-3 h-3" />
+                    Revisão solicitada
+                  </p>
+                </div>
+              )}
+              
+              {/* Second row - Share and Delete */}
               <div className="flex gap-2">
                 <Button
                   variant="outline"
