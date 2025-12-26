@@ -146,6 +146,12 @@ export default function AdminStats() {
       });
 
       // Fetch banned products from admin_action_logs (product_ban action)
+      // Mapeamento de emails antigos para emails atuais de admins
+      const oldEmailMapping: Record<string, string> = {
+        'suporte@kambafy.com': 'fabioluciano@kambafy.com',
+        'amadoruben203@gmail.com': 'fabioluciano@kambafy.com'
+      };
+      
       let bansQuery = supabase
         .from('admin_action_logs')
         .select('admin_email, created_at')
@@ -238,15 +244,17 @@ export default function AdminStats() {
       });
 
       // Process withdrawal data by admin_processed_by (UUID)
+      // CORRIGIDO: Os status reais no banco são 'aprovado' e 'rejeitado' (não 'completed'/'approved'/'rejected')
       withdrawalData?.forEach(item => {
         const stat = statsMap.get(item.admin_processed_by);
         if (stat) {
-          if (item.status === 'completed' || item.status === 'approved' || item.status === 'aprovado') {
+          if (item.status === 'aprovado') {
             stat.saques_aprovados++;
-          } else if (item.status === 'rejected' || item.status === 'rejeitado') {
+            stat.total_acoes++;
+          } else if (item.status === 'rejeitado') {
             stat.saques_rejeitados++;
+            stat.total_acoes++;
           }
-          stat.total_acoes++;
         }
       });
 
@@ -262,9 +270,14 @@ export default function AdminStats() {
         }
       });
 
-      // Process bans data by email
+      // Process bans data by email (com mapeamento de emails antigos)
       bansData?.forEach(item => {
-        const adminId = adminByEmail.get(item.admin_email?.toLowerCase() || '');
+        const emailLower = item.admin_email?.toLowerCase() || '';
+        // Tentar primeiro o email direto, depois o mapeamento de emails antigos
+        let adminId = adminByEmail.get(emailLower);
+        if (!adminId && oldEmailMapping[emailLower]) {
+          adminId = adminByEmail.get(oldEmailMapping[emailLower].toLowerCase());
+        }
         if (adminId) {
           const stat = statsMap.get(adminId);
           if (stat) {
