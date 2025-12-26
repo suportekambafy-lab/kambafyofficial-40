@@ -245,3 +245,6 @@ verify_jwt = false
 
 [functions.send-refund-response-notification]
 verify_jwt = false
+
+[functions.send-report-email]
+verify_jwt = false
