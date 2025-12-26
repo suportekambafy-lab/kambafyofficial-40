@@ -158,6 +158,11 @@ export default function AdminRefunds() {
       r.buyer_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       r.products?.name?.toLowerCase().includes(searchTerm.toLowerCase());
     
+    // Filtro especial para "disputas" (rejeitado pelo vendedor)
+    if (statusFilter === 'disputed') {
+      return matchesSearch && r.status === 'rejected_by_seller';
+    }
+    
     const matchesStatus = statusFilter === 'all' || r.status === statusFilter;
     
     return matchesSearch && matchesStatus;
@@ -239,6 +244,7 @@ export default function AdminRefunds() {
             </SelectTrigger>
             <SelectContent className="bg-background border shadow-lg z-50">
               <SelectItem value="all">Todos os Status</SelectItem>
+              <SelectItem value="disputed">Disputas</SelectItem>
               <SelectItem value="pending">Pendente</SelectItem>
               <SelectItem value="rejected_by_seller">Rejeitado (Vendedor)</SelectItem>
               <SelectItem value="approved_by_seller">Aprovado (Vendedor)</SelectItem>
