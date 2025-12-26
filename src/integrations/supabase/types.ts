@@ -4748,6 +4748,26 @@ export type Database = {
           id: string
         }[]
       }
+      get_profiles_for_admin_count: {
+        Args: { p_search?: string }
+        Returns: number
+      }
+      get_profiles_for_admin_paginated: {
+        Args: { p_limit?: number; p_offset?: number; p_search?: string }
+        Returns: {
+          account_holder: string
+          avatar_url: string
+          ban_reason: string
+          banned: boolean
+          bio: string
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          is_creator: boolean
+          user_id: string
+        }[]
+      }
       get_public_product_data: {
         Args: { p_product_id: string }
         Returns: {

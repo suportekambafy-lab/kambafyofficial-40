@@ -61,7 +61,7 @@ export default function AdminUsers() {
   const [creatorsCount, setCreatorsCount] = useState(0);
   const [filteredCount, setFilteredCount] = useState(0);
 
-  const itemsPerPage = 10;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   useEffect(() => {
     if (!admin) return;
@@ -73,7 +73,7 @@ export default function AdminUsers() {
     if (!admin) return;
     void loadUsers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [admin, currentPage, searchTerm]);
+  }, [admin, currentPage, itemsPerPage, searchTerm]);
 
   const refreshStats = async () => {
     try {
@@ -96,42 +96,39 @@ export default function AdminUsers() {
     try {
       setLoading(true);
 
-      const from = (currentPage - 1) * itemsPerPage;
-      const to = from + itemsPerPage - 1;
+      const offset = (currentPage - 1) * itemsPerPage;
+      const searchParam = searchTerm.trim() || null;
 
-      // Usar RPC para buscar usuários paginados (bypassa RLS)
-      const { data: allData, error: rpcError } = await supabase.rpc('get_all_profiles_for_admin');
+      // Buscar usuários com paginação via RPC (bypassa limite de 1000)
+      const [usersRes, countRes] = await Promise.all([
+        supabase.rpc('get_profiles_for_admin_paginated', {
+          p_search: searchParam,
+          p_limit: itemsPerPage,
+          p_offset: offset
+        }),
+        supabase.rpc('get_profiles_for_admin_count', {
+          p_search: searchParam
+        })
+      ]);
 
-      if (rpcError) {
-        console.error('Erro ao carregar usuários via RPC:', rpcError);
+      if (usersRes.error) {
+        console.error('Erro ao carregar usuários via RPC:', usersRes.error);
         toast({
           title: 'Erro',
-          description: 'Erro ao carregar usuários: ' + rpcError.message,
+          description: 'Erro ao carregar usuários: ' + usersRes.error.message,
           variant: 'destructive',
         });
         return;
       }
 
-      let filtered = (allData as UserProfile[]) || [];
-
-      // Filtrar por termo de busca no cliente
-      const term = searchTerm.trim().toLowerCase();
-      if (term) {
-        filtered = filtered.filter(
-          (u) =>
-            u.full_name?.toLowerCase().includes(term) ||
-            u.email?.toLowerCase().includes(term)
-        );
-      }
-
-      setFilteredCount(filtered.length);
-      setUsers(filtered.slice(from, to + 1));
+      setUsers((usersRes.data as UserProfile[]) || []);
+      setFilteredCount(Number(countRes.data) || 0);
     } catch (error) {
       console.error('Error loading users:', error);
       toast({
         title: 'Erro',
         description: 'Erro inesperado ao carregar usuários',
-        variant: 'destructive',
+        variant: 'destructive'
       });
     } finally {
       setLoading(false);
@@ -639,7 +636,7 @@ export default function AdminUsers() {
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
-            <Select value={String(itemsPerPage)} onValueChange={(v) => setCurrentPage(1)}>
+            <Select value={String(itemsPerPage)} onValueChange={(v) => { setItemsPerPage(Number(v)); setCurrentPage(1); }}>
               <SelectTrigger className="w-16 h-8 border-[hsl(var(--admin-border))]">
                 <SelectValue />
               </SelectTrigger>
@@ -647,6 +644,7 @@ export default function AdminUsers() {
                 <SelectItem value="10">10</SelectItem>
                 <SelectItem value="25">25</SelectItem>
                 <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
               </SelectContent>
             </Select>
           </div>
