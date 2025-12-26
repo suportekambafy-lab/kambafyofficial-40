@@ -77,19 +77,38 @@ export default function AdminProducts() {
 
   const loadProducts = async () => {
     try {
-      console.log('Carregando produtos via RPC admin...');
+      console.log('Carregando produtos via RPC admin com paginação...');
       
-      // Buscar TODOS os produtos usando RPC (bypassa RLS)
-      const { data: allProducts, error: productsError } = await supabase.rpc('get_all_products_for_admin');
+      // Buscar TODOS os produtos usando paginação para ultrapassar o limite de 1000
+      const BATCH_SIZE = 1000;
+      let allProducts: any[] = [];
+      let offset = 0;
+      let hasMore = true;
 
-      if (productsError) {
-        console.error('Erro ao carregar produtos:', productsError);
-        toast.error('Erro ao carregar produtos: ' + productsError.message);
-        return;
+      while (hasMore) {
+        const { data: batch, error: batchError } = await supabase.rpc('get_all_products_for_admin_paginated', {
+          p_limit: BATCH_SIZE,
+          p_offset: offset
+        });
+
+        if (batchError) {
+          console.error('Erro ao carregar produtos (lote):', batchError);
+          toast.error('Erro ao carregar produtos: ' + batchError.message);
+          return;
+        }
+
+        if (!batch || batch.length === 0) {
+          hasMore = false;
+        } else {
+          allProducts = [...allProducts, ...batch];
+          offset += BATCH_SIZE;
+          hasMore = batch.length === BATCH_SIZE;
+          console.log(`Carregados ${allProducts.length} produtos...`);
+        }
       }
 
-      const productsData = allProducts || [];
-      console.log('Produtos encontrados:', productsData.length);
+      const productsData = allProducts;
+      console.log('Total de produtos encontrados:', productsData.length);
 
       // Depois buscar os perfis dos usuários (em lotes para evitar URL muito longa)
       if (productsData && productsData.length > 0) {
@@ -141,34 +160,7 @@ export default function AdminProducts() {
           profiles: allProfiles.find(p => p.user_id === product.user_id) || null
         }));
 
-        console.log('Resultado final:', productsWithProfiles);
-        
-        // Debug específico para produtos com revisão solicitada (qualquer status)
-        const productsWithRevision = productsWithProfiles.filter(p => p.revision_requested);
-        const activeWithRevision = productsWithProfiles.filter(p => 
-          p.status === 'Ativo' && p.revision_requested
-        );
-        const bannedWithRevision = productsWithProfiles.filter(p => 
-          p.status === 'Banido' && p.revision_requested
-        );
-        
-        console.log('📊 Debug produtos com revisão solicitada:');
-        console.log(`- Total produtos: ${productsWithProfiles.length}`);
-        console.log(`- TOTAL com revisão solicitada: ${productsWithRevision.length}`);
-        console.log(`- Ativos com revisão solicitada: ${activeWithRevision.length}`);
-        console.log(`- Banidos com revisão solicitada: ${bannedWithRevision.length}`);
-        
-        if (productsWithRevision.length > 0) {
-          console.log('📝 Produtos com revisão solicitada:', productsWithRevision.map(p => ({
-            id: p.id,
-            name: p.name,
-            status: p.status,
-            revision_requested: p.revision_requested,
-            revision_requested_at: p.revision_requested_at
-          })));
-        } else {
-          console.log('ℹ️ Nenhum produto com revisão solicitada encontrado');
-        }
+        console.log('Resultado final:', productsWithProfiles.length, 'produtos com perfis');
         
         setProducts(productsWithProfiles);
       } else {

@@ -4565,6 +4565,33 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_all_products_for_admin_paginated: {
+        Args: { p_limit?: number; p_offset?: number }
+        Returns: {
+          admin_approved: boolean
+          approved_by_admin_id: string
+          approved_by_admin_name: string
+          ban_reason: string
+          banned_by_admin_id: string
+          banned_by_admin_name: string
+          cover: string
+          created_at: string
+          description: string
+          fantasy_name: string
+          id: string
+          name: string
+          price: string
+          revision_documents: Json
+          revision_explanation: string
+          revision_requested: boolean
+          revision_requested_at: string
+          sales: number
+          share_link: string
+          status: string
+          type: string
+          user_id: string
+        }[]
+      }
       get_all_profiles_for_admin: {
         Args: never
         Returns: {
