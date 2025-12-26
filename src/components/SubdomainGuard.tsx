@@ -241,19 +241,20 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
       }
     } else if (currentSubdomain === 'admin') {
       // admin.kambafy.com: por padrão, FORÇAR apenas rotas /admin
-      // EXCEÇÃO: durante impersonation, permitir /vendedor no MESMO subdomínio para manter a sessão do Supabase
+      // EXCEÇÃO: durante impersonation, permitir /vendedor e /meus-acessos no MESMO subdomínio
+      // para manter a sessão do Supabase (localStorage não compartilha entre subdomínios).
       const isImpersonating = !!localStorage.getItem('impersonation_data');
 
-      if (currentPath.startsWith('/vendedor')) {
+      if (currentPath.startsWith('/vendedor') || currentPath.startsWith('/meus-acessos')) {
         if (isImpersonating) {
-          console.log('✅ SubdomainGuard: Admin impersonation ativa - permitindo /vendedor no admin', {
+          console.log('✅ SubdomainGuard: Admin impersonation ativa - permitindo rota no admin', {
             currentPath,
             currentSubdomain
           });
           return;
         }
 
-        console.log('🚫 SubdomainGuard: /vendedor no admin sem impersonation - voltando ao login admin', {
+        console.log('🚫 SubdomainGuard: Rota de app no admin sem impersonation - voltando ao login admin', {
           currentPath
         });
         window.location.href = window.location.protocol + '//' + window.location.host + '/admin/login';
