@@ -69,7 +69,7 @@ export default function AdminProducts() {
   const [products, setProducts] = useState<ProductWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<string>('todos');
+  const [statusFilter, setStatusFilter] = useState<string>('pendente');
   const [banModalOpen, setBanModalOpen] = useState(false);
   const [selectedProductForBan, setSelectedProductForBan] = useState<{ id: string; name: string } | null>(null);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
