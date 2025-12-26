@@ -31,20 +31,24 @@ export const useAdminAuthHook = () => {
 
   useEffect(() => {
     checkAdminSession();
-    
+
     // Verificar e atualizar dados do admin a cada 30 segundos
     const interval = setInterval(async () => {
+      // Durante impersonation, não consultar o banco (RLS vai falhar com user impersonado)
+      const isImpersonating = !!localStorage.getItem('impersonation_data');
+      if (isImpersonating) return;
+
       const adminData = localStorage.getItem('admin_session');
       if (adminData) {
         const parsedAdmin = JSON.parse(adminData);
-        
+
         // Buscar dados atualizados do banco
         const { data, error } = await supabase
           .from('admin_users')
           .select('*')
           .eq('email', parsedAdmin.email)
           .single();
-        
+
         if (data && !error) {
           // Verificar se o role mudou
           if (data.role !== parsedAdmin.role || data.is_active !== parsedAdmin.is_active) {
@@ -54,7 +58,7 @@ export const useAdminAuthHook = () => {
               oldActive: parsedAdmin.is_active,
               newActive: data.is_active
             });
-            
+
             const updatedAdmin: AdminUser = {
               id: data.id,
               email: data.email,
@@ -64,14 +68,14 @@ export const useAdminAuthHook = () => {
               created_at: data.created_at,
               updated_at: data.updated_at
             };
-            
+
             setAdmin(updatedAdmin);
             localStorage.setItem('admin_session', JSON.stringify(updatedAdmin));
           }
         }
       }
     }, 30000); // Verificar a cada 30 segundos
-    
+
     return () => clearInterval(interval);
   }, []);
 
