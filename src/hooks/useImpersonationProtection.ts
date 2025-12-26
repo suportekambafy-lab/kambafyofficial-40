@@ -121,43 +121,91 @@ export const useImpersonationProtection = (): ImpersonationProtectionResult => {
       // Fazer signOut local do usuário impersonado
       await supabase.auth.signOut({ scope: 'local' });
 
+      const adminSessionRaw = localStorage.getItem('admin_session');
+      const adminEmail = (() => {
+        if (!adminSessionRaw) return null;
+        try {
+          const parsed = JSON.parse(adminSessionRaw);
+          return typeof parsed?.email === 'string' ? parsed.email : null;
+        } catch {
+          return null;
+        }
+      })();
+
       // Tentar restaurar a sessão Supabase do admin
       const backupSessionRaw = localStorage.getItem('admin_supabase_session_backup');
       let sessionRestored = false;
-      
-      if (backupSessionRaw) {
-        try {
-          const backup = JSON.parse(backupSessionRaw);
-          console.log('🔁 Restaurando sessão Supabase do admin...');
-          
-          const { error: restoreError } = await supabase.auth.setSession({
-            access_token: backup.access_token,
-            refresh_token: backup.refresh_token,
-          });
 
-          if (!restoreError) {
+      if (backupSessionRaw && adminEmail) {
+        try {
+          const backup = JSON.parse(backupSessionRaw) as {
+            access_token?: string;
+            refresh_token?: string;
+          };
+
+          if (!backup?.access_token || !backup?.refresh_token) {
+            throw new Error('Backup de sessão incompleto (tokens ausentes)');
+          }
+
+          console.log('🔁 Restaurando sessão Supabase do admin...');
+
+          // 1) Tentar setSession
+          try {
+            const { data, error } = await supabase.auth.setSession({
+              access_token: backup.access_token,
+              refresh_token: backup.refresh_token,
+            });
+
+            if (error || !data.session) {
+              throw error ?? new Error('Sessão retornou vazia');
+            }
+          } catch (e) {
+            // 2) Fallback: refreshSession direto pelo refresh_token
+            console.warn('⚠️ setSession falhou, tentando refreshSession...', e);
+            const { data, error } = await supabase.auth.refreshSession({
+              refresh_token: backup.refresh_token,
+            });
+
+            if (error || !data.session) {
+              throw error ?? new Error('refreshSession retornou vazia');
+            }
+          }
+
+          // Verificar se realmente virou sessão do admin
+          const { data: verify } = await supabase.auth.getSession();
+          const currentEmail = verify.session?.user?.email ?? null;
+
+          sessionRestored = currentEmail === adminEmail;
+
+          if (sessionRestored) {
             console.log('✅ Sessão Supabase do admin restaurada');
             localStorage.removeItem('admin_supabase_session_backup');
-            sessionRestored = true;
-            
+
             // Com sessão restaurada, podemos atualizar o registro
             if (sessionId) {
               await supabase
                 .from('admin_impersonation_sessions')
                 .update({
                   is_active: false,
-                  ended_at: new Date().toISOString()
+                  ended_at: new Date().toISOString(),
                 })
                 .eq('id', sessionId);
             }
           } else {
-            console.warn('⚠️ Falha ao restaurar sessão Supabase, sessão expirou. Admin precisa relogar.');
+            console.warn('⚠️ Sessão não corresponde ao admin após restore', {
+              adminEmail,
+              currentEmail,
+            });
             localStorage.removeItem('admin_supabase_session_backup');
           }
         } catch (e) {
           console.error('❌ Erro ao restaurar sessão backup:', e);
           localStorage.removeItem('admin_supabase_session_backup');
         }
+      } else {
+        if (!adminEmail) console.warn('⚠️ Admin email não encontrado (admin_session ausente/corrompida)');
+        if (!backupSessionRaw) console.warn('⚠️ Backup de sessão do admin não encontrado');
+        localStorage.removeItem('admin_supabase_session_backup');
       }
 
       toast({

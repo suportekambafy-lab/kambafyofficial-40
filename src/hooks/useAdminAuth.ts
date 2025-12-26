@@ -111,104 +111,146 @@ export const useAdminAuthHook = () => {
           return;
         }
 
-        const backupSessionRaw = localStorage.getItem('admin_supabase_session_backup');
-        let sessionRestored = false;
+         const backupSessionRaw = localStorage.getItem('admin_supabase_session_backup');
+         let sessionRestored = false;
 
-        if (backupSessionRaw) {
-          const needsRestore =
-            !authData.session ||
-            (authData.session.user?.email && authData.session.user.email !== parsedAdmin.email);
+         const attemptRestoreFromBackup = async (backupRaw: string) => {
+           const backup = JSON.parse(backupRaw) as { access_token?: string; refresh_token?: string };
 
-          if (needsRestore) {
-            try {
-              const backup = JSON.parse(backupSessionRaw) as {
-                access_token: string;
-                refresh_token: string;
-              };
+           if (!backup?.access_token || !backup?.refresh_token) {
+             throw new Error('Backup de sessão incompleto (tokens ausentes)');
+           }
 
-              console.log('🔁 [ADMIN-AUTH] Restaurando sessão Supabase do admin...');
-              const { data: newSession, error: restoreError } = await supabase.auth.setSession({
-                access_token: backup.access_token,
-                refresh_token: backup.refresh_token,
-              });
+           // 1) setSession
+           try {
+             const { data, error } = await supabase.auth.setSession({
+               access_token: backup.access_token,
+               refresh_token: backup.refresh_token,
+             });
 
-              if (restoreError || !newSession.session) {
-                console.warn('⚠️ [ADMIN-AUTH] Sessão backup expirou, admin precisa relogar');
-                localStorage.removeItem('admin_supabase_session_backup');
-                // Não fazer logout completo - apenas limpar backup
-              } else {
-                console.log('✅ [ADMIN-AUTH] Sessão Supabase do admin restaurada');
-                localStorage.removeItem('admin_supabase_session_backup');
-                sessionRestored = true;
-              }
-            } catch (e) {
-              console.error('❌ [ADMIN-AUTH] Erro ao restaurar sessão backup:', e);
-              localStorage.removeItem('admin_supabase_session_backup');
-            }
-          } else {
-            // Sessão já é do admin correto, não precisa restaurar
-            sessionRestored = true;
-            localStorage.removeItem('admin_supabase_session_backup');
-          }
-        } else if (authData.session?.user?.email === parsedAdmin.email) {
-          // Já tem sessão válida do admin
-          sessionRestored = true;
-        }
-        
-        // Se a sessão Supabase foi restaurada ou já era válida, verificar no banco
-        if (sessionRestored) {
-          const { data, error } = await supabase
-            .from('admin_users')
-            .select('*')
-            .eq('email', parsedAdmin.email)
-            .single();
-          
-          console.log('🔍 [ADMIN-AUTH] Dados do banco:', { data, error });
-          
-          if (data && !error) {
-            // Verificar se admin está ativo
-            if (!data.is_active) {
-              console.log('⚠️ [ADMIN-AUTH] Admin desativado, fazendo logout');
-              localStorage.removeItem('admin_session');
-              localStorage.removeItem('admin_jwt');
-              setAdmin(null);
-              return;
-            }
-            
-            // Verificar se o role mudou
-            if (data.role !== parsedAdmin.role) {
-              console.log('🔄 [ADMIN-AUTH] Role atualizado detectado:', {
-                oldRole: parsedAdmin.role,
-                newRole: data.role
-              });
-              
-              const updatedAdmin: AdminUser = {
-                id: data.id,
-                email: data.email,
-                full_name: data.full_name,
-                role: data.role,
-                is_active: data.is_active,
-                created_at: data.created_at,
-                updated_at: data.updated_at
-              };
-              
-              setAdmin(updatedAdmin);
-              localStorage.setItem('admin_session', JSON.stringify(updatedAdmin));
-            } else {
-              console.log('✅ [ADMIN-AUTH] Admin setado:', parsedAdmin);
-              setAdmin(parsedAdmin);
-            }
-          } else if (error) {
-            // Se deu erro na query (pode ser RLS ou rede), confiar no localStorage em vez de deslogar
-            console.warn('⚠️ [ADMIN-AUTH] Erro ao verificar admin no banco, mantendo sessão local:', error.message);
-            setAdmin(parsedAdmin);
-          }
-        } else {
-          // Sessão Supabase não está válida, mas temos dados no localStorage
-          // Confiar no JWT customizado do admin e manter o estado
-          console.log('⚠️ [ADMIN-AUTH] Sessão Supabase não restaurada, usando dados locais');
-          setAdmin(parsedAdmin);
-        }
+             if (error || !data.session) {
+               throw error ?? new Error('Sessão retornou vazia');
+             }
+           } catch (e) {
+             // 2) Fallback: refreshSession direto pelo refresh_token
+             console.warn('⚠️ [ADMIN-AUTH] setSession falhou, tentando refreshSession...', e);
+             const { data, error } = await supabase.auth.refreshSession({
+               refresh_token: backup.refresh_token,
+             });
+
+             if (error || !data.session) {
+               throw error ?? new Error('refreshSession retornou vazia');
+             }
+           }
+
+           const { data: verify } = await supabase.auth.getSession();
+           return verify.session?.user?.email ?? null;
+         };
+
+         // Verificar/Restaurar sessão Supabase para o email do admin
+         if (backupSessionRaw) {
+           const needsRestore =
+             !authData.session ||
+             (authData.session.user?.email && authData.session.user.email !== parsedAdmin.email);
+
+           if (needsRestore) {
+             try {
+               console.log('🔁 [ADMIN-AUTH] Restaurando sessão Supabase do admin...');
+               const restoredEmail = await attemptRestoreFromBackup(backupSessionRaw);
+
+               if (restoredEmail === parsedAdmin.email) {
+                 console.log('✅ [ADMIN-AUTH] Sessão Supabase do admin restaurada');
+                 sessionRestored = true;
+                 localStorage.removeItem('admin_supabase_session_backup');
+               } else {
+                 console.warn('⚠️ [ADMIN-AUTH] Restore não bate com o admin esperado', {
+                   expected: parsedAdmin.email,
+                   got: restoredEmail,
+                 });
+                 localStorage.removeItem('admin_supabase_session_backup');
+               }
+             } catch (e) {
+               console.error('❌ [ADMIN-AUTH] Erro ao restaurar sessão backup:', e);
+               localStorage.removeItem('admin_supabase_session_backup');
+             }
+           } else {
+             // Sessão já é do admin correto, não precisa restaurar
+             sessionRestored = true;
+             localStorage.removeItem('admin_supabase_session_backup');
+           }
+         } else if (authData.session?.user?.email === parsedAdmin.email) {
+           // Já tem sessão válida do admin
+           sessionRestored = true;
+         }
+
+         // Se ainda não temos sessão Supabase do admin, evitar ficar no admin "sem dados"
+         if (!sessionRestored) {
+           console.warn('⚠️ [ADMIN-AUTH] Sem sessão Supabase do admin (RLS vai bloquear).');
+
+           // Em rotas admin, forçar re-login
+           if (window.location.pathname.startsWith('/admin') && !window.location.pathname.startsWith('/admin/login')) {
+             localStorage.removeItem('admin_session');
+             localStorage.removeItem('admin_jwt');
+             localStorage.removeItem('admin_permissions_timestamp');
+             localStorage.removeItem('admin_supabase_session_backup');
+             window.location.href = '/admin/login';
+             return;
+           }
+
+           // Fora de /admin, manter estado local (ex.: navegação pública)
+           setAdmin(parsedAdmin);
+           return;
+         }
+         
+         // Se a sessão Supabase foi restaurada ou já era válida, verificar no banco
+         {
+           const { data, error } = await supabase
+             .from('admin_users')
+             .select('*')
+             .eq('email', parsedAdmin.email)
+             .single();
+           
+           console.log('🔍 [ADMIN-AUTH] Dados do banco:', { data, error });
+           
+           if (data && !error) {
+             // Verificar se admin está ativo
+             if (!data.is_active) {
+               console.log('⚠️ [ADMIN-AUTH] Admin desativado, fazendo logout');
+               localStorage.removeItem('admin_session');
+               localStorage.removeItem('admin_jwt');
+               setAdmin(null);
+               return;
+             }
+             
+             // Verificar se o role mudou
+             if (data.role !== parsedAdmin.role) {
+               console.log('🔄 [ADMIN-AUTH] Role atualizado detectado:', {
+                 oldRole: parsedAdmin.role,
+                 newRole: data.role
+               });
+               
+               const updatedAdmin: AdminUser = {
+                 id: data.id,
+                 email: data.email,
+                 full_name: data.full_name,
+                 role: data.role,
+                 is_active: data.is_active,
+                 created_at: data.created_at,
+                 updated_at: data.updated_at
+               };
+               
+               setAdmin(updatedAdmin);
+               localStorage.setItem('admin_session', JSON.stringify(updatedAdmin));
+             } else {
+               console.log('✅ [ADMIN-AUTH] Admin setado:', parsedAdmin);
+               setAdmin(parsedAdmin);
+             }
+           } else if (error) {
+             // Se deu erro na query (pode ser RLS ou rede), confiar no localStorage em vez de deslogar
+             console.warn('⚠️ [ADMIN-AUTH] Erro ao verificar admin no banco, mantendo sessão local:', error.message);
+             setAdmin(parsedAdmin);
+           }
+         }
       } else {
         console.log('❌ [ADMIN-AUTH] Nenhuma sessão admin encontrada');
       }
