@@ -210,6 +210,7 @@ export function useRefunds(userType: 'buyer' | 'seller' | 'admin') {
               currency: refundData.currency || 'KZ',
               status: action === 'approve' ? 'approved' : 'rejected',
               sellerComment: comment,
+              rejectedBy: action === 'reject' ? 'seller' : undefined,
             }
           });
           console.log('✅ Notificação de resposta de reembolso enviada ao cliente');
@@ -280,6 +281,7 @@ export function useRefunds(userType: 'buyer' | 'seller' | 'admin') {
               currency: refundData.currency || 'KZ',
               status: action === 'approve' ? 'approved' : 'rejected',
               adminComment: comment,
+              rejectedBy: action === 'reject' ? 'admin' : undefined,
             }
           });
           console.log('✅ Notificação de resposta de reembolso (admin) enviada ao cliente');

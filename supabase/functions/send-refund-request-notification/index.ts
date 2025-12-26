@@ -21,6 +21,24 @@ interface RefundRequestNotificationPayload {
   refundDeadline: string;
 }
 
+// Formatar moeda corretamente
+const formatCurrency = (amount: number, currency: string): string => {
+  const formatted = new Intl.NumberFormat('pt-AO', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+  
+  switch (currency?.toUpperCase()) {
+    case 'EUR': return `€${formatted}`;
+    case 'GBP': return `£${formatted}`;
+    case 'USD': return `$${formatted}`;
+    case 'MZN': return `${formatted} MZN`;
+    case 'KZ':
+    case 'AOA':
+    default: return `${formatted} KZ`;
+  }
+};
+
 const handler = async (req: Request): Promise<Response> => {
   console.log("📧 [send-refund-request-notification] Iniciando...");
 
@@ -58,10 +76,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const formattedAmount = new Intl.NumberFormat('pt-AO', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(amount);
+    const formattedAmount = formatCurrency(amount, currency);
 
     const deadlineDate = refundDeadline 
       ? new Date(refundDeadline).toLocaleDateString('pt-BR', {
@@ -114,27 +129,27 @@ const handler = async (req: Request): Promise<Response> => {
                           <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                             <tr>
                               <td style="padding: 8px 0; color: #78350f; font-size: 14px;">
-                                <strong>Pedido:</strong> #${orderId}
+                                <strong>📦 Pedido:</strong> #${orderId}
                               </td>
                             </tr>
                             <tr>
                               <td style="padding: 8px 0; color: #78350f; font-size: 14px;">
-                                <strong>Produto:</strong> ${productName}
+                                <strong>🛒 Produto:</strong> ${productName}
                               </td>
                             </tr>
                             <tr>
                               <td style="padding: 8px 0; color: #78350f; font-size: 14px;">
-                                <strong>Valor:</strong> ${formattedAmount} ${currency || 'KZ'}
+                                <strong>💰 Valor:</strong> ${formattedAmount}
                               </td>
                             </tr>
                             <tr>
                               <td style="padding: 8px 0; color: #78350f; font-size: 14px;">
-                                <strong>Cliente:</strong> ${buyerName} (${buyerEmail})
+                                <strong>👤 Cliente:</strong> ${buyerName} (${buyerEmail})
                               </td>
                             </tr>
                             <tr>
                               <td style="padding: 8px 0; color: #78350f; font-size: 14px;">
-                                <strong>Prazo para responder:</strong> ${deadlineDate}
+                                <strong>⏰ Prazo para responder:</strong> ${deadlineDate}
                               </td>
                             </tr>
                           </table>
@@ -147,7 +162,7 @@ const handler = async (req: Request): Promise<Response> => {
                       <tr>
                         <td style="padding: 20px;">
                           <p style="margin: 0 0 10px; color: #71717a; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
-                            Motivo do reembolso:
+                            📝 Motivo do reembolso:
                           </p>
                           <p style="margin: 0; color: #3f3f46; font-size: 14px; line-height: 1.6;">
                             ${reason || 'Nenhum motivo especificado'}
