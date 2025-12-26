@@ -432,16 +432,6 @@ export default function AdminStats() {
             </CardContent>
           </Card>
           
-          <Card className="bg-orange-50 border-orange-200">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2">
-                <Ban className="h-4 w-4 text-orange-600" />
-                <span className="text-xs text-orange-700">Banimentos</span>
-              </div>
-              <p className="text-2xl font-bold text-orange-800 mt-1">{totals?.banimentos || 0}</p>
-            </CardContent>
-          </Card>
-          
           <Card className="bg-emerald-50 border-emerald-200">
             <CardContent className="p-4">
               <div className="flex items-center gap-2">
@@ -469,6 +459,16 @@ export default function AdminStats() {
                 <span className="text-xs text-blue-700">Produtos Aprov.</span>
               </div>
               <p className="text-2xl font-bold text-blue-800 mt-1">{totalApprovedProducts}</p>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-orange-50 border-orange-200">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2">
+                <Ban className="h-4 w-4 text-orange-600" />
+                <span className="text-xs text-orange-700">Produtos Banidos</span>
+              </div>
+              <p className="text-2xl font-bold text-orange-800 mt-1">{totals?.banimentos || 0}</p>
             </CardContent>
           </Card>
           
