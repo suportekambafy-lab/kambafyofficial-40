@@ -48,7 +48,7 @@ const Report = () => {
         <header className="border-b border-border bg-card">
           <div className="mx-auto max-w-7xl px-6 py-4 flex items-center justify-between">
             <SubdomainLink to="/" className="flex items-center">
-              <img src="/kambafy-logo-white.png" alt="Kambafy" className="h-16 w-auto" />
+              <img src="/kambafy-logo-green.png" alt="Kambafy" className="h-16 w-auto" />
             </SubdomainLink>
             <SubdomainLink to="/">
               <Button variant="ghost">Voltar à Página Inicial</Button>
