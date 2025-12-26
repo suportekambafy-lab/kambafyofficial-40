@@ -111,34 +111,57 @@ export const useImpersonationProtection = (): ImpersonationProtectionResult => {
 
   const exitImpersonation = useCallback(async () => {
     try {
-      // Registrar término da sessão
-      if (session?.id) {
-        await supabase
-          .from('admin_impersonation_sessions')
-          .update({
-            is_active: false,
-            ended_at: new Date().toISOString()
-          })
-          .eq('id', session.id);
-      }
-
-      // Limpar APENAS dados de impersonation (manter sessão admin)
+      // Registrar término da sessão no banco (usando service role via função se necessário)
+      const sessionId = session?.id;
+      
+      // Limpar dados de impersonation PRIMEIRO
       localStorage.removeItem('impersonation_data');
       setSession(null);
       setTimeRemaining(0);
 
-      // NÃO fazer signOut do Supabase - isso deslogaria o admin também
-      // O admin usa JWT customizado armazenado em localStorage (admin_session)
-      // Apenas limpar a sessão Supabase do usuário impersonado usando signOut com scope 'local'
-      // para não afetar outras abas/sessões
+      // Fazer signOut local do usuário impersonado
       await supabase.auth.signOut({ scope: 'local' });
+
+      // Tentar restaurar a sessão Supabase do admin
+      const backupSessionRaw = localStorage.getItem('admin_supabase_session_backup');
+      if (backupSessionRaw) {
+        try {
+          const backup = JSON.parse(backupSessionRaw);
+          console.log('🔁 Restaurando sessão Supabase do admin...');
+          
+          const { error: restoreError } = await supabase.auth.setSession({
+            access_token: backup.access_token,
+            refresh_token: backup.refresh_token,
+          });
+
+          if (restoreError) {
+            console.error('❌ Falha ao restaurar sessão Supabase:', restoreError);
+          } else {
+            console.log('✅ Sessão Supabase do admin restaurada');
+            localStorage.removeItem('admin_supabase_session_backup');
+            
+            // Agora com a sessão admin restaurada, podemos atualizar o registro
+            if (sessionId) {
+              await supabase
+                .from('admin_impersonation_sessions')
+                .update({
+                  is_active: false,
+                  ended_at: new Date().toISOString()
+                })
+                .eq('id', sessionId);
+            }
+          }
+        } catch (e) {
+          console.error('❌ Erro ao restaurar sessão backup:', e);
+        }
+      }
 
       toast({
         title: 'Impersonation encerrado',
         description: 'Voltando ao painel de administração',
       });
 
-      // Redirecionar para o painel admin - o admin ainda está logado via JWT em localStorage
+      // Redirecionar para o painel admin
       window.location.href = '/admin/usuarios';
     } catch (error) {
       console.error('Erro ao sair do impersonation:', error);
@@ -147,6 +170,8 @@ export const useImpersonationProtection = (): ImpersonationProtectionResult => {
         description: 'Erro ao sair do modo impersonation',
         variant: 'destructive'
       });
+      // Em caso de erro, ainda redirecionar
+      window.location.href = '/admin/usuarios';
     }
   }, [session, toast]);
 
