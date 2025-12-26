@@ -5,10 +5,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useSellerTheme } from '@/hooks/useSellerTheme';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useSellerPendingRefunds } from '@/hooks/useSellerPendingRefunds';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  ChevronLeft, 
+  ChevronLeft,
   ChevronRight,
   LayoutDashboard, 
   Package, 
@@ -72,6 +73,7 @@ export function ModernSidebar({
   const { toast } = useToast();
   const { isDark } = useSellerTheme();
   const { t } = useTranslation();
+  const { count: pendingRefundsCount } = useSellerPendingRefunds();
   const [dashboardData, setDashboardData] = useState({
     totalRevenue: 0,
   });
@@ -250,6 +252,11 @@ export function ModernSidebar({
                       Novo
                     </span>
                   )}
+                  {item.href === '/vendedor/reembolsos' && pendingRefundsCount > 0 && (
+                    <span className="bg-destructive text-destructive-foreground text-[10px] font-bold min-w-[18px] h-[18px] flex items-center justify-center px-1 rounded-full">
+                      {pendingRefundsCount > 99 ? '99+' : pendingRefundsCount}
+                    </span>
+                  )}
                 </NavLink>
               ))}
             </nav>
@@ -391,6 +398,11 @@ export function ModernSidebar({
                   {item.isNew && !collapsed && (
                     <span className="bg-gradient-to-r from-yellow-400 to-orange-400 text-slate-900 text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase shadow-sm">
                       Novo
+                    </span>
+                  )}
+                  {item.href === '/vendedor/reembolsos' && pendingRefundsCount > 0 && (
+                    <span className={`bg-destructive text-destructive-foreground text-[10px] font-bold min-w-[18px] h-[18px] flex items-center justify-center px-1 rounded-full ${collapsed ? 'absolute -top-1 -right-1' : ''}`}>
+                      {pendingRefundsCount > 99 ? '99+' : pendingRefundsCount}
                     </span>
                   )}
                 </>
