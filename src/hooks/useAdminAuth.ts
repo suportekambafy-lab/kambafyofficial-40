@@ -112,82 +112,101 @@ export const useAdminAuthHook = () => {
         }
 
         const backupSessionRaw = localStorage.getItem('admin_supabase_session_backup');
+        let sessionRestored = false;
 
         if (backupSessionRaw) {
-          try {
-            const needsRestore =
-              !authData.session ||
-              (authData.session.user?.email && authData.session.user.email !== parsedAdmin.email);
+          const needsRestore =
+            !authData.session ||
+            (authData.session.user?.email && authData.session.user.email !== parsedAdmin.email);
 
-            if (needsRestore) {
+          if (needsRestore) {
+            try {
               const backup = JSON.parse(backupSessionRaw) as {
                 access_token: string;
                 refresh_token: string;
               };
 
               console.log('🔁 [ADMIN-AUTH] Restaurando sessão Supabase do admin...');
-              const { error: restoreError } = await supabase.auth.setSession({
+              const { data: newSession, error: restoreError } = await supabase.auth.setSession({
                 access_token: backup.access_token,
                 refresh_token: backup.refresh_token,
               });
 
-              if (restoreError) {
-                console.error('❌ [ADMIN-AUTH] Falha ao restaurar sessão Supabase:', restoreError);
+              if (restoreError || !newSession.session) {
+                console.warn('⚠️ [ADMIN-AUTH] Sessão backup expirou, admin precisa relogar');
+                localStorage.removeItem('admin_supabase_session_backup');
+                // Não fazer logout completo - apenas limpar backup
               } else {
                 console.log('✅ [ADMIN-AUTH] Sessão Supabase do admin restaurada');
                 localStorage.removeItem('admin_supabase_session_backup');
+                sessionRestored = true;
               }
+            } catch (e) {
+              console.error('❌ [ADMIN-AUTH] Erro ao restaurar sessão backup:', e);
+              localStorage.removeItem('admin_supabase_session_backup');
             }
-          } catch (e) {
-            console.error('❌ [ADMIN-AUTH] Erro ao restaurar sessão backup:', e);
+          } else {
+            // Sessão já é do admin correto, não precisa restaurar
+            sessionRestored = true;
+            localStorage.removeItem('admin_supabase_session_backup');
           }
+        } else if (authData.session?.user?.email === parsedAdmin.email) {
+          // Já tem sessão válida do admin
+          sessionRestored = true;
         }
         
-        // Buscar dados atualizados do banco para verificar se mudou
-        const { data, error } = await supabase
-          .from('admin_users')
-          .select('*')
-          .eq('email', parsedAdmin.email)
-          .single();
-        
-        console.log('🔍 [ADMIN-AUTH] Dados do banco:', { data, error });
-        
-        if (data && !error) {
-          // Verificar se admin está ativo
-          if (!data.is_active) {
-            console.log('⚠️ [ADMIN-AUTH] Admin desativado, fazendo logout');
-            localStorage.removeItem('admin_session');
-            localStorage.removeItem('admin_jwt');
-            setAdmin(null);
-            return;
-          }
+        // Se a sessão Supabase foi restaurada ou já era válida, verificar no banco
+        if (sessionRestored) {
+          const { data, error } = await supabase
+            .from('admin_users')
+            .select('*')
+            .eq('email', parsedAdmin.email)
+            .single();
           
-          // Verificar se o role mudou
-          if (data.role !== parsedAdmin.role) {
-            console.log('🔄 [ADMIN-AUTH] Role atualizado detectado:', {
-              oldRole: parsedAdmin.role,
-              newRole: data.role
-            });
+          console.log('🔍 [ADMIN-AUTH] Dados do banco:', { data, error });
+          
+          if (data && !error) {
+            // Verificar se admin está ativo
+            if (!data.is_active) {
+              console.log('⚠️ [ADMIN-AUTH] Admin desativado, fazendo logout');
+              localStorage.removeItem('admin_session');
+              localStorage.removeItem('admin_jwt');
+              setAdmin(null);
+              return;
+            }
             
-            const updatedAdmin: AdminUser = {
-              id: data.id,
-              email: data.email,
-              full_name: data.full_name,
-              role: data.role,
-              is_active: data.is_active,
-              created_at: data.created_at,
-              updated_at: data.updated_at
-            };
-            
-            setAdmin(updatedAdmin);
-            localStorage.setItem('admin_session', JSON.stringify(updatedAdmin));
-          } else {
-            console.log('✅ [ADMIN-AUTH] Admin setado:', parsedAdmin);
+            // Verificar se o role mudou
+            if (data.role !== parsedAdmin.role) {
+              console.log('🔄 [ADMIN-AUTH] Role atualizado detectado:', {
+                oldRole: parsedAdmin.role,
+                newRole: data.role
+              });
+              
+              const updatedAdmin: AdminUser = {
+                id: data.id,
+                email: data.email,
+                full_name: data.full_name,
+                role: data.role,
+                is_active: data.is_active,
+                created_at: data.created_at,
+                updated_at: data.updated_at
+              };
+              
+              setAdmin(updatedAdmin);
+              localStorage.setItem('admin_session', JSON.stringify(updatedAdmin));
+            } else {
+              console.log('✅ [ADMIN-AUTH] Admin setado:', parsedAdmin);
+              setAdmin(parsedAdmin);
+            }
+          } else if (error) {
+            // Se deu erro na query (pode ser RLS ou rede), confiar no localStorage em vez de deslogar
+            console.warn('⚠️ [ADMIN-AUTH] Erro ao verificar admin no banco, mantendo sessão local:', error.message);
             setAdmin(parsedAdmin);
           }
-        } else if (error) {
-          // Se deu erro na query (pode ser RLS ou rede), confiar no localStorage em vez de deslogar
-          console.warn('⚠️ [ADMIN-AUTH] Erro ao verificar admin no banco (pode ser RLS), mantendo sessão local:', error.message);
+        } else {
+          // Sessão Supabase não está válida, mas temos dados no localStorage
+          // Confiar no JWT customizado do admin e manter o estado
+          console.log('⚠️ [ADMIN-AUTH] Sessão Supabase não restaurada, usando dados locais');
           setAdmin(parsedAdmin);
         }
       } else {
