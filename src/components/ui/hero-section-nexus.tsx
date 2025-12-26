@@ -10,7 +10,6 @@ import React, {
     useMemo,
     type ReactNode,
     type MouseEvent as ReactMouseEvent,
-    type FormEvent,
     type SVGProps,
 } from 'react';
 import {
@@ -27,21 +26,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { PlayStoreButton } from "@/components/ui/play-store-button";
 import { AppStoreButton } from "@/components/ui/app-store-button";
-import { BookOpen, DollarSign, Users, Shield, Star, Play, ArrowRight } from 'lucide-react';
+import { BookOpen, DollarSign, Users, Shield, Star, Play, ArrowRight, Check, Globe, Zap, Lock, CreditCard, Smartphone, TrendingUp, Award, ChevronRight, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { SubdomainLink } from "@/components/SubdomainLink";
-import { TopSellersRanking } from "@/components/TopSellersRanking";
 import kambafy_icon from "@/assets/kambafy-icon-gray.png";
-import teamImage from "@/assets/team-collaboration.jpg";
-import aboutSectionImage from "@/assets/about-section-team.jpg";
-import victorAvatar from "@/assets/testimonial-victor-muabi.jpg";
 
 function cn(...classes: (string | undefined | null | boolean)[]): string {
   return classes.filter(Boolean).join(" ");
 }
-
-const professionalWoman = '/lovable-uploads/09933f06-0001-46b9-9e43-62a0ebdd9868.png';
-const professionalMan = '/lovable-uploads/730e6c93-f015-4eb9-a5cb-a980f00fcde0.png';
 
 interface RotatingTextRef {
   next: () => void;
@@ -257,26 +249,6 @@ const RotatingText = forwardRef<RotatingTextRef, RotatingTextProps>(
 );
 RotatingText.displayName = "RotatingText";
 
-const ShinyText: React.FC<{ text: string; className?: string }> = ({ text, className = "" }) => (
-    <span className={cn("relative overflow-hidden inline-block", className)}>
-        {text}
-        <span style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
-            animation: 'shine 2s infinite linear',
-            opacity: 0.5,
-            pointerEvents: 'none'
-        }}></span>
-        <style>{`
-            @keyframes shine {
-                0% { transform: translateX(-100%); }
-                100% { transform: translateX(100%); }
-            }
-        `}</style>
-    </span>
-);
-
 const MenuIcon: React.FC<SVGProps<SVGSVGElement>> = (props) => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6" {...props}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
@@ -289,42 +261,106 @@ const CloseIcon: React.FC<SVGProps<SVGSVGElement>> = (props) => (
     </svg>
 );
 
-interface NavLinkProps {
-    href?: string;
-    children: ReactNode;
-    className?: string;
-    onClick?: (event: ReactMouseEvent<HTMLAnchorElement>) => void;
-}
-
-const NavLink: React.FC<NavLinkProps> = ({ href = "#", children, className = "", onClick }) => (
-   <a
-     href={href}
-     onClick={onClick}
-     className={cn("relative group text-sm font-medium text-gray-300 hover:text-white transition-colors duration-200 flex items-center py-1", className)}
-   >
-     {children}
-     <span className="absolute bottom-[-2px] left-0 right-0 h-[1px] bg-[#81e76a] scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
-   </a>
+// Floating 3D-style element component
+const FloatingElement: React.FC<{ className?: string; children: ReactNode; delay?: number }> = ({ className, children, delay = 0 }) => (
+  <motion.div
+    className={className}
+    animate={{
+      y: [0, -10, 0],
+    }}
+    transition={{
+      duration: 4,
+      repeat: Infinity,
+      ease: "easeInOut",
+      delay,
+    }}
+  >
+    {children}
+  </motion.div>
 );
 
-interface Dot {
-    x: number;
-    y: number;
-    baseColor: string;
-    targetOpacity: number;
-    currentOpacity: number;
-    opacitySpeed: number;
-    baseRadius: number;
-    currentRadius: number;
-}
+// Feature Card Component
+const FeatureCard: React.FC<{
+  icon: ReactNode;
+  title: string;
+  description: string;
+  color: string;
+  delay?: number;
+}> = ({ icon, title, description, color, delay = 0 }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 30 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true }}
+    transition={{ duration: 0.5, delay }}
+    whileHover={{ y: -5, transition: { duration: 0.2 } }}
+    className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100"
+  >
+    <div className={`w-14 h-14 rounded-2xl ${color} flex items-center justify-center mb-4`}>
+      {icon}
+    </div>
+    <h3 className="text-xl font-bold text-gray-900 mb-2">{title}</h3>
+    <p className="text-gray-600">{description}</p>
+  </motion.div>
+);
+
+// Stat Card Component  
+const StatCard: React.FC<{ number: string; label: string; delay?: number }> = ({ number, label, delay = 0 }) => (
+  <motion.div
+    initial={{ opacity: 0, scale: 0.9 }}
+    whileInView={{ opacity: 1, scale: 1 }}
+    viewport={{ once: true }}
+    transition={{ duration: 0.5, delay }}
+    className="text-center"
+  >
+    <div className="text-4xl md:text-5xl font-bold text-[#9AE66E] mb-2">{number}</div>
+    <div className="text-gray-600 font-medium">{label}</div>
+  </motion.div>
+);
+
+// FAQ Item Component
+const FAQItem: React.FC<{ question: string; answer: string; isOpen: boolean; onToggle: () => void }> = ({ 
+  question, 
+  answer, 
+  isOpen, 
+  onToggle 
+}) => (
+  <motion.div 
+    className="border-b border-gray-200"
+    initial={false}
+  >
+    <button
+      onClick={onToggle}
+      className="w-full py-6 flex items-center justify-between text-left hover:text-[#9AE66E] transition-colors"
+    >
+      <span className="text-lg font-semibold text-gray-900 pr-4">{question}</span>
+      <motion.div
+        animate={{ rotate: isOpen ? 180 : 0 }}
+        transition={{ duration: 0.2 }}
+      >
+        <ChevronDown className="w-5 h-5 text-gray-500" />
+      </motion.div>
+    </button>
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: "auto", opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          className="overflow-hidden"
+        >
+          <p className="pb-6 text-gray-600 leading-relaxed">{answer}</p>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  </motion.div>
+);
 
 const InteractiveHero: React.FC = () => {
    const navigate = useNavigate();
-   const canvasRef = useRef<HTMLCanvasElement>(null);
-   const animationFrameId = useRef<number | null>(null);
    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
-   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
    const [isScrolled, setIsScrolled] = useState<boolean>(false);
+   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
 
    const { scrollY } = useScroll();
    useMotionValueEvent(scrollY, "change", (latest) => {
@@ -334,187 +370,6 @@ const InteractiveHero: React.FC = () => {
    const handleAuthNavigation = (mode: 'login' | 'signup') => {
      navigate(`/auth?mode=${mode}`);
    };
-
-   const dotsRef = useRef<Dot[]>([]);
-   const gridRef = useRef<Record<string, number[]>>({});
-   const canvasSizeRef = useRef<{ width: number; height: number }>({ width: 0, height: 0 });
-   const mousePositionRef = useRef<{ x: number | null; y: number | null }>({ x: null, y: null });
-
-   const DOT_SPACING = 25;
-   const BASE_OPACITY_MIN = 0.40;
-   const BASE_OPACITY_MAX = 0.50;
-   const BASE_RADIUS = 1;
-   const INTERACTION_RADIUS = 150;
-   const INTERACTION_RADIUS_SQ = INTERACTION_RADIUS * INTERACTION_RADIUS;
-   const OPACITY_BOOST = 0.6;
-   const RADIUS_BOOST = 2.5;
-   const GRID_CELL_SIZE = Math.max(50, Math.floor(INTERACTION_RADIUS / 1.5));
-
-   const handleMouseMove = useCallback((event: globalThis.MouseEvent) => {
-        const canvas = canvasRef.current;
-        if (!canvas) {
-            mousePositionRef.current = { x: null, y: null };
-            return;
-        }
-        const rect = canvas.getBoundingClientRect();
-        const canvasX = event.clientX - rect.left;
-        const canvasY = event.clientY - rect.top;
-        mousePositionRef.current = { x: canvasX, y: canvasY };
-   }, []);
-
-   const createDots = useCallback(() => {
-       const { width, height } = canvasSizeRef.current;
-       if (width === 0 || height === 0) return;
-
-       const newDots: Dot[] = [];
-       const newGrid: Record<string, number[]> = {};
-       const cols = Math.ceil(width / DOT_SPACING);
-       const rows = Math.ceil(height / DOT_SPACING);
-
-       for (let i = 0; i < cols; i++) {
-           for (let j = 0; j < rows; j++) {
-               const x = i * DOT_SPACING + DOT_SPACING / 2;
-               const y = j * DOT_SPACING + DOT_SPACING / 2;
-               const cellX = Math.floor(x / GRID_CELL_SIZE);
-               const cellY = Math.floor(y / GRID_CELL_SIZE);
-               const cellKey = `${cellX}_${cellY}`;
-
-               if (!newGrid[cellKey]) {
-                   newGrid[cellKey] = [];
-               }
-
-               const dotIndex = newDots.length;
-               newGrid[cellKey].push(dotIndex);
-
-               const baseOpacity = Math.random() * (BASE_OPACITY_MAX - BASE_OPACITY_MIN) + BASE_OPACITY_MIN;
-               newDots.push({
-                   x,
-                   y,
-                   baseColor: `rgba(87, 220, 205, ${BASE_OPACITY_MAX})`,
-                   targetOpacity: baseOpacity,
-                   currentOpacity: baseOpacity,
-                   opacitySpeed: (Math.random() * 0.005) + 0.002,
-                   baseRadius: BASE_RADIUS,
-                   currentRadius: BASE_RADIUS,
-               });
-           }
-       }
-       dotsRef.current = newDots;
-       gridRef.current = newGrid;
-   }, [DOT_SPACING, GRID_CELL_SIZE, BASE_OPACITY_MIN, BASE_OPACITY_MAX, BASE_RADIUS]);
-
-   const handleResize = useCallback(() => {
-       const canvas = canvasRef.current;
-       if (!canvas) return;
-       const container = canvas.parentElement;
-       const width = container ? container.clientWidth : window.innerWidth;
-       const height = container ? container.clientHeight : window.innerHeight;
-
-       if (canvas.width !== width || canvas.height !== height ||
-           canvasSizeRef.current.width !== width || canvasSizeRef.current.height !== height)
-       {
-           canvas.width = width;
-           canvas.height = height;
-           canvasSizeRef.current = { width, height };
-           createDots();
-       }
-   }, [createDots]);
-
-   const animateDots = useCallback(() => {
-       const canvas = canvasRef.current;
-       const ctx = canvas?.getContext('2d');
-       const dots = dotsRef.current;
-       const grid = gridRef.current;
-       const { width, height } = canvasSizeRef.current;
-       const { x: mouseX, y: mouseY } = mousePositionRef.current;
-
-       if (!ctx || !dots || !grid || width === 0 || height === 0) {
-           animationFrameId.current = requestAnimationFrame(animateDots);
-           return;
-       }
-
-       ctx.clearRect(0, 0, width, height);
-
-       const activeDotIndices = new Set<number>();
-       if (mouseX !== null && mouseY !== null) {
-           const mouseCellX = Math.floor(mouseX / GRID_CELL_SIZE);
-           const mouseCellY = Math.floor(mouseY / GRID_CELL_SIZE);
-           const searchRadius = Math.ceil(INTERACTION_RADIUS / GRID_CELL_SIZE);
-           for (let i = -searchRadius; i <= searchRadius; i++) {
-               for (let j = -searchRadius; j <= searchRadius; j++) {
-                   const checkCellX = mouseCellX + i;
-                   const checkCellY = mouseCellY + j;
-                   const cellKey = `${checkCellX}_${checkCellY}`;
-                   if (grid[cellKey]) {
-                       grid[cellKey].forEach(dotIndex => activeDotIndices.add(dotIndex));
-                   }
-               }
-           }
-       }
-
-       dots.forEach((dot, index) => {
-           dot.currentOpacity += dot.opacitySpeed;
-           if (dot.currentOpacity >= dot.targetOpacity || dot.currentOpacity <= BASE_OPACITY_MIN) {
-               dot.opacitySpeed = -dot.opacitySpeed;
-               dot.currentOpacity = Math.max(BASE_OPACITY_MIN, Math.min(dot.currentOpacity, BASE_OPACITY_MAX));
-               dot.targetOpacity = Math.random() * (BASE_OPACITY_MAX - BASE_OPACITY_MIN) + BASE_OPACITY_MIN;
-           }
-
-           let interactionFactor = 0;
-           dot.currentRadius = dot.baseRadius;
-
-           if (mouseX !== null && mouseY !== null && activeDotIndices.has(index)) {
-               const dx = dot.x - mouseX;
-               const dy = dot.y - mouseY;
-               const distSq = dx * dx + dy * dy;
-
-               if (distSq < INTERACTION_RADIUS_SQ) {
-                   const distance = Math.sqrt(distSq);
-                   interactionFactor = Math.max(0, 1 - distance / INTERACTION_RADIUS);
-                   interactionFactor = interactionFactor * interactionFactor;
-               }
-           }
-
-           const finalOpacity = Math.min(1, dot.currentOpacity + interactionFactor * OPACITY_BOOST);
-           dot.currentRadius = dot.baseRadius + interactionFactor * RADIUS_BOOST;
-
-           const colorMatch = dot.baseColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
-           const r = colorMatch ? colorMatch[1] : '87';
-           const g = colorMatch ? colorMatch[2] : '220';
-           const b = colorMatch ? colorMatch[3] : '205';
-
-           ctx.beginPath();
-           ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${finalOpacity.toFixed(3)})`;
-           ctx.arc(dot.x, dot.y, dot.currentRadius, 0, Math.PI * 2);
-           ctx.fill();
-       });
-
-       animationFrameId.current = requestAnimationFrame(animateDots);
-   }, [GRID_CELL_SIZE, INTERACTION_RADIUS, INTERACTION_RADIUS_SQ, OPACITY_BOOST, RADIUS_BOOST, BASE_OPACITY_MIN, BASE_OPACITY_MAX, BASE_RADIUS]);
-
-   useEffect(() => {
-       handleResize();
-       const canvasElement = canvasRef.current;
-        const handleMouseLeave = () => {
-            mousePositionRef.current = { x: null, y: null };
-        };
-
-       window.addEventListener('mousemove', handleMouseMove, { passive: true });
-       window.addEventListener('resize', handleResize);
-       document.documentElement.addEventListener('mouseleave', handleMouseLeave);
-
-
-       animationFrameId.current = requestAnimationFrame(animateDots);
-
-       return () => {
-           window.removeEventListener('resize', handleResize);
-           window.removeEventListener('mousemove', handleMouseMove);
-           document.documentElement.removeEventListener('mouseleave', handleMouseLeave);
-           if (animationFrameId.current) {
-               cancelAnimationFrame(animationFrameId.current);
-           }
-       };
-   }, [handleResize, handleMouseMove, animateDots]);
 
    useEffect(() => {
        if (isMobileMenuOpen) {
@@ -527,16 +382,12 @@ const InteractiveHero: React.FC = () => {
 
    const headerVariants: Variants = {
        top: {
-           backgroundColor: "rgba(17, 17, 17, 0.8)",
-           borderBottomColor: "rgba(55, 65, 81, 0.5)",
-           position: 'fixed',
+           backgroundColor: "rgba(255, 255, 255, 0)",
            boxShadow: 'none',
        },
        scrolled: {
-           backgroundColor: "rgba(17, 17, 17, 0.95)",
-           borderBottomColor: "rgba(75, 85, 99, 0.7)",
-           boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-           position: 'fixed'
+           backgroundColor: "rgba(255, 255, 255, 0.98)",
+           boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
        }
    };
 
@@ -546,581 +397,694 @@ const InteractiveHero: React.FC = () => {
        exit: { opacity: 0, y: -20, transition: { duration: 0.15, ease: "easeIn" } }
    };
 
-    const contentDelay = 0.3;
-    const itemDelayIncrement = 0.1;
-
-    const bannerVariants: Variants = {
-        hidden: { opacity: 0, y: -10 },
-        visible: { opacity: 1, y: 0, transition: { duration: 0.4, delay: contentDelay } }
-    };
-   const headlineVariants: Variants = {
-        hidden: { opacity: 0 },
-        visible: { opacity: 1, transition: { duration: 0.5, delay: contentDelay + itemDelayIncrement } }
-    };
-    const subHeadlineVariants: Variants = {
-        hidden: { opacity: 0, y: 10 },
-        visible: { opacity: 1, y: 0, transition: { duration: 0.5, delay: contentDelay + itemDelayIncrement * 2 } }
-    };
-    const formVariants: Variants = {
-        hidden: { opacity: 0, y: 10 },
-        visible: { opacity: 1, y: 0, transition: { duration: 0.5, delay: contentDelay + itemDelayIncrement * 3 } }
-    };
-    const trialTextVariants: Variants = {
-        hidden: { opacity: 0 },
-        visible: { opacity: 1, transition: { duration: 0.5, delay: contentDelay + itemDelayIncrement * 4 } }
-    };
-    const worksWithVariants: Variants = {
-        hidden: { opacity: 0 },
-        visible: { opacity: 1, transition: { duration: 0.5, delay: contentDelay + itemDelayIncrement * 5 } }
-    };
-    const imageVariants: Variants = {
-        hidden: { opacity: 0, scale: 0.95, y: 20 },
-        visible: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.6, delay: contentDelay + itemDelayIncrement * 6, ease: [0.16, 1, 0.3, 1] } }
-    };
+   const faqs = [
+     {
+       question: "Como começar a vender na Kambafy?",
+       answer: "Para começar, crie sua conta gratuita, configure seu perfil de criador e publique seu primeiro produto. Nossa equipe está disponível para ajudar em cada passo. É rápido, simples e você pode começar a vender em minutos."
+     },
+     {
+       question: "Quanto custa usar a plataforma?",
+       answer: "Zero custos fixos! Cobramos apenas 8,99% de comissão sobre cada venda realizada. Sem mensalidades, sem taxas de adesão, sem surpresas. Você só paga quando ganha."
+     },
+     {
+       question: "Quais tipos de produtos posso vender?",
+       answer: "Você pode vender cursos online, e-books, mentorias, templates, consultorias, podcasts, comunidades pagas e muito mais. A plataforma é flexível para qualquer tipo de produto digital."
+     },
+     {
+       question: "Como recebo meus pagamentos?",
+       answer: "Os pagamentos são processados automaticamente e transferidos para sua conta em até 3 dias úteis. Aceitamos múltiplas moedas e métodos de pagamento incluindo cartão, Multicaixa Express e transferência."
+     },
+     {
+       question: "Preciso saber programar?",
+       answer: "Absolutamente não! Nossa plataforma foi desenvolvida para ser intuitiva e fácil de usar. Qualquer pessoa pode criar e vender seus produtos digitais sem qualquer conhecimento técnico."
+     }
+   ];
 
   return (
-    <div className="relative bg-[#111111] text-gray-300 overflow-x-hidden">
-        <canvas ref={canvasRef} className="fixed inset-0 z-0 pointer-events-none opacity-80" />
-        <div className="fixed inset-0 z-1 pointer-events-none" style={{
-            background: 'linear-gradient(to bottom, transparent 0%, #111111 90%), radial-gradient(ellipse at center, transparent 40%, #111111 95%)'
-        }}></div>
+    <div className="relative bg-white text-gray-900 overflow-x-hidden">
+      {/* Header */}
+      <motion.header
+        variants={headerVariants}
+        initial="top"
+        animate={isScrolled ? "scrolled" : "top"}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+        className="fixed w-full top-0 z-50 backdrop-blur-sm"
+      >
+        <nav className="flex justify-between items-center max-w-screen-xl mx-auto h-[70px] px-6 md:px-10 lg:px-16">
+          <div className="flex items-center flex-shrink-0">
+            <img 
+              src="/kambafy-logo-green.png" 
+              alt="Kambafy" 
+              className="h-12 w-auto"
+            />
+          </div>
 
-        {/* Header */}
-        <motion.header
-            variants={headerVariants}
-            initial="top"
-            animate={isScrolled ? "scrolled" : "top"}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="w-full sticky top-0 z-30 backdrop-blur-md border-b"
-        >
-            <nav className="flex justify-between items-center max-w-screen-xl mx-auto h-[70px] px-6 md:px-10 lg:px-16">
-                <div className="flex items-center flex-shrink-0">
-                    <img 
-                      src="/kambafy-logo-white.png" 
-                      alt="Kambafy" 
-                      className="h-12 w-auto"
-                    />
-                </div>
+          <div className="hidden md:flex items-center justify-center flex-grow space-x-8 px-4">
+            <a href="#recursos" className="text-sm font-medium text-gray-600 hover:text-[#9AE66E] transition-colors">Recursos</a>
+            <a href="#como-funciona" className="text-sm font-medium text-gray-600 hover:text-[#9AE66E] transition-colors">Como Funciona</a>
+            <a href="#precos" className="text-sm font-medium text-gray-600 hover:text-[#9AE66E] transition-colors">Preços</a>
+            <a href="#faq" className="text-sm font-medium text-gray-600 hover:text-[#9AE66E] transition-colors">FAQ</a>
+          </div>
 
-                <div className="hidden md:flex items-center justify-center flex-grow space-x-6 lg:space-x-8 px-4">
-                    <NavLink href="#recursos">Recursos</NavLink>
-                    <NavLink href="#como-funciona">Como Funciona</NavLink>
-                    <NavLink href="#precos">Preços</NavLink>
-                    <NavLink href="#sobre">Sobre</NavLink>
-                </div>
+          <div className="flex items-center flex-shrink-0 space-x-4">
+            <button 
+              onClick={() => handleAuthNavigation('login')} 
+              className="hidden md:inline-block text-sm font-medium text-gray-700 hover:text-[#9AE66E] transition-colors"
+            >
+              Entrar
+            </button>
 
-                <div className="flex items-center flex-shrink-0 space-x-4 lg:space-x-6">
-                    <button onClick={() => handleAuthNavigation('login')} className="hidden md:inline-block text-sm font-medium text-gray-300 hover:text-white transition-colors duration-200">Entrar</button>
+            <motion.button
+              onClick={() => handleAuthNavigation('signup')}
+              className="bg-[#9AE66E] text-gray-900 px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-[#8AD65E] transition-all duration-200 shadow-sm hover:shadow-md"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              Começar Grátis
+            </motion.button>
 
-                    <motion.button
-                        onClick={() => handleAuthNavigation('signup')}
-                        className="bg-[#81e76a] text-[#111111] px-4 py-[6px] rounded-md text-sm font-semibold hover:bg-opacity-90 transition-colors duration-200 whitespace-nowrap shadow-sm hover:shadow-md"
-                        whileHover={{ scale: 1.03, y: -1 }}
-                        whileTap={{ scale: 0.97 }}
-                        transition={{ type: "spring", stiffness: 400, damping: 15 }}
-                    >
-                        Começar Agora
-                    </motion.button>
+            <motion.button
+              className="md:hidden text-gray-700"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label="Toggle menu"
+              whileHover={{ scale: 1.1 }} 
+              whileTap={{ scale: 0.9 }}
+            >
+              {isMobileMenuOpen ? <CloseIcon /> : <MenuIcon />}
+            </motion.button>
+          </div>
+        </nav>
 
-                    <motion.button
-                        className="md:hidden text-gray-300 hover:text-white z-50"
-                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                        aria-label="Toggle menu"
-                        whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
-                    >
-                        {isMobileMenuOpen ? <CloseIcon /> : <MenuIcon />}
-                    </motion.button>
-                </div>
-            </nav>
-
-            <AnimatePresence>
-                {isMobileMenuOpen && (
-                    <motion.div
-                        key="mobile-menu"
-                        variants={mobileMenuVariants} initial="hidden" animate="visible" exit="exit"
-                        className="md:hidden absolute top-full left-0 right-0 bg-[#111111]/95 backdrop-blur-sm shadow-lg py-4 border-t border-gray-800/50"
-                    >
-                        <div className="flex flex-col items-center space-y-4 px-6">
-                            <a href="#recursos" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-medium text-gray-300 hover:text-white transition-colors">Recursos</a>
-                            <a href="#como-funciona" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-medium text-gray-300 hover:text-white transition-colors">Como Funciona</a>
-                            <a href="#precos" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-medium text-gray-300 hover:text-white transition-colors">Preços</a>
-                            <a href="#sobre" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-medium text-gray-300 hover:text-white transition-colors">Sobre</a>
-                            <hr className="w-full border-t border-gray-700/50 my-2"/>
-                            <button onClick={() => handleAuthNavigation('login')} className="text-sm font-medium text-gray-300 hover:text-white transition-colors">Entrar</button>
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </motion.header>
-
-        {/* Hero Section */}
-        <main className="relative z-10">
-          <section className="flex flex-col items-center justify-center text-center px-4 pt-32 pb-16">
+        <AnimatePresence>
+          {isMobileMenuOpen && (
             <motion.div
-                variants={bannerVariants}
-                initial="hidden"
-                animate="visible"
-                className="mb-6"
+              key="mobile-menu"
+              variants={mobileMenuVariants} 
+              initial="hidden" 
+              animate="visible" 
+              exit="exit"
+              className="md:hidden absolute top-full left-0 right-0 bg-white shadow-lg py-4 border-t border-gray-100"
             >
-                <ShinyText text="Plataforma #1 para Criadores Digitais" className="bg-[#1a1a1a] border border-gray-700 text-[#81e76a] px-4 py-1 rounded-full text-xs sm:text-sm font-medium cursor-pointer hover:border-[#81e76a]/50 transition-colors" />
+              <div className="flex flex-col items-center space-y-4 px-6">
+                <a href="#recursos" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-medium text-gray-600 hover:text-[#9AE66E] transition-colors">Recursos</a>
+                <a href="#como-funciona" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-medium text-gray-600 hover:text-[#9AE66E] transition-colors">Como Funciona</a>
+                <a href="#precos" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-medium text-gray-600 hover:text-[#9AE66E] transition-colors">Preços</a>
+                <a href="#faq" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-medium text-gray-600 hover:text-[#9AE66E] transition-colors">FAQ</a>
+                <hr className="w-full border-t border-gray-200 my-2"/>
+                <button onClick={() => handleAuthNavigation('login')} className="text-sm font-medium text-gray-600 hover:text-[#9AE66E] transition-colors">Entrar</button>
+              </div>
             </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.header>
 
-            <motion.h1
-                variants={headlineVariants}
-                initial="hidden"
-                animate="visible"
-                className="text-4xl sm:text-5xl lg:text-[64px] font-bold text-white leading-tight max-w-4xl mb-4"
+      {/* Hero Section */}
+      <section className="relative min-h-screen bg-gradient-to-b from-[#9AE66E] via-[#9AE66E] to-[#7CC652] overflow-hidden">
+        {/* Decorative elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-20 left-10 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
+        </div>
+
+        <div className="relative z-10 max-w-screen-xl mx-auto px-6 md:px-10 lg:px-16 pt-32 pb-20">
+          <div className="grid lg:grid-cols-2 gap-12 items-center min-h-[80vh]">
+            {/* Left Content */}
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6 }}
+              className="text-center lg:text-left"
             >
-                Venda seus produtos<br />
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full mb-6"
+              >
+                <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                <span className="text-sm font-medium text-white">+1000 criadores já vendem na Kambafy</span>
+              </motion.div>
+
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-gray-900 leading-[1.1] mb-6">
+                Venda seus
+                <br />
                 <span className="inline-block h-[1.2em] overflow-hidden align-bottom">
-                    <RotatingText
-                        texts={['digitais', 'criativos', 'exclusivos', 'incríveis', 'únicos']}
-                        mainClassName="text-[#81e76a] mx-1"
-                        staggerFrom={"last"}
-                        initial={{ y: "-100%", opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        exit={{ y: "110%", opacity: 0 }}
-                        staggerDuration={0.01}
-                        transition={{ type: "spring", damping: 18, stiffness: 250 }}
-                        rotationInterval={2200}
-                        splitBy="characters"
-                        auto={true}
-                        loop={true}
-                    />
+                  <RotatingText
+                    texts={['cursos', 'e-books', 'mentorias', 'templates']}
+                    mainClassName="text-white mx-1"
+                    staggerFrom="last"
+                    initial={{ y: "-100%", opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: "110%", opacity: 0 }}
+                    staggerDuration={0.02}
+                    transition={{ type: "spring", damping: 20, stiffness: 200 }}
+                    rotationInterval={2500}
+                    splitBy="characters"
+                    auto={true}
+                    loop={true}
+                  />
                 </span>
-            </motion.h1>
+                <br />
+                sem complicações
+              </h1>
 
-            <motion.p
-                variants={subHeadlineVariants}
-                initial="hidden"
-                animate="visible"
-                className="text-base sm:text-lg lg:text-xl text-gray-400 max-w-2xl mx-auto mb-8"
-            >
-                Crie, gerencie e venda seus cursos, e-books e produtos digitais em uma única plataforma. Tudo que você precisa para construir seu negócio online.
-            </motion.p>
+              <p className="text-lg lg:text-xl text-gray-800 max-w-lg mx-auto lg:mx-0 mb-8">
+                A plataforma completa para criadores digitais em Angola e países lusófonos. Zero custos fixos, apenas sucesso.
+              </p>
 
-            <motion.div
-                variants={formVariants}
-                initial="hidden"
-                animate="visible"
-                className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-md mx-auto mb-3"
-            >
+              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8">
                 <motion.button
-                    onClick={() => handleAuthNavigation('signup')}
-                    className="w-full sm:w-auto bg-[#81e76a] text-[#111111] px-8 py-3 rounded-md text-base font-semibold hover:bg-opacity-90 transition-colors duration-200 shadow-lg hover:shadow-xl flex-shrink-0"
-                    whileHover={{ scale: 1.03, y: -1 }}
-                    whileTap={{ scale: 0.97 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                  onClick={() => handleAuthNavigation('signup')}
+                  className="bg-gray-900 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-gray-800 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
                 >
-                    Começar a Vender
+                  Começar a Vender
+                  <ArrowRight className="w-5 h-5" />
                 </motion.button>
                 <motion.button
-                    className="w-full sm:w-auto bg-transparent border border-[#81e76a] text-[#81e76a] px-8 py-3 rounded-md text-base font-semibold hover:bg-[#81e76a]/10 transition-colors duration-200 flex items-center justify-center gap-2"
-                    whileHover={{ scale: 1.03, y: -1 }}
-                    whileTap={{ scale: 0.97 }}
+                  className="bg-white/20 backdrop-blur-sm text-gray-900 px-8 py-4 rounded-full text-lg font-semibold hover:bg-white/30 transition-all duration-200 flex items-center justify-center gap-2"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                 >
-                    <Play className="w-4 h-4" />
-                    Ver Como Funciona
+                  <Play className="w-5 h-5" />
+                  Ver Demo
                 </motion.button>
+              </div>
+
+              <div className="flex items-center gap-6 justify-center lg:justify-start text-sm text-gray-700">
+                <div className="flex items-center gap-2">
+                  <Check className="w-4 h-4" />
+                  <span>Sem mensalidade</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="w-4 h-4" />
+                  <span>Suporte 24/7</span>
+                </div>
+              </div>
             </motion.div>
 
-            <motion.p
-                variants={trialTextVariants}
-                initial="hidden"
-                animate="visible"
-                className="text-xs text-gray-500 mb-6"
-            >
-                Sem custos fixos • Sem mensalidades
-            </motion.p>
-
+            {/* Right Content - Floating Card */}
             <motion.div
-                variants={worksWithVariants}
-                initial="hidden"
-                animate="visible"
-                className="flex flex-row justify-center gap-3 mb-16"
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="relative hidden lg:block"
             >
+              <FloatingElement className="relative z-10">
+                <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md ml-auto">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-12 h-12 bg-[#9AE66E] rounded-full flex items-center justify-center">
+                      <TrendingUp className="w-6 h-6 text-gray-900" />
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-500">Vendas do mês</div>
+                      <div className="text-2xl font-bold text-gray-900">Kz 2.450.000</div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4 mb-6">
+                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                          <BookOpen className="w-5 h-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-900">Curso de Marketing</div>
+                          <div className="text-sm text-gray-500">45 vendas</div>
+                        </div>
+                      </div>
+                      <div className="text-[#9AE66E] font-semibold">+12%</div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                          <Users className="w-5 h-5 text-purple-600" />
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-900">Mentoria Premium</div>
+                          <div className="text-sm text-gray-500">23 alunos</div>
+                        </div>
+                      </div>
+                      <div className="text-[#9AE66E] font-semibold">+28%</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-500">Próximo saque disponível</span>
+                    <span className="font-semibold text-gray-900">3 dias</span>
+                  </div>
+                </div>
+              </FloatingElement>
+
+              {/* Decorative floating elements */}
+              <FloatingElement delay={0.5} className="absolute -top-4 -left-4">
+                <div className="bg-white rounded-2xl shadow-lg p-4 flex items-center gap-3">
+                  <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                    <Star className="w-4 h-4 text-yellow-500" />
+                  </div>
+                  <div className="text-sm font-medium">4.9 Avaliação</div>
+                </div>
+              </FloatingElement>
+
+              <FloatingElement delay={1} className="absolute -bottom-4 left-8">
+                <div className="bg-white rounded-2xl shadow-lg p-4 flex items-center gap-3">
+                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                    <Check className="w-4 h-4 text-green-500" />
+                  </div>
+                  <div className="text-sm font-medium">Pagamento confirmado!</div>
+                </div>
+              </FloatingElement>
+            </motion.div>
+          </div>
+        </div>
+
+        {/* Wave separator */}
+        <div className="absolute bottom-0 left-0 right-0">
+          <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full">
+            <path d="M0 120L60 110C120 100 240 80 360 70C480 60 600 60 720 65C840 70 960 80 1080 85C1200 90 1320 90 1380 90L1440 90V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" fill="white"/>
+          </svg>
+        </div>
+      </section>
+
+      {/* Trust Section */}
+      <section className="py-16 bg-white">
+        <div className="max-w-screen-xl mx-auto px-6 md:px-10 lg:px-16">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <StatCard number="1000+" label="Criadores Ativos" delay={0} />
+            <StatCard number="15k+" label="Produtos Vendidos" delay={0.1} />
+            <StatCard number="Kz 50M+" label="Em Vendas" delay={0.2} />
+            <StatCard number="98%" label="Satisfação" delay={0.3} />
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section id="recursos" className="py-24 bg-gray-50">
+        <div className="max-w-screen-xl mx-auto px-6 md:px-10 lg:px-16">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-3xl lg:text-5xl font-bold text-gray-900 mb-4">
+              Tudo que você precisa para
+              <span className="text-[#9AE66E]"> vender mais</span>
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Ferramentas poderosas para transformar seu conhecimento em um negócio próspero
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <FeatureCard
+              icon={<CreditCard className="w-7 h-7 text-blue-600" />}
+              title="Checkout Otimizado"
+              description="Página de pagamento personalizada com alta conversão e múltiplos métodos de pagamento."
+              color="bg-blue-100"
+              delay={0}
+            />
+            <FeatureCard
+              icon={<Users className="w-7 h-7 text-purple-600" />}
+              title="Sistema de Afiliados"
+              description="Expanda suas vendas com afiliados. Eles vendem, você paga comissão."
+              color="bg-purple-100"
+              delay={0.1}
+            />
+            <FeatureCard
+              icon={<Zap className="w-7 h-7 text-yellow-600" />}
+              title="Order Bump"
+              description="Aumente o ticket médio oferecendo produtos complementares no checkout."
+              color="bg-yellow-100"
+              delay={0.2}
+            />
+            <FeatureCard
+              icon={<Globe className="w-7 h-7 text-green-600" />}
+              title="Área de Membros"
+              description="Entregue seus cursos com uma área de membros moderna e profissional."
+              color="bg-green-100"
+              delay={0.3}
+            />
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
+            <FeatureCard
+              icon={<Lock className="w-7 h-7 text-red-600" />}
+              title="Pagamentos Seguros"
+              description="Transações protegidas com criptografia. Multicaixa, cartões e mais."
+              color="bg-red-100"
+              delay={0.4}
+            />
+            <FeatureCard
+              icon={<Smartphone className="w-7 h-7 text-indigo-600" />}
+              title="App Nativo"
+              description="Gerencie suas vendas pelo celular com nosso app para iOS e Android."
+              color="bg-indigo-100"
+              delay={0.5}
+            />
+            <FeatureCard
+              icon={<TrendingUp className="w-7 h-7 text-teal-600" />}
+              title="Analytics Completo"
+              description="Dashboards detalhados para acompanhar vendas, conversões e receita."
+              color="bg-teal-100"
+              delay={0.6}
+            />
+            <FeatureCard
+              icon={<Award className="w-7 h-7 text-orange-600" />}
+              title="Certificados"
+              description="Emita certificados automáticos para seus alunos ao final dos cursos."
+              color="bg-orange-100"
+              delay={0.7}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works Section */}
+      <section id="como-funciona" className="py-24 bg-white">
+        <div className="max-w-screen-xl mx-auto px-6 md:px-10 lg:px-16">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-3xl lg:text-5xl font-bold text-gray-900 mb-4">
+              Comece a vender em
+              <span className="text-[#9AE66E]"> 3 passos</span>
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Simples, rápido e sem complicações
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              {
+                step: "01",
+                title: "Crie sua conta",
+                description: "Cadastre-se gratuitamente em menos de 2 minutos. Sem cartão de crédito."
+              },
+              {
+                step: "02", 
+                title: "Publique seu produto",
+                description: "Upload do seu curso, e-book ou serviço. Configure preços e checkout."
+              },
+              {
+                step: "03",
+                title: "Receba pagamentos",
+                description: "Compartilhe seu link e receba pagamentos de forma automática."
+              }
+            ].map((item, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+                className="relative text-center"
+              >
+                <div className="text-8xl font-bold text-[#9AE66E]/20 mb-4">{item.step}</div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2 -mt-12">{item.title}</h3>
+                <p className="text-gray-600">{item.description}</p>
+                {index < 2 && (
+                  <div className="hidden md:block absolute top-1/4 -right-4 transform translate-x-1/2">
+                    <ChevronRight className="w-8 h-8 text-[#9AE66E]" />
+                  </div>
+                )}
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section id="precos" className="py-24 bg-gray-900 text-white">
+        <div className="max-w-screen-xl mx-auto px-6 md:px-10 lg:px-16">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-3xl lg:text-5xl font-bold mb-4">
+              Preço simples,
+              <span className="text-[#9AE66E]"> sem surpresas</span>
+            </h2>
+            <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+              Sem mensalidade. Sem custos fixos. Pague apenas quando vender.
+            </p>
+          </motion.div>
+
+          <div className="max-w-xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              className="bg-gray-800 rounded-3xl p-8 md:p-12 border border-gray-700 relative overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 bg-[#9AE66E] text-gray-900 px-4 py-1 text-sm font-semibold rounded-bl-xl">
+                Mais Popular
+              </div>
+
+              <div className="text-center mb-8">
+                <h3 className="text-2xl font-bold mb-4">Plano Comissão</h3>
+                <div className="flex items-baseline justify-center gap-2 mb-2">
+                  <span className="text-6xl font-bold text-[#9AE66E]">8,99%</span>
+                  <span className="text-gray-400">por venda</span>
+                </div>
+                <p className="text-gray-400">Comece grátis, pague só quando vender</p>
+              </div>
+
+              <div className="space-y-4 mb-8">
+                {[
+                  "Sem mensalidade ou taxa de adesão",
+                  "Checkout personalizado profissional",
+                  "Sistema completo de afiliados",
+                  "Order Bump para aumentar vendas",
+                  "Integração com Facebook Pixel",
+                  "Área de membros ilimitada",
+                  "Pagamento em até 3 dias úteis",
+                  "Suporte prioritário via WhatsApp"
+                ].map((feature, index) => (
+                  <div key={index} className="flex items-center gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#9AE66E]/20 flex items-center justify-center">
+                      <Check className="w-4 h-4 text-[#9AE66E]" />
+                    </div>
+                    <span className="text-gray-300">{feature}</span>
+                  </div>
+                ))}
+              </div>
+
+              <motion.button
+                onClick={() => handleAuthNavigation('signup')}
+                className="w-full bg-[#9AE66E] text-gray-900 py-4 rounded-full text-lg font-semibold hover:bg-[#8AD65E] transition-all duration-200 flex items-center justify-center gap-2"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                Começar Agora Grátis
+                <ArrowRight className="w-5 h-5" />
+              </motion.button>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* App Download Section */}
+      <section className="py-24 bg-[#9AE66E]">
+        <div className="max-w-screen-xl mx-auto px-6 md:px-10 lg:px-16">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+            >
+              <h2 className="text-3xl lg:text-5xl font-bold text-gray-900 mb-6">
+                Gerencie suas vendas de qualquer lugar
+              </h2>
+              <p className="text-lg text-gray-800 mb-8">
+                Baixe o app Kambafy e tenha controle total do seu negócio na palma da mão. Acompanhe vendas, gerencie produtos e receba notificações em tempo real.
+              </p>
+              <div className="flex flex-wrap gap-4">
                 <PlayStoreButton 
-                    onClick={() => window.open('https://play.google.com/store/apps/details?id=com.converta.kambafy', '_blank')}
-                    className="bg-white hover:bg-white/90 text-black"
+                  onClick={() => window.open('https://play.google.com/store/apps/details?id=com.converta.kambafy', '_blank')}
+                  className="bg-gray-900 hover:bg-gray-800 text-white"
                 />
                 <AppStoreButton 
-                    onClick={() => window.open('https://apps.apple.com/pt/app/kambafy/id6752709065', '_blank')}
-                    className="bg-white hover:bg-white/90 text-black"
+                  onClick={() => window.open('https://apps.apple.com/pt/app/kambafy/id6752709065', '_blank')}
+                  className="bg-gray-900 hover:bg-gray-800 text-white"
                 />
+              </div>
             </motion.div>
-          </section>
-
-          {/* Features Section */}
-          <section id="recursos" className="py-24 px-6 relative z-10">
-              <div className="mx-auto max-w-7xl">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-16">
-                      <div className="text-center lg:text-left">
-                          <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4">
-                              Tudo que Você Precisa para{' '}
-                              <span className="text-[#81e76a]">Ter Sucesso</span>
-                          </h2>
-                          <p className="text-lg text-gray-400">
-                              Ferramentas poderosas e simples para transformar seu conhecimento em um negócio próspero
-                          </p>
+            
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="relative flex justify-center"
+            >
+              <FloatingElement>
+                <div className="bg-gray-900 rounded-[3rem] p-4 shadow-2xl max-w-[280px]">
+                  <div className="bg-gray-800 rounded-[2.5rem] p-6">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-white font-semibold">Vendas Hoje</span>
+                        <span className="text-[#9AE66E] text-sm">+23%</span>
                       </div>
-                      <div className="relative">
-                          <img 
-                              src={teamImage} 
-                              alt="Profissionais colaborando" 
-                              className="rounded-2xl shadow-lg object-cover w-full h-80 lg:h-96" 
+                      <div className="text-3xl font-bold text-white">Kz 145.000</div>
+                      <div className="h-20 flex items-end gap-1">
+                        {[40, 65, 45, 80, 55, 90, 70].map((h, i) => (
+                          <div 
+                            key={i} 
+                            className="flex-1 bg-[#9AE66E] rounded-t"
+                            style={{ height: `${h}%` }}
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-[#81e76a]/20 to-transparent rounded-2xl"></div>
+                        ))}
                       </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                      {[
-                          { icon: <BookOpen className="w-8 h-8" />, title: "Order Bump", description: "Aumente suas vendas com ofertas complementares no momento da compra." },
-                          { icon: <DollarSign className="w-8 h-8" />, title: "Checkout Personalizado", description: "Customize completamente sua página de checkout para maximizar conversões." },
-                          { icon: <Users className="w-8 h-8" />, title: "Pixel", description: "Integre Facebook Pixel e outras ferramentas de tracking para otimizar campanhas." },
-                          { icon: <Shield className="w-8 h-8" />, title: "Afiliação", description: "Sistema completo de afiliados para expandir suas vendas através de parceiros." }
-                      ].map((feature, index) => (
-                          <div key={index} className="bg-[#1a1a1a] border border-gray-700/50 rounded-lg p-6 hover:border-[#81e76a]/50 transition-all duration-300">
-                              <div className="text-[#81e76a] mb-4">{feature.icon}</div>
-                              <h3 className="text-xl font-semibold text-white mb-2">{feature.title}</h3>
-                              <p className="text-gray-400">{feature.description}</p>
-                          </div>
-                      ))}
-                  </div>
-              </div>
-          </section>
-
-          {/* Stats Section */}
-          <section className="py-16 px-6 bg-[#81e76a]/5 relative z-10">
-              <div className="mx-auto max-w-7xl">
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
-                      {[
-                          { number: "1000+", label: "Criadores Ativos" },
-                          { number: "15k+", label: "Alunos Satisfeitos" },
-                          { number: "500+", label: "Cursos Disponíveis" },
-                          { number: "98%", label: "Satisfação dos Usuários" }
-                      ].map((stat, index) => (
-                          <div key={index}>
-                              <div className="text-4xl font-bold text-[#81e76a] mb-2">{stat.number}</div>
-                              <div className="text-gray-400">{stat.label}</div>
-                          </div>
-                      ))}
-                  </div>
-              </div>
-          </section>
-
-          {/* How It Works Section */}
-          <section id="como-funciona" className="py-24 px-6 relative z-10">
-              <div className="mx-auto max-w-7xl">
-                  <div className="text-center mb-16">
-                      <h2 className="text-3xl lg:text-5xl font-bold text-white mb-4">
-                          Como{' '}
-                          <span className="text-[#81e76a]">Funciona</span>
-                      </h2>
-                      <p className="text-lg text-gray-400">
-                          Comece a vender seus produtos digitais em 3 passos simples
-                      </p>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                      {[
-                          { 
-                              number: "01", 
-                              title: "Crie sua Conta", 
-                              description: "Cadastre-se gratuitamente e configure seu perfil de criador em minutos. Sem burocracias, sem complicações." 
-                          },
-                          { 
-                              number: "02", 
-                              title: "Configure seu Produto", 
-                              description: "Adicione seus cursos, e-books ou produtos digitais. Personalize seu checkout e defina seus preços." 
-                          },
-                          { 
-                              number: "03", 
-                              title: "Comece a Vender", 
-                              description: "Compartilhe seu link e comece a receber pagamentos. Receba em até 3 dias úteis após cada venda." 
-                          }
-                      ].map((step, index) => (
-                          <div key={index} className="relative">
-                              <div className="bg-[#1a1a1a] border border-gray-700/50 rounded-lg p-8 hover:border-[#81e76a]/50 transition-all duration-300">
-                                  <div className="text-6xl font-bold text-[#81e76a]/20 mb-4">{step.number}</div>
-                                  <h3 className="text-2xl font-semibold text-white mb-4">{step.title}</h3>
-                                  <p className="text-gray-400">{step.description}</p>
-                              </div>
-                              {index < 2 && (
-                                  <div className="hidden md:block absolute top-1/2 -right-4 transform -translate-y-1/2">
-                                      <ArrowRight className="w-8 h-8 text-[#81e76a]/50" />
-                                  </div>
-                              )}
-                          </div>
-                      ))}
-                  </div>
-              </div>
-          </section>
-
-          {/* Testimonials Section */}
-          <section className="py-24 px-6 relative z-10">
-              <div className="mx-auto max-w-7xl">
-                  <div className="text-center mb-16">
-                      <h2 className="text-3xl lg:text-5xl font-bold text-white mb-4">
-                          O que Dizem Nossos{' '}
-                          <span className="text-[#81e76a]">Criadores</span>
-                      </h2>
-                      <p className="text-lg text-gray-400">
-                          Histórias reais de pessoas que transformaram suas vidas com a Kambafy
-                      </p>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                      {[
-                          { name: "Victor Muabi", role: "@victormuabi", content: "Esta é a plataforma que faltava no mercado, fácil de usar, converte muito bem, aumentou minha conversão em lançamentos.", image: victorAvatar },
-                          { name: "Carlos Santos", role: "@carlostech", content: "Este serviço transformou minha forma de trabalhar. Design limpo, recursos poderosos e excelente suporte.", image: "https://randomuser.me/api/portraits/men/64.jpg" },
-                          { name: "Ricardo Lima", role: "@ricardocria", content: "Já testei muitas plataformas, mas esta se destaca. Intuitiva, confiável e genuinamente útil para produtividade.", image: "https://randomuser.me/api/portraits/men/32.jpg" }
-                      ].map((testimonial, index) => (
-                          <div key={index} className="bg-[#1a1a1a] border border-gray-700/50 rounded-lg p-6">
-                              <div className="flex items-center mb-4">
-                                  <img src={testimonial.image} alt={testimonial.name} className="w-12 h-12 rounded-full object-cover mr-4" />
-                                  <div className="flex">
-                                      {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 text-[#81e76a] fill-current" />)}
-                                  </div>
-                              </div>
-                              <p className="text-gray-400 mb-4 italic">"{testimonial.content}"</p>
-                              <div>
-                                  <h4 className="font-semibold text-white">{testimonial.name}</h4>
-                                  <p className="text-sm text-gray-500">{testimonial.role}</p>
-                              </div>
-                          </div>
-                      ))}
-                  </div>
-              </div>
-          </section>
-
-          {/* Pricing Section */}
-          <section id="precos" className="py-24 px-6 relative z-10">
-              <div className="mx-auto max-w-7xl">
-                  <div className="text-center mb-16">
-                      <h2 className="text-3xl lg:text-5xl font-bold text-white mb-4">
-                          Preços{' '}
-                          <span className="text-[#81e76a]">Transparentes</span>
-                      </h2>
-                      <p className="text-lg text-gray-400">
-                          Sem mensalidades, sem custos fixos. Pague apenas quando vender.
-                      </p>
-                  </div>
-
-                  <div className="max-w-3xl mx-auto">
-                      <div className="bg-[#1a1a1a] border border-gray-700/50 rounded-2xl p-8 md:p-12 hover:border-[#81e76a]/50 transition-all duration-300">
-                          <div className="text-center mb-8">
-                              <h3 className="text-2xl font-bold text-white mb-4">Plano Comissão</h3>
-                              <div className="flex items-baseline justify-center gap-2 mb-4">
-                                  <span className="text-5xl font-bold text-[#81e76a]">8,99%</span>
-                                  <span className="text-gray-400">por venda</span>
-                              </div>
-                              <p className="text-gray-400">Comece gratuitamente, pague apenas quando vender</p>
-                          </div>
-
-                          <div className="space-y-4 mb-8">
-                              {[
-                                  "Sem mensalidade ou taxa de adesão",
-                                  "Checkout personalizado e profissional",
-                                  "Sistema completo de afiliados",
-                                  "Order Bump para aumentar vendas",
-                                  "Integração com Facebook Pixel",
-                                  "Área de membros ilimitada",
-                                  "Pagamento em até 3 dias úteis",
-                                  "Suporte prioritário"
-                              ].map((feature, index) => (
-                                  <div key={index} className="flex items-center gap-3">
-                                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#81e76a]/20 flex items-center justify-center">
-                                          <div className="w-2 h-2 bg-[#81e76a] rounded-full"></div>
-                                      </div>
-                                      <span className="text-gray-300">{feature}</span>
-                                  </div>
-                              ))}
-                          </div>
-
-                          <Button 
-                              size="lg" 
-                              className="w-full bg-[#81e76a] hover:bg-[#81e76a]/90 text-[#111111] text-lg font-semibold"
-                              onClick={() => handleAuthNavigation('signup')}
-                          >
-                              Começar Agora Grátis
-                              <ArrowRight className="ml-2 w-5 h-5" />
-                          </Button>
+                      <div className="pt-4 border-t border-gray-700">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-400">5 novos pedidos</span>
+                          <ChevronRight className="w-4 h-4 text-gray-400" />
+                        </div>
                       </div>
+                    </div>
                   </div>
-              </div>
-          </section>
+                </div>
+              </FloatingElement>
+            </motion.div>
+          </div>
+        </div>
+      </section>
 
-          {/* About Section */}
-          <section id="sobre" className="py-24 px-6 bg-[#81e76a]/5 relative z-10">
-              <div className="mx-auto max-w-7xl">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-                      <div>
-                          <h2 className="text-3xl lg:text-5xl font-bold text-white mb-6">
-                              Sobre a{' '}
-                              <span className="text-[#81e76a]">Kambafy</span>
-                          </h2>
-                          <p className="text-lg text-gray-400 mb-6">
-                              Somos uma startup angolana dedicada a democratizar o acesso ao conhecimento e 
-                              empoderar criadores de conteúdo em toda Angola e países lusófonos.
-                          </p>
-                          <p className="text-lg text-gray-400 mb-8">
-                              Nossa missão é criar uma ponte entre quem tem conhecimento e quem quer aprender, 
-                              proporcionando oportunidades de crescimento pessoal e profissional para todos.
-                          </p>
-                          <div className="space-y-4">
-                              {["Plataforma 100% nacional", "Pagamentos em multimoedas"].map((item, index) => (
-                                  <div key={index} className="flex items-center space-x-3">
-                                      <div className="w-2 h-2 bg-[#81e76a] rounded-full"></div>
-                                      <span className="text-gray-300">{item}</span>
-                                  </div>
-                              ))}
-                          </div>
-                      </div>
-                      <div className="relative">
-                          <img src={aboutSectionImage} alt="Equipe profissional" className="rounded-lg shadow-xl object-cover w-full h-96" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-[#81e76a]/30 to-transparent rounded-lg"></div>
-                      </div>
-                  </div>
-              </div>
-          </section>
+      {/* FAQ Section */}
+      <section id="faq" className="py-24 bg-white">
+        <div className="max-w-3xl mx-auto px-6 md:px-10 lg:px-16">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-3xl lg:text-5xl font-bold text-gray-900 mb-4">
+              Perguntas
+              <span className="text-[#9AE66E]"> frequentes</span>
+            </h2>
+            <p className="text-lg text-gray-600">
+              Tire suas dúvidas sobre a plataforma
+            </p>
+          </motion.div>
 
-          {/* FAQ Section */}
-          <section className="py-24 px-6 relative z-10">
-              <div className="mx-auto max-w-4xl">
-                  <div className="text-center mb-16">
-                      <h2 className="text-3xl lg:text-5xl font-bold text-white mb-4">
-                          Perguntas{' '}
-                          <span className="text-[#81e76a]">Frequentes</span>
-                      </h2>
-                      <p className="text-lg text-gray-400">
-                          Tire suas dúvidas sobre a plataforma
-                      </p>
-                  </div>
-                  <div className="space-y-4">
-                      {[
-                          {
-                              question: "Como começar a vender na Kambafy?",
-                              answer: "Para começar, crie sua conta gratuita, configure seu perfil de criador e publique seu primeiro produto. Nossa equipe está disponível para ajudar em cada passo."
-                          },
-                          {
-                              question: "Como funciona a comissão da plataforma?",
-                              answer: "Trabalhamos com um modelo justo: cobramos apenas 8,99% de comissão sobre cada venda realizada. Sem mensalidades, sem custos fixos."
-                          },
-                          {
-                              question: "Posso vender diferentes tipos de produtos?",
-                              answer: "Sim! Você pode vender cursos online, e-books, mentorias, templates, consultorias e muito mais. A plataforma é flexível para diversos tipos de infoprodutos."
-                          },
-                          {
-                              question: "Como recebo meus pagamentos?",
-                              answer: "Os pagamentos são processados automaticamente e transferidos para sua conta bancária em até 3 dias úteis. Suportamos múltiplas moedas e métodos de pagamento."
-                          },
-                          {
-                              question: "Preciso de conhecimentos técnicos?",
-                              answer: "Não! Nossa plataforma foi desenvolvida para ser intuitiva e fácil de usar. Qualquer pessoa pode criar e vender seus produtos digitais sem precisar de conhecimentos técnicos."
-                          }
-                      ].map((faq, index) => (
-                          <div key={index} className="bg-[#1a1a1a] border border-gray-700/50 rounded-lg overflow-hidden">
-                              <button 
-                                  className="w-full text-left p-6 text-white font-semibold hover:bg-[#81e76a]/5 transition-colors"
-                                  onClick={(e) => {
-                                      const content = e.currentTarget.nextElementSibling as HTMLElement;
-                                      if (content.style.maxHeight) {
-                                          content.style.maxHeight = '';
-                                      } else {
-                                          content.style.maxHeight = content.scrollHeight + "px";
-                                      }
-                                  }}
-                              >
-                                  {faq.question}
-                              </button>
-                              <div className="overflow-hidden transition-all duration-300" style={{maxHeight: '0'}}>
-                                  <div className="p-6 pt-0 text-gray-400">
-                                      {faq.answer}
-                                  </div>
-                              </div>
-                          </div>
-                      ))}
-                  </div>
-                  <div className="mt-8 text-center">
-                      <p className="text-gray-400 mb-4">
-                          Não encontrou a resposta que procurava?
-                      </p>
-                      <Button variant="outline" className="border-[#81e76a] text-[#81e76a] hover:bg-[#81e76a]/10" asChild>
-                          <SubdomainLink to="/ajuda">
-                              Ir para Central de Ajuda
-                          </SubdomainLink>
-                      </Button>
-                  </div>
-              </div>
-          </section>
+          <div>
+            {faqs.map((faq, index) => (
+              <FAQItem
+                key={index}
+                question={faq.question}
+                answer={faq.answer}
+                isOpen={openFAQ === index}
+                onToggle={() => setOpenFAQ(openFAQ === index ? null : index)}
+              />
+            ))}
+          </div>
 
-          {/* CTA Section */}
-          <section className="py-24 px-6 relative z-10">
-              <div className="mx-auto max-w-4xl text-center">
-                  <h2 className="text-3xl lg:text-5xl font-bold text-white mb-6">
-                      Pronto para{' '}
-                      <span className="text-[#81e76a]">Começar?</span>
-                  </h2>
-                  <p className="text-lg text-gray-400 mb-8">
-                      Cadastre-se gratuitamente e comece a monetizar seu conhecimento hoje mesmo
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                      <Button 
-                          size="lg" 
-                          className="bg-[#81e76a] hover:bg-[#81e76a]/90 text-[#111111] px-8 text-lg"
-                          onClick={() => handleAuthNavigation('signup')}
-                      >
-                          Criar Conta Grátis
-                          <ArrowRight className="ml-2 w-5 h-5" />
-                      </Button>
-                      <Button size="lg" variant="outline" className="border-[#81e76a] text-[#81e76a] hover:bg-[#81e76a]/10 px-8 text-lg" onClick={() => navigate('/contato')}>
-                          Falar com Especialista
-                      </Button>
-                  </div>
-              </div>
-          </section>
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="mt-12 text-center"
+          >
+            <p className="text-gray-600 mb-4">Ainda tem dúvidas?</p>
+            <Button 
+              variant="outline" 
+              className="border-[#9AE66E] text-gray-900 hover:bg-[#9AE66E]/10" 
+              asChild
+            >
+              <SubdomainLink to="/ajuda">
+                Falar com Suporte
+              </SubdomainLink>
+            </Button>
+          </motion.div>
+        </div>
+      </section>
 
-          {/* Footer */}
-          <footer className="bg-[#0a0a0a] text-gray-300 py-16 px-6 relative z-10 border-t border-gray-800">
-              <div className="mx-auto max-w-7xl">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
-                      <div>
-                          <img src={kambafy_icon} alt="Kambafy" className="h-12 w-auto mb-4" />
-                          <p className="text-gray-500 text-sm">A maior plataforma Lusófona de infoprodutos</p>
-                      </div>
-                      <div>
-                          <h4 className="font-semibold text-white mb-4">Plataforma</h4>
-                          <ul className="space-y-2 text-sm">
-                              <li><SubdomainLink to="/como-funciona" className="text-gray-500 hover:text-white transition-colors">Como Funciona</SubdomainLink></li>
-                              <li><SubdomainLink to="/precos" className="text-gray-500 hover:text-white transition-colors">Preços</SubdomainLink></li>
-                              <li><SubdomainLink to="/recursos" className="text-gray-500 hover:text-white transition-colors">Recursos</SubdomainLink></li>
-                          </ul>
-                      </div>
-                      <div>
-                          <h4 className="font-semibold text-white mb-4">Suporte</h4>
-                          <ul className="space-y-2 text-sm">
-                              <li><SubdomainLink to="/ajuda" className="text-gray-500 hover:text-white transition-colors">Central de Ajuda</SubdomainLink></li>
-                              <li><SubdomainLink to="/contato" className="text-gray-500 hover:text-white transition-colors">Contacto</SubdomainLink></li>
-                              <li><SubdomainLink to="/denuncie" className="text-gray-500 hover:text-white transition-colors">Denuncie</SubdomainLink></li>
-                              <li><SubdomainLink to="/status" className="text-gray-500 hover:text-white transition-colors">Status</SubdomainLink></li>
-                          </ul>
-                      </div>
-                      <div>
-                          <h4 className="font-semibold text-white mb-4">Legal</h4>
-                          <ul className="space-y-2 text-sm">
-                              <li><SubdomainLink to="/privacidade" className="text-gray-500 hover:text-white transition-colors">Privacidade</SubdomainLink></li>
-                              <li><SubdomainLink to="/termos" className="text-gray-500 hover:text-white transition-colors">Termos</SubdomainLink></li>
-                              <li><SubdomainLink to="/cookies" className="text-gray-500 hover:text-white transition-colors">Cookies</SubdomainLink></li>
-                          </ul>
-                      </div>
-                  </div>
-                  <div className="border-t border-gray-800 pt-8 text-center">
-                      <p className="text-gray-500 text-sm">© 2025 Kambafy. Todos os direitos reservados. Feito com ❤️ em Angola.</p>
-                  </div>
-              </div>
-          </footer>
-        </main>
+      {/* CTA Section */}
+      <section className="py-24 bg-gray-50">
+        <div className="max-w-4xl mx-auto px-6 md:px-10 lg:px-16 text-center">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-3xl lg:text-5xl font-bold text-gray-900 mb-6">
+              Pronto para transformar seu conhecimento em
+              <span className="text-[#9AE66E]"> renda?</span>
+            </h2>
+            <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
+              Junte-se a mais de 1000 criadores que já estão vendendo seus produtos digitais na Kambafy
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <motion.button
+                onClick={() => handleAuthNavigation('signup')}
+                className="bg-[#9AE66E] text-gray-900 px-8 py-4 rounded-full text-lg font-semibold hover:bg-[#8AD65E] transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                Criar Conta Grátis
+                <ArrowRight className="w-5 h-5" />
+              </motion.button>
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="border-gray-300 text-gray-700 hover:bg-gray-100 px-8 rounded-full" 
+                onClick={() => navigate('/contato')}
+              >
+                Falar com Especialista
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-gray-900 text-gray-300 py-16 px-6">
+        <div className="max-w-screen-xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+            <div>
+              <img src={kambafy_icon} alt="Kambafy" className="h-12 w-auto mb-4 brightness-200" />
+              <p className="text-gray-500 text-sm">A maior plataforma lusófona de infoprodutos</p>
+            </div>
+            <div>
+              <h4 className="font-semibold text-white mb-4">Plataforma</h4>
+              <ul className="space-y-2 text-sm">
+                <li><SubdomainLink to="/como-funciona" className="text-gray-500 hover:text-[#9AE66E] transition-colors">Como Funciona</SubdomainLink></li>
+                <li><SubdomainLink to="/precos" className="text-gray-500 hover:text-[#9AE66E] transition-colors">Preços</SubdomainLink></li>
+                <li><SubdomainLink to="/recursos" className="text-gray-500 hover:text-[#9AE66E] transition-colors">Recursos</SubdomainLink></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold text-white mb-4">Suporte</h4>
+              <ul className="space-y-2 text-sm">
+                <li><SubdomainLink to="/ajuda" className="text-gray-500 hover:text-[#9AE66E] transition-colors">Central de Ajuda</SubdomainLink></li>
+                <li><SubdomainLink to="/contato" className="text-gray-500 hover:text-[#9AE66E] transition-colors">Contacto</SubdomainLink></li>
+                <li><SubdomainLink to="/denuncie" className="text-gray-500 hover:text-[#9AE66E] transition-colors">Denuncie</SubdomainLink></li>
+                <li><SubdomainLink to="/status" className="text-gray-500 hover:text-[#9AE66E] transition-colors">Status</SubdomainLink></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold text-white mb-4">Legal</h4>
+              <ul className="space-y-2 text-sm">
+                <li><SubdomainLink to="/privacidade" className="text-gray-500 hover:text-[#9AE66E] transition-colors">Privacidade</SubdomainLink></li>
+                <li><SubdomainLink to="/termos" className="text-gray-500 hover:text-[#9AE66E] transition-colors">Termos</SubdomainLink></li>
+                <li><SubdomainLink to="/cookies" className="text-gray-500 hover:text-[#9AE66E] transition-colors">Cookies</SubdomainLink></li>
+              </ul>
+            </div>
+          </div>
+          <div className="border-t border-gray-800 pt-8 text-center">
+            <p className="text-gray-500 text-sm">© 2025 Kambafy. Todos os direitos reservados. Feito com ❤️ em Angola.</p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
