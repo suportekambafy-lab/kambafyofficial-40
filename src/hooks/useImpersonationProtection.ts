@@ -118,8 +118,9 @@ export const useImpersonationProtection = (): ImpersonationProtectionResult => {
       setSession(null);
       setTimeRemaining(0);
 
-      // Fazer signOut local do usuário impersonado
-      await supabase.auth.signOut({ scope: 'local' });
+      // ⚠️ Não fazer signOut antes de restaurar.
+      // Em alguns cenários, isso dispara SIGNED_OUT e atrapalha o restore do admin.
+      // Vamos apenas substituir a sessão via setSession/refreshSession.
 
       const adminSessionRaw = localStorage.getItem('admin_session');
       const adminEmail = (() => {

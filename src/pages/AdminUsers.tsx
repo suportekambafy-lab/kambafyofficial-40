@@ -341,17 +341,23 @@ export default function AdminUsers() {
       // ✅ Backup da sessão Supabase do admin para restaurar após sair do impersonation
       const { data: adminAuthData } = await supabase.auth.getSession();
       if (adminAuthData.session) {
-        localStorage.setItem(
-          'admin_supabase_session_backup',
-          JSON.stringify({
-            access_token: adminAuthData.session.access_token,
-            refresh_token: adminAuthData.session.refresh_token,
-          })
-        );
+        const backup = {
+          access_token: adminAuthData.session.access_token,
+          refresh_token: adminAuthData.session.refresh_token,
+        };
+
+        console.log('🔐 Backup sessão admin (impersonation):', {
+          hasAccessToken: !!backup.access_token,
+          hasRefreshToken: !!backup.refresh_token,
+          refreshTokenLen: backup.refresh_token?.length ?? 0,
+        });
+
+        localStorage.setItem('admin_supabase_session_backup', JSON.stringify(backup));
       }
 
-      // Fazer logout LOCAL do admin (não revoga refresh token, permitindo restore)
-      await supabase.auth.signOut({ scope: 'local' });
+      // ⚠️ NÃO fazer signOut do admin aqui.
+      // Em alguns cenários isso revoga/invalidada o refresh token e impede restaurar depois.
+      // O signIn abaixo já substituirá a sessão atual no storage.
 
       // Fazer login com a senha temporária
       const { error: loginError } = await supabase.auth.signInWithPassword({
