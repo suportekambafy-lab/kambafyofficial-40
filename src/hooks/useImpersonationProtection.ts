@@ -111,7 +111,6 @@ export const useImpersonationProtection = (): ImpersonationProtectionResult => {
 
   const exitImpersonation = useCallback(async () => {
     try {
-      // Registrar término da sessão no banco (usando service role via função se necessário)
       const sessionId = session?.id;
       
       // Limpar dados de impersonation PRIMEIRO
@@ -124,6 +123,8 @@ export const useImpersonationProtection = (): ImpersonationProtectionResult => {
 
       // Tentar restaurar a sessão Supabase do admin
       const backupSessionRaw = localStorage.getItem('admin_supabase_session_backup');
+      let sessionRestored = false;
+      
       if (backupSessionRaw) {
         try {
           const backup = JSON.parse(backupSessionRaw);
@@ -134,13 +135,12 @@ export const useImpersonationProtection = (): ImpersonationProtectionResult => {
             refresh_token: backup.refresh_token,
           });
 
-          if (restoreError) {
-            console.error('❌ Falha ao restaurar sessão Supabase:', restoreError);
-          } else {
+          if (!restoreError) {
             console.log('✅ Sessão Supabase do admin restaurada');
             localStorage.removeItem('admin_supabase_session_backup');
+            sessionRestored = true;
             
-            // Agora com a sessão admin restaurada, podemos atualizar o registro
+            // Com sessão restaurada, podemos atualizar o registro
             if (sessionId) {
               await supabase
                 .from('admin_impersonation_sessions')
@@ -150,19 +150,25 @@ export const useImpersonationProtection = (): ImpersonationProtectionResult => {
                 })
                 .eq('id', sessionId);
             }
+          } else {
+            console.warn('⚠️ Falha ao restaurar sessão Supabase, sessão expirou. Admin precisa relogar.');
+            localStorage.removeItem('admin_supabase_session_backup');
           }
         } catch (e) {
           console.error('❌ Erro ao restaurar sessão backup:', e);
+          localStorage.removeItem('admin_supabase_session_backup');
         }
       }
 
       toast({
         title: 'Impersonation encerrado',
-        description: 'Voltando ao painel de administração',
+        description: sessionRestored 
+          ? 'Voltando ao painel de administração' 
+          : 'Sessão expirada, faça login novamente',
       });
 
-      // Redirecionar para o painel admin
-      window.location.href = '/admin/usuarios';
+      // Redirecionar - se não restaurou, ir para login
+      window.location.href = sessionRestored ? '/admin' : '/admin/login';
     } catch (error) {
       console.error('Erro ao sair do impersonation:', error);
       toast({
@@ -170,8 +176,8 @@ export const useImpersonationProtection = (): ImpersonationProtectionResult => {
         description: 'Erro ao sair do modo impersonation',
         variant: 'destructive'
       });
-      // Em caso de erro, ainda redirecionar
-      window.location.href = '/admin/usuarios';
+      // Em caso de erro, redirecionar para login
+      window.location.href = '/admin/login';
     }
   }, [session, toast]);
 
