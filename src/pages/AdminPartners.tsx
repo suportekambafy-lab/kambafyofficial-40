@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { CheckCircle, XCircle, Search, Eye, Calendar, Building2 } from "lucide-react";
+import { CheckCircle, XCircle, Search, Eye, Calendar, Building2, Mail } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -127,6 +127,39 @@ export default function AdminPartners() {
       toast({
         variant: "destructive",
         title: "Erro ao aprovar parceiro",
+        description: error.message,
+      });
+    } finally {
+      setProcessing(null);
+    }
+  };
+
+  const handleResendAccess = async (partner: Partner) => {
+    setProcessing(`resend-${partner.id}`);
+    try {
+      const { data: inviteData, error: inviteError } = await supabase.functions.invoke('send-partner-invite', {
+        body: {
+          partner_id: partner.id,
+          email: partner.contact_email,
+          company_name: partner.company_name,
+          contact_name: partner.contact_name,
+        }
+      });
+
+      if (inviteError) {
+        throw inviteError;
+      }
+
+      toast({
+        title: "Acesso reenviado",
+        description: `Email de acesso enviado para ${partner.contact_email}.`,
+      });
+
+      console.log('[AdminPartners] Resend invite result:', inviteData);
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao reenviar acesso",
         description: error.message,
       });
     } finally {
@@ -326,6 +359,21 @@ export default function AdminPartners() {
                   >
                     <XCircle className="w-4 h-4 mr-2" />
                     Rejeitar
+                  </Button>
+                </div>
+              )}
+
+              {partner.status === "approved" && (
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleResendAccess(partner)}
+                    disabled={processing !== null}
+                    className="flex-1"
+                  >
+                    <Mail className="w-4 h-4 mr-2" />
+                    {processing === `resend-${partner.id}` ? "Enviando..." : "Reenviar acesso"}
                   </Button>
                 </div>
               )}
