@@ -73,6 +73,10 @@ export default function PartnersPortal() {
   useEffect(() => {
     if (user) {
       loadPartnerData();
+    } else if (user === null) {
+      // Usuário não autenticado - redirecionar para login
+      setLoading(false);
+      navigate('/auth');
     }
   }, [user]);
 
