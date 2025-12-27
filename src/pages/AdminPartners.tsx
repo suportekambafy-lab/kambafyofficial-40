@@ -69,20 +69,32 @@ export default function AdminPartners() {
   };
 
   const handleApprove = async (partnerId: string) => {
+    console.log('[AdminPartners] handleApprove chamado para:', partnerId);
     setProcessing(partnerId);
     try {
       // Encontrar o parceiro para pegar os dados
       const partner = partners.find(p => p.id === partnerId);
-      if (!partner) throw new Error("Parceiro não encontrado");
+      if (!partner) {
+        console.error('[AdminPartners] Parceiro não encontrado:', partnerId);
+        throw new Error("Parceiro não encontrado");
+      }
+      console.log('[AdminPartners] Parceiro encontrado:', partner.company_name);
 
       // 1. Aprovar o parceiro no banco (gera API key)
-      const { error } = await supabase.rpc("approve_partner", {
+      console.log('[AdminPartners] Chamando approve_partner RPC...');
+      const { data: rpcData, error } = await supabase.rpc("approve_partner", {
         partner_id: partnerId
       });
+      
+      console.log('[AdminPartners] RPC resultado:', { rpcData, error });
 
-      if (error) throw error;
+      if (error) {
+        console.error('[AdminPartners] Erro na RPC:', error);
+        throw error;
+      }
 
       // 2. Enviar email de convite com link para criar senha
+      console.log('[AdminPartners] Chamando send-partner-invite...');
       const { data: inviteData, error: inviteError } = await supabase.functions.invoke('send-partner-invite', {
         body: {
           partner_id: partnerId,
@@ -91,6 +103,8 @@ export default function AdminPartners() {
           contact_name: partner.contact_name,
         }
       });
+
+      console.log('[AdminPartners] Invite resultado:', { inviteData, inviteError });
 
       if (inviteError) {
         console.error('Erro ao enviar convite:', inviteError);
@@ -109,6 +123,7 @@ export default function AdminPartners() {
 
       fetchPartners();
     } catch (error: any) {
+      console.error('[AdminPartners] Erro geral:', error);
       toast({
         variant: "destructive",
         title: "Erro ao aprovar parceiro",
