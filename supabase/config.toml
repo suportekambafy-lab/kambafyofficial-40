@@ -248,3 +248,6 @@ verify_jwt = false
 
 [functions.send-report-email]
 verify_jwt = false
+
+[functions.process-partner-webhook]
+verify_jwt = false

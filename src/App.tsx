@@ -257,6 +257,7 @@ const App = () => {
                        {/* Partner Routes */}
                        <Route path="/partners/apply" element={<OptimizedRoutes.PartnersApply />} />
                        <Route path="/partners/portal" element={<OptimizedRoutes.PartnersPortal />} />
+                       <Route path="/api-docs" element={<OptimizedRoutes.ApiDocumentation />} />
                        
                         {/* Developer Routes */}
                        <Route path="/dev-routes" element={<OptimizedRoutes.DevRoutes />} />
