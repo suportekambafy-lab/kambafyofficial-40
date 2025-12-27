@@ -321,7 +321,116 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     if (!orders || orders.length === 0) {
-      console.log('[APPYPAY-WEBHOOK] Order not found in orders table, checking module_payments...');
+      console.log('[APPYPAY-WEBHOOK] Order not found in orders table, checking external_payments...');
+      
+      // ✅ NOVO: Buscar em external_payments (API de Parceiros)
+      let externalPayment: any = null;
+      
+      // Tentar por appypay_transaction_id (Express)
+      if (payload.merchantTransactionId) {
+        const { data: extPayment } = await supabase
+          .from('external_payments')
+          .select('*, partners!inner(webhook_url, webhook_secret)')
+          .eq('appypay_transaction_id', payload.merchantTransactionId)
+          .single();
+        
+        if (extPayment) {
+          externalPayment = extPayment;
+          console.log(`[APPYPAY-WEBHOOK] External payment found by merchantTransactionId`);
+        }
+      }
+      
+      // Tentar por reference_number (Referência)
+      if (!externalPayment && payload.reference?.referenceNumber) {
+        const { data: extPayment } = await supabase
+          .from('external_payments')
+          .select('*, partners!inner(webhook_url, webhook_secret)')
+          .eq('reference_number', payload.reference.referenceNumber)
+          .single();
+        
+        if (extPayment) {
+          externalPayment = extPayment;
+          console.log(`[APPYPAY-WEBHOOK] External payment found by referenceNumber`);
+        }
+      }
+      
+      // Se encontrou external_payment, processar
+      if (externalPayment) {
+        console.log('[APPYPAY-WEBHOOK] Processing external payment for partner:', externalPayment.partner_id);
+        
+        const paymentStatus = payload.responseStatus?.status;
+        const isSuccessful = payload.responseStatus?.successful;
+        
+        let newStatus = 'pending';
+        let eventType = 'payment.pending';
+        
+        if (isSuccessful === true && paymentStatus === 'Success') {
+          newStatus = 'completed';
+          eventType = 'payment.completed';
+        } else if (paymentStatus === 'Pending') {
+          newStatus = 'pending';
+          eventType = 'payment.pending';
+        } else {
+          newStatus = 'failed';
+          eventType = 'payment.failed';
+        }
+        
+        console.log(`[APPYPAY-WEBHOOK] External payment status: ${externalPayment.status} -> ${newStatus}`);
+        
+        // Atualizar external_payment
+        if (externalPayment.status !== newStatus) {
+          const updateData: any = {
+            status: newStatus,
+            updated_at: new Date().toISOString(),
+          };
+          
+          if (newStatus === 'completed') {
+            updateData.completed_at = new Date().toISOString();
+          }
+          
+          await supabase
+            .from('external_payments')
+            .update(updateData)
+            .eq('id', externalPayment.id);
+          
+          console.log(`[APPYPAY-WEBHOOK] ✅ External payment updated to ${newStatus}`);
+          
+          // Disparar webhook para o parceiro
+          if (externalPayment.partners?.webhook_url && (newStatus === 'completed' || newStatus === 'failed')) {
+            console.log(`[APPYPAY-WEBHOOK] 📤 Triggering partner webhook for event: ${eventType}`);
+            
+            try {
+              const { error: webhookError } = await supabase.functions.invoke('process-partner-webhook', {
+                body: {
+                  paymentId: externalPayment.id,
+                  event: eventType
+                }
+              });
+              
+              if (webhookError) {
+                console.error('[APPYPAY-WEBHOOK] ❌ Error triggering partner webhook:', webhookError);
+              } else {
+                console.log('[APPYPAY-WEBHOOK] ✅ Partner webhook triggered successfully');
+              }
+            } catch (webhookInvokeError) {
+              console.error('[APPYPAY-WEBHOOK] ❌ Exception triggering partner webhook:', webhookInvokeError);
+            }
+          }
+        }
+        
+        return new Response(JSON.stringify({
+          success: true,
+          message: 'External payment processed',
+          payment_id: externalPayment.id,
+          status: newStatus,
+          event: eventType
+        }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders }
+        });
+      }
+      
+      console.log('[APPYPAY-WEBHOOK] Order not found in external_payments, checking module_payments...');
       
       // Buscar em module_payments
       let modulePaymentId = null;

@@ -614,6 +614,35 @@ export default function PartnersPortal() {
                   <Button variant="outline" onClick={regenerateWebhookSecret}>
                     Regenerar Secret
                   </Button>
+                  <Button 
+                    variant="secondary" 
+                    onClick={async () => {
+                      if (!partner.webhook_url) {
+                        toast({ title: "Erro", description: "Configure uma URL primeiro", variant: "destructive" });
+                        return;
+                      }
+                      try {
+                        const response = await fetch(
+                          `https://hcbkqygdtzpxvctfdqbd.supabase.co/functions/v1/kambafy-payments-api/webhooks/test`,
+                          {
+                            method: 'POST',
+                            headers: { 'x-api-key': partner.api_key, 'Content-Type': 'application/json' }
+                          }
+                        );
+                        const result = await response.json();
+                        toast({
+                          title: result.success ? "Sucesso" : "Falhou",
+                          description: result.message,
+                          variant: result.success ? "default" : "destructive"
+                        });
+                      } catch (e) {
+                        toast({ title: "Erro", description: "Falha ao testar webhook", variant: "destructive" });
+                      }
+                    }}
+                  >
+                    <Webhook className="w-4 h-4 mr-2" />
+                    Testar Conexão
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -643,9 +672,9 @@ export default function PartnersPortal() {
                     </p>
                   </div>
                   <div className="p-4 border rounded-lg">
-                    <Badge variant="outline" className="mb-2">refund.completed</Badge>
+                    <Badge variant="outline" className="mb-2">webhook.test</Badge>
                     <p className="text-sm text-muted-foreground">
-                      Enviado quando um reembolso é processado
+                      Enviado ao testar a conexão do webhook
                     </p>
                   </div>
                 </div>
