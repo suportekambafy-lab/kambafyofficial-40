@@ -14,6 +14,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 
+// Helper para evitar inferência de tipo profunda do Supabase
+const executeQuery = async <T,>(queryFn: () => any): Promise<{ data: T | null; error: any }> => {
+  return await queryFn();
+};
+
 interface Partner {
   id: string;
   company_name: string;
@@ -74,11 +79,11 @@ export default function PartnersPortal() {
     try {
       setLoading(true);
 
-      // Buscar dados do parceiro
-      const { data: partnerData, error: partnerError } = await supabase
+      // Buscar dados do parceiro - usando any para evitar deep type instantiation
+      const { data: partnerData, error: partnerError } = await (supabase as any)
         .from('partners')
         .select('*')
-        .eq('user_id', user?.id as string)
+        .eq('user_id', user?.id ?? '')
         .single();
 
       if (partnerError || !partnerData) {
@@ -91,28 +96,28 @@ export default function PartnersPortal() {
         return;
       }
 
-      setPartner(partnerData);
+      setPartner(partnerData as Partner);
       setWebhookUrl(partnerData.webhook_url || "");
 
       // Buscar pagamentos
-      const { data: paymentsData } = await supabase
+      const { data: paymentsData } = await (supabase as any)
         .from('external_payments')
         .select('*')
         .eq('partner_id', partnerData.id)
         .order('created_at', { ascending: false })
         .limit(50);
-
-      setPayments(paymentsData || []);
+      
+      setPayments((paymentsData || []) as Payment[]);
 
       // Buscar logs de API
-      const { data: logsData } = await supabase
+      const { data: logsData } = await (supabase as any)
         .from('api_usage_logs')
         .select('*')
         .eq('partner_id', partnerData.id)
         .order('created_at', { ascending: false })
         .limit(100);
-
-      setApiLogs(logsData || []);
+      
+      setApiLogs((logsData || []) as ApiLog[]);
 
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
