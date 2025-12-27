@@ -4681,6 +4681,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_auth_user_id_by_email: { Args: { _email: string }; Returns: string }
       get_available_balance_with_retention: {
         Args: { p_user_id: string }
         Returns: number

@@ -26,23 +26,14 @@ const getAppOriginFromReq = (req: Request) => {
   return DEFAULT_APP_ORIGIN;
 };
 
-const findUserByEmail = async (supabaseAdmin: any, email: string) => {
-  const target = normalizeEmail(email);
-  const perPage = 200;
-  const maxPages = 50;
-
-  for (let page = 1; page <= maxPages; page++) {
-    const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage });
-    if (error) throw error;
-
-    const users = data?.users ?? [];
-    const match = users.find((u: any) => normalizeEmail(u.email ?? "") === target);
-    if (match) return match;
-
-    if (users.length < perPage) break;
+// Use RPC to find user by email (avoids listUsers pagination issues)
+const findUserIdByEmail = async (supabaseAdmin: any, email: string): Promise<string | null> => {
+  const { data, error } = await supabaseAdmin.rpc('get_auth_user_id_by_email', { _email: email });
+  if (error) {
+    console.error("[send-partner-invite] RPC get_auth_user_id_by_email error:", error);
+    return null;
   }
-
-  return null;
+  return data;
 };
 
 const handler = async (req: Request): Promise<Response> => {
@@ -85,10 +76,14 @@ const handler = async (req: Request): Promise<Response> => {
     let userId: string;
     let tempPassword: string | null = null;
 
-    const existingUser = await findUserByEmail(supabaseAdmin, normalizedEmail);
+    // 1) Encontrar usuário existente via RPC ou criar novo
+    let userId: string;
+    let tempPassword: string | null = null;
 
-    if (existingUser) {
-      userId = existingUser.id;
+    const existingUserId = await findUserIdByEmail(supabaseAdmin, normalizedEmail);
+
+    if (existingUserId) {
+      userId = existingUserId;
       console.log(`[send-partner-invite] User already exists: ${userId}`);
     } else {
       tempPassword = `KP_${crypto.randomUUID().slice(0, 12)}`;
@@ -104,11 +99,11 @@ const handler = async (req: Request): Promise<Response> => {
       });
 
       if (createError) {
-        // Se o usuário existir mas não veio na primeira página da listagem, tentamos achar por paginação.
+        // Se o usuário existir mas RPC não encontrou (improvável), tentar RPC novamente
         if ((createError as any)?.code === "email_exists") {
-          const fallbackUser = await findUserByEmail(supabaseAdmin, normalizedEmail);
-          if (!fallbackUser) throw createError;
-          userId = fallbackUser.id;
+          const fallbackUserId = await findUserIdByEmail(supabaseAdmin, normalizedEmail);
+          if (!fallbackUserId) throw createError;
+          userId = fallbackUserId;
           tempPassword = null;
           console.log(`[send-partner-invite] User exists (fallback found): ${userId}`);
         } else {
