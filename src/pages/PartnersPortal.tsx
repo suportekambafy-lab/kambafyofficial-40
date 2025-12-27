@@ -12,6 +12,7 @@ import { SEO } from "@/components/SEO";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { WebhookDashboard } from "@/components/partners/WebhookDashboard";
 import { format } from "date-fns";
 
 // Helper para evitar inferência de tipo profunda do Supabase
@@ -554,6 +555,7 @@ export default function PartnersPortal() {
 
           {/* Webhooks Tab */}
           <TabsContent value="webhooks" className="space-y-6">
+            {/* Configuration Card */}
             <Card>
               <CardHeader>
                 <CardTitle>Configuração de Webhooks</CardTitle>
@@ -606,7 +608,7 @@ export default function PartnersPortal() {
                   </p>
                 </div>
 
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-3">
                   <Button onClick={saveWebhookSettings} disabled={savingWebhook}>
                     {savingWebhook && <RefreshCw className="w-4 h-4 mr-2 animate-spin" />}
                     Salvar URL
@@ -647,6 +649,7 @@ export default function PartnersPortal() {
               </CardContent>
             </Card>
 
+            {/* Events Card */}
             <Card>
               <CardHeader>
                 <CardTitle>Eventos Disponíveis</CardTitle>
@@ -680,6 +683,13 @@ export default function PartnersPortal() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Webhook Dashboard with logs, history, resend */}
+            <WebhookDashboard 
+              partnerId={partner.id} 
+              apiKey={partner.api_key}
+              webhookUrl={partner.webhook_url}
+            />
           </TabsContent>
 
           {/* Logs Tab */}
