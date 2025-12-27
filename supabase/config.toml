@@ -251,3 +251,6 @@ verify_jwt = false
 
 [functions.process-partner-webhook]
 verify_jwt = false
+
+[functions.send-partner-invite]
+verify_jwt = false

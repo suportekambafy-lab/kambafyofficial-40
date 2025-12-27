@@ -71,16 +71,41 @@ export default function AdminPartners() {
   const handleApprove = async (partnerId: string) => {
     setProcessing(partnerId);
     try {
+      // Encontrar o parceiro para pegar os dados
+      const partner = partners.find(p => p.id === partnerId);
+      if (!partner) throw new Error("Parceiro não encontrado");
+
+      // 1. Aprovar o parceiro no banco (gera API key)
       const { error } = await supabase.rpc("approve_partner", {
         partner_id: partnerId
       });
 
       if (error) throw error;
 
-      toast({
-        title: "Parceiro aprovado!",
-        description: "API key gerada e enviada por email.",
+      // 2. Enviar email de convite com link para criar senha
+      const { data: inviteData, error: inviteError } = await supabase.functions.invoke('send-partner-invite', {
+        body: {
+          partner_id: partnerId,
+          email: partner.contact_email,
+          company_name: partner.company_name,
+          contact_name: partner.contact_name,
+        }
       });
+
+      if (inviteError) {
+        console.error('Erro ao enviar convite:', inviteError);
+        // Não falhar completamente, o parceiro foi aprovado
+        toast({
+          title: "Parceiro aprovado!",
+          description: "API key gerada, mas houve erro ao enviar email. Verifique manualmente.",
+          variant: "default"
+        });
+      } else {
+        toast({
+          title: "Parceiro aprovado!",
+          description: "Email enviado com link para criar senha de acesso.",
+        });
+      }
 
       fetchPartners();
     } catch (error: any) {
