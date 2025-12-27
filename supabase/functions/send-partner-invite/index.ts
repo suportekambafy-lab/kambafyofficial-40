@@ -77,9 +77,6 @@ const handler = async (req: Request): Promise<Response> => {
     let tempPassword: string | null = null;
 
     // 1) Encontrar usuário existente via RPC ou criar novo
-    let userId: string;
-    let tempPassword: string | null = null;
-
     const existingUserId = await findUserIdByEmail(supabaseAdmin, normalizedEmail);
 
     if (existingUserId) {
@@ -116,16 +113,9 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    // 2) Vincular partner -> user_id
-    const { error: updateError } = await supabaseAdmin
-      .from("partners")
-      .update({ user_id: userId })
-      .eq("id", partner_id);
-
-    if (updateError) {
-      console.error("[send-partner-invite] Error updating partner:", updateError);
-      throw updateError;
-    }
+    // 2) (Opcional) Vincular partner -> user_id
+    // Nem todas as bases têm a coluna `partners.user_id`. Para evitar falhas no envio,
+    // seguimos sem atualizar o partner e usamos o email como identificador.
 
     // 3) Gerar link para criar/redefinir senha (mais seguro do que "reenviar senha")
     const { data: resetData, error: resetError } = await supabaseAdmin.auth.admin.generateLink({
