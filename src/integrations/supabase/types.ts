@@ -4385,12 +4385,10 @@ export type Database = {
           valor_original: number
         }[]
       }
-      approve_partner:
-        | { Args: { partner_id: string }; Returns: undefined }
-        | {
-            Args: { admin_id?: string; partner_id: string }
-            Returns: undefined
-          }
+      approve_partner: {
+        Args: { admin_id?: string; partner_id: string }
+        Returns: undefined
+      }
       audit_balance_transactions: {
         Args: never
         Returns: {
