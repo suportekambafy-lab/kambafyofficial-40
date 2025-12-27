@@ -60,6 +60,30 @@ const ApiDocumentation = () => {
       badge: 'Útil',
       badgeVariant: 'secondary' as const,
     },
+    {
+      method: 'GET',
+      path: '/balance',
+      title: 'Consultar Saldo',
+      description: 'Retorna o saldo disponível de um cliente por email',
+      badge: 'Novo',
+      badgeVariant: 'outline' as const,
+    },
+    {
+      method: 'POST',
+      path: '/refunds',
+      title: 'Solicitar Reembolso',
+      description: 'Cria uma solicitação de reembolso para um pagamento',
+      badge: 'Novo',
+      badgeVariant: 'outline' as const,
+    },
+    {
+      method: 'GET',
+      path: '/stats',
+      title: 'Estatísticas',
+      description: 'Retorna estatísticas de uso e transações do parceiro',
+      badge: 'Novo',
+      badgeVariant: 'outline' as const,
+    },
   ];
 
   const curlCreateExpress = `curl -X POST "${API_BASE_URL}" \\
@@ -166,6 +190,19 @@ def get_payment(payment_id):
     response = requests.get(f"{BASE_URL}/payment/{payment_id}", headers=headers)
     return response.json()
 
+# Consultar saldo
+def get_balance(email):
+    response = requests.get(f"{BASE_URL}/balance", headers=headers, params={"email": email})
+    return response.json()
+
+# Solicitar reembolso
+def request_refund(payment_id, reason):
+    response = requests.post(f"{BASE_URL}/refunds", headers=headers, json={
+        "paymentId": payment_id,
+        "reason": reason
+    })
+    return response.json()
+
 # Verificar assinatura do webhook
 def verify_webhook_signature(payload, signature, secret):
     expected = hmac.new(
@@ -173,30 +210,89 @@ def verify_webhook_signature(payload, signature, secret):
         payload.encode(),
         hashlib.sha256
     ).hexdigest()
-    return hmac.compare_digest(expected, signature)
+    return hmac.compare_digest(expected, signature)`;
 
-# Webhook handler (Flask example)
-from flask import Flask, request, jsonify
+  const phpExample = `<?php
+// Configuração
+$apiKey = "YOUR_API_KEY";
+$baseUrl = "${API_BASE_URL}";
 
-app = Flask(__name__)
-WEBHOOK_SECRET = "YOUR_WEBHOOK_SECRET"
+function kambafyRequest($method, $endpoint, $data = null) {
+    global $apiKey, $baseUrl;
+    
+    $ch = curl_init();
+    $url = $baseUrl . $endpoint;
+    
+    $headers = [
+        "Content-Type: application/json",
+        "x-api-key: " . $apiKey
+    ];
+    
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    
+    if ($method === "POST") {
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+    }
+    
+    $response = curl_exec($ch);
+    curl_close($ch);
+    
+    return json_decode($response, true);
+}
 
-@app.route('/webhook', methods=['POST'])
-def handle_webhook():
-    payload = request.get_data(as_text=True)
-    signature = request.headers.get('X-Kambafy-Signature', '')
+// Criar pagamento Express
+function createExpressPayment($orderId, $amount, $phone, $name, $email) {
+    return kambafyRequest("POST", "/", [
+        "orderId" => $orderId,
+        "amount" => $amount,
+        "currency" => "AOA",
+        "paymentMethod" => "express",
+        "phoneNumber" => $phone,
+        "customerName" => $name,
+        "customerEmail" => $email
+    ]);
+}
+
+// Verificar status
+function getPayment($paymentId) {
+    return kambafyRequest("GET", "/payment/" . $paymentId);
+}
+
+// Consultar saldo
+function getBalance($email) {
+    return kambafyRequest("GET", "/balance?email=" . urlencode($email));
+}
+
+// Webhook handler (Laravel example)
+Route::post('/webhook', function (Request $request) {
+    $payload = $request->getContent();
+    $signature = $request->header('X-Kambafy-Signature');
+    $secret = env('KAMBAFY_WEBHOOK_SECRET');
     
-    if not verify_webhook_signature(payload, signature, WEBHOOK_SECRET):
-        return jsonify({"error": "Invalid signature"}), 401
+    $expected = hash_hmac('sha256', $payload, $secret);
     
-    data = request.json
-    event = data.get('event')
+    if (!hash_equals($expected, $signature)) {
+        return response()->json(['error' => 'Invalid signature'], 401);
+    }
     
-    if event == 'payment.completed':
-        # Processar pagamento confirmado
-        print(f"Pagamento {data['payment_id']} confirmado!")
+    $data = $request->json()->all();
     
-    return jsonify({"received": True})`;
+    switch ($data['event']) {
+        case 'payment.completed':
+            // Liberar acesso ao produto
+            Log::info("Pagamento {$data['payment_id']} confirmado!");
+            break;
+        case 'payment.failed':
+            // Notificar cliente
+            break;
+    }
+    
+    return response()->json(['received' => true]);
+});
+?>`;
 
   const webhookPayloadExample = `{
   "event": "payment.completed",
@@ -357,6 +453,50 @@ app.post('/webhook', (req, res) => {
                   Todas as requisições devem incluir o header <code className="bg-muted px-1 rounded">x-api-key</code> com sua chave de API.
                 </p>
               </div>
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Modo Sandbox (Teste):</p>
+                <p className="text-sm text-muted-foreground">
+                  Use API keys com prefixo <code className="bg-muted px-1 rounded">kp_test_</code> para ambiente sandbox.
+                  Pagamentos sandbox não processam dinheiro real.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Sandbox Mode */}
+          <Card className="mb-8 border-blue-500/30 bg-blue-500/5">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="w-5 h-5 text-blue-500" />
+                Modo Sandbox (Teste)
+              </CardTitle>
+              <CardDescription>
+                Teste sua integração sem processar pagamentos reais
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="p-4 border rounded-lg">
+                  <h4 className="font-semibold mb-2">API Key de Teste</h4>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Use uma API key com prefixo <code className="bg-muted px-1 rounded">kp_test_</code>
+                  </p>
+                  <code className="text-sm bg-muted px-2 py-1 rounded">kp_test_abc123...</code>
+                </div>
+                <div className="p-4 border rounded-lg">
+                  <h4 className="font-semibold mb-2">Números de Teste</h4>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    <li><code className="bg-muted px-1 rounded">923000000</code> → Sucesso imediato</li>
+                    <li><code className="bg-muted px-1 rounded">923000001</code> → Falha simulada</li>
+                    <li><code className="bg-muted px-1 rounded">923000002</code> → Pendente (timeout)</li>
+                  </ul>
+                </div>
+              </div>
+              <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+                <p className="text-sm">
+                  <strong>Dica:</strong> Pagamentos sandbox são marcados automaticamente como concluídos após 5 segundos quando usando o número de teste de sucesso.
+                </p>
+              </div>
             </CardContent>
           </Card>
 
@@ -398,10 +538,11 @@ app.post('/webhook', (req, res) => {
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="curl">
-                <TabsList className="mb-4">
+                <TabsList className="mb-4 flex-wrap">
                   <TabsTrigger value="curl">cURL</TabsTrigger>
                   <TabsTrigger value="javascript">JavaScript</TabsTrigger>
                   <TabsTrigger value="python">Python</TabsTrigger>
+                  <TabsTrigger value="php">PHP</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="curl" className="space-y-6">
@@ -421,6 +562,23 @@ app.post('/webhook', (req, res) => {
                     <h4 className="font-semibold mb-2">Listar Pagamentos</h4>
                     <CodeBlock code={curlListPayments} language="bash" id="curl-list" />
                   </div>
+                  <div>
+                    <h4 className="font-semibold mb-2">Consultar Saldo</h4>
+                    <CodeBlock code={`curl -X GET "${API_BASE_URL}/balance?email=cliente@email.com" \\
+  -H "x-api-key: YOUR_API_KEY"`} language="bash" id="curl-balance" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-2">Solicitar Reembolso</h4>
+                    <CodeBlock code={`curl -X POST "${API_BASE_URL}/refunds" \\
+  -H "Content-Type: application/json" \\
+  -H "x-api-key: YOUR_API_KEY" \\
+  -d '{"paymentId": "payment_id_here", "reason": "Cliente solicitou cancelamento"}'`} language="bash" id="curl-refund" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-2">Ver Estatísticas</h4>
+                    <CodeBlock code={`curl -X GET "${API_BASE_URL}/stats" \\
+  -H "x-api-key: YOUR_API_KEY"`} language="bash" id="curl-stats" />
+                  </div>
                 </TabsContent>
 
                 <TabsContent value="javascript">
@@ -429,6 +587,10 @@ app.post('/webhook', (req, res) => {
 
                 <TabsContent value="python">
                   <CodeBlock code={pythonExample} language="python" id="python-example" />
+                </TabsContent>
+
+                <TabsContent value="php">
+                  <CodeBlock code={phpExample} language="php" id="php-example" />
                 </TabsContent>
               </Tabs>
             </CardContent>
