@@ -16,13 +16,15 @@ interface PartnerInviteRequest {
   contact_name: string;
 }
 
-const DEFAULT_APP_ORIGIN = "https://admin.kambafy.com";
+const DEFAULT_APP_ORIGIN = "https://app.kambafy.com";
 
 const normalizeEmail = (value: string) => value.trim().toLowerCase();
 
 const getAppOriginFromReq = (req: Request) => {
   const origin = req.headers.get("origin");
-  if (origin && origin.startsWith("http")) return origin;
+  // Em dev/preview, respeitar o Origin para manter os links funcionando no ambiente atual
+  if (origin && origin.startsWith("http") && origin.includes("localhost")) return origin;
+  // Em produção, forçar domínio principal do app para evitar redirecionamentos para /auth
   return DEFAULT_APP_ORIGIN;
 };
 
@@ -34,6 +36,19 @@ const findUserIdByEmail = async (supabaseAdmin: any, email: string): Promise<str
     return null;
   }
   return data;
+};
+
+// O generateLink às vezes usa o Site URL (ex.: /auth) quando o redirectTo não está na allowlist.
+// Para garantir que o usuário caia na tela correta, forçamos o path para /reset-password.
+const toResetPasswordLink = (actionLink: string): string => {
+  try {
+    const url = new URL(actionLink);
+    url.pathname = "/reset-password";
+    return url.toString();
+  } catch {
+    // Fallback bem simples (mantém hash com tokens)
+    return actionLink.replace("/auth", "/reset-password");
+  }
 };
 
 const handler = async (req: Request): Promise<Response> => {
@@ -131,8 +146,23 @@ const handler = async (req: Request): Promise<Response> => {
       throw resetError;
     }
 
-    const resetLink = resetData.properties.action_link;
-    console.log(`[send-partner-invite] Generated reset link for ${email}`);
+    const actionLink = resetData?.properties?.action_link as string | undefined;
+
+    if (!actionLink) {
+      throw new Error("Reset link generation succeeded but action_link is missing");
+    }
+
+    const resetLink = toResetPasswordLink(actionLink);
+
+    try {
+      const safeUrl = new URL(resetLink);
+      console.log(`[send-partner-invite] Generated reset link for ${email}:`, {
+        origin: safeUrl.origin,
+        pathname: safeUrl.pathname,
+      });
+    } catch {
+      console.log(`[send-partner-invite] Generated reset link for ${email} (path rewritten)`);
+    }
 
     const contactNameSafe = contact_name || company_name;
 
