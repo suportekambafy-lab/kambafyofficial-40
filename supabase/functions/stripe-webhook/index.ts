@@ -88,57 +88,159 @@ serve(async (req) => {
     console.log('🎯 Processing webhook event:', event.type);
     console.log('📊 Event data:', JSON.stringify(event.data, null, 2));
 
+    // ========== HANDLE CHECKOUT SESSION COMPLETED (SUBSCRIPTIONS) ==========
+    
+    if (event.type === 'checkout.session.completed') {
+      console.log('🛒 Processing checkout.session.completed');
+      const session = event.data.object as Stripe.Checkout.Session;
+      
+      // Verificar se é uma assinatura
+      if (session.mode === 'subscription' && session.subscription) {
+        console.log('📝 Subscription checkout completed!');
+        const metadata = session.metadata || {};
+        
+        try {
+          // Buscar detalhes da subscription do Stripe
+          const subscriptionDetails = await stripe.subscriptions.retrieve(session.subscription as string);
+          
+          // Criar registro de assinatura
+          const { data: insertData, error: insertError } = await supabase
+            .from('customer_subscriptions')
+            .insert({
+              customer_email: metadata.customer_email || session.customer_email,
+              customer_name: metadata.customer_name || '',
+              product_id: metadata.product_id,
+              stripe_subscription_id: session.subscription as string,
+              stripe_customer_id: session.customer as string,
+              status: 'active',
+              renewal_type: 'automatic',
+              payment_method: 'stripe',
+              current_period_start: new Date(subscriptionDetails.current_period_start * 1000).toISOString(),
+              current_period_end: new Date(subscriptionDetails.current_period_end * 1000).toISOString(),
+              trial_start: subscriptionDetails.trial_start ? new Date(subscriptionDetails.trial_start * 1000).toISOString() : null,
+              trial_end: subscriptionDetails.trial_end ? new Date(subscriptionDetails.trial_end * 1000).toISOString() : null,
+              metadata: metadata,
+            })
+            .select()
+            .single();
+
+          if (insertError) {
+            console.error('❌ Error creating subscription:', insertError);
+            throw insertError;
+          }
+          
+          console.log('✅ Subscription created:', insertData.id);
+
+          // Buscar produto para detalhes
+          const { data: product } = await supabase
+            .from('products')
+            .select('name, user_id, member_area_id, access_duration_type, access_duration_value')
+            .eq('id', metadata.product_id)
+            .single();
+
+          // Conceder acesso ao cliente
+          let accessExpiresAt = null;
+          if (product?.access_duration_type === 'days' && product?.access_duration_value) {
+            accessExpiresAt = new Date(Date.now() + product.access_duration_value * 86400000).toISOString();
+          }
+
+          // Criar customer_access
+          await supabase.from('customer_access').upsert({
+            customer_email: (metadata.customer_email || session.customer_email).toLowerCase().trim(),
+            customer_name: metadata.customer_name || '',
+            product_id: metadata.product_id,
+            order_id: `sub_${session.subscription}`,
+            is_active: true,
+            access_expires_at: accessExpiresAt,
+          }, { onConflict: 'customer_email,product_id' });
+          
+          console.log('✅ Customer access granted');
+
+          // Se for curso, adicionar em member_area_students
+          if (product?.member_area_id) {
+            await supabase.from('member_area_students').upsert({
+              member_area_id: product.member_area_id,
+              student_email: (metadata.customer_email || session.customer_email).toLowerCase().trim(),
+              student_name: metadata.customer_name || '',
+              cohort_id: metadata.cohort_id || null,
+            }, { onConflict: 'member_area_id,student_email' });
+            
+            console.log('✅ Student added to member area');
+          }
+
+          // Processar comissão do vendedor
+          if (product?.user_id) {
+            const amount = (session.amount_total || 0) / 100;
+            const platformFee = amount * PLATFORM_COMMISSION_RATE;
+            const sellerAmount = amount - platformFee;
+
+            await supabase.from('balance_transactions').insert({
+              user_id: product.user_id,
+              type: 'subscription_sale',
+              amount: sellerAmount,
+              currency: 'KZ',
+              description: `Nova assinatura - ${product.name}`,
+              order_id: `sub_${session.subscription}`,
+            });
+
+            await supabase.from('balance_transactions').insert({
+              user_id: product.user_id,
+              type: 'kambafy_fee',
+              amount: -platformFee,
+              currency: 'KZ',
+              description: `Taxa Kambafy (8.99%) - Assinatura ${product.name}`,
+              order_id: `fee_sub_${session.subscription}`,
+            });
+
+            console.log('✅ Seller balance credited:', sellerAmount);
+          }
+
+          // Enviar email de confirmação
+          try {
+            await supabase.functions.invoke('send-subscription-welcome-email', {
+              body: {
+                customerEmail: metadata.customer_email || session.customer_email,
+                customerName: metadata.customer_name || '',
+                productName: product?.name || 'Assinatura',
+                productId: metadata.product_id,
+              }
+            });
+            console.log('✅ Welcome email sent');
+          } catch (emailError) {
+            console.log('⚠️ Could not send welcome email:', emailError);
+          }
+
+        } catch (error: any) {
+          console.error('❌ Error processing subscription checkout:', error.message);
+          throw error;
+        }
+      }
+    }
+
     // ========== HANDLE SUBSCRIPTION EVENTS ==========
     
     if (event.type === 'customer.subscription.created') {
-      console.log('📝 Processing subscription created');
+      console.log('📝 Processing subscription created (updating if exists)');
       const subscription = event.data.object as Stripe.Subscription;
-      const metadata = subscription.metadata;
 
       try {
-        // Marcar assinatura como renovação automática
+        // Apenas atualizar a subscription existente (criada no checkout.session.completed)
         const { error: updateError } = await supabase
           .from('customer_subscriptions')
-          .update({ renewal_type: 'automatic' })
-          .eq('stripe_subscription_id', subscription.id);
-
-        if (updateError) {
-          console.error('❌ Error updating renewal_type:', updateError);
-        } else {
-          console.log('✅ Subscription marked as automatic renewal');
-        }
-
-        const { data: insertData, error: insertError } = await supabase
-          .from('customer_subscriptions')
-          .insert({
-            customer_email: metadata.customer_email,
-            customer_name: metadata.customer_name || '',
-            product_id: metadata.product_id,
-            stripe_subscription_id: subscription.id,
-            stripe_customer_id: subscription.customer as string,
+          .update({
             status: subscription.status,
             current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
             current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-            trial_start: subscription.trial_start ? new Date(subscription.trial_start * 1000).toISOString() : null,
-            trial_end: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
-            metadata: metadata,
           })
-          .select()
-          .single();
+          .eq('stripe_subscription_id', subscription.id);
 
-        if (insertError) throw insertError;
-
-        await supabase.from('subscription_events').insert({
-          subscription_id: insertData.id,
-          event_type: 'created',
-          stripe_event_id: event.id,
-          data: subscription,
-        });
-
-        console.log('✅ Subscription created successfully:', subscription.id);
+        if (updateError) {
+          console.log('⚠️ Subscription not found to update, might be created in checkout.session.completed');
+        } else {
+          console.log('✅ Subscription updated from subscription.created event');
+        }
       } catch (error: any) {
-        console.error('❌ Error creating subscription:', error.message);
-        throw error;
+        console.error('❌ Error in subscription.created:', error.message);
       }
     }
 
@@ -177,22 +279,73 @@ serve(async (req) => {
     }
 
     if (event.type === 'customer.subscription.deleted') {
-      console.log('📝 Processing subscription deleted');
+      console.log('📝 Processing subscription deleted - revoking all access');
       const subscription = event.data.object as Stripe.Subscription;
 
       try {
-        const { data: subData, error: deleteError } = await supabase
+        // Buscar dados da assinatura antes de cancelar
+        const { data: subData, error: fetchError } = await supabase
+          .from('customer_subscriptions')
+          .select('*, products!inner(member_area_id)')
+          .eq('stripe_subscription_id', subscription.id)
+          .single();
+
+        if (fetchError) {
+          console.error('❌ Subscription not found:', subscription.id);
+          throw fetchError;
+        }
+
+        // Atualizar status da assinatura
+        await supabase
           .from('customer_subscriptions')
           .update({
             status: 'canceled',
             canceled_at: new Date().toISOString(),
           })
-          .eq('stripe_subscription_id', subscription.id)
-          .select()
-          .single();
+          .eq('stripe_subscription_id', subscription.id);
 
-        if (deleteError) throw deleteError;
+        console.log('✅ Subscription marked as canceled');
 
+        // Revogar acesso em customer_access
+        await supabase
+          .from('customer_access')
+          .update({ is_active: false, updated_at: new Date().toISOString() })
+          .eq('customer_email', subData.customer_email.toLowerCase().trim())
+          .eq('product_id', subData.product_id);
+        
+        console.log('✅ Customer access revoked');
+
+        // Se for curso, remover de member_area_students e invalidar sessões
+        if (subData.products?.member_area_id) {
+          // Remover de member_area_students
+          await supabase
+            .from('member_area_students')
+            .delete()
+            .eq('member_area_id', subData.products.member_area_id)
+            .eq('student_email', subData.customer_email.toLowerCase().trim());
+          
+          console.log('✅ Student removed from member area');
+
+          // Remover acesso a módulos
+          await supabase
+            .from('module_student_access')
+            .delete()
+            .eq('member_area_id', subData.products.member_area_id)
+            .eq('student_email', subData.customer_email.toLowerCase().trim());
+          
+          console.log('✅ Module access revoked');
+
+          // Invalidar sessões
+          await supabase
+            .from('member_area_sessions')
+            .delete()
+            .eq('member_area_id', subData.products.member_area_id)
+            .eq('student_email', subData.customer_email.toLowerCase().trim());
+          
+          console.log('✅ Sessions invalidated');
+        }
+
+        // Log do evento
         await supabase.from('subscription_events').insert({
           subscription_id: subData.id,
           event_type: 'canceled',
@@ -200,7 +353,7 @@ serve(async (req) => {
           data: subscription,
         });
 
-        console.log('✅ Subscription deleted successfully:', subscription.id);
+        console.log('✅ Subscription deleted and all access revoked:', subscription.id);
       } catch (error: any) {
         console.error('❌ Error deleting subscription:', error.message);
         throw error;
