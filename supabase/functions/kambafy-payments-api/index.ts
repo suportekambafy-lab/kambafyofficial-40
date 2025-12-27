@@ -11,6 +11,16 @@ const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minuto
 const RATE_LIMIT_MAX_REQUESTS = 100; // 100 requests por minuto
 const rateLimitCache = new Map<string, { count: number; resetAt: number }>();
 
+// Sandbox test phone numbers
+const SANDBOX_TEST_PHONES: Record<string, 'success' | 'failed' | 'pending'> = {
+  '923000000': 'success',    // Always succeeds immediately
+  '923000001': 'failed',     // Always fails
+  '923000002': 'pending',    // Always stays pending
+  '+244923000000': 'success',
+  '+244923000001': 'failed',
+  '+244923000002': 'pending',
+};
+
 interface CreatePaymentRequest {
   orderId: string;
   amount: number;
@@ -33,6 +43,11 @@ interface GetOAuthTokenResponse {
   access_token: string;
   token_type: string;
   expires_in: number;
+}
+
+// Check if API key is sandbox (test) mode
+function isSandboxKey(apiKey: string): boolean {
+  return apiKey.startsWith('kp_test_');
 }
 
 // Rate limiter function
@@ -83,11 +98,16 @@ serve(async (req) => {
       );
     }
 
-    // Buscar parceiro
+    // Detectar modo sandbox
+    const sandboxMode = isSandboxKey(apiKey);
+
+    // Buscar parceiro (aceitar tanto kp_test_ quanto kp_live_)
+    const searchKey = sandboxMode ? apiKey.replace('kp_test_', 'kp_') : apiKey;
+    
     const { data: partner, error: partnerError } = await supabaseAdmin
       .from('partners')
       .select('*')
-      .eq('api_key', apiKey)
+      .or(`api_key.eq.${apiKey},api_key.eq.${searchKey}`)
       .eq('status', 'approved')
       .single();
 
@@ -105,6 +125,7 @@ serve(async (req) => {
       'X-RateLimit-Limit': RATE_LIMIT_MAX_REQUESTS.toString(),
       'X-RateLimit-Remaining': rateLimit.remaining.toString(),
       'X-RateLimit-Reset': Math.ceil(rateLimit.resetAt / 1000).toString(),
+      'X-Sandbox-Mode': sandboxMode.toString(),
     };
 
     if (!rateLimit.allowed) {
@@ -129,7 +150,7 @@ serve(async (req) => {
 
     // Rotas
     if (method === 'POST' && (path === '' || path === '/')) {
-      return await createPayment(req, partner, supabaseAdmin, startTime, rateLimitHeaders);
+      return await createPayment(req, partner, supabaseAdmin, startTime, rateLimitHeaders, sandboxMode);
     }
 
     if (method === 'GET' && path.startsWith('/payment/')) {
@@ -158,6 +179,19 @@ serve(async (req) => {
       return await listRefunds(req, partner, supabaseAdmin, startTime, rateLimitHeaders);
     }
 
+    // Webhook management endpoints
+    if (method === 'POST' && path === '/webhooks/test') {
+      return await testWebhook(partner, supabaseAdmin, startTime, rateLimitHeaders);
+    }
+
+    if (method === 'POST' && path === '/webhooks/resend') {
+      return await resendWebhook(req, partner, supabaseAdmin, startTime, rateLimitHeaders);
+    }
+
+    if (method === 'GET' && path === '/webhooks/logs') {
+      return await getWebhookLogs(req, partner, supabaseAdmin, startTime, rateLimitHeaders);
+    }
+
     await logApiUsage(supabaseAdmin, partner.id, path, method, 404, Date.now() - startTime, req);
     return new Response(
       JSON.stringify({ error: 'Endpoint not found', code: 'NOT_FOUND' }),
@@ -178,7 +212,8 @@ async function createPayment(
   partner: any,
   supabaseAdmin: any,
   startTime: number,
-  rateLimitHeaders: Record<string, string>
+  rateLimitHeaders: Record<string, string>,
+  sandboxMode: boolean = false
 ) {
   try {
     const body: CreatePaymentRequest = await req.json();
@@ -239,18 +274,46 @@ async function createPayment(
       );
     }
 
-    // Obter token OAuth AppyPay
-    const oauthToken = await getAppyPayOAuthToken();
+    let appypayResponse: { transactionId: string; entity: string | null; reference: string | null };
+    let paymentStatus = 'pending';
 
-    // Criar cobrança com AppyPay
-    const appypayResponse = await createAppyPayCharge(oauthToken, {
-      amount,
-      paymentMethod,
-      phoneNumber,
-      customerName,
-      customerEmail,
-      orderId,
-    });
+    // MODO SANDBOX: Simular pagamento sem chamar AppyPay
+    if (sandboxMode) {
+      console.log('🧪 Sandbox mode: Simulating payment');
+      
+      // Gerar IDs simulados
+      const sandboxTxId = `SANDBOX_${Date.now()}_${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+      
+      appypayResponse = {
+        transactionId: sandboxTxId,
+        entity: paymentMethod === 'reference' ? '10611' : null,
+        reference: paymentMethod === 'reference' ? `${Date.now()}`.slice(-9) : null,
+      };
+
+      // Verificar telefones de teste para Express
+      if (paymentMethod === 'express' && phoneNumber) {
+        const cleanPhone = phoneNumber.replace(/\D/g, '').slice(-9);
+        const testResult = SANDBOX_TEST_PHONES[phoneNumber] || SANDBOX_TEST_PHONES[cleanPhone] || SANDBOX_TEST_PHONES[`+244${cleanPhone}`];
+        
+        if (testResult === 'success') {
+          paymentStatus = 'completed';
+        } else if (testResult === 'failed') {
+          paymentStatus = 'failed';
+        }
+        // 'pending' permanece como default
+      }
+    } else {
+      // MODO PRODUÇÃO: Chamar AppyPay real
+      const oauthToken = await getAppyPayOAuthToken();
+      appypayResponse = await createAppyPayCharge(oauthToken, {
+        amount,
+        paymentMethod,
+        phoneNumber,
+        customerName,
+        customerEmail,
+        orderId,
+      });
+    }
 
     // Definir expiração
     const expiresAt = paymentMethod === 'express'
@@ -266,7 +329,7 @@ async function createPayment(
         amount,
         currency,
         payment_method: paymentMethod,
-        status: 'pending',
+        status: paymentStatus,
         customer_name: customerName,
         customer_email: customerEmail,
         customer_phone: phoneNumber || customerPhone,
@@ -274,7 +337,11 @@ async function createPayment(
         reference_entity: appypayResponse.entity,
         reference_number: appypayResponse.reference,
         expires_at: expiresAt,
-        metadata,
+        completed_at: paymentStatus === 'completed' ? new Date().toISOString() : null,
+        metadata: {
+          ...metadata,
+          is_sandbox: sandboxMode,
+        },
       })
       .select()
       .single();
@@ -286,6 +353,14 @@ async function createPayment(
 
     await logApiUsage(supabaseAdmin, partner.id, '/create-payment', 'POST', 201, Date.now() - startTime, req);
 
+    // Se sandbox e status completed, disparar webhook
+    if (sandboxMode && paymentStatus === 'completed' && partner.webhook_url) {
+      console.log('🧪 Sandbox: Triggering webhook for completed payment');
+      await supabaseAdmin.functions.invoke('process-partner-webhook', {
+        body: { paymentId: payment.id, event: 'payment.completed' }
+      });
+    }
+
     // Resposta
     const response: any = {
       id: payment.id,
@@ -296,11 +371,14 @@ async function createPayment(
       paymentMethod: payment.payment_method,
       expiresAt: payment.expires_at,
       createdAt: payment.created_at,
+      sandbox: sandboxMode,
     };
 
     if (paymentMethod === 'express') {
       response.instructions = {
-        message: `Um código USSD foi enviado para ${phoneNumber}. O cliente deve digitar o código no telefone para confirmar o pagamento.`,
+        message: sandboxMode 
+          ? `[SANDBOX] Pagamento simulado para ${phoneNumber}.`
+          : `Um código USSD foi enviado para ${phoneNumber}. O cliente deve digitar o código no telefone para confirmar o pagamento.`,
         transactionId: payment.appypay_transaction_id,
         expiresIn: '5 minutos',
       };
@@ -308,7 +386,9 @@ async function createPayment(
       response.reference = {
         entity: payment.reference_entity,
         reference: payment.reference_number,
-        instructions: `Pague em qualquer ATM Multicaixa usando:\nEntidade: ${payment.reference_entity}\nReferência: ${payment.reference_number}`,
+        instructions: sandboxMode
+          ? `[SANDBOX] Referência simulada - Entidade: ${payment.reference_entity}, Referência: ${payment.reference_number}`
+          : `Pague em qualquer ATM Multicaixa usando:\nEntidade: ${payment.reference_entity}\nReferência: ${payment.reference_number}`,
         expiresIn: '48 horas',
       };
     }
@@ -929,6 +1009,253 @@ async function createAppyPayCharge(token: string, data: {
     entity: result.responseStatus?.reference?.entity || null,
     reference: result.responseStatus?.reference?.referenceNumber || null,
   };
+}
+
+// NOVO: Testar conexão do webhook
+async function testWebhook(
+  partner: any, 
+  supabaseAdmin: any, 
+  startTime: number,
+  rateLimitHeaders: Record<string, string>
+) {
+  try {
+    if (!partner.webhook_url) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'No webhook URL configured', 
+          code: 'NO_WEBHOOK_URL',
+          message: 'Configure a webhook URL in your partner settings first.'
+        }),
+        { status: 400, headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const testPayload = {
+      event: 'webhook.test',
+      message: 'This is a test webhook from Kambafy Payments API',
+      partner_id: partner.id,
+      company_name: partner.company_name,
+      timestamp: new Date().toISOString(),
+    };
+
+    const payloadString = JSON.stringify(testPayload);
+    
+    // Gerar assinatura se houver secret
+    let signature = '';
+    if (partner.webhook_secret) {
+      const encoder = new TextEncoder();
+      const key = await crypto.subtle.importKey(
+        "raw",
+        encoder.encode(partner.webhook_secret),
+        { name: "HMAC", hash: "SHA-256" },
+        false,
+        ["sign"]
+      );
+      const sig = await crypto.subtle.sign("HMAC", key, encoder.encode(payloadString));
+      signature = Array.from(new Uint8Array(sig))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+    }
+
+    const testStart = Date.now();
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
+    try {
+      const response = await fetch(partner.webhook_url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Kambafy-Signature': signature,
+          'X-Kambafy-Event': 'webhook.test',
+          'X-Kambafy-Timestamp': testPayload.timestamp,
+          'User-Agent': 'Kambafy-Webhook/1.0',
+        },
+        body: payloadString,
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeout);
+      const responseTime = Date.now() - testStart;
+
+      await logApiUsage(supabaseAdmin, partner.id, '/webhooks/test', 'POST', 200, Date.now() - startTime, null);
+
+      return new Response(
+        JSON.stringify({
+          success: response.ok,
+          url: partner.webhook_url,
+          statusCode: response.status,
+          responseTimeMs: responseTime,
+          message: response.ok 
+            ? 'Webhook endpoint is reachable and responding correctly'
+            : `Webhook endpoint returned status ${response.status}`,
+          testedAt: testPayload.timestamp,
+        }),
+        { status: 200, headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } }
+      );
+    } catch (fetchError: any) {
+      clearTimeout(timeout);
+      const responseTime = Date.now() - testStart;
+      
+      await logApiUsage(supabaseAdmin, partner.id, '/webhooks/test', 'POST', 200, Date.now() - startTime, null);
+
+      return new Response(
+        JSON.stringify({
+          success: false,
+          url: partner.webhook_url,
+          error: fetchError.name === 'AbortError' ? 'Connection timeout (10s)' : fetchError.message,
+          responseTimeMs: responseTime,
+          message: 'Failed to connect to webhook endpoint',
+          testedAt: testPayload.timestamp,
+        }),
+        { status: 200, headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+  } catch (error: any) {
+    console.error('❌ Test webhook error:', error);
+    await logApiUsage(supabaseAdmin, partner.id, '/webhooks/test', 'POST', 500, Date.now() - startTime, null);
+    return new Response(
+      JSON.stringify({ error: error.message || 'Failed to test webhook', code: 'TEST_WEBHOOK_ERROR' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+}
+
+// NOVO: Reenviar webhook para um pagamento
+async function resendWebhook(
+  req: Request,
+  partner: any, 
+  supabaseAdmin: any, 
+  startTime: number,
+  rateLimitHeaders: Record<string, string>
+) {
+  try {
+    const { paymentId } = await req.json();
+
+    if (!paymentId) {
+      return new Response(
+        JSON.stringify({ error: 'paymentId is required', code: 'VALIDATION_ERROR' }),
+        { status: 400, headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Verificar se pagamento existe e pertence ao parceiro
+    const { data: payment, error: paymentError } = await supabaseAdmin
+      .from('external_payments')
+      .select('id, status')
+      .eq('id', paymentId)
+      .eq('partner_id', partner.id)
+      .single();
+
+    if (paymentError || !payment) {
+      return new Response(
+        JSON.stringify({ error: 'Payment not found', code: 'NOT_FOUND' }),
+        { status: 404, headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!partner.webhook_url) {
+      return new Response(
+        JSON.stringify({ error: 'No webhook URL configured', code: 'NO_WEBHOOK_URL' }),
+        { status: 400, headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Determinar evento baseado no status
+    let event = 'payment.pending';
+    if (payment.status === 'completed') event = 'payment.completed';
+    else if (payment.status === 'failed') event = 'payment.failed';
+    else if (payment.status === 'expired') event = 'payment.expired';
+
+    // Disparar webhook
+    const { data: webhookResult, error: webhookError } = await supabaseAdmin.functions.invoke('process-partner-webhook', {
+      body: { paymentId, event }
+    });
+
+    await logApiUsage(supabaseAdmin, partner.id, '/webhooks/resend', 'POST', 200, Date.now() - startTime, req);
+
+    return new Response(
+      JSON.stringify({
+        success: !webhookError,
+        paymentId,
+        event,
+        result: webhookResult,
+        error: webhookError?.message,
+        resentAt: new Date().toISOString(),
+      }),
+      { status: 200, headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error: any) {
+    console.error('❌ Resend webhook error:', error);
+    await logApiUsage(supabaseAdmin, partner.id, '/webhooks/resend', 'POST', 500, Date.now() - startTime, req);
+    return new Response(
+      JSON.stringify({ error: error.message || 'Failed to resend webhook', code: 'RESEND_WEBHOOK_ERROR' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+}
+
+// NOVO: Listar logs de webhooks
+async function getWebhookLogs(
+  req: Request,
+  partner: any, 
+  supabaseAdmin: any, 
+  startTime: number,
+  rateLimitHeaders: Record<string, string>
+) {
+  try {
+    const url = new URL(req.url);
+    const limit = parseInt(url.searchParams.get('limit') || '50');
+    const offset = parseInt(url.searchParams.get('offset') || '0');
+
+    // Buscar pagamentos com webhook logs
+    const { data: payments, error, count } = await supabaseAdmin
+      .from('external_payments')
+      .select('id, order_id, status, webhook_sent, webhook_sent_at, webhook_attempts, webhook_last_error, metadata, created_at', { count: 'exact' })
+      .eq('partner_id', partner.id)
+      .or('webhook_attempts.gt.0,webhook_sent.eq.true')
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (error) throw error;
+
+    const webhookLogs = (payments || []).map((p: any) => ({
+      paymentId: p.id,
+      orderId: p.order_id,
+      paymentStatus: p.status,
+      webhookSent: p.webhook_sent,
+      webhookSentAt: p.webhook_sent_at,
+      attempts: p.webhook_attempts,
+      lastError: p.webhook_last_error,
+      lastEvent: p.metadata?.last_webhook_event,
+      deliveryLogs: p.metadata?.webhook_logs || [],
+    }));
+
+    await logApiUsage(supabaseAdmin, partner.id, '/webhooks/logs', 'GET', 200, Date.now() - startTime, req);
+
+    return new Response(
+      JSON.stringify({
+        data: webhookLogs,
+        pagination: {
+          total: count,
+          limit,
+          offset,
+        },
+        webhookUrl: partner.webhook_url,
+      }),
+      { status: 200, headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error: any) {
+    console.error('❌ Get webhook logs error:', error);
+    await logApiUsage(supabaseAdmin, partner.id, '/webhooks/logs', 'GET', 500, Date.now() - startTime, req);
+    return new Response(
+      JSON.stringify({ error: error.message || 'Failed to get webhook logs', code: 'GET_WEBHOOK_LOGS_ERROR' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
 }
 
 // Helper: Log de uso da API
