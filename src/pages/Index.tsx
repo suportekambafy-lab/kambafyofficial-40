@@ -1,4 +1,4 @@
-import InteractiveHero from "@/components/ui/hero-section-nexus";
+import InteractiveHeroFaciPay from "@/components/ui/hero-section-facipay";
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useSubdomain } from '@/hooks/useSubdomain';
@@ -62,7 +62,7 @@ const Index = () => {
       {/* Banner de anúncio - fixo no topo */}
       {showBanner && (
         <div 
-          className={`fixed top-0 left-0 right-0 z-50 transition-transform duration-300 ${
+          className={`fixed top-0 left-0 right-0 z-[60] transition-transform duration-300 ${
             bannerVisible ? 'translate-y-0' : '-translate-y-full'
           }`}
         >
@@ -79,9 +79,9 @@ const Index = () => {
         </div>
       )}
 
-      {/* Ajustar header para ficar abaixo do banner */}
-      <div className={showBanner && bannerVisible ? "[&_header]:!top-[48px]" : ""}>
-        <InteractiveHero />
+      {/* Nova Landing Page estilo FaciPay */}
+      <div className={showBanner && bannerVisible ? "pt-12" : ""}>
+        <InteractiveHeroFaciPay />
       </div>
     </>
   );
