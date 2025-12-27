@@ -74,9 +74,9 @@ export default function PartnersPortal() {
     if (user) {
       loadPartnerData();
     } else if (user === null) {
-      // Usuário não autenticado - redirecionar para login
+      // Usuário não autenticado - redirecionar para login de parceiros
       setLoading(false);
-      navigate('/auth');
+      navigate('/partners/login');
     }
   }, [user]);
 
