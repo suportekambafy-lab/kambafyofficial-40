@@ -47,15 +47,21 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Verificar se já existe um usuário com este email
-    const { data: existingUser } = await supabaseAdmin.auth.admin.listUsers();
-    const userExists = existingUser?.users?.some(u => u.email === email);
+    const { data: existingUsers, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+    
+    if (listError) {
+      console.error("[send-partner-invite] Error listing users:", listError);
+      throw listError;
+    }
+    
+    const existingUser = existingUsers?.users?.find(u => u.email?.toLowerCase() === email.toLowerCase());
+    const userExists = !!existingUser;
 
     let userId: string;
 
     if (userExists) {
       // Usuário já existe - apenas vincular ao parceiro
-      const user = existingUser.users.find(u => u.email === email);
-      userId = user!.id;
+      userId = existingUser.id;
       console.log(`[send-partner-invite] User already exists: ${userId}`);
       
       // Atualizar o partner com o user_id
@@ -70,7 +76,7 @@ const handler = async (req: Request): Promise<Response> => {
       }
 
       // Enviar email informando que já tem acesso
-      await resend.emails.send({
+      const { error: emailError } = await resend.emails.send({
         from: "Kambafy Payments <noreply@kambafy.com>",
         to: [email],
         subject: "🎉 Sua candidatura como parceiro foi aprovada!",
@@ -120,8 +126,16 @@ const handler = async (req: Request): Promise<Response> => {
         `,
       });
 
+      if (emailError) {
+        console.error("[send-partner-invite] Error sending email:", emailError);
+        throw emailError;
+      }
+      
+      console.log(`[send-partner-invite] Existing user email sent to ${email}`);
+
     } else {
       // Criar novo usuário com senha temporária
+      console.log(`[send-partner-invite] Creating new user for ${email}`);
       const tempPassword = `KP_${crypto.randomUUID().slice(0, 12)}`;
       
       const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
