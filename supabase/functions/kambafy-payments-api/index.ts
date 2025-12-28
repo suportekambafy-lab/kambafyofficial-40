@@ -952,6 +952,41 @@ async function getAppyPayOAuthToken(): Promise<string> {
   return data.access_token;
 }
 
+// Helper: Sanitizar description para AppyPay (apenas letras, números e espaços, máx 40 chars)
+function sanitizeDescription(text: string): string {
+  if (!text) return 'Pagamento Kambafy';
+  
+  // Remover acentos
+  const accentMap: Record<string, string> = {
+    'á': 'a', 'à': 'a', 'ã': 'a', 'â': 'a', 'ä': 'a',
+    'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
+    'í': 'i', 'ì': 'i', 'î': 'i', 'ï': 'i',
+    'ó': 'o', 'ò': 'o', 'õ': 'o', 'ô': 'o', 'ö': 'o',
+    'ú': 'u', 'ù': 'u', 'û': 'u', 'ü': 'u',
+    'ç': 'c', 'ñ': 'n',
+    'Á': 'A', 'À': 'A', 'Ã': 'A', 'Â': 'A', 'Ä': 'A',
+    'É': 'E', 'È': 'E', 'Ê': 'E', 'Ë': 'E',
+    'Í': 'I', 'Ì': 'I', 'Î': 'I', 'Ï': 'I',
+    'Ó': 'O', 'Ò': 'O', 'Õ': 'O', 'Ô': 'O', 'Ö': 'O',
+    'Ú': 'U', 'Ù': 'U', 'Û': 'U', 'Ü': 'U',
+    'Ç': 'C', 'Ñ': 'N'
+  };
+  
+  let sanitized = text;
+  for (const [accent, replacement] of Object.entries(accentMap)) {
+    sanitized = sanitized.replace(new RegExp(accent, 'g'), replacement);
+  }
+  
+  // Remover caracteres especiais exceto letras, números e espaços
+  sanitized = sanitized.replace(/[^a-zA-Z0-9\s]/g, '');
+  
+  // Remover espaços duplicados e trim
+  sanitized = sanitized.replace(/\s+/g, ' ').trim();
+  
+  // Limitar a 40 caracteres
+  return sanitized.substring(0, 40).trim() || 'Pagamento Kambafy';
+}
+
 // Helper: Criar cobrança AppyPay (Express ou Reference)
 async function createAppyPayCharge(token: string, data: {
   amount: number;
@@ -969,10 +1004,16 @@ async function createAppyPayCharge(token: string, data: {
   const randomSuffix = Math.random().toString(36).substr(2, 4).toUpperCase();
   const merchantTxId = `TR${timestamp}${randomSuffix}`;
 
+  // Sanitizar orderId para description (apenas primeiros 20 chars, apenas alfanuméricos)
+  const cleanOrderId = data.orderId.replace(/[^a-zA-Z0-9]/g, '').substring(0, 15);
+  const description = sanitizeDescription(`Pagamento ${cleanOrderId}`);
+  
+  console.log(`📝 AppyPay description: "${description}" (original orderId: ${data.orderId})`);
+
   const payload: any = {
     amount: data.amount,
     currency: 'AOA',
-    description: `Payment for order ${data.orderId}`,
+    description: description,
     merchantTransactionId: merchantTxId,
     paymentMethod: data.paymentMethod === 'express' 
       ? 'GPO_b1cfa3d3-f34a-4cfa-bcff-d52829991567'
