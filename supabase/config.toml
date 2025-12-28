@@ -254,3 +254,6 @@ verify_jwt = false
 
 [functions.send-partner-invite]
 verify_jwt = false
+
+[functions.kambapay-public-api]
+verify_jwt = false

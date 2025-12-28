@@ -1,15 +1,17 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Code, Copy, ExternalLink, Zap } from "lucide-react";
+import { Copy, ExternalLink, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-export function PartnersIntegrationWidget() {
-  const [apiKey, setApiKey] = useState("kp_demo1234567890abcdef...");
+const API_BASE_URL = "https://hcbkqygdtzpxvctfdqbd.supabase.co/functions/v1/kambapay-public-api";
+
+interface PartnersIntegrationWidgetProps {
+  apiKey?: string;
+}
+
+export function PartnersIntegrationWidget({ apiKey = "SUA_API_KEY_AQUI" }: PartnersIntegrationWidgetProps) {
   const { toast } = useToast();
 
   const copyToClipboard = (text: string) => {
@@ -20,11 +22,15 @@ export function PartnersIntegrationWidget() {
     });
   };
 
-  const javascriptExample = `// Verificar saldo KambaPay
+  const javascriptExample = `// Base URL da API KambaPay
+const API_URL = '${API_BASE_URL}';
+const API_KEY = '${apiKey}';
+
+// Verificar saldo KambaPay
 async function checkBalance(email) {
-  const response = await fetch('/api/kambapay/balance?email=' + email, {
+  const response = await fetch(\`\${API_URL}/balance?email=\${email}\`, {
     headers: {
-      'x-api-key': '${apiKey}'
+      'x-api-key': API_KEY
     }
   });
   return response.json();
@@ -32,24 +38,38 @@ async function checkBalance(email) {
 
 // Processar pagamento
 async function processPayment(paymentData) {
-  const response = await fetch('/api/kambapay/payments', {
+  const response = await fetch(\`\${API_URL}/payments\`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': '${apiKey}'
+      'x-api-key': API_KEY
     },
     body: JSON.stringify(paymentData)
+  });
+  return response.json();
+}
+
+// Ver estatísticas
+async function getStats() {
+  const response = await fetch(\`\${API_URL}/stats\`, {
+    headers: {
+      'x-api-key': API_KEY
+    }
   });
   return response.json();
 }`;
 
   const phpExample = `<?php
+// Base URL da API KambaPay
+define('API_URL', '${API_BASE_URL}');
+define('API_KEY', '${apiKey}');
+
 // Verificar saldo KambaPay
 function checkBalance($email) {
     $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, 'https://api.kambapay.com/balance?email=' . $email);
+    curl_setopt($ch, CURLOPT_URL, API_URL . '/balance?email=' . urlencode($email));
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        'x-api-key: ${apiKey}'
+        'x-api-key: ' . API_KEY
     ]);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     $response = curl_exec($ch);
@@ -60,12 +80,25 @@ function checkBalance($email) {
 // Processar pagamento
 function processPayment($paymentData) {
     $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, 'https://api.kambapay.com/payments');
+    curl_setopt($ch, CURLOPT_URL, API_URL . '/payments');
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($paymentData));
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
         'Content-Type: application/json',
-        'x-api-key: ${apiKey}'
+        'x-api-key: ' . API_KEY
+    ]);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    $response = curl_exec($ch);
+    curl_close($ch);
+    return json_decode($response, true);
+}
+
+// Ver estatísticas
+function getStats() {
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, API_URL . '/stats');
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'x-api-key: ' . API_KEY
     ]);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     $response = curl_exec($ch);
@@ -76,19 +109,29 @@ function processPayment($paymentData) {
 
   const pythonExample = `import requests
 
+# Base URL da API KambaPay
+API_URL = '${API_BASE_URL}'
+API_KEY = '${apiKey}'
+
 # Verificar saldo KambaPay
 def check_balance(email):
-    headers = {'x-api-key': '${apiKey}'}
-    response = requests.get(f'https://api.kambapay.com/balance?email={email}', headers=headers)
+    headers = {'x-api-key': API_KEY}
+    response = requests.get(f'{API_URL}/balance?email={email}', headers=headers)
     return response.json()
 
 # Processar pagamento
 def process_payment(payment_data):
     headers = {
         'Content-Type': 'application/json',
-        'x-api-key': '${apiKey}'
+        'x-api-key': API_KEY
     }
-    response = requests.post('https://api.kambapay.com/payments', json=payment_data, headers=headers)
+    response = requests.post(f'{API_URL}/payments', json=payment_data, headers=headers)
+    return response.json()
+
+# Ver estatísticas
+def get_stats():
+    headers = {'x-api-key': API_KEY}
+    response = requests.get(f'{API_URL}/stats', headers=headers)
     return response.json()`;
 
   return (
