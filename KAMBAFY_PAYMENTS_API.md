@@ -1,74 +1,64 @@
-# 🚀 Kambafy Payments API - Documentação
+# 🚀 Kambafy Payments API - Documentação Completa
 
-## 📋 Credenciais Geradas
+## ⚡ Quick Start - Comece em 2 minutos!
 
+### Pagamento Express (USSD) - Copie e cole:
+
+```bash
+curl -X POST "https://hcbkqygdtzpxvctfdqbd.supabase.co/functions/v1/kambafy-payments-api" \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: SUA_API_KEY" \
+  -d '{
+    "orderId": "pedido_001",
+    "amount": 5000,
+    "paymentMethod": "express",
+    "phoneNumber": "923456789",
+    "customerName": "João Silva",
+    "customerEmail": "joao@email.com"
+  }'
 ```
-API Key: kp_b5d70d968ab64886ca0fea02c6dea5c61af3f9ae6be997a608f9f9f9e1a07a64
-Webhook Secret: 77e3ec211cb7b677ef6df984ebb54f1702e8505e4f4bd121f41fe2e495067890
-```
 
-⚠️ **IMPORTANTE**: Guarde estas credenciais em segurança. Elas NÃO serão mostradas novamente!
+### Pagamento Referência (ATM) - Copie e cole:
+
+```bash
+curl -X POST "https://hcbkqygdtzpxvctfdqbd.supabase.co/functions/v1/kambafy-payments-api" \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: SUA_API_KEY" \
+  -d '{
+    "orderId": "pedido_002",
+    "amount": 10000,
+    "paymentMethod": "reference",
+    "customerName": "Maria Santos",
+    "customerEmail": "maria@email.com"
+  }'
+```
 
 ---
 
-## 🔗 Endpoints Disponíveis
+## 📋 Tabela de Campos
 
-### Base URL
-```
-https://hcbkqygdtzpxvctfdqbd.supabase.co/functions/v1/kambafy-payments-api
-```
+| Campo | Tipo | Obrigatório | Descrição |
+|-------|------|-------------|-----------|
+| `orderId` | string | ✅ Sim | ID único do pedido no seu sistema |
+| `amount` | number | ✅ Sim | Valor em **centavos** (5000 = 50,00 AOA) |
+| `paymentMethod` | string | ✅ Sim | `"express"` (USSD) ou `"reference"` (ATM) |
+| `customerName` | string | ✅ Sim | Nome completo do cliente |
+| `customerEmail` | string | ✅ Sim | Email do cliente |
+| `phoneNumber` | string | ⚠️ Condicional | **Obrigatório** se `paymentMethod = "express"` |
+| `currency` | string | ❌ Não | Moeda (padrão: `"AOA"`) |
+| `metadata` | object | ❌ Não | Dados extras (productId, notes, etc.) |
 
 ---
 
-## 1️⃣ Criar Pagamento
+## 📤 Respostas da API
 
-### `POST /`
+### ✅ Sucesso - Pagamento Express (HTTP 200)
 
-Cria um novo pagamento via Express (USSD) ou Referência (ATM).
-
-#### Headers
-```
-Content-Type: application/json
-x-api-key: kp_b5d70d968ab64886ca0fea02c6dea5c61af3f9ae6be997a608f9f9f9e1a07a64
-```
-
-#### Request Body (Express)
 ```json
 {
-  "orderId": "ORDER_123",
-  "amount": 5000,
-  "currency": "AOA",
-  "paymentMethod": "express",
-  "customerName": "João Silva",
-  "customerEmail": "joao@email.com",
-  "phoneNumber": "923456789",
-  "metadata": {
-    "productId": "prod_123",
-    "notes": "Informações extras"
-  }
-}
-```
-
-#### Request Body (Referência)
-```json
-{
-  "orderId": "ORDER_124",
-  "amount": 10000,
-  "currency": "AOA",
-  "paymentMethod": "reference",
-  "customerName": "Maria Santos",
-  "customerEmail": "maria@email.com",
-  "metadata": {
-    "productId": "prod_456"
-  }
-}
-```
-
-#### Response (Express)
-```json
-{
-  "id": "uuid-do-pagamento",
-  "orderId": "ORDER_123",
+  "success": true,
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "orderId": "pedido_001",
   "status": "pending",
   "amount": 5000,
   "currency": "AOA",
@@ -77,17 +67,19 @@ x-api-key: kp_b5d70d968ab64886ca0fea02c6dea5c61af3f9ae6be997a608f9f9f9e1a07a64
   "createdAt": "2024-11-24T10:55:00Z",
   "instructions": {
     "message": "Um código USSD foi enviado para 923456789. O cliente deve digitar o código no telefone para confirmar o pagamento.",
-    "transactionId": "TR123456",
+    "transactionId": "TR123456ABC",
     "expiresIn": "5 minutos"
   }
 }
 ```
 
-#### Response (Referência)
+### ✅ Sucesso - Pagamento Referência (HTTP 200)
+
 ```json
 {
-  "id": "uuid-do-pagamento",
-  "orderId": "ORDER_124",
+  "success": true,
+  "id": "550e8400-e29b-41d4-a716-446655440001",
+  "orderId": "pedido_002",
   "status": "pending",
   "amount": 10000,
   "currency": "AOA",
@@ -105,21 +97,158 @@ x-api-key: kp_b5d70d968ab64886ca0fea02c6dea5c61af3f9ae6be997a608f9f9f9e1a07a64
 
 ---
 
+## ❌ Respostas de Erro
+
+### 400 Bad Request - Dados Inválidos
+
+```json
+{
+  "success": false,
+  "error": "Campo phoneNumber é obrigatório para pagamentos express",
+  "code": "VALIDATION_ERROR"
+}
+```
+
+**Causas comuns:**
+- `orderId` não fornecido
+- `amount` inválido ou zero
+- `paymentMethod` diferente de "express" ou "reference"
+- `phoneNumber` ausente para pagamento express
+- `customerName` ou `customerEmail` vazio
+
+### 401 Unauthorized - API Key Inválida
+
+```json
+{
+  "success": false,
+  "error": "API key inválida ou não autorizada",
+  "code": "UNAUTHORIZED"
+}
+```
+
+**Causas comuns:**
+- Header `x-api-key` não enviado
+- API Key incorreta ou expirada
+- Parceiro desativado
+
+### 409 Conflict - Pedido Duplicado
+
+```json
+{
+  "success": false,
+  "error": "Já existe um pagamento para este orderId",
+  "code": "DUPLICATE_ORDER"
+}
+```
+
+### 500 Internal Server Error
+
+```json
+{
+  "success": false,
+  "error": "Erro interno do servidor",
+  "code": "SERVER_ERROR"
+}
+```
+
+---
+
+## 🔄 Fluxo de Status do Pagamento
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                                                             │
+│   pending ──────┬──────► processing ──────┬──────► completed ✅
+│                 │                         │
+│                 │                         └──────► failed ❌
+│                 │
+│                 └─────────────────────────────────► expired ⏰
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+| Status | Descrição |
+|--------|-----------|
+| `pending` | Pagamento criado, aguardando confirmação do cliente |
+| `processing` | Cliente iniciou o pagamento, em processamento |
+| `completed` | ✅ Pagamento confirmado com sucesso |
+| `failed` | ❌ Pagamento falhou (recusado, erro, etc.) |
+| `expired` | ⏰ Tempo limite expirou sem pagamento |
+
+---
+
+## 🔗 Endpoints Disponíveis
+
+### Base URL
+```
+https://hcbkqygdtzpxvctfdqbd.supabase.co/functions/v1/kambafy-payments-api
+```
+
+---
+
+## 1️⃣ Criar Pagamento
+
+### `POST /`
+
+#### Headers Obrigatórios
+```
+Content-Type: application/json
+x-api-key: SUA_API_KEY
+```
+
+#### cURL Completo (Express)
+```bash
+curl -X POST "https://hcbkqygdtzpxvctfdqbd.supabase.co/functions/v1/kambafy-payments-api" \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: SUA_API_KEY" \
+  -d '{
+    "orderId": "ORDER_123",
+    "amount": 5000,
+    "paymentMethod": "express",
+    "customerName": "João Silva",
+    "customerEmail": "joao@email.com",
+    "phoneNumber": "923456789",
+    "metadata": {
+      "productId": "prod_123",
+      "notes": "Compra de curso"
+    }
+  }'
+```
+
+#### cURL Completo (Referência)
+```bash
+curl -X POST "https://hcbkqygdtzpxvctfdqbd.supabase.co/functions/v1/kambafy-payments-api" \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: SUA_API_KEY" \
+  -d '{
+    "orderId": "ORDER_124",
+    "amount": 10000,
+    "paymentMethod": "reference",
+    "customerName": "Maria Santos",
+    "customerEmail": "maria@email.com",
+    "metadata": {
+      "productId": "prod_456"
+    }
+  }'
+```
+
+---
+
 ## 2️⃣ Verificar Pagamento
 
 ### `GET /payment/{paymentId}`
 
-Obtém o status de um pagamento específico.
-
-#### Headers
+#### cURL
+```bash
+curl -X GET "https://hcbkqygdtzpxvctfdqbd.supabase.co/functions/v1/kambafy-payments-api/payment/550e8400-e29b-41d4-a716-446655440000" \
+  -H "x-api-key: SUA_API_KEY"
 ```
-x-api-key: kp_b5d70d968ab64886ca0fea02c6dea5c61af3f9ae6be997a608f9f9f9e1a07a64
-```
 
-#### Response
+#### Resposta de Sucesso (HTTP 200)
 ```json
 {
-  "id": "uuid-do-pagamento",
+  "success": true,
+  "id": "550e8400-e29b-41d4-a716-446655440000",
   "orderId": "ORDER_123",
   "status": "completed",
   "amount": 5000,
@@ -128,7 +257,7 @@ x-api-key: kp_b5d70d968ab64886ca0fea02c6dea5c61af3f9ae6be997a608f9f9f9e1a07a64
   "customerName": "João Silva",
   "customerEmail": "joao@email.com",
   "customerPhone": "923456789",
-  "transactionId": "TR123456",
+  "transactionId": "TR123456ABC",
   "expiresAt": "2024-11-24T11:00:00Z",
   "completedAt": "2024-11-24T10:58:30Z",
   "createdAt": "2024-11-24T10:55:00Z",
@@ -138,30 +267,41 @@ x-api-key: kp_b5d70d968ab64886ca0fea02c6dea5c61af3f9ae6be997a608f9f9f9e1a07a64
 }
 ```
 
+#### Resposta de Erro - Pagamento não encontrado (HTTP 404)
+```json
+{
+  "success": false,
+  "error": "Pagamento não encontrado",
+  "code": "NOT_FOUND"
+}
+```
+
 ---
 
 ## 3️⃣ Listar Pagamentos
 
 ### `GET /payments?status=pending&limit=50&offset=0`
 
-Lista os pagamentos do parceiro com filtros opcionais.
-
-#### Headers
-```
-x-api-key: kp_b5d70d968ab64886ca0fea02c6dea5c61af3f9ae6be997a608f9f9f9e1a07a64
+#### cURL
+```bash
+curl -X GET "https://hcbkqygdtzpxvctfdqbd.supabase.co/functions/v1/kambafy-payments-api/payments?status=completed&limit=10" \
+  -H "x-api-key: SUA_API_KEY"
 ```
 
 #### Query Parameters
-- `status` (opcional): `pending`, `completed`, `failed`, `expired`
-- `limit` (opcional): Número de resultados (padrão: 50)
-- `offset` (opcional): Paginação (padrão: 0)
+| Parâmetro | Tipo | Padrão | Descrição |
+|-----------|------|--------|-----------|
+| `status` | string | todos | Filtrar: `pending`, `completed`, `failed`, `expired` |
+| `limit` | number | 50 | Máximo de resultados (1-100) |
+| `offset` | number | 0 | Paginação |
 
-#### Response
+#### Resposta de Sucesso (HTTP 200)
 ```json
 {
+  "success": true,
   "data": [
     {
-      "id": "uuid-1",
+      "id": "550e8400-e29b-41d4-a716-446655440000",
       "orderId": "ORDER_123",
       "status": "completed",
       "amount": 5000,
@@ -169,7 +309,7 @@ x-api-key: kp_b5d70d968ab64886ca0fea02c6dea5c61af3f9ae6be997a608f9f9f9e1a07a64
       "paymentMethod": "express",
       "customerName": "João Silva",
       "customerEmail": "joao@email.com",
-      "transactionId": "TR123456",
+      "transactionId": "TR123456ABC",
       "completedAt": "2024-11-24T10:58:30Z",
       "createdAt": "2024-11-24T10:55:00Z"
     }
@@ -177,26 +317,60 @@ x-api-key: kp_b5d70d968ab64886ca0fea02c6dea5c61af3f9ae6be997a608f9f9f9e1a07a64
   "pagination": {
     "total": 150,
     "limit": 50,
-    "offset": 0
+    "offset": 0,
+    "hasMore": true
   }
 }
 ```
 
 ---
 
+## 🧪 Modo Sandbox / Testes
+
+Para testar a integração sem cobrar de verdade:
+
+### Números de Teste (Express)
+| Número | Comportamento |
+|--------|---------------|
+| `923000001` | ✅ Pagamento aprovado após 10 segundos |
+| `923000002` | ❌ Pagamento recusado |
+| `923000003` | ⏰ Pagamento expira (sem resposta) |
+
+### Valores de Teste
+| Valor (centavos) | Comportamento |
+|------------------|---------------|
+| `100` | ✅ Sempre aprovado |
+| `999` | ❌ Sempre recusado |
+| `998` | ⏰ Sempre expira |
+
+### Exemplo de Teste
+```bash
+# Teste de sucesso
+curl -X POST "https://hcbkqygdtzpxvctfdqbd.supabase.co/functions/v1/kambafy-payments-api" \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: SUA_API_KEY" \
+  -d '{
+    "orderId": "teste_001",
+    "amount": 100,
+    "paymentMethod": "express",
+    "phoneNumber": "923000001",
+    "customerName": "Teste",
+    "customerEmail": "teste@teste.com"
+  }'
+```
+
+---
+
 ## 🔔 Webhooks
 
-Quando um pagamento for confirmado ou falhar, o Kambafy enviará uma notificação HTTP POST para a URL configurada.
+Quando um pagamento mudar de status, o Kambafy envia uma notificação para sua URL configurada.
 
-### Configurar Webhook URL
-
-Execute no SQL do Supabase:
-
-```sql
-UPDATE partners 
-SET webhook_url = 'https://seu-app.com/webhook/kambafy'
-WHERE contact_email = 'admin@kambafy.com';
-```
+### Eventos Disponíveis
+| Evento | Descrição |
+|--------|-----------|
+| `payment.completed` | Pagamento confirmado com sucesso |
+| `payment.failed` | Pagamento falhou |
+| `payment.expired` | Pagamento expirou |
 
 ### Payload do Webhook
 
@@ -205,9 +379,9 @@ WHERE contact_email = 'admin@kambafy.com';
   "event": "payment.completed",
   "timestamp": "2024-11-24T10:58:30Z",
   "data": {
-    "id": "uuid-do-pagamento",
+    "id": "550e8400-e29b-41d4-a716-446655440000",
     "orderId": "ORDER_123",
-    "transactionId": "TR123456",
+    "transactionId": "TR123456ABC",
     "amount": 5000,
     "currency": "AOA",
     "paymentMethod": "express",
@@ -226,182 +400,229 @@ WHERE contact_email = 'admin@kambafy.com';
 }
 ```
 
-### Verificar Assinatura do Webhook
+### Headers do Webhook
+```
+Content-Type: application/json
+X-Kambafy-Signature: abc123def456...
+X-Kambafy-Event: payment.completed
+X-Kambafy-Timestamp: 1732445910
+```
 
-O Kambafy envia um header `X-Kambafy-Signature` com hash HMAC-SHA256 para você verificar a autenticidade.
+### Verificar Assinatura (Segurança)
+
+**⚠️ IMPORTANTE**: Sempre verifique a assinatura para garantir que o webhook veio do Kambafy!
 
 #### Node.js/TypeScript
 ```typescript
 import crypto from 'crypto';
 
-function verifyWebhook(
-  payload: string,
-  signature: string,
-  secret: string
-): boolean {
+function verifyWebhook(payload: string, signature: string, secret: string): boolean {
   const hmac = crypto.createHmac('sha256', secret);
   hmac.update(payload);
   const expectedSignature = hmac.digest('hex');
-  
   return signature === expectedSignature;
 }
 
-// Uso no Express.js
+// Express.js
 app.post('/webhook/kambafy', express.raw({ type: 'application/json' }), (req, res) => {
   const signature = req.headers['x-kambafy-signature'] as string;
   const rawBody = req.body.toString();
   
   if (!verifyWebhook(rawBody, signature, process.env.KAMBAFY_WEBHOOK_SECRET!)) {
-    return res.status(401).send('Invalid signature');
+    return res.status(401).json({ error: 'Invalid signature' });
   }
   
   const event = JSON.parse(rawBody);
   
-  if (event.event === 'payment.completed') {
-    // Processar pagamento confirmado
-    console.log('Pagamento confirmado:', event.data.orderId);
-    // ... sua lógica aqui
+  switch (event.event) {
+    case 'payment.completed':
+      console.log('✅ Pagamento confirmado:', event.data.orderId);
+      // Liberar acesso ao produto, enviar email, etc.
+      break;
+    case 'payment.failed':
+      console.log('❌ Pagamento falhou:', event.data.orderId);
+      break;
+    case 'payment.expired':
+      console.log('⏰ Pagamento expirou:', event.data.orderId);
+      break;
   }
   
-  res.status(200).send('OK');
+  res.status(200).json({ received: true });
 });
 ```
 
-#### Python
+#### Python (Flask)
 ```python
 import hmac
 import hashlib
+import json
+import os
 
 def verify_webhook(payload: str, signature: str, secret: str) -> bool:
-    expected_signature = hmac.new(
-        secret.encode(),
-        payload.encode(),
-        hashlib.sha256
-    ).hexdigest()
-    
-    return signature == expected_signature
+    expected = hmac.new(secret.encode(), payload.encode(), hashlib.sha256).hexdigest()
+    return signature == expected
 
-# Flask
 @app.route('/webhook/kambafy', methods=['POST'])
 def kambafy_webhook():
     signature = request.headers.get('X-Kambafy-Signature')
     raw_body = request.get_data(as_text=True)
     
     if not verify_webhook(raw_body, signature, os.getenv('KAMBAFY_WEBHOOK_SECRET')):
-        return 'Invalid signature', 401
+        return {'error': 'Invalid signature'}, 401
     
     event = json.loads(raw_body)
     
     if event['event'] == 'payment.completed':
-        # Processar pagamento confirmado
-        print(f"Pagamento confirmado: {event['data']['orderId']}")
-        # ... sua lógica aqui
+        print(f"✅ Pagamento confirmado: {event['data']['orderId']}")
     
-    return 'OK', 200
+    return {'received': True}, 200
+```
+
+#### PHP
+```php
+<?php
+function verifyWebhook($payload, $signature, $secret) {
+    $expected = hash_hmac('sha256', $payload, $secret);
+    return hash_equals($expected, $signature);
+}
+
+$payload = file_get_contents('php://input');
+$signature = $_SERVER['HTTP_X_KAMBAFY_SIGNATURE'] ?? '';
+$secret = getenv('KAMBAFY_WEBHOOK_SECRET');
+
+if (!verifyWebhook($payload, $signature, $secret)) {
+    http_response_code(401);
+    echo json_encode(['error' => 'Invalid signature']);
+    exit;
+}
+
+$event = json_decode($payload, true);
+
+if ($event['event'] === 'payment.completed') {
+    // Processar pagamento
+    error_log("✅ Pagamento confirmado: " . $event['data']['orderId']);
+}
+
+http_response_code(200);
+echo json_encode(['received' => true]);
 ```
 
 ---
 
-## 📱 Exemplo de Integração Completa (React Native)
+## 📱 SDK JavaScript/TypeScript
 
 ```typescript
 // kambafy-sdk.ts
 const KAMBAFY_API = 'https://hcbkqygdtzpxvctfdqbd.supabase.co/functions/v1/kambafy-payments-api';
-const API_KEY = 'kp_b5d70d968ab64886ca0fea02c6dea5c61af3f9ae6be997a608f9f9f9e1a07a64';
 
-interface CreatePaymentParams {
+interface PaymentParams {
   orderId: string;
   amount: number;
   paymentMethod: 'express' | 'reference';
   customerName: string;
   customerEmail: string;
-  phoneNumber?: string; // Obrigatório para 'express'
+  phoneNumber?: string;
   metadata?: Record<string, any>;
 }
 
-export async function createPayment(params: CreatePaymentParams) {
-  try {
+interface PaymentResponse {
+  success: boolean;
+  id: string;
+  orderId: string;
+  status: string;
+  amount: number;
+  currency: string;
+  paymentMethod: string;
+  expiresAt: string;
+  createdAt: string;
+  instructions?: {
+    message: string;
+    transactionId: string;
+    expiresIn: string;
+  };
+  reference?: {
+    entity: string;
+    reference: string;
+    instructions: string;
+    expiresIn: string;
+  };
+}
+
+export class KambafySDK {
+  private apiKey: string;
+
+  constructor(apiKey: string) {
+    this.apiKey = apiKey;
+  }
+
+  async createPayment(params: PaymentParams): Promise<PaymentResponse> {
     const response = await fetch(KAMBAFY_API, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': API_KEY,
+        'x-api-key': this.apiKey,
       },
       body: JSON.stringify(params),
     });
 
+    const data = await response.json();
+    
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Erro ao criar pagamento');
+      throw new Error(data.error || 'Erro ao criar pagamento');
     }
 
-    return await response.json();
-  } catch (error) {
-    console.error('Erro ao criar pagamento:', error);
-    throw error;
+    return data;
   }
-}
 
-export async function getPaymentStatus(paymentId: string) {
-  try {
+  async getPayment(paymentId: string): Promise<PaymentResponse> {
     const response = await fetch(`${KAMBAFY_API}/payment/${paymentId}`, {
-      method: 'GET',
-      headers: {
-        'x-api-key': API_KEY,
-      },
+      headers: { 'x-api-key': this.apiKey },
     });
 
+    const data = await response.json();
+    
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Erro ao verificar pagamento');
+      throw new Error(data.error || 'Erro ao verificar pagamento');
     }
 
-    return await response.json();
-  } catch (error) {
-    console.error('Erro ao verificar pagamento:', error);
-    throw error;
+    return data;
   }
-}
 
-// Uso no componente
-import { createPayment, getPaymentStatus } from './kambafy-sdk';
+  async listPayments(options?: { status?: string; limit?: number; offset?: number }) {
+    const params = new URLSearchParams();
+    if (options?.status) params.set('status', options.status);
+    if (options?.limit) params.set('limit', options.limit.toString());
+    if (options?.offset) params.set('offset', options.offset.toString());
 
-async function handlePayment() {
-  try {
-    // 1. Criar pagamento
-    const payment = await createPayment({
-      orderId: `ORDER_${Date.now()}`,
-      amount: 5000,
-      paymentMethod: 'express',
-      customerName: 'João Silva',
-      customerEmail: 'joao@email.com',
-      phoneNumber: '923456789',
-      metadata: {
-        productId: 'prod_123',
-      },
+    const response = await fetch(`${KAMBAFY_API}/payments?${params}`, {
+      headers: { 'x-api-key': this.apiKey },
     });
 
-    console.log('Pagamento criado:', payment);
-    alert(payment.instructions.message);
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error || 'Erro ao listar pagamentos');
+    }
 
-    // 2. Polling para verificar status (opcional)
-    const checkInterval = setInterval(async () => {
-      const status = await getPaymentStatus(payment.id);
-      
-      if (status.status === 'completed') {
-        clearInterval(checkInterval);
-        alert('Pagamento confirmado! ✅');
-        // Navegar para tela de sucesso
-      } else if (status.status === 'failed' || status.status === 'expired') {
-        clearInterval(checkInterval);
-        alert('Pagamento falhou ou expirou ❌');
-      }
-    }, 5000); // Verificar a cada 5 segundos
-
-  } catch (error) {
-    alert(`Erro: ${error.message}`);
+    return data;
   }
 }
+
+// Uso
+const kambafy = new KambafySDK('SUA_API_KEY');
+
+// Criar pagamento express
+const payment = await kambafy.createPayment({
+  orderId: 'pedido_001',
+  amount: 5000,
+  paymentMethod: 'express',
+  phoneNumber: '923456789',
+  customerName: 'João Silva',
+  customerEmail: 'joao@email.com',
+});
+
+console.log('Pagamento criado:', payment.id);
+console.log('Instruções:', payment.instructions?.message);
 ```
 
 ---
@@ -426,55 +647,28 @@ SET
   api_key = 'kp_' || encode(gen_random_bytes(32), 'hex'),
   webhook_secret = encode(gen_random_bytes(32), 'hex'),
   updated_at = NOW()
-WHERE contact_email = 'admin@kambafy.com';
+WHERE contact_email = 'seu@email.com';
 
 -- Ver novas credenciais
 SELECT api_key, webhook_secret 
 FROM partners 
-WHERE contact_email = 'admin@kambafy.com';
+WHERE contact_email = 'seu@email.com';
 ```
 
 ---
 
-## 📊 Monitoramento
+## 📊 Códigos HTTP de Referência
 
-### Ver Logs de Uso da API
-
-```sql
-SELECT * FROM api_usage_logs 
-WHERE partner_id = (
-  SELECT id FROM partners WHERE contact_email = 'admin@kambafy.com'
-)
-ORDER BY created_at DESC 
-LIMIT 100;
-```
-
-### Ver Status de Webhooks
-
-```sql
-SELECT * FROM webhook_status
-ORDER BY updated_at DESC
-LIMIT 50;
-```
-
-### Ver Pagamentos Recentes
-
-```sql
-SELECT 
-  order_id,
-  status,
-  amount,
-  payment_method,
-  customer_name,
-  created_at,
-  completed_at
-FROM external_payments
-WHERE partner_id = (
-  SELECT id FROM partners WHERE contact_email = 'admin@kambafy.com'
-)
-ORDER BY created_at DESC
-LIMIT 100;
-```
+| Código | Status | Descrição |
+|--------|--------|-----------|
+| 200 | OK | Requisição bem-sucedida |
+| 201 | Created | Pagamento criado com sucesso |
+| 400 | Bad Request | Dados inválidos na requisição |
+| 401 | Unauthorized | API Key inválida |
+| 404 | Not Found | Recurso não encontrado |
+| 409 | Conflict | Conflito (orderId duplicado) |
+| 429 | Too Many Requests | Rate limit excedido |
+| 500 | Server Error | Erro interno do servidor |
 
 ---
 
@@ -482,12 +676,13 @@ LIMIT 100;
 
 Para dúvidas ou problemas:
 
-1. Verifique os logs da API: `api_usage_logs`
-2. Verifique os webhooks: `webhook_status`
-3. Entre em contato: admin@kambafy.com
+1. Verifique a resposta de erro da API
+2. Confira se a API Key está correta
+3. Valide o formato dos dados enviados
+4. Entre em contato: **admin@kambafy.com**
 
 ---
 
 ## 🎉 Pronto!
 
-Sua API de pagamentos Kambafy está ativa e funcionando. Bom uso! 🚀
+Sua integração com a API Kambafy Payments está pronta. Bom uso! 🚀
