@@ -48,36 +48,40 @@ export default function PartnersLogin() {
         throw new Error("Erro ao fazer login");
       }
 
-      // Verificar se o usuário é um parceiro aprovado
-      const { data: partnerData, error: partnerError } = await (supabase as any)
-        .from('partners')
-        .select('id, status, company_name')
-        .eq('user_id', authData.user.id)
-        .maybeSingle();
+      // Verificar se o usuário é um parceiro aprovado (via Edge Function para contornar RLS)
+      const { data: checkData, error: checkError } = await supabase.functions.invoke(
+        "partner-login-check",
+        { body: {} }
+      );
 
-      if (partnerError) {
+      if (checkError) {
         throw new Error("Erro ao verificar status de parceiro");
       }
+
+      const partnerData = (checkData as any)?.partner as
+        | { id: string; status: string; company_name: string }
+        | null;
 
       if (!partnerData) {
         // Não é parceiro - fazer logout e informar
         await supabase.auth.signOut();
         toast({
           title: "Acesso Negado",
-          description: "Esta conta não está registrada como parceiro. Faça sua candidatura primeiro.",
-          variant: "destructive"
+          description:
+            "Esta conta não está registrada como parceiro. Faça sua candidatura primeiro.",
+          variant: "destructive",
         });
-        navigate('/partners/apply');
+        navigate("/partners/apply");
         return;
       }
 
-      if (partnerData.status !== 'approved') {
+      if (partnerData.status !== "approved") {
         // Parceiro não aprovado
         await supabase.auth.signOut();
         toast({
           title: "Aguardando Aprovação",
           description: `Sua candidatura como "${partnerData.company_name}" ainda está em análise. Você receberá um email quando for aprovado.`,
-          variant: "default"
+          variant: "default",
         });
         return;
       }
