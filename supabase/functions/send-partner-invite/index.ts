@@ -38,17 +38,10 @@ const findUserIdByEmail = async (supabaseAdmin: any, email: string): Promise<str
   return data;
 };
 
-// O generateLink às vezes usa o Site URL (ex.: /auth) quando o redirectTo não está na allowlist.
-// Para garantir que o usuário caia na tela correta, forçamos o path para /reset-password.
-const toResetPasswordLink = (actionLink: string): string => {
-  try {
-    const url = new URL(actionLink);
-    url.pathname = "/reset-password";
-    return url.toString();
-  } catch {
-    // Fallback bem simples (mantém hash com tokens)
-    return actionLink.replace("/auth", "/reset-password");
-  }
+const generateTempPassword = (): string => {
+  // Senha curta o suficiente para digitar, mas ainda com boa entropia
+  const raw = crypto.randomUUID().replace(/-/g, "").slice(0, 12);
+  return `KP_${raw}`;
 };
 
 const handler = async (req: Request): Promise<Response> => {
@@ -83,23 +76,34 @@ const handler = async (req: Request): Promise<Response> => {
 
     const appOrigin = getAppOriginFromReq(req);
     const partnersLoginUrl = `${appOrigin}/partners/login`;
-    const resetPasswordRedirectTo = `${appOrigin}/reset-password?next=/partners/login`;
 
     const normalizedEmail = normalizeEmail(email);
 
-    // 1) Encontrar/criar usuário (a senha NÃO é recuperável depois)
+    // 1) Encontrar/criar usuário e (re)definir uma senha temporária
     let userId: string;
-    let tempPassword: string | null = null;
+    const tempPassword = generateTempPassword();
 
-    // 1) Encontrar usuário existente via RPC ou criar novo
     const existingUserId = await findUserIdByEmail(supabaseAdmin, normalizedEmail);
 
     if (existingUserId) {
       userId = existingUserId;
-      console.log(`[send-partner-invite] User already exists: ${userId}`);
-    } else {
-      tempPassword = `KP_${crypto.randomUUID().slice(0, 12)}`;
 
+      const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+        password: tempPassword,
+        email_confirm: true,
+        user_metadata: {
+          full_name: contact_name,
+          is_partner: true,
+        },
+      });
+
+      if (updateError) {
+        console.error("[send-partner-invite] Error updating user password:", updateError);
+        throw updateError;
+      }
+
+      console.log(`[send-partner-invite] Updated password for existing user: ${userId}`);
+    } else {
       const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
         email: normalizedEmail,
         password: tempPassword,
@@ -115,9 +119,24 @@ const handler = async (req: Request): Promise<Response> => {
         if ((createError as any)?.code === "email_exists") {
           const fallbackUserId = await findUserIdByEmail(supabaseAdmin, normalizedEmail);
           if (!fallbackUserId) throw createError;
+
           userId = fallbackUserId;
-          tempPassword = null;
-          console.log(`[send-partner-invite] User exists (fallback found): ${userId}`);
+
+          const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+            password: tempPassword,
+            email_confirm: true,
+            user_metadata: {
+              full_name: contact_name,
+              is_partner: true,
+            },
+          });
+
+          if (updateError) {
+            console.error("[send-partner-invite] Error updating user password (fallback):", updateError);
+            throw updateError;
+          }
+
+          console.log(`[send-partner-invite] User exists (fallback found) and password updated: ${userId}`);
         } else {
           console.error("[send-partner-invite] Error creating user:", createError);
           throw createError;
@@ -132,49 +151,19 @@ const handler = async (req: Request): Promise<Response> => {
     // Nem todas as bases têm a coluna `partners.user_id`. Para evitar falhas no envio,
     // seguimos sem atualizar o partner e usamos o email como identificador.
 
-    // 3) Gerar link para criar/redefinir senha (mais seguro do que "reenviar senha")
-    const { data: resetData, error: resetError } = await supabaseAdmin.auth.admin.generateLink({
-      type: "recovery",
-      email: normalizedEmail,
-      options: {
-        redirectTo: resetPasswordRedirectTo,
-      },
-    });
-
-    if (resetError) {
-      console.error("[send-partner-invite] Error generating reset link:", resetError);
-      throw resetError;
-    }
-
-    const actionLink = resetData?.properties?.action_link as string | undefined;
-
-    if (!actionLink) {
-      throw new Error("Reset link generation succeeded but action_link is missing");
-    }
-
-    const resetLink = toResetPasswordLink(actionLink);
-
-    try {
-      const safeUrl = new URL(resetLink);
-      console.log(`[send-partner-invite] Generated reset link for ${email}:`, {
-        origin: safeUrl.origin,
-        pathname: safeUrl.pathname,
-      });
-    } catch {
-      console.log(`[send-partner-invite] Generated reset link for ${email} (path rewritten)`);
-    }
+    // 3) Enviar email com a senha temporária
 
     const contactNameSafe = contact_name || company_name;
 
-    const tempPasswordHtml = tempPassword
-      ? `
+    const tempPasswordHtml = `
         <div style="background: #fafafa; border-radius: 8px; padding: 16px; margin: 20px 0;">
-          <p style="color: #18181b; margin: 0 0 8px 0; font-size: 14px;"><strong>Sua senha temporária:</strong></p>
+          <p style="color: #18181b; margin: 0 0 8px 0; font-size: 14px;"><strong>Seu acesso:</strong></p>
+          <p style="color: #3f3f46; margin: 0 0 8px 0; font-size: 14px;">Email: <strong>${normalizedEmail}</strong></p>
+          <p style="color: #3f3f46; margin: 0 0 8px 0; font-size: 14px;">Senha temporária:</p>
           <p style="margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size: 14px; color: #18181b;">${tempPassword}</p>
-          <p style="color: #71717a; margin: 8px 0 0 0; font-size: 12px;">Recomendamos redefinir a senha usando o botão abaixo.</p>
+          <p style="color: #71717a; margin: 8px 0 0 0; font-size: 12px;">Após entrar, altere sua senha nas configurações.</p>
         </div>
-      `
-      : "";
+      `;
 
     // 4) Enviar email (sempre)
     const { error: emailError } = await resend.emails.send({
@@ -198,23 +187,17 @@ const handler = async (req: Request): Promise<Response> => {
               Sua candidatura como parceiro <strong>${company_name}</strong> foi <span style="color: #16a34a; font-weight: bold;">aprovada</span>!
             </p>
 
-            <p style="color: #3f3f46; font-size: 16px; line-height: 1.6;">
-              Por segurança, não armazenamos/sabemos sua senha. Use o botão abaixo para <strong>criar ou redefinir</strong> sua senha de acesso.
-            </p>
+             <p style="color: #3f3f46; font-size: 16px; line-height: 1.6;">
+               Use as credenciais abaixo para entrar no Portal de Parceiros.
+             </p>
 
-            <div style="text-align: center; margin: 28px 0 18px;">
-              <a href="${resetLink}" style="display: inline-block; background-color: #2563eb; color: white; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
-                Criar / Redefinir Senha
-              </a>
-            </div>
+             ${tempPasswordHtml}
 
-            ${tempPasswordHtml}
-
-            <div style="text-align: center; margin: 18px 0 0;">
-              <a href="${partnersLoginUrl}" style="display: inline-block; background-color: #18181b; color: white; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-weight: 600; font-size: 14px;">
-                Acessar Portal de Parceiros
-              </a>
-            </div>
+             <div style="text-align: center; margin: 18px 0 0;">
+               <a href="${partnersLoginUrl}" style="display: inline-block; background-color: #18181b; color: white; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-weight: 600; font-size: 14px;">
+                 Acessar Portal de Parceiros
+               </a>
+             </div>
 
             <div style="background: #f0fdf4; border-radius: 8px; padding: 16px; margin: 24px 0;">
               <p style="color: #166534; margin: 0; font-size: 14px;">
