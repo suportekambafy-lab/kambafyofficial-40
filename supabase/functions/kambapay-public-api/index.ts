@@ -56,7 +56,11 @@ serve(async (req) => {
 
     // Route requests based on path and method
     const url = new URL(req.url);
-    const path = url.pathname;
+    // Remove the function name prefix from path (e.g., /kambapay-public-api/payments -> /payments)
+    let path = url.pathname;
+    if (path.startsWith("/kambapay-public-api")) {
+      path = path.replace("/kambapay-public-api", "") || "/";
+    }
     const method = req.method;
 
     console.log(`API Request: ${method} ${path} from partner ${partner.company_name}`);
