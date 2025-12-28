@@ -6,8 +6,22 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+interface Partner {
+  id: string;
+  company_name: string;
+  api_key: string;
+  webhook_url: string | null;
+  webhook_secret: string | null;
+  status: string;
+  commission_rate: number;
+  monthly_transaction_limit: number;
+  current_month_transactions: number;
+  total_transactions: number;
+  total_revenue: number;
+}
+
 type PartnerCheckResponse = {
-  partner: { id: string; status: string; company_name: string } | null;
+  partner: Partner | null;
 };
 
 serve(async (req) => {
@@ -52,7 +66,7 @@ serve(async (req) => {
 
     const { data: partner, error: partnerError } = await supabaseAdmin
       .from("partners")
-      .select("id, status, company_name")
+      .select("*")
       .ilike("contact_email", email)
       .maybeSingle();
 
@@ -65,9 +79,7 @@ serve(async (req) => {
     }
 
     const payload: PartnerCheckResponse = {
-      partner: partner
-        ? { id: partner.id, status: partner.status, company_name: partner.company_name }
-        : null,
+      partner: partner as Partner | null,
     };
 
     return new Response(JSON.stringify(payload), {

@@ -84,20 +84,42 @@ export default function PartnersPortal() {
     try {
       setLoading(true);
 
-      // Buscar dados do parceiro - usando any para evitar deep type instantiation
-      const { data: partnerData, error: partnerError } = await (supabase as any)
-        .from('partners')
-        .select('*')
-        .eq('user_id', user?.id ?? '')
-        .single();
+      // Usar edge function para contornar RLS
+      const { data: checkData, error: checkError } = await supabase.functions.invoke(
+        "partner-login-check",
+        { body: {} }
+      );
 
-      if (partnerError || !partnerData) {
+      if (checkError) {
+        console.error('Erro ao verificar parceiro:', checkError);
+        toast({
+          title: "Erro",
+          description: "Erro ao verificar status de parceiro",
+          variant: "destructive"
+        });
+        navigate('/partners/login');
+        return;
+      }
+
+      const partnerData = (checkData as any)?.partner;
+
+      if (!partnerData) {
         toast({
           title: "Acesso Negado",
-          description: "Você não é um parceiro aprovado. Cadastre-se primeiro.",
+          description: "Você não é um parceiro registrado. Cadastre-se primeiro.",
           variant: "destructive"
         });
         navigate('/partners/apply');
+        return;
+      }
+
+      if (partnerData.status !== 'approved') {
+        toast({
+          title: "Aguardando Aprovação",
+          description: `Sua candidatura como "${partnerData.company_name}" ainda está em análise.`,
+          variant: "default"
+        });
+        navigate('/partners/login');
         return;
       }
 
