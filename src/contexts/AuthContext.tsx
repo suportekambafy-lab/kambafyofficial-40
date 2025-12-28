@@ -420,49 +420,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string): Promise<{ error?: AuthError }> => {
     try {
-      console.log('🔐 Attempting sign in for:', email);
-      
+      const normalizedEmail = email.trim().toLowerCase();
+      console.log('🔐 Attempting sign in for:', normalizedEmail);
+
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+        email: normalizedEmail,
         password,
       });
 
       if (error) {
         console.error('❌ Sign in error:', error);
-        
+
         // Se o erro for "Email not confirmed", tentar login customizado
         if (error.message?.includes('Email not confirmed')) {
           console.log('📧 Email not confirmed, trying custom login...');
-          
+
           try {
             const { data: customData, error: customError } = await supabase.functions.invoke('custom-auth-login', {
-              body: { email, password }
+              body: { email: normalizedEmail, password }
             });
-            
+
             if (customError) {
               console.error('❌ Custom login error:', customError);
               return { error };
             }
-            
+
             if (customData?.success && customData?.user && customData?.session) {
               console.log('✅ Custom login successful, setting session...');
-              
+
               // Definir manualmente a sessão
               const { error: setSessionError } = await supabase.auth.setSession({
                 access_token: customData.session.access_token,
                 refresh_token: customData.session.refresh_token,
               });
-              
+
               if (setSessionError) {
                 console.error('❌ Error setting custom session:', setSessionError);
                 return { error: setSessionError };
               }
-              
+
               console.log('✅ Custom session set successfully');
-              
+
               // Verificar banimento
               await checkUserBanStatus(customData.user);
-              
+
               // Vincular OneSignal External ID (se for acesso via app)
               if (customData.user?.email) {
                 // Executar em background sem bloquear o login
@@ -470,7 +471,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   console.error('Erro ao vincular OneSignal external_id:', err);
                 });
               }
-              
+
               return {};
             } else {
               console.log('❌ Custom login returned no valid session');
@@ -479,17 +480,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.error('❌ Custom login exception:', customError);
           }
         }
-        
+
         return { error };
       }
 
       console.log('✅ Sign in successful');
-      
+
       // Verificar se o usuário está banido
       if (data.user) {
         await checkUserBanStatus(data.user);
       }
-      
+
       // Vincular OneSignal External ID (se for acesso via app)
       if (data.user?.email) {
         // Executar em background sem bloquear o login
@@ -497,7 +498,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           console.error('Erro ao vincular OneSignal external_id:', err);
         });
       }
-      
+
       return {};
     } catch (error) {
       console.error('❌ Unexpected sign in error:', error);
@@ -542,9 +543,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const resetPassword = async (email: string) => {
+    const normalizedEmail = email.trim().toLowerCase();
+
     try {
       const { error } = await supabase.functions.invoke('reset-password', {
-        body: { email }
+        body: { email: normalizedEmail }
       });
 
       return { error };

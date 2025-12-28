@@ -107,8 +107,9 @@ const Auth = () => {
   const handleSignIn = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    const email = formData.get('email') as string;
-    const password = formData.get('password') as string;
+    const rawEmail = (formData.get('email') as string) || '';
+    const email = rawEmail.trim().toLowerCase();
+    const password = (formData.get('password') as string) || '';
 
     if (!email || !password) {
       setErrorField("Por favor, preencha email e senha.");
@@ -131,12 +132,12 @@ const Auth = () => {
 
       if (result.error) {
         let message = "Email ou senha incorretos.";
-        
+
         if (result.error.message.includes('email')) {
           message = "Por favor, insira um email válido.";
         } else if (result.error.message.includes('Email not confirmed') || result.error.code === 'email_not_confirmed') {
           message = "Email não confirmado! Verifique sua caixa de entrada e clique no link de confirmação.";
-          
+
           toast({
             title: "⚠️ Email não confirmado",
             description: "Você precisa confirmar seu email antes de fazer login. Verifique sua caixa de entrada.",
@@ -152,27 +153,27 @@ const Auth = () => {
 
       // Login bem-sucedido - verificar se precisa de 2FA
       const { data: { user: loggedUser } } = await supabase.auth.getUser();
-      
+
       if (loggedUser) {
         const check2FA = await checkLogin2FARequired(loggedUser);
-        
+
         if (check2FA.requires2FA && check2FA.reason) {
           console.log('🔐 2FA necessário:', check2FA.reason);
-          
+
           // Sinalizar ao contexto que precisa de 2FA
           set2FARequired(true, loggedUser.email || '');
-          
+
           // Redirecionar para página de verificação 2FA
           setChecking2FA(false);
           navigate('/verificar-2fa', { replace: true });
           setLoading(false);
           return;
         }
-        
+
         // Registrar login bem-sucedido
         await registerSuccessfulLogin(loggedUser.id);
       }
-      
+
       // Liberar redirecionamento automático
       setChecking2FA(false);
     } catch (error) {
@@ -234,8 +235,9 @@ const Auth = () => {
   const handleSignup = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    const email = formData.get('email') as string;
-    const password = formData.get('password') as string;
+    const rawEmail = (formData.get('email') as string) || '';
+    const email = rawEmail.trim().toLowerCase();
+    const password = (formData.get('password') as string) || '';
 
     if (!email || !password || !fullName) {
       setErrorField("Por favor, preencha todos os campos.");
@@ -248,14 +250,14 @@ const Auth = () => {
     try {
       const userType = selectedUserType === 'customer' ? 'customer' : 'business';
       localStorage.setItem('userType', userType);
-      
+
       // Fazer o signup AGORA (mas ficará não-confirmado)
       console.log('🔄 Fazendo signup inicial...');
       const { error: signupError } = await signUp(email, password, fullName);
-      
+
       if (signupError) {
         let message = "Ocorreu um erro. Tente novamente.";
-        
+
         if (signupError.message.includes('User already registered')) {
           message = "Este email já está registrado. Tente fazer login.";
         } else if (signupError.message.includes('Password')) {
@@ -267,9 +269,9 @@ const Auth = () => {
         setErrorField(message);
         return;
       }
-      
+
       console.log('✅ Signup inicial concluído, indo para verificação');
-      
+
       // Salvar dados para verificação e confirmação posterior
       setSignupData({
         email,
@@ -278,7 +280,7 @@ const Auth = () => {
       });
       setCurrentView('signup-verification');
       setErrorField('');
-      
+
     } catch (error) {
       console.error('Erro no processo de signup:', error);
       setErrorField("Ocorreu um erro inesperado. Tente novamente.");
