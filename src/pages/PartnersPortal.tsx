@@ -534,14 +534,14 @@ export default function PartnersPortal() {
                   <Label>Base URL</Label>
                   <div className="flex items-center space-x-2">
                     <Input
-                      value="https://hcbkqygdtzpxvctfdqbd.supabase.co/functions/v1/kambafy-payments-api"
+                      value="https://hcbkqygdtzpxvctfdqbd.supabase.co/functions/v1/kambapay-public-api"
                       readOnly
                       className="font-mono text-sm"
                     />
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() => copyToClipboard("https://hcbkqygdtzpxvctfdqbd.supabase.co/functions/v1/kambafy-payments-api", "Base URL")}
+                      onClick={() => copyToClipboard("https://hcbkqygdtzpxvctfdqbd.supabase.co/functions/v1/kambapay-public-api", "Base URL")}
                     >
                       <Copy className="w-4 h-4" />
                     </Button>
@@ -557,7 +557,7 @@ export default function PartnersPortal() {
               <CardContent>
                 <div className="bg-zinc-950 text-zinc-100 p-4 rounded-lg overflow-x-auto">
                   <pre className="text-sm">
-{`curl -X POST "https://hcbkqygdtzpxvctfdqbd.supabase.co/functions/v1/kambafy-payments-api" \\
+{`curl -X POST "https://hcbkqygdtzpxvctfdqbd.supabase.co/functions/v1/kambapay-public-api/payments" \\
   -H "Content-Type: application/json" \\
   -H "x-api-key: ${showApiKey ? partner.api_key : 'YOUR_API_KEY'}" \\
   -d '{
