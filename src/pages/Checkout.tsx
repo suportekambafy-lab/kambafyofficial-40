@@ -931,6 +931,20 @@ const Checkout = () => {
       ];
     }
 
+    // ✅ Espanha: sempre disponibilizar cartão (Stripe) em espanhol
+    if (userCountry.code === 'ES') {
+      return [
+        {
+          id: 'card',
+          name: 'Tarjeta de Crédito/Débito',
+          image: getPaymentMethodImage('card') || getPaymentMethodImage('card_us'),
+          enabled: true,
+          countryFlag: '🇪🇸',
+          countryName: 'España'
+        }
+      ];
+    }
+
     // Definir ordem dos métodos por país
     const paymentOrder: Record<string, string[]> = {
       'AO': ['express', 'reference', 'transfer'],
