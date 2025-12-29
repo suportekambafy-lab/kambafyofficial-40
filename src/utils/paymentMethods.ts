@@ -199,7 +199,7 @@ export const getAngolaPaymentMethods = (): PaymentMethod[] => {
 };
 
 export const getMozambiquePaymentMethods = (): PaymentMethod[] => {
-  return PAYMENT_METHODS.filter(method => method.isMozambique);
+  return PAYMENT_METHODS.filter(method => method.isMozambique && method.enabled);
 };
 
 export const getPortugalPaymentMethods = (): PaymentMethod[] => {
