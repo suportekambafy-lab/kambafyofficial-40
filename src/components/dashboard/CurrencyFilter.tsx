@@ -17,8 +17,13 @@ const CURRENCY_INFO: Record<string, { symbol: string; flag: string }> = {
   'BRL': { symbol: 'R$', flag: '🇧🇷' },
 };
 
+// Normalize AOA to KZ (same currency)
+const normalizeCurrency = (currency: string) => currency === 'AOA' ? 'KZ' : currency;
+
 export function CurrencyFilter({ activeCurrency, onCurrencyChange, availableCurrencies }: CurrencyFilterProps) {
-  const currencies = ['all', ...availableCurrencies.filter(c => c !== 'all')];
+  // Normalize currencies and remove duplicates (AOA = KZ)
+  const normalizedCurrencies = [...new Set(availableCurrencies.map(normalizeCurrency))];
+  const currencies = ['all', ...normalizedCurrencies.filter(c => c !== 'all')];
   
   return (
     <div className="flex gap-2 flex-wrap">

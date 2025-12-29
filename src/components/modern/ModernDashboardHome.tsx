@@ -262,12 +262,15 @@ export function ModernDashboardHome() {
     }
   }, [user]);
 
+  // Normalize AOA to KZ (same currency)
+  const normalizeCurrency = (currency: string) => currency === 'AOA' ? 'KZ' : currency;
+
   // Get available currencies from orders
   const availableCurrencies = useMemo(() => {
     const currencies = new Set<string>();
     allOrders.forEach(order => {
       if (order.currency) {
-        currencies.add(order.currency);
+        currencies.add(normalizeCurrency(order.currency));
       }
     });
     return Array.from(currencies).sort();
@@ -282,9 +285,9 @@ export function ModernDashboardHome() {
       filtered = filtered.filter(order => order.product_id === selectedProduct);
     }
 
-    // Apply currency filter
+    // Apply currency filter (normalize AOA to KZ)
     if (selectedCurrency !== 'all') {
-      filtered = filtered.filter(order => order.currency === selectedCurrency);
+      filtered = filtered.filter(order => normalizeCurrency(order.currency) === selectedCurrency);
     }
 
     // Apply time filter (include custom range)
