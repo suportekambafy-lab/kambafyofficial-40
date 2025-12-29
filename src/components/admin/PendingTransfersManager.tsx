@@ -581,7 +581,8 @@ export function PendingTransfersManager() {
       const { data: updateResult, error: updateError } = await supabase
         .rpc('admin_process_transfer_request', {
           p_transfer_id: transferId,
-          p_action: action
+          p_action: action,
+          p_admin_email: admin?.email || null
         });
 
       if (updateError) {
