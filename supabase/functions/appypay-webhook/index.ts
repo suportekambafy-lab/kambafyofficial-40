@@ -330,7 +330,7 @@ const handler = async (req: Request): Promise<Response> => {
       if (payload.id) {
         const { data: extPayment } = await supabase
           .from('external_payments')
-          .select('*, partners!inner(webhook_url, webhook_secret)')
+          .select('*, partners(webhook_url, webhook_secret)')
           .eq('appypay_transaction_id', payload.id)
           .single();
         
@@ -344,7 +344,7 @@ const handler = async (req: Request): Promise<Response> => {
       if (!externalPayment && payload.merchantTransactionId) {
         const { data: extPayment } = await supabase
           .from('external_payments')
-          .select('*, partners!inner(webhook_url, webhook_secret)')
+          .select('*, partners(webhook_url, webhook_secret)')
           .eq('appypay_transaction_id', payload.merchantTransactionId)
           .single();
         
@@ -358,7 +358,7 @@ const handler = async (req: Request): Promise<Response> => {
       if (!externalPayment && payload.reference?.referenceNumber) {
         const { data: extPayment } = await supabase
           .from('external_payments')
-          .select('*, partners!inner(webhook_url, webhook_secret)')
+          .select('*, partners(webhook_url, webhook_secret)')
           .eq('reference_number', payload.reference.referenceNumber)
           .single();
         
