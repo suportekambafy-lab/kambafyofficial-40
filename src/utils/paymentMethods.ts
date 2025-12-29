@@ -50,7 +50,7 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
     id: "emola",
     name: "e-Mola",
     image: getPaymentMethodImage("emola"),
-    enabled: false,
+    enabled: true,
     isMozambique: true,
     countryFlag: "🇲🇿",
     countryName: "Moçambique"
@@ -59,7 +59,7 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
     id: "mpesa",
     name: "M-Pesa",
     image: getPaymentMethodImage("mpesa"),
-    enabled: false,
+    enabled: true,
     isMozambique: true,
     countryFlag: "🇲🇿",
     countryName: "Moçambique"
