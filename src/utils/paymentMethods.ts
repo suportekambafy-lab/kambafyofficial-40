@@ -175,8 +175,8 @@ export const getCountryByPaymentMethod = (paymentMethod: string) => {
     // Moçambique
     'emola': { code: 'MZ', name: 'Moçambique', flag: '🇲🇿' },
     'mpesa': { code: 'MZ', name: 'Moçambique', flag: '🇲🇿' },
-    
-    // Reino Unido
+    'card_mz': { code: 'MZ', name: 'Moçambique', flag: '🇲🇿' },
+
     'card_uk': { code: 'GB', name: 'United Kingdom', flag: '🇬🇧' },
     'klarna_uk': { code: 'GB', name: 'United Kingdom', flag: '🇬🇧' },
     
