@@ -127,8 +127,8 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
           // Portugal usa métodos tradicionais
           return ['card', 'klarna', 'multibanco', 'mbway'].includes(method.id);
         } else if (userCountry.code === 'MZ') {
-          // Moçambique usa métodos tradicionais - aceita mpesa e epesa para compatibilidade
-          return ['emola', 'mpesa', 'epesa'].includes(method.id);
+          // Moçambique usa card_mz (Stripe) e métodos locais
+          return ['card_mz', 'emola', 'mpesa'].includes(method.id);
         } else if (userCountry.code === 'GB') {
           // UK usa card e klarna
           return ['card_uk', 'klarna_uk'].includes(method.id);

@@ -26,7 +26,8 @@ export default function PaymentMethodsSelector({ selectedMethods, onMethodsChang
     const base = allMethods.map((method) => {
       const selected = selectedById.get(method.id);
       if (!selected) {
-        return hasSavedConfig ? { ...method, enabled: false } : method;
+        // Novos métodos (como card_mz) devem vir ativos por padrão
+        return method;
       }
       const enabled = typeof selected.enabled === "boolean" ? selected.enabled : method.enabled;
       return { ...method, enabled };
