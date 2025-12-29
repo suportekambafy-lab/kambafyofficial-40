@@ -99,10 +99,10 @@ serve(async (req) => {
     
     // Validate prefix based on provider
     const prefix = formattedPhone.substring(0, 2);
-    if (provider === 'emola' && prefix !== '87') {
+    if (provider === 'emola' && !['86', '87'].includes(prefix)) {
       console.error('❌ Invalid prefix for e-Mola:', prefix);
       return new Response(
-        JSON.stringify({ error: `Para e-Mola, use um número Movitel (87). Recebeu: ${prefix}` }),
+        JSON.stringify({ error: `Para e-Mola, use um número Movitel (86 ou 87). Recebeu: ${prefix}` }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
