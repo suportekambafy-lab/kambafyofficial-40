@@ -2632,7 +2632,7 @@ const Checkout = () => {
                 name: formData.fullName,
                 email: formData.email,
                 phone: formData.phone
-              }} paymentMethod={selectedPayment} onSuccess={handleCardPaymentSuccess} onError={handleCardPaymentError} processing={processing} setProcessing={setProcessing} displayPrice={getDisplayPrice(totalPrice, true)} convertedAmount={convertedTotalPrice} customerCountry={ipCountryName} />
+              }} paymentMethod={selectedPayment} onSuccess={handleCardPaymentSuccess} onError={handleCardPaymentError} processing={processing} setProcessing={setProcessing} displayPrice={getDisplayPrice(totalPrice, true)} convertedAmount={convertedTotalPrice} customerCountry={ipCountryName} countryCode={userCountry?.code} />
                 </div>}
 
             </div>

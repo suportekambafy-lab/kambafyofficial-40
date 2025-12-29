@@ -66,11 +66,18 @@ const STRIPE_TRANSLATIONS = {
   }
 };
 
-const getStripeLocale = (paymentMethod: string): 'pt' | 'en' | 'es' => {
+const getStripeLocale = (paymentMethod: string, countryCode?: string): 'pt' | 'en' | 'es' => {
+  // Países espanhóis usam locale 'es'
+  if (countryCode === 'ES' || countryCode === 'MX' || countryCode === 'CL' || countryCode === 'AR') {
+    return 'es';
+  }
   if (paymentMethod === 'card_mx' || paymentMethod === 'card_cl') {
     return 'es';
   }
   if (paymentMethod === 'card_uk' || paymentMethod === 'card_us') {
+    return 'en';
+  }
+  if (countryCode === 'US' || countryCode === 'GB') {
     return 'en';
   }
   return 'pt';
@@ -113,6 +120,7 @@ interface StripeCardFormProps {
   displayPrice: string;
   convertedAmount: number;
   customerCountry?: string;
+  countryCode?: string;
   mbwayPhone?: string;
   onMbwayPhoneChange?: (phone: string) => void;
 }
@@ -133,6 +141,7 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
   displayPrice,
   convertedAmount,
   customerCountry,
+  countryCode,
   mbwayPhone,
   onMbwayPhoneChange
 }) => {
@@ -143,8 +152,8 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
   const [cardError, setCardError] = useState<string>('');
   const [localMbwayPhone, setLocalMbwayPhone] = useState<string>(mbwayPhone || '');
   
-  // Get translations based on payment method
-  const locale = getStripeLocale(paymentMethod);
+  // Get translations based on payment method and country code
+  const locale = getStripeLocale(paymentMethod, countryCode);
   const t = STRIPE_TRANSLATIONS[locale];
 
   const getStripeCurrency = (fromCurrency: string): string => {
@@ -606,15 +615,24 @@ interface StripeCardPaymentProps {
   displayPrice: string;
   convertedAmount: number;
   customerCountry?: string;
+  countryCode?: string;
   mbwayPhone?: string;
   onMbwayPhoneChange?: (phone: string) => void;
 }
 
 const StripeCardPayment: React.FC<StripeCardPaymentProps> = (props) => {
-  // Determinar o locale para o Stripe Elements baseado no método de pagamento
+  // Determinar o locale para o Stripe Elements baseado no país do cliente
   const getStripeElementsLocale = (): 'pt' | 'en' | 'es' | 'auto' => {
+    // Países espanhóis
+    if (props.countryCode === 'ES' || props.countryCode === 'MX' || props.countryCode === 'CL' || props.countryCode === 'AR') {
+      return 'es';
+    }
     if (props.paymentMethod === 'card_mx' || props.paymentMethod === 'card_cl') {
       return 'es';
+    }
+    // Países ingleses
+    if (props.countryCode === 'US' || props.countryCode === 'GB') {
+      return 'en';
     }
     if (props.paymentMethod === 'card_uk' || props.paymentMethod === 'card_us') {
       return 'en';
