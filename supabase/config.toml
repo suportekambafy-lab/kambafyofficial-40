@@ -183,6 +183,9 @@ verify_jwt = false
 [functions.sislog-webhook]
 verify_jwt = false
 
+[functions.sislog-callback]
+verify_jwt = false
+
 [functions.create-multibanco-order]
 verify_jwt = false
 
