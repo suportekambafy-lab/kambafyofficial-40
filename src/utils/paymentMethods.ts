@@ -243,8 +243,13 @@ export const getPaymentMethodsByCountry = (countryCode: string): PaymentMethod[]
     case 'PT':
       return getPortugalPaymentMethods();
     case 'ES':
-      // Espanha usa os métodos EUR (mesmo set de Portugal)
-      return getPortugalPaymentMethods();
+      // Espanha usa apenas cartão (EUR)
+      return [{
+        id: 'card',
+        name: 'Tarjeta de Crédito/Débito',
+        image: '/lovable-uploads/3253c01d-89da-4a32-846f-4861dd03645c.png',
+        enabled: true
+      }];
     case 'GB':
       return getUKPaymentMethods();
     case 'US':

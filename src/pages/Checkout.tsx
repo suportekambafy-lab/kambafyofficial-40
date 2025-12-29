@@ -936,7 +936,7 @@ const Checkout = () => {
       'AO': ['express', 'reference', 'transfer'],
       'MZ': [], // e-Mola e M-Pesa estão indisponíveis
       'PT': ['card', 'klarna', 'multibanco', 'mbway'],
-      'ES': ['card', 'klarna', 'multibanco', 'mbway'],
+      'ES': ['card'],
       'GB': ['card_uk', 'klarna_uk'],
       'US': ['card_us'],
       'MX': ['card_mx'],
@@ -951,9 +951,11 @@ const Checkout = () => {
           return ['express', 'transfer', 'reference'].includes(method.id);
         } else if (userCountry.code === 'MZ') {
           return false; // e-Mola e M-Pesa estão indisponíveis
-        } else if (userCountry.code === 'PT' || userCountry.code === 'ES') {
-          // 🇵🇹 Portugal e 🇪🇸 Espanha usam o mesmo set Stripe (EUR)
+        } else if (userCountry.code === 'PT') {
           return ['card', 'klarna', 'multibanco', 'mbway'].includes(method.id);
+        } else if (userCountry.code === 'ES') {
+          // 🇪🇸 Espanha usa apenas cartão
+          return method.id === 'card';
         } else if (userCountry.code === 'GB') {
           return ['card_uk', 'klarna_uk'].includes(method.id);
         } else if (userCountry.code === 'US') {
