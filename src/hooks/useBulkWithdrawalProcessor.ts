@@ -27,7 +27,7 @@ export function useBulkWithdrawalProcessor(onSuccess: () => void) {
 
   const processBulkRequests = async (
     requestIds: string[], 
-    status: 'aprovado' | 'rejeitado', 
+    status: 'aprovado' | 'rejeitado' | 'suspenso', 
     adminId?: string,
     notes?: string
   ) => {
@@ -100,10 +100,13 @@ export function useBulkWithdrawalProcessor(onSuccess: () => void) {
         }
       }
 
+      const statusText = status === 'aprovado' ? 'aprovado(s)' : 
+                         status === 'suspenso' ? 'suspenso(s)' : 'rejeitado(s)';
+      
       toast({
         title: 'Sucesso',
-        description: `${requestIds.length} saque(s) ${status}(s) com sucesso`,
-        variant: status === 'aprovado' ? 'default' : 'destructive'
+        description: `${requestIds.length} saque(s) ${statusText} com sucesso`,
+        variant: status === 'aprovado' ? 'default' : status === 'suspenso' ? 'default' : 'destructive'
       });
 
       // Limpar seleção

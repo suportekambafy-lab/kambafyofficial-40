@@ -242,6 +242,10 @@ export default function Financial() {
         color: 'bg-yellow-500',
         text: 'Pendente'
       },
+      'suspenso': {
+        color: 'bg-orange-500',
+        text: 'Em Análise'
+      },
       'aprovado': {
         color: 'bg-green-500',
         text: 'Aprovado'
