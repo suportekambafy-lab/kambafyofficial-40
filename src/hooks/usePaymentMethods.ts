@@ -69,7 +69,8 @@ export const usePaymentMethods = (countryCode?: string, productPaymentMethods?: 
     const paymentOrder: Record<string, string[]> = {
       'AO': ['express', 'reference', 'transfer'],
       'MZ': ['emola', 'mpesa', 'epesa'], // Aceita ambos para compatibilidade
-      'PT': ['card', 'mbway', 'multibanco', 'klarna']
+      'PT': ['card', 'mbway', 'multibanco', 'klarna'],
+      'ES': ['card', 'klarna'] // Espanha usa os mesmos métodos Stripe que Portugal (EUR)
     };
     
     // Países padrão (Angola, Portugal, Moçambique, etc.)

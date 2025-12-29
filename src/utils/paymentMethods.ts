@@ -169,6 +169,9 @@ export const getCountryByPaymentMethod = (paymentMethod: string) => {
     'klarna': { code: 'PT', name: 'Portugal', flag: '🇵🇹' },
     'mbway': { code: 'PT', name: 'Portugal', flag: '🇵🇹' },
     
+    // Espanha
+    'card_es': { code: 'ES', name: 'Espanha', flag: '🇪🇸' },
+    
     // Moçambique
     'emola': { code: 'MZ', name: 'Moçambique', flag: '🇲🇿' },
     'mpesa': { code: 'MZ', name: 'Moçambique', flag: '🇲🇿' },

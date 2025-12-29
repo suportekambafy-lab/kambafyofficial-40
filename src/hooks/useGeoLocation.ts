@@ -24,6 +24,13 @@ const SUPPORTED_COUNTRIES: Record<string, CountryInfo> = {
     flag: '🇵🇹',
     exchangeRate: 0.0012
   },
+  ES: {
+    code: 'ES',
+    name: 'Espanha',
+    currency: 'EUR',
+    flag: '🇪🇸',
+    exchangeRate: 0.0012
+  },
   MZ: {
     code: 'MZ',
     name: 'Moçambique',
@@ -71,6 +78,7 @@ const SUPPORTED_COUNTRIES: Record<string, CountryInfo> = {
 const COUNTRY_LANGUAGES: Record<string, string> = {
   'AO': 'pt',
   'PT': 'pt',
+  'ES': 'es',
   'MZ': 'pt',
   'GB': 'en',
   'US': 'en',
