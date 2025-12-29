@@ -107,6 +107,7 @@ export default function Sales() {
   const [resendingAccessFor, setResendingAccessFor] = useState<string | null>(null); // ID da venda sendo processada
   const [resendAccessDialogOpen, setResendAccessDialogOpen] = useState(false);
   const [selectedSaleForResend, setSelectedSaleForResend] = useState<Sale | null>(null);
+  const [detailsDialogSaleId, setDetailsDialogSaleId] = useState<string | null>(null);
   const {
     loadOrdersWithStats,
     totalCount
@@ -795,7 +796,7 @@ export default function Sales() {
                           </div>
                           
                           {/* Botão Ver Detalhes com Dialog */}
-                          <Dialog>
+                          <Dialog open={detailsDialogSaleId === sale.id} onOpenChange={(open) => setDetailsDialogSaleId(open ? sale.id : null)}>
                             <DialogTrigger asChild>
                               <Button variant="ghost" size="sm" className="text-xs h-7 px-2">
                                 <Eye className="h-3 w-3 mr-1" />
@@ -904,6 +905,7 @@ export default function Sales() {
                                       variant="outline"
                                       size="sm"
                                       onClick={() => {
+                                        setDetailsDialogSaleId(null); // Fecha o modal de detalhes
                                         setSelectedSaleForResend(sale);
                                         setResendAccessDialogOpen(true);
                                       }}
