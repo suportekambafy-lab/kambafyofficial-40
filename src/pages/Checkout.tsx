@@ -1577,7 +1577,7 @@ const Checkout = () => {
     // APENAS se o método de pagamento selecionado for Stripe (card, klarna, multibanco)
     if (product.subscription_config?.is_subscription && product.subscription_config?.stripe_price_id) {
       // Se for método Stripe, usar checkout de assinatura Stripe
-      if (['card', 'klarna', 'multibanco', 'mbway', 'card_uk', 'klarna_uk', 'card_us'].includes(selectedPayment)) {
+      if (['card', 'klarna', 'multibanco', 'mbway', 'card_uk', 'klarna_uk', 'card_us', 'card_mz'].includes(selectedPayment)) {
         console.log('📦 Product is subscription with Stripe payment, redirecting to Stripe subscription checkout');
         await handleSubscriptionCheckout();
         return;
@@ -1587,7 +1587,7 @@ const Checkout = () => {
     }
 
     // Para métodos Stripe, o processamento é feito pelo componente StripeCardPayment
-    if (['card', 'klarna', 'multibanco', 'mbway', 'card_uk', 'klarna_uk', 'card_us', 'card_mx', 'card_cl'].includes(selectedPayment)) {
+    if (['card', 'klarna', 'multibanco', 'mbway', 'card_uk', 'klarna_uk', 'card_us', 'card_mx', 'card_cl', 'card_mz'].includes(selectedPayment)) {
       console.log('Stripe payment method selected, processing handled by StripeCardPayment component');
       return;
     }
@@ -2608,7 +2608,7 @@ const Checkout = () => {
               {/* Apple Pay removido */}
 
               {/* Botão de Assinatura para produtos de assinatura */}
-              {product?.subscription_config?.is_subscription && product?.subscription_config?.stripe_price_id && ['card', 'klarna', 'multibanco', 'mbway', 'card_uk', 'klarna_uk', 'card_us'].includes(selectedPayment) && (
+              {product?.subscription_config?.is_subscription && product?.subscription_config?.stripe_price_id && ['card', 'klarna', 'multibanco', 'mbway', 'card_uk', 'klarna_uk', 'card_us', 'card_mz'].includes(selectedPayment) && (
                 <div className="mt-6">
                   <Button
                     onClick={handleSubscriptionCheckout}
@@ -2641,7 +2641,7 @@ const Checkout = () => {
               )}
 
               {/* Componente Stripe para pagamentos únicos (não assinatura) */}
-              {['card', 'klarna', 'multibanco', 'mbway', 'card_uk', 'klarna_uk', 'card_us', 'card_mx', 'card_cl'].includes(selectedPayment) && !(product?.subscription_config?.is_subscription && product?.subscription_config?.stripe_price_id) && <div className="mt-6">
+              {['card', 'klarna', 'multibanco', 'mbway', 'card_uk', 'klarna_uk', 'card_us', 'card_mx', 'card_cl', 'card_mz'].includes(selectedPayment) && !(product?.subscription_config?.is_subscription && product?.subscription_config?.stripe_price_id) && <div className="mt-6">
                   <OptimizedStripeCardPayment amount={totalPrice} originalAmountKZ={originalPriceKZ} currency={userCountry.currency} productId={productId || ''} customerData={{
                 name: formData.fullName,
                 email: formData.email,
@@ -2880,7 +2880,7 @@ const Checkout = () => {
                 </div>}
 
               {/* Mozambique Payment Form (e-Mola / M-Pesa) */}
-              {['emola', 'mpesa', 'epesa'].includes(selectedPayment) && (
+              {['emola', 'mpesa'].includes(selectedPayment) && (
                 <div className="mt-6">
                   <MozambiquePaymentForm
                     product={product}
@@ -2892,7 +2892,7 @@ const Checkout = () => {
                     amount={totalPrice}
                     currency="MZN"
                     formatPrice={getDisplayPrice}
-                    selectedProvider={selectedPayment === 'epesa' ? 'mpesa' : selectedPayment as 'emola' | 'mpesa'}
+                    selectedProvider={selectedPayment as 'emola' | 'mpesa'}
                     onPaymentComplete={(orderId) => {
                       console.log('🇲🇿 Mozambique payment reference generated:', orderId);
                       toast({
@@ -2910,7 +2910,7 @@ const Checkout = () => {
                 </div>
               )}
 
-              {!['card', 'klarna', 'multibanco', 'mbway', 'card_uk', 'klarna_uk', 'card_us', 'card_mx', 'card_cl', 'transfer', 'emola', 'mpesa', 'epesa'].includes(selectedPayment) && availablePaymentMethods.length > 0 && !referenceData && <Button onClick={handlePurchase} disabled={!formData.fullName || !formData.email || !(selectedPayment === 'express' ? expressPhone : formData.phone) || !selectedPayment || processing} className={`w-full h-12 font-semibold relative transition-all ${!formData.fullName || !formData.email || !(selectedPayment === 'express' ? expressPhone : formData.phone) || !selectedPayment || processing ? 'bg-green-600/50 cursor-not-allowed text-white/70' : 'bg-green-600 hover:bg-green-700 text-white'}`}>
+              {!['card', 'klarna', 'multibanco', 'mbway', 'card_uk', 'klarna_uk', 'card_us', 'card_mx', 'card_cl', 'card_mz', 'transfer', 'emola', 'mpesa'].includes(selectedPayment) && availablePaymentMethods.length > 0 && !referenceData && <Button onClick={handlePurchase} disabled={!formData.fullName || !formData.email || !(selectedPayment === 'express' ? expressPhone : formData.phone) || !selectedPayment || processing} className={`w-full h-12 font-semibold relative transition-all ${!formData.fullName || !formData.email || !(selectedPayment === 'express' ? expressPhone : formData.phone) || !selectedPayment || processing ? 'bg-green-600/50 cursor-not-allowed text-white/70' : 'bg-green-600 hover:bg-green-700 text-white'}`}>
                   {processing ? <div className="flex items-center justify-center">
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2">
                       </div>

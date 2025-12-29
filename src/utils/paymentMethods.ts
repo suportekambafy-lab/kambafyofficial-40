@@ -65,15 +65,6 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
     countryName: "Moçambique"
   },
   {
-    id: "epesa",
-    name: "e-Pesa",
-    image: getPaymentMethodImage("mpesa"),
-    enabled: false,
-    isMozambique: true,
-    countryFlag: "🇲🇿",
-    countryName: "Moçambique"
-  },
-  {
     id: "card_mz",
     name: "Pagamento com Cartão",
     image: getPaymentMethodImage("card"),
