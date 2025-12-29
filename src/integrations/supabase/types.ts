@@ -2515,6 +2515,8 @@ export type Database = {
           impersonation_session_id: string | null
           order_bump_data: Json | null
           order_id: string
+          original_amount: number | null
+          original_currency: string | null
           payment_method: string | null
           payment_proof_data: Json | null
           payment_proof_hash: string | null
@@ -2550,6 +2552,8 @@ export type Database = {
           impersonation_session_id?: string | null
           order_bump_data?: Json | null
           order_id: string
+          original_amount?: number | null
+          original_currency?: string | null
           payment_method?: string | null
           payment_proof_data?: Json | null
           payment_proof_hash?: string | null
@@ -2585,6 +2589,8 @@ export type Database = {
           impersonation_session_id?: string | null
           order_bump_data?: Json | null
           order_id?: string
+          original_amount?: number | null
+          original_currency?: string | null
           payment_method?: string | null
           payment_proof_data?: Json | null
           payment_proof_hash?: string | null
@@ -2994,6 +3000,7 @@ export type Database = {
           is_creator: boolean | null
           language: string | null
           onesignal_player_id: string | null
+          preferred_currency: string | null
           push_notifications_enabled: boolean | null
           retained_fixed_amount: number | null
           retention_reason: string | null
@@ -3020,6 +3027,7 @@ export type Database = {
           is_creator?: boolean | null
           language?: string | null
           onesignal_player_id?: string | null
+          preferred_currency?: string | null
           push_notifications_enabled?: boolean | null
           retained_fixed_amount?: number | null
           retention_reason?: string | null
@@ -3046,6 +3054,7 @@ export type Database = {
           is_creator?: boolean | null
           language?: string | null
           onesignal_player_id?: string | null
+          preferred_currency?: string | null
           push_notifications_enabled?: boolean | null
           retained_fixed_amount?: number | null
           retention_reason?: string | null

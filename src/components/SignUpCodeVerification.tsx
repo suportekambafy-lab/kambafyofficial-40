@@ -184,6 +184,31 @@ const SignUpCodeVerification = ({
       }
 
       console.log('✅ Login realizado com sucesso após confirmação!');
+      
+      // Salvar país no profile se existir
+      const savedCountry = localStorage.getItem('signupCountry');
+      if (savedCountry) {
+        const { data: authUser } = await supabase.auth.getUser();
+        if (authUser?.user) {
+          const currencyMap: Record<string, string> = {
+            'AO': 'KZ',
+            'MZ': 'MZN',
+            'PT': 'EUR',
+            'ES': 'EUR',
+            'BR': 'BRL',
+            'GB': 'GBP'
+          };
+          
+          await supabase.from('profiles').update({
+            country: savedCountry,
+            preferred_currency: currencyMap[savedCountry] || 'KZ'
+          }).eq('user_id', authUser.user.id);
+          
+          localStorage.removeItem('signupCountry');
+          console.log('✅ País salvo no perfil:', savedCountry);
+        }
+      }
+      
       toast({
         title: "Bem-vindo!",
         description: "Conta criada e login realizado com sucesso!",

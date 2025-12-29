@@ -46,7 +46,11 @@ const Auth = () => {
     email: string;
     password: string;
     fullName: string;
+    country: string;
   } | null>(null);
+  
+  // Estado para país selecionado no signup
+  const [selectedCountry, setSelectedCountry] = useState('AO');
   
   // Estados para 2FA após login
   const [pending2FAData, setPending2FAData] = useState<{
@@ -276,10 +280,14 @@ const Auth = () => {
       setSignupData({
         email,
         password,
-        fullName
+        fullName,
+        country: selectedCountry
       });
       setCurrentView('signup-verification');
       setErrorField('');
+
+      // Guardar país no localStorage para usar após confirmação
+      localStorage.setItem('signupCountry', selectedCountry);
 
     } catch (error) {
       console.error('Erro no processo de signup:', error);
@@ -619,6 +627,28 @@ const Auth = () => {
                       required 
                     />
                   </div>
+                </div>
+
+                {/* Country Selector */}
+                <div className="animate-element animate-delay-350">
+                  <label className="text-sm font-medium text-muted-foreground">País</label>
+                  <select
+                    value={selectedCountry}
+                    onChange={(e) => setSelectedCountry(e.target.value)}
+                    className="w-full bg-foreground/5 text-sm p-4 rounded-2xl border border-border focus:outline-none focus:border-violet-400/70"
+                    style={{ fontSize: '16px' }}
+                    disabled={loading}
+                  >
+                    <option value="AO">🇦🇴 Angola (KZ)</option>
+                    <option value="MZ">🇲🇿 Moçambique (MZN)</option>
+                    <option value="PT">🇵🇹 Portugal (EUR)</option>
+                    <option value="ES">🇪🇸 Espanha (EUR)</option>
+                    <option value="BR">🇧🇷 Brasil (BRL)</option>
+                    <option value="GB">🇬🇧 Reino Unido (GBP)</option>
+                  </select>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Define a moeda base da sua conta
+                  </p>
                 </div>
 
                 <div className="animate-element animate-delay-400">
