@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
+import Stripe from "https://esm.sh/stripe@14.21.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -25,12 +26,15 @@ interface CreatePaymentRequest {
   orderId: string;
   amount: number;
   currency?: string;
-  paymentMethod: 'express' | 'reference';
+  paymentMethod: 'express' | 'reference' | 'card';
   customerName: string;
   customerEmail: string;
   customerPhone?: string;
   metadata?: Record<string, any>;
   phoneNumber?: string;
+  // Campos específicos para pagamento com cartão
+  successUrl?: string;
+  cancelUrl?: string;
 }
 
 interface RefundRequest {
@@ -217,7 +221,7 @@ async function createPayment(
 ) {
   try {
     const body: CreatePaymentRequest = await req.json();
-    const { orderId, amount, currency = 'AOA', paymentMethod, customerName, customerEmail, customerPhone, metadata, phoneNumber } = body;
+    const { orderId, amount, currency = 'AOA', paymentMethod, customerName, customerEmail, customerPhone, metadata, phoneNumber, successUrl, cancelUrl } = body;
 
     const rawPhoneNumber = phoneNumber ?? customerPhone;
     const normalizedPhoneNumber = rawPhoneNumber ? normalizePhoneNumber(rawPhoneNumber) : null;
@@ -292,12 +296,166 @@ async function createPayment(
     let appypayResponse: { transactionId: string; entity: string | null; reference: string | null; merchantTransactionId?: string };
     let paymentStatus = 'pending';
 
-    // Definir expiração
+    // Definir expiração baseado no método de pagamento
     const expiresAt = paymentMethod === 'express'
       ? new Date(Date.now() + 5 * 60 * 1000).toISOString()  // 5 minutos
-      : new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();  // 48 horas
+      : paymentMethod === 'card'
+        ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()  // 24 horas para cartão
+        : new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();  // 48 horas para referência
 
     let payment: any = null;
+
+    // PAGAMENTO COM CARTÃO (Stripe white-label)
+    if (paymentMethod === 'card') {
+      console.log('💳 Processing card payment via Stripe');
+      
+      const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
+      if (!stripeSecretKey) {
+        await logApiUsage(supabaseAdmin, partner.id, '/create-payment', 'POST', 500, Date.now() - startTime, req);
+        return new Response(
+          JSON.stringify({ error: 'Card payments not configured', code: 'CARD_NOT_CONFIGURED' }),
+          { status: 500, headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const stripe = new Stripe(stripeSecretKey, { apiVersion: '2023-10-16' });
+
+      // Converter amount para centavos se necessário (assumindo que vem em centavos)
+      const amountInCents = Math.round(amount);
+
+      // Determinar a moeda para Stripe (lowercase)
+      const stripeCurrency = currency.toLowerCase();
+
+      // Criar registro no banco primeiro
+      const { data: insertedPayment, error: insertError } = await supabaseAdmin
+        .from('external_payments')
+        .insert({
+          partner_id: partner.id,
+          order_id: orderId,
+          amount,
+          currency,
+          payment_method: 'card',
+          status: 'pending',
+          customer_name: customerName,
+          customer_email: customerEmail,
+          customer_phone: rawPhoneNumber || null,
+          expires_at: expiresAt,
+          metadata: {
+            ...metadata,
+            is_sandbox: sandboxMode,
+          },
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error('❌ Insert error:', insertError);
+        throw new Error('Failed to save payment');
+      }
+
+      payment = insertedPayment;
+
+      try {
+        // Definir URLs de retorno
+        const defaultSuccessUrl = `https://kambafy.com/payment/success?order_id=${orderId}`;
+        const defaultCancelUrl = `https://kambafy.com/payment/cancel?order_id=${orderId}`;
+
+        // Criar Stripe Checkout Session
+        const session = await stripe.checkout.sessions.create({
+          payment_method_types: ['card'],
+          mode: 'payment',
+          customer_email: customerEmail,
+          line_items: [
+            {
+              price_data: {
+                currency: stripeCurrency,
+                product_data: {
+                  name: metadata?.productName || `Pedido ${orderId}`,
+                  description: metadata?.productDescription || `Pagamento para ${partner.business_name || 'Parceiro Kambafy'}`,
+                },
+                unit_amount: amountInCents,
+              },
+              quantity: 1,
+            },
+          ],
+          success_url: successUrl || defaultSuccessUrl,
+          cancel_url: cancelUrl || defaultCancelUrl,
+          metadata: {
+            external_payment_id: payment.id,
+            partner_id: partner.id,
+            order_id: orderId,
+            source: 'kambafy_partner_api',
+          },
+          expires_at: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 horas
+        });
+
+        console.log('✅ Stripe session created:', session.id);
+
+        // Atualizar registro com dados do Stripe
+        const { data: updatedPayment, error: updateError } = await supabaseAdmin
+          .from('external_payments')
+          .update({
+            card_session_id: session.id,
+            metadata: {
+              ...payment.metadata,
+              checkout_url: session.url,
+              stripe_session_id: session.id,
+            },
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', payment.id)
+          .select()
+          .single();
+
+        if (updateError) {
+          console.error('⚠️ Failed to update payment with Stripe data:', updateError);
+        } else {
+          payment = updatedPayment;
+        }
+      } catch (stripeError: any) {
+        console.error('❌ Stripe error:', stripeError.message);
+        
+        // Marcar como failed
+        await supabaseAdmin
+          .from('external_payments')
+          .update({
+            status: 'failed',
+            webhook_last_error: stripeError.message,
+            metadata: {
+              ...payment.metadata,
+              stripe_error: stripeError.message,
+              failed_at: new Date().toISOString(),
+            },
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', payment.id);
+
+        throw stripeError;
+      }
+
+      await logApiUsage(supabaseAdmin, partner.id, '/create-payment', 'POST', 201, Date.now() - startTime, req);
+
+      // Retornar resposta para cartão
+      return new Response(
+        JSON.stringify({
+          id: payment.id,
+          orderId: payment.order_id,
+          status: payment.status,
+          amount: payment.amount,
+          currency: payment.currency,
+          paymentMethod: 'card',
+          expiresAt: payment.expires_at,
+          createdAt: payment.created_at,
+          sandbox: sandboxMode,
+          checkout: {
+            url: payment.metadata?.checkout_url,
+            expiresIn: '24 horas',
+          },
+          instructions: 'Redirecione o cliente para a URL de checkout para completar o pagamento com cartão.',
+        }),
+        { status: 201, headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     // MODO SANDBOX: Simular pagamento sem chamar AppyPay
     if (sandboxMode) {
@@ -507,6 +665,12 @@ async function createPayment(
           : `Pague em qualquer ATM Multicaixa usando:\nEntidade: ${payment.reference_entity}\nReferência: ${payment.reference_number}`,
         expiresIn: '48 horas',
       };
+    } else if (paymentMethod === 'card') {
+      response.checkout = {
+        url: payment.metadata?.checkout_url,
+        expiresIn: '24 horas',
+      };
+      response.instructions = 'Redirecione o cliente para a URL de checkout para completar o pagamento com cartão.';
     }
 
     return new Response(

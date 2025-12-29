@@ -257,3 +257,6 @@ verify_jwt = false
 
 [functions.kambapay-public-api]
 verify_jwt = false
+
+[functions.stripe-partner-webhook]
+verify_jwt = false
