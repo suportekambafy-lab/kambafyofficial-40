@@ -14,7 +14,30 @@ interface PaymentMethodsSelectorProps {
 
 export default function PaymentMethodsSelector({ selectedMethods, onMethodsChange }: PaymentMethodsSelectorProps) {
   const allMethods = getAllPaymentMethods();
-  const currentMethods = selectedMethods.length > 0 ? selectedMethods : allMethods;
+  const hasSavedConfig = selectedMethods.length > 0;
+
+  // Sempre mostrar TODOS os métodos globais (para produtos já cadastrados verem novos métodos)
+  // e aplicar o estado "enabled" salvo no produto quando existir.
+  const selectedById = React.useMemo(() => {
+    return new Map(selectedMethods.map((m) => [m.id, m] as const));
+  }, [selectedMethods]);
+
+  const mergedMethods: PaymentMethod[] = React.useMemo(() => {
+    const base = allMethods.map((method) => {
+      const selected = selectedById.get(method.id);
+      if (!selected) {
+        return hasSavedConfig ? { ...method, enabled: false } : method;
+      }
+      const enabled = typeof selected.enabled === "boolean" ? selected.enabled : method.enabled;
+      return { ...method, enabled };
+    });
+
+    // Preservar métodos customizados (ou antigos) que existam no produto, mas não no catálogo global
+    const extras = selectedMethods.filter((m) => !allMethods.some((am) => am.id === m.id));
+    return [...base, ...extras];
+  }, [allMethods, hasSavedConfig, selectedById, selectedMethods]);
+
+  const currentMethods = mergedMethods;
 
   const handleMethodToggle = (methodId: string, enabled: boolean) => {
     // Verificar se o método está disponível no PAYMENT_METHODS
