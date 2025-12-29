@@ -374,8 +374,10 @@ const handler = async (req: Request): Promise<Response> => {
         return null;
       };
 
-      const maxLookupAttempts = 5;
-      const retryDelayMs = 700;
+      // O webhook "express" pode chegar vários segundos antes do insert em external_payments.
+      // Mantemos uma janela maior para evitar ficar preso em "pending".
+      const maxLookupAttempts = 25;
+      const retryDelayMs = 1000;
 
       for (let attempt = 1; attempt <= maxLookupAttempts && !externalPayment; attempt++) {
         externalPayment = await lookupExternalPaymentOnce();
