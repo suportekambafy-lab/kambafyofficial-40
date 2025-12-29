@@ -326,8 +326,22 @@ const handler = async (req: Request): Promise<Response> => {
       // ✅ NOVO: Buscar em external_payments (API de Parceiros)
       let externalPayment: any = null;
       
-      // Tentar por appypay_transaction_id (Express)
-      if (payload.merchantTransactionId) {
+      // ✅ CORREÇÃO: Buscar por payload.id (charge ID do AppyPay) - é isso que salvamos em appypay_transaction_id
+      if (payload.id) {
+        const { data: extPayment } = await supabase
+          .from('external_payments')
+          .select('*, partners!inner(webhook_url, webhook_secret)')
+          .eq('appypay_transaction_id', payload.id)
+          .single();
+        
+        if (extPayment) {
+          externalPayment = extPayment;
+          console.log(`[APPYPAY-WEBHOOK] External payment found by payload.id (charge ID): ${payload.id}`);
+        }
+      }
+      
+      // Fallback: tentar por merchantTransactionId (algumas integrações antigas)
+      if (!externalPayment && payload.merchantTransactionId) {
         const { data: extPayment } = await supabase
           .from('external_payments')
           .select('*, partners!inner(webhook_url, webhook_secret)')
@@ -336,7 +350,7 @@ const handler = async (req: Request): Promise<Response> => {
         
         if (extPayment) {
           externalPayment = extPayment;
-          console.log(`[APPYPAY-WEBHOOK] External payment found by merchantTransactionId`);
+          console.log(`[APPYPAY-WEBHOOK] External payment found by merchantTransactionId (fallback)`);
         }
       }
       
