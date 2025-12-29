@@ -484,8 +484,8 @@ export function ModernDashboardHome() {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-2 max-w-full">
-          <div className="flex-1 min-w-0">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-w-full">
+          <div className="col-span-2 sm:col-span-1">
             <CustomPeriodSelector
               value={timeFilter}
               onValueChange={setTimeFilter}
@@ -493,7 +493,7 @@ export function ModernDashboardHome() {
             />
           </div>
 
-          <div className="flex-1 min-w-0 space-y-1.5">
+          <div className="space-y-1.5">
             <label className="text-[13px] font-medium text-foreground">
               Produto
             </label>
@@ -503,7 +503,7 @@ export function ModernDashboardHome() {
             />
           </div>
 
-          <div className="flex-1 min-w-0 space-y-1.5">
+          <div className="space-y-1.5">
             <label className="text-[13px] font-medium text-foreground">
               Moeda
             </label>
