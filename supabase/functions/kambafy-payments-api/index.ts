@@ -274,27 +274,35 @@ async function createPayment(
       );
     }
 
-    let appypayResponse: { transactionId: string; entity: string | null; reference: string | null };
+    let appypayResponse: { transactionId: string; entity: string | null; reference: string | null; merchantTransactionId?: string };
     let paymentStatus = 'pending';
+
+    // Definir expiração
+    const expiresAt = paymentMethod === 'express'
+      ? new Date(Date.now() + 5 * 60 * 1000).toISOString()  // 5 minutos
+      : new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();  // 48 horas
+
+    let payment: any = null;
 
     // MODO SANDBOX: Simular pagamento sem chamar AppyPay
     if (sandboxMode) {
       console.log('🧪 Sandbox mode: Simulating payment');
-      
+
       // Gerar IDs simulados
       const sandboxTxId = `SANDBOX_${Date.now()}_${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
-      
+
       appypayResponse = {
         transactionId: sandboxTxId,
         entity: paymentMethod === 'reference' ? '10611' : null,
         reference: paymentMethod === 'reference' ? `${Date.now()}`.slice(-9) : null,
+        merchantTransactionId: sandboxTxId,
       };
 
       // Verificar telefones de teste para Express
       if (paymentMethod === 'express' && phoneNumber) {
         const cleanPhone = phoneNumber.replace(/\D/g, '').slice(-9);
         const testResult = SANDBOX_TEST_PHONES[phoneNumber] || SANDBOX_TEST_PHONES[cleanPhone] || SANDBOX_TEST_PHONES[`+244${cleanPhone}`];
-        
+
         if (testResult === 'success') {
           paymentStatus = 'completed';
         } else if (testResult === 'failed') {
@@ -302,53 +310,140 @@ async function createPayment(
         }
         // 'pending' permanece como default
       }
+
+      // Salvar no banco (sandbox)
+      const { data: insertedPayment, error: insertError } = await supabaseAdmin
+        .from('external_payments')
+        .insert({
+          partner_id: partner.id,
+          order_id: orderId,
+          amount,
+          currency,
+          payment_method: paymentMethod,
+          status: paymentStatus,
+          customer_name: customerName,
+          customer_email: customerEmail,
+          customer_phone: phoneNumber || customerPhone,
+          appypay_transaction_id: appypayResponse.transactionId,
+          reference_entity: appypayResponse.entity,
+          reference_number: appypayResponse.reference,
+          expires_at: expiresAt,
+          completed_at: paymentStatus === 'completed' ? new Date().toISOString() : null,
+          metadata: {
+            ...metadata,
+            is_sandbox: true,
+          },
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error('❌ Insert error:', insertError);
+        throw new Error('Failed to save payment');
+      }
+
+      payment = insertedPayment;
     } else {
-      // MODO PRODUÇÃO: Chamar AppyPay real
-      const oauthToken = await getAppyPayOAuthToken();
-      appypayResponse = await createAppyPayCharge(oauthToken, {
-        amount,
-        paymentMethod,
-        phoneNumber,
-        customerName,
-        customerEmail,
-        orderId,
-      });
-    }
+      // MODO PRODUÇÃO: criar registro ANTES de chamar AppyPay para evitar race com webhook (express)
+      const now = new Date();
+      const timestamp = now.getDate().toString().padStart(2, '0') +
+                       now.getHours().toString().padStart(2, '0') +
+                       now.getMinutes().toString().padStart(2, '0');
+      const randomSuffix = Math.random().toString(36).substr(2, 4).toUpperCase();
+      const merchantTransactionId = `TR${timestamp}${randomSuffix}`;
 
-    // Definir expiração
-    const expiresAt = paymentMethod === 'express'
-      ? new Date(Date.now() + 5 * 60 * 1000).toISOString()  // 5 minutos
-      : new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();  // 48 horas
+      const { data: insertedPayment, error: preInsertError } = await supabaseAdmin
+        .from('external_payments')
+        .insert({
+          partner_id: partner.id,
+          order_id: orderId,
+          amount,
+          currency,
+          payment_method: paymentMethod,
+          status: 'pending',
+          customer_name: customerName,
+          customer_email: customerEmail,
+          customer_phone: phoneNumber || customerPhone,
+          // ⚠️ IMPORTANTE: salvar merchantTransactionId primeiro, para o webhook encontrar imediatamente
+          appypay_transaction_id: merchantTransactionId,
+          reference_entity: null,
+          reference_number: null,
+          expires_at: expiresAt,
+          completed_at: null,
+          metadata: {
+            ...metadata,
+            is_sandbox: false,
+            appypay_merchant_transaction_id: merchantTransactionId,
+          },
+        })
+        .select()
+        .single();
 
-    // Salvar no banco
-    const { data: payment, error: insertError } = await supabaseAdmin
-      .from('external_payments')
-      .insert({
-        partner_id: partner.id,
-        order_id: orderId,
-        amount,
-        currency,
-        payment_method: paymentMethod,
-        status: paymentStatus,
-        customer_name: customerName,
-        customer_email: customerEmail,
-        customer_phone: phoneNumber || customerPhone,
-        appypay_transaction_id: appypayResponse.transactionId,
-        reference_entity: appypayResponse.entity,
-        reference_number: appypayResponse.reference,
-        expires_at: expiresAt,
-        completed_at: paymentStatus === 'completed' ? new Date().toISOString() : null,
-        metadata: {
-          ...metadata,
-          is_sandbox: sandboxMode,
-        },
-      })
-      .select()
-      .single();
+      if (preInsertError) {
+        console.error('❌ Insert error (pre):', preInsertError);
+        throw new Error('Failed to save payment');
+      }
 
-    if (insertError) {
-      console.error('❌ Insert error:', insertError);
-      throw new Error('Failed to save payment');
+      payment = insertedPayment;
+
+      try {
+        const oauthToken = await getAppyPayOAuthToken();
+        appypayResponse = await createAppyPayCharge(oauthToken, {
+          amount,
+          paymentMethod,
+          phoneNumber,
+          customerName,
+          customerEmail,
+          orderId,
+          merchantTransactionId,
+        });
+
+        // Atualizar registro com o chargeId (payload.id) e referência (se houver)
+        const updatedMetadata = {
+          ...(payment.metadata || {}),
+          appypay_merchant_transaction_id: merchantTransactionId,
+          appypay_charge_id: appypayResponse.transactionId,
+        };
+
+        const { data: updatedPayment, error: updateError } = await supabaseAdmin
+          .from('external_payments')
+          .update({
+            appypay_transaction_id: appypayResponse.transactionId,
+            reference_entity: appypayResponse.entity,
+            reference_number: appypayResponse.reference,
+            metadata: updatedMetadata,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', payment.id)
+          .select()
+          .single();
+
+        if (updateError) {
+          console.error('⚠️ Failed to update payment with AppyPay IDs:', updateError);
+        } else {
+          payment = updatedPayment;
+        }
+      } catch (err: any) {
+        // Marcar como failed se a criação da cobrança falhar
+        const errorMessage = err?.message || 'Failed to create AppyPay charge';
+        console.error('❌ AppyPay create charge error:', errorMessage);
+
+        await supabaseAdmin
+          .from('external_payments')
+          .update({
+            status: 'failed',
+            webhook_last_error: errorMessage,
+            metadata: {
+              ...(payment?.metadata || {}),
+              appypay_error: errorMessage,
+              failed_at: new Date().toISOString(),
+            },
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', payment.id);
+
+        throw err;
+      }
     }
 
     await logApiUsage(supabaseAdmin, partner.id, '/create-payment', 'POST', 201, Date.now() - startTime, req);
@@ -995,14 +1090,18 @@ async function createAppyPayCharge(token: string, data: {
   customerName: string;
   customerEmail: string;
   orderId: string;
+  // ✅ IMPORTANTE: permitir injetar o merchantTransactionId pré-gerado (evita race com webhook)
+  merchantTransactionId?: string;
 }) {
-  // Gerar merchantTransactionId (máx 15 chars alfanuméricos)
-  const now = new Date();
-  const timestamp = now.getDate().toString().padStart(2, '0') + 
-                   now.getHours().toString().padStart(2, '0') + 
-                   now.getMinutes().toString().padStart(2, '0');
-  const randomSuffix = Math.random().toString(36).substr(2, 4).toUpperCase();
-  const merchantTxId = `TR${timestamp}${randomSuffix}`;
+  const merchantTxId = data.merchantTransactionId || (() => {
+    // Gerar merchantTransactionId (máx 15 chars alfanuméricos)
+    const now = new Date();
+    const timestamp = now.getDate().toString().padStart(2, '0') +
+                     now.getHours().toString().padStart(2, '0') +
+                     now.getMinutes().toString().padStart(2, '0');
+    const randomSuffix = Math.random().toString(36).substr(2, 4).toUpperCase();
+    return `TR${timestamp}${randomSuffix}`;
+  })();
 
   // Sanitizar orderId para description (apenas primeiros 20 chars, apenas alfanuméricos)
   const cleanOrderId = data.orderId.replace(/[^a-zA-Z0-9]/g, '').substring(0, 15);
