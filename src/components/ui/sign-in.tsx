@@ -190,6 +190,9 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                       placeholder="Digite sua senha" 
                       className="auth-input w-full bg-transparent p-4 pr-12 rounded-2xl focus:outline-none"
                       style={{ fontSize: '16px' }}
+                      autoCapitalize="off"
+                      autoCorrect="off"
+                      spellCheck="false"
                       disabled={loading}
                       required 
                     />
