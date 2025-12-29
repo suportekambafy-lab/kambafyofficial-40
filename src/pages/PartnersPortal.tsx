@@ -166,15 +166,14 @@ export default function PartnersPortal() {
 
     setSavingWebhook(true);
     try {
-      const { error } = await supabase
-        .from('partners')
-        .update({ 
-          webhook_url: webhookUrl || null,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', partner.id);
+      // Usar edge function para contornar RLS
+      const { data, error } = await supabase.functions.invoke(
+        "partner-update-webhook",
+        { body: { webhook_url: webhookUrl || null } }
+      );
 
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
       setPartner({ ...partner, webhook_url: webhookUrl || null });
       toast({
@@ -182,9 +181,10 @@ export default function PartnersPortal() {
         description: "Configurações de webhook atualizadas.",
       });
     } catch (error: any) {
+      console.error('Erro ao salvar webhook:', error);
       toast({
         title: "Erro",
-        description: error.message,
+        description: error.message || "Erro ao salvar webhook",
         variant: "destructive"
       });
     } finally {
@@ -198,15 +198,14 @@ export default function PartnersPortal() {
     const newSecret = `whsec_${crypto.randomUUID().replace(/-/g, '')}`;
     
     try {
-      const { error } = await supabase
-        .from('partners')
-        .update({ 
-          webhook_secret: newSecret,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', partner.id);
+      // Usar edge function para contornar RLS
+      const { data, error } = await supabase.functions.invoke(
+        "partner-update-webhook",
+        { body: { webhook_secret: newSecret } }
+      );
 
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
       setPartner({ ...partner, webhook_secret: newSecret });
       toast({
@@ -214,9 +213,10 @@ export default function PartnersPortal() {
         description: "Novo webhook secret gerado. Atualize sua aplicação.",
       });
     } catch (error: any) {
+      console.error('Erro ao regenerar secret:', error);
       toast({
         title: "Erro",
-        description: error.message,
+        description: error.message || "Erro ao regenerar secret",
         variant: "destructive"
       });
     }
