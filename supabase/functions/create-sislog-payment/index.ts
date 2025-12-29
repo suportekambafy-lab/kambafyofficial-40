@@ -193,9 +193,9 @@ serve(async (req) => {
       );
     }
 
-    // Calculate seller commission (90% by default)
-    const commissionRate = product.commission ? parseFloat(product.commission) / 100 : 0.90;
-    const sellerCommission = Math.round(amount * commissionRate * 100) / 100;
+    // SISLOG is Mozambique only - 9.99% platform fee (seller gets 90.01%)
+    const MOZAMBIQUE_SELLER_RATE = 0.9001; // 90.01% after 9.99% platform fee
+    const sellerCommission = Math.round(amount * MOZAMBIQUE_SELLER_RATE * 100) / 100;
 
     // Create order in database
     const orderToInsert = {

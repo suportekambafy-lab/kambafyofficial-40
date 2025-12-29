@@ -1,14 +1,17 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { getCommissionRate, getSellerRate, ANGOLA_COMMISSION_RATE, DEFAULT_COMMISSION_RATE } from "../_shared/commission-rates.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, stripe-signature',
 };
 
-const PLATFORM_COMMISSION_RATE = 0.0899; // 8.99%
+// Helper to get rate based on payment method from order/metadata
+const getPlatformCommissionRate = (paymentMethod?: string | null): number => {
+  return getCommissionRate(paymentMethod);
+};
 
 serve(async (req) => {
   console.log('🚀 Stripe webhook called!', req.method);
@@ -168,10 +171,11 @@ serve(async (req) => {
             console.log('✅ Student added to member area');
           }
 
-          // Processar comissão do vendedor
+          // Processar comissão do vendedor (Stripe = 9.99%)
           if (product?.user_id) {
             const amount = (session.amount_total || 0) / 100;
-            const platformFee = amount * PLATFORM_COMMISSION_RATE;
+            const commissionRate = DEFAULT_COMMISSION_RATE; // Stripe = 9.99%
+            const platformFee = amount * commissionRate;
             const sellerAmount = amount - platformFee;
 
             await supabase.from('balance_transactions').insert({
@@ -188,7 +192,7 @@ serve(async (req) => {
               type: 'kambafy_fee',
               amount: -platformFee,
               currency: 'KZ',
-              description: `Taxa Kambafy (8.99%) - Assinatura ${product.name}`,
+              description: `Taxa Kambafy (9.99%) - Assinatura ${product.name}`,
               order_id: `fee_sub_${session.subscription}`,
             });
 
@@ -377,7 +381,8 @@ serve(async (req) => {
             console.error('❌ Subscription not found:', subscriptionId);
           } else {
             const amount = (invoice.amount_paid || 0) / 100;
-            const platformFee = amount * PLATFORM_COMMISSION_RATE;
+            const commissionRate = DEFAULT_COMMISSION_RATE; // Stripe = 9.99%
+            const platformFee = amount * commissionRate;
             const sellerAmount = amount - platformFee;
 
             console.log('💸 Processing renewal payment:', {
@@ -401,7 +406,7 @@ serve(async (req) => {
               type: 'kambafy_fee',
               amount: -platformFee,
               currency: 'KZ',
-              description: `Taxa Kambafy (8.99%) - Renovação assinatura`,
+              description: `Taxa Kambafy (9.99%) - Renovação assinatura`,
               order_id: `fee_${subscriptionId}_${Date.now()}`,
             });
 

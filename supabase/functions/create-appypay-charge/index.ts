@@ -473,9 +473,9 @@ Deno.serve(async (req) => {
 
     // Salvar ordem no banco apenas se não for módulo (skipOrderSave = false)
     if (!skipOrderSave) {
-      // Calcular seller_commission PRIMEIRO
+      // AppyPay is Angola only - 8.99% platform fee
       const grossAmount = parseFloat(originalAmount?.toString() || amount.toString());
-      const sellerCommission = grossAmount * 0.9101; // 8.99% platform fee
+      const sellerCommission = grossAmount * 0.9101; // 8.99% platform fee (Angola)
       
       // Calcular expires_at baseado no método de pagamento
       let expiresAt = null;
