@@ -12,7 +12,7 @@ interface CurrencyFilterProps {
 }
 
 const CURRENCIES = [
-  { code: 'all', label: 'Todas', flag: '🌍' },
+  { code: 'all', label: 'Todas as moedas', flag: '' },
   { code: 'KZ', label: 'KZ (Angola)', flag: '🇦🇴' },
   { code: 'MZN', label: 'MZN (Moçambique)', flag: '🇲🇿' },
   { code: 'EUR', label: 'EUR (Europa)', flag: '🇪🇺' },
@@ -29,7 +29,7 @@ export function CurrencyFilter({ value, onValueChange }: CurrencyFilterProps) {
       <SelectTrigger className="w-full bg-background">
         <SelectValue>
           <span className="flex items-center gap-2">
-            <span>{selectedCurrency.flag}</span>
+            {selectedCurrency.flag && <span>{selectedCurrency.flag}</span>}
             <span>{selectedCurrency.code === 'all' ? 'Todas' : selectedCurrency.code}</span>
           </span>
         </SelectValue>
@@ -38,7 +38,7 @@ export function CurrencyFilter({ value, onValueChange }: CurrencyFilterProps) {
         {CURRENCIES.map((currency) => (
           <SelectItem key={currency.code} value={currency.code}>
             <span className="flex items-center gap-2">
-              <span>{currency.flag}</span>
+              {currency.flag && <span>{currency.flag}</span>}
               <span>{currency.label}</span>
             </span>
           </SelectItem>
