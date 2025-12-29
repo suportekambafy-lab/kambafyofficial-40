@@ -605,6 +605,7 @@ interface StripeCardPaymentProps {
   setProcessing: (processing: boolean) => void;
   displayPrice: string;
   convertedAmount: number;
+  customerCountry?: string;
   mbwayPhone?: string;
   onMbwayPhoneChange?: (phone: string) => void;
 }
