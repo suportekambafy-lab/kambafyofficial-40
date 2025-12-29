@@ -27,13 +27,35 @@ Deno.serve(async (req) => {
 
     // Parse body JSON
     const body = await req.json();
-    const { transactionId, status } = body;
+    
+    // SISLOG pode enviar o transactionId com diferentes nomes de campo
+    // Tentar múltiplas variações para garantir compatibilidade
+    const transactionId = body.transactionId || 
+                          body.transaction_id || 
+                          body.TransactionId || 
+                          body.transactionid ||
+                          body.reference ||
+                          body.Reference ||
+                          body.id ||
+                          body.Id;
+    
+    const status = body.status || body.Status || body.result || body.Result;
 
-    console.log('📥 SISLOG Callback received:', { transactionId, status, fullBody: body });
+    console.log('📥 SISLOG Callback received:', { 
+      transactionId, 
+      status, 
+      fullBody: JSON.stringify(body),
+      bodyKeys: Object.keys(body)
+    });
 
     if (!transactionId) {
-      console.error('❌ Missing transactionId in callback');
-      return new Response(JSON.stringify({ error: 'Missing transactionId' }), { 
+      console.error('❌ Missing transactionId in callback. Body keys:', Object.keys(body));
+      console.error('❌ Full body:', JSON.stringify(body));
+      return new Response(JSON.stringify({ 
+        error: 'Missing transactionId',
+        received_keys: Object.keys(body),
+        received_body: body
+      }), { 
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
