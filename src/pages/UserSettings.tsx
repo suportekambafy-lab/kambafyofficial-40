@@ -20,6 +20,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { IdentityCard } from "@/components/settings/IdentityCard";
 import { AddressCard } from "@/components/settings/AddressCard";
 import { TimezoneSettings } from "@/components/settings/TimezoneSettings";
+import { CurrencySettings } from "@/components/settings/CurrencySettings";
 
 export default function UserSettings() {
   const { user } = useAuth();
@@ -528,6 +529,9 @@ export default function UserSettings() {
 
             {/* Timezone Settings */}
             <TimezoneSettings />
+
+            {/* Currency Settings */}
+            <CurrencySettings />
           </TabsContent>
 
 
