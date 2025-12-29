@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { DollarSign, RefreshCw, CheckCircle, XCircle, CheckSquare, Square, Loader2 } from 'lucide-react';
+import { DollarSign, RefreshCw, CheckCircle, XCircle, PauseCircle, CheckSquare, Square, Loader2 } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
 import { useWithdrawalRequests } from '@/hooks/useWithdrawalRequests';
 import { useWithdrawalProcessor } from '@/hooks/useWithdrawalProcessor';
@@ -36,11 +36,11 @@ export default function AdminWithdrawals() {
     setNotes({ ...notes, [id]: value });
   };
 
-  const handleProcess = (requestId: string, status: 'aprovado' | 'rejeitado') => {
+  const handleProcess = (requestId: string, status: 'aprovado' | 'rejeitado' | 'suspenso') => {
     processRequest(requestId, status, admin?.id);
   };
 
-  const handleBulkProcess = (status: 'aprovado' | 'rejeitado') => {
+  const handleBulkProcess = (status: 'aprovado' | 'rejeitado' | 'suspenso') => {
     const selectedArray = Array.from(selectedIds);
     if (selectedArray.length === 0) return;
     
@@ -50,7 +50,7 @@ export default function AdminWithdrawals() {
   const [bulkNotes, setBulkNotes] = useState('');
 
   // Filtros
-  const [statusFilter, setStatusFilter] = useState<'todos' | 'pendente' | 'aprovado' | 'rejeitado'>('todos');
+  const [statusFilter, setStatusFilter] = useState<'todos' | 'pendente' | 'suspenso' | 'aprovado' | 'rejeitado'>('todos');
   const [searchTerm, setSearchTerm] = useState('');
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
@@ -138,6 +138,7 @@ export default function AdminWithdrawals() {
               >
                 <option value="todos">Todos</option>
                 <option value="pendente">Pendente</option>
+                <option value="suspenso">Suspenso</option>
                 <option value="aprovado">Aprovado</option>
                 <option value="rejeitado">Rejeitado</option>
               </select>
@@ -242,6 +243,16 @@ export default function AdminWithdrawals() {
                   >
                     <CheckCircle className="h-4 w-4" />
                     <span className="text-xs sm:text-sm">{bulkProcessing ? 'Aprovando...' : `Aprovar ${selectedIds.size}`}</span>
+                  </Button>
+                  
+                  <Button
+                    onClick={() => handleBulkProcess('suspenso')}
+                    disabled={bulkProcessing}
+                    size="sm"
+                    className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 border-0 shadow-sm flex items-center gap-2 justify-center"
+                  >
+                    <PauseCircle className="h-4 w-4" />
+                    <span className="text-xs sm:text-sm">{bulkProcessing ? 'Suspendendo...' : `Suspender ${selectedIds.size}`}</span>
                   </Button>
                   
                   <Button

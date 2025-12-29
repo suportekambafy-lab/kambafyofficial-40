@@ -8,7 +8,7 @@ export function useWithdrawalProcessor(onSuccess: () => void) {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [notes, setNotes] = useState<{ [key: string]: string }>({});
 
-  const processRequest = async (requestId: string, status: 'aprovado' | 'rejeitado', adminId?: string) => {
+  const processRequest = async (requestId: string, status: 'aprovado' | 'rejeitado' | 'suspenso', adminId?: string) => {
     setProcessingId(requestId);
     
     try {
@@ -123,11 +123,18 @@ export function useWithdrawalProcessor(onSuccess: () => void) {
             variant: 'default'
           });
         }
+      } else if (status === 'suspenso') {
+        // Para suspensões
+        toast({
+          title: 'Saque Suspenso',
+          description: 'Saque suspenso para análise. Vendedor será notificado.',
+          variant: 'default'
+        });
       } else {
-        // Para rejeições, apenas mostrar sucesso
+        // Para rejeições
         toast({
           title: 'Sucesso',
-          description: `Saque ${status} com sucesso`,
+          description: `Saque rejeitado com sucesso`,
           variant: 'destructive'
         });
       }

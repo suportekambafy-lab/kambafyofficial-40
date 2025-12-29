@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { User, Calendar, DollarSign, CheckCircle, XCircle, CreditCard, Wallet, Globe, Bitcoin, Building } from 'lucide-react';
+import { User, Calendar, DollarSign, CheckCircle, XCircle, PauseCircle, CreditCard, Wallet, Globe, Bitcoin, Building } from 'lucide-react';
 import { AdminActionBadge } from './AdminActionBadge';
 
 interface WithdrawalMethod {
@@ -37,7 +37,7 @@ interface WithdrawalRequestCardProps {
   processingId: string | null;
   notes: { [key: string]: string };
   onNotesChange: (id: string, value: string) => void;
-  onProcess: (id: string, status: 'aprovado' | 'rejeitado') => void;
+  onProcess: (id: string, status: 'aprovado' | 'rejeitado' | 'suspenso') => void;
 }
 
 const METHOD_LABELS: Record<string, { label: string; flag: string }> = {
@@ -57,6 +57,8 @@ const getStatusBadge = (status: string) => {
   switch (status) {
     case 'pendente':
       return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">Pendente</Badge>;
+    case 'suspenso':
+      return <Badge className="bg-orange-100 text-orange-800 border-orange-200">Suspenso</Badge>;
     case 'aprovado':
       return <Badge className="bg-green-100 text-green-800 border-green-200">Aprovado</Badge>;
     case 'rejeitado':
@@ -246,21 +248,23 @@ export function WithdrawalRequestCard({
           </div>
         )}
 
-        {request.status === 'pendente' && (
+        {(request.status === 'pendente' || request.status === 'suspenso') && (
           <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
             <div>
               <label className="block text-sm font-medium mb-2 text-gray-900">
-                Observações (opcional)
+                Observações {request.status === 'suspenso' ? '(recomendado)' : '(opcional)'}
               </label>
               <Textarea
                 value={notes[request.id] || ''}
                 onChange={(e) => onNotesChange(request.id, e.target.value)}
-                placeholder="Adicione observações sobre esta solicitação..."
+                placeholder={request.status === 'suspenso' 
+                  ? "Adicione observações sobre a decisão final..." 
+                  : "Adicione observações sobre esta solicitação..."}
                 rows={3}
                 className="bg-white border-gray-300"
               />
             </div>
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
               <Button
                 onClick={() => onProcess(request.id, 'aprovado')}
                 disabled={processingId === request.id}
@@ -269,6 +273,16 @@ export function WithdrawalRequestCard({
                 <CheckCircle className="h-4 w-4" />
                 {processingId === request.id ? 'Aprovando...' : 'Aprovar'}
               </Button>
+              {request.status === 'pendente' && (
+                <Button
+                  onClick={() => onProcess(request.id, 'suspenso')}
+                  disabled={processingId === request.id}
+                  className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 border-0 shadow-sm flex items-center gap-2"
+                >
+                  <PauseCircle className="h-4 w-4" />
+                  {processingId === request.id ? 'Suspendendo...' : 'Suspender'}
+                </Button>
+              )}
               <Button
                 onClick={() => onProcess(request.id, 'rejeitado')}
                 disabled={processingId === request.id}
@@ -291,7 +305,11 @@ export function WithdrawalRequestCard({
           <AdminActionBadge 
             adminName={request.admin_processed_by_name}
             adminId={request.admin_processed_by}
-            actionLabel={request.status === 'aprovado' ? 'Aprovado por' : 'Rejeitado por'}
+            actionLabel={
+              request.status === 'aprovado' ? 'Aprovado por' : 
+              request.status === 'suspenso' ? 'Suspenso por' : 
+              'Rejeitado por'
+            }
             className="mt-3"
           />
         )}
