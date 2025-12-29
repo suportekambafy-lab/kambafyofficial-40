@@ -13,7 +13,7 @@ const Pricing = () => {
       description: "Pague apenas quando vender",
       features: [
         "Produtos ilimitados",
-        "Apenas 8,99% por transação",
+        "A partir de 8,99% por transação",
         "Suporte por email",
         "Pagamentos em Kwanza",
         "Dashboard completo",
@@ -195,7 +195,7 @@ const Pricing = () => {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Sem Plano</p>
-                  <p className="text-2xl font-bold text-gray-600">8,99%</p>
+                  <p className="text-2xl font-bold text-gray-600">8,99% - 9,99%</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Básico</p>
@@ -260,14 +260,32 @@ const Pricing = () => {
           {/* Taxas de Transação */}
           <div className="bg-gray-50 rounded-2xl p-4 sm:p-6 lg:p-8 mx-4">
             <h3 className="text-xl sm:text-2xl font-bold text-center mb-4 sm:mb-6">Taxas por Transação</h3>
-            <div className="max-w-md mx-auto text-center">
-              <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200">
-                <div className="text-2xl sm:text-3xl font-bold text-checkout-green mb-2">8,99%</div>
-                <p className="text-sm sm:text-base text-gray-600">Por cada venda realizada</p>
-                <p className="text-xs sm:text-sm text-gray-500 mt-2">
-                  Taxa aplicada apenas sobre vendas concluídas
-                </p>
+            <div className="max-w-2xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <span className="text-2xl mr-2">🇦🇴</span>
+                    <span className="font-semibold">Angola</span>
+                  </div>
+                  <div className="text-2xl sm:text-3xl font-bold text-checkout-green mb-2">8,99%</div>
+                  <p className="text-xs sm:text-sm text-gray-500">
+                    Multicaixa Express, Referência, Transferência
+                  </p>
+                </div>
+                <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <span className="text-2xl mr-2">🌍</span>
+                    <span className="font-semibold">Internacional</span>
+                  </div>
+                  <div className="text-2xl sm:text-3xl font-bold text-checkout-green mb-2">9,99%</div>
+                  <p className="text-xs sm:text-sm text-gray-500">
+                    Moçambique, Portugal, Cartão, Klarna
+                  </p>
+                </div>
               </div>
+              <p className="text-xs sm:text-sm text-gray-500 mt-4 text-center">
+                Taxa aplicada apenas sobre vendas concluídas
+              </p>
             </div>
           </div>
 

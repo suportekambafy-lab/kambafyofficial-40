@@ -912,10 +912,10 @@ const InteractiveHero: React.FC = () => {
                           <div className="text-center mb-8">
                               <h3 className="text-2xl font-bold text-white mb-4">Plano Comissão</h3>
                               <div className="flex items-baseline justify-center gap-2 mb-4">
-                                  <span className="text-5xl font-bold text-[#81e76a]">8,99%</span>
+                                  <span className="text-4xl md:text-5xl font-bold text-[#81e76a]">8,99% - 9,99%</span>
                                   <span className="text-gray-400">por venda</span>
                               </div>
-                              <p className="text-gray-400">Comece gratuitamente, pague apenas quando vender</p>
+                              <p className="text-gray-400">Angola 8,99% • Internacional 9,99%</p>
                           </div>
 
                           <div className="space-y-4 mb-8">
@@ -1005,7 +1005,7 @@ const InteractiveHero: React.FC = () => {
                           },
                           {
                               question: "Como funciona a comissão da plataforma?",
-                              answer: "Trabalhamos com um modelo justo: cobramos apenas 8,99% de comissão sobre cada venda realizada. Sem mensalidades, sem custos fixos."
+                              answer: "Trabalhamos com um modelo justo: cobramos apenas 8,99% de comissão para vendas em Angola e 9,99% para vendas internacionais (Moçambique, Portugal, cartões). Sem mensalidades, sem custos fixos."
                           },
                           {
                               question: "Posso vender diferentes tipos de produtos?",
