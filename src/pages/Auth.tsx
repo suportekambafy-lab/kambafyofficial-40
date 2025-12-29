@@ -515,6 +515,9 @@ const Auth = () => {
                       onChange={(e) => setNewPassword(e.target.value)}
                       className="w-full bg-transparent text-sm p-3 md:p-4 rounded-2xl focus:outline-none"
                       style={{ fontSize: '16px' }}
+                      autoCapitalize="off"
+                      autoCorrect="off"
+                      spellCheck="false"
                       disabled={resetLoading}
                       required 
                     />
@@ -531,6 +534,9 @@ const Auth = () => {
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       className="w-full bg-transparent text-sm p-3 md:p-4 rounded-2xl focus:outline-none"
                       style={{ fontSize: '16px' }}
+                      autoCapitalize="off"
+                      autoCorrect="off"
+                      spellCheck="false"
                       disabled={resetLoading}
                       required 
                     />
@@ -639,6 +645,9 @@ const Auth = () => {
                       placeholder="Crie uma senha segura" 
                       className="w-full bg-transparent text-sm p-4 rounded-2xl focus:outline-none"
                       style={{ fontSize: '16px' }}
+                      autoCapitalize="off"
+                      autoCorrect="off"
+                      spellCheck="false"
                       disabled={loading}
                       required 
                     />

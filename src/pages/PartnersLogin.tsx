@@ -143,6 +143,9 @@ export default function PartnersLogin() {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                autoCapitalize="off"
+                autoCorrect="off"
+                spellCheck={false}
                 disabled={loading}
               />
             </div>
