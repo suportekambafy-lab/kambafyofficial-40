@@ -1014,6 +1014,7 @@ const OptimizedCheckout = () => {
                                 
                                 return total;
                               })()}
+                              customerCountry={userCountry?.name || userCountry?.code}
                           />
                         </Suspense>
                       )}

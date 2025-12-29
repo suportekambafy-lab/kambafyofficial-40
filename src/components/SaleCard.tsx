@@ -2,7 +2,7 @@ import React, { memo } from 'react';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { User, Calendar, Package, CheckCircle, Clock, XCircle, CreditCard, Banknote, Building } from "lucide-react";
-import { getPaymentMethodName, getCountryByPaymentMethod } from "@/utils/paymentMethods";
+import { getPaymentMethodName, getCountryByPaymentMethod, getCountryFlag } from "@/utils/paymentMethods";
 import { useCurrencyToCountry } from "@/hooks/useCurrencyToCountry";
 import { formatPriceForSeller } from '@/utils/priceFormatting';
 
@@ -12,6 +12,7 @@ interface Sale {
   customer_name: string;
   customer_email: string;
   customer_phone: string;
+  customer_country?: string | null;
   amount: string;
   currency: string;
   status: string;
@@ -155,7 +156,10 @@ export const SaleCard = memo(({ sale }: SaleCardProps) => {
             <Package className="w-4 h-4 text-gray-400 flex-shrink-0" />
             <span className="text-xs flex items-center gap-1">
               {(() => {
-                const countryInfo = getCountryByPaymentMethod(sale.payment_method);
+                // Usar customer_country se disponível, caso contrário inferir do método de pagamento
+                const countryInfo = sale.customer_country 
+                  ? getCountryFlag(sale.customer_country)
+                  : getCountryByPaymentMethod(sale.payment_method);
                 return (
                   <>
                     <span>{countryInfo.flag}</span>
