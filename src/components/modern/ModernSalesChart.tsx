@@ -5,6 +5,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { TrendingUp, TrendingDown } from 'lucide-react';
+import { usePreferredCurrency } from '@/hooks/usePreferredCurrency';
 interface ChartData {
   time: string;
   vendas: number;
@@ -31,6 +32,7 @@ export function ModernSalesChart({
   const {
     user
   } = useAuth();
+  const { formatInPreferredCurrency, currencyConfig } = usePreferredCurrency();
   const [chartData, setChartData] = useState<ChartData[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalValue, setTotalValue] = useState(0);
@@ -360,7 +362,7 @@ export function ModernSalesChart({
               if (value >= 1000) return `${(value / 1000).toFixed(0)}K`;
               return value.toString();
             }} width={45} domain={[0, 'auto']} />
-                <ChartTooltip content={<ChartTooltipContent />} formatter={(value: number) => [`${value.toLocaleString()} KZ`, 'Vendas']} />
+                <ChartTooltip content={<ChartTooltipContent />} formatter={(value: number) => [formatInPreferredCurrency(value), 'Vendas']} />
                 <Area type="monotone" dataKey="vendas" stroke="url(#strokeGradient)" strokeWidth={2.5} fillOpacity={1} fill="url(#colorVendasGradient)" dot={false} activeDot={{
               fill: '#22c55e',
               stroke: 'white',

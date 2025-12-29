@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { startOfDay, endOfDay, subDays, isWithinInterval } from 'date-fns';
 import { countTotalSales } from '@/utils/orderUtils';
 import { useNavigate } from 'react-router-dom';
+import { usePreferredCurrency } from '@/hooks/usePreferredCurrency';
 
 interface Order {
   id: string;
@@ -36,6 +37,7 @@ export function ModernDashboardHome() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { formatInPreferredCurrency } = usePreferredCurrency();
   const [timeFilter, setTimeFilter] = useState('ultimos-30-dias');
   const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>(undefined);
   const [selectedProduct, setSelectedProduct] = useState('todos');
@@ -496,7 +498,7 @@ export function ModernDashboardHome() {
             <div className="flex items-center justify-between">
               <h2 className="text-2xl md:text-3xl font-bold text-foreground">
                 {showValues.revenue 
-                  ? `${dashboardData.totalRevenue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} KZ` 
+                  ? formatInPreferredCurrency(dashboardData.totalRevenue)
                   : "••••••••"}
               </h2>
               <Button

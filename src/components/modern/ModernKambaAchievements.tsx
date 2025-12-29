@@ -8,10 +8,12 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Trophy, Crown, Target, Eye, EyeOff, Rocket } from 'lucide-react';
+import { usePreferredCurrency } from '@/hooks/usePreferredCurrency';
 export function ModernKambaAchievements() {
   const {
     user
   } = useAuth();
+  const { formatInPreferredCurrency, convertFromKZ, currencyConfig } = usePreferredCurrency();
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [showModal, setShowModal] = useState(false);
   const [showRevenue, setShowRevenue] = useState(false);
@@ -70,18 +72,17 @@ export function ModernKambaAchievements() {
     }
   };
   const formatCurrency = (value: number) => {
-    const parts = value.toFixed(2).split('.');
-    const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-    const decimalPart = parts[1];
-    return `${integerPart},${decimalPart} Kz`;
+    return formatInPreferredCurrency(value);
   };
   const formatCurrencyShort = (value: number) => {
-    if (value >= 1000000) {
-      return `${(value / 1000000).toFixed(1)}M Kz`;
-    } else if (value >= 1000) {
-      return `${Math.round(value / 1000)}K Kz`;
+    const converted = convertFromKZ(value);
+    const symbol = currencyConfig.code === 'KZ' ? 'Kz' : currencyConfig.symbol;
+    if (converted >= 1000000) {
+      return `${symbol}${(converted / 1000000).toFixed(1)}M`;
+    } else if (converted >= 1000) {
+      return `${symbol}${Math.round(converted / 1000)}K`;
     } else {
-      return `${Math.round(value)} Kz`;
+      return `${symbol}${Math.round(converted)}`;
     }
   };
   return <>
