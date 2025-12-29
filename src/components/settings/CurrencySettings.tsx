@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Coins, Check } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { useCustomToast } from "@/hooks/useCustomToast";
 
 interface CountryOption {
   code: string;
@@ -26,7 +26,7 @@ const SUPPORTED_COUNTRIES: CountryOption[] = [
 
 export const CurrencySettings: React.FC = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
+  const { toast } = useCustomToast();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [country, setCountry] = useState('AO');
@@ -91,14 +91,15 @@ export const CurrencySettings: React.FC = () => {
 
       toast({
         title: "Configurações salvas",
-        description: "Suas preferências de moeda foram atualizadas.",
+        message: "Suas preferências de moeda foram atualizadas.",
+        variant: "success"
       });
     } catch (error) {
       console.error('Error saving currency settings:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível salvar as configurações.",
-        variant: "destructive"
+        message: "Não foi possível salvar as configurações.",
+        variant: "error"
       });
     } finally {
       setSaving(false);
