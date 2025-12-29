@@ -219,6 +219,9 @@ async function createPayment(
     const body: CreatePaymentRequest = await req.json();
     const { orderId, amount, currency = 'AOA', paymentMethod, customerName, customerEmail, customerPhone, metadata, phoneNumber } = body;
 
+    const rawPhoneNumber = phoneNumber ?? customerPhone;
+    const normalizedPhoneNumber = rawPhoneNumber ? normalizePhoneNumber(rawPhoneNumber) : null;
+
     // Validações
     if (!orderId || !amount || !paymentMethod || !customerName || !customerEmail) {
       await logApiUsage(supabaseAdmin, partner.id, '/create-payment', 'POST', 400, Date.now() - startTime, req);
@@ -232,12 +235,24 @@ async function createPayment(
       );
     }
 
-    if (paymentMethod === 'express' && !phoneNumber) {
+    if (paymentMethod === 'express' && !rawPhoneNumber) {
       await logApiUsage(supabaseAdmin, partner.id, '/create-payment', 'POST', 400, Date.now() - startTime, req);
       return new Response(
         JSON.stringify({ 
           error: 'phoneNumber is required for express payments', 
           code: 'VALIDATION_ERROR'
+        }),
+        { status: 400, headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (paymentMethod === 'express' && (!normalizedPhoneNumber || !isValidPhoneNumber(normalizedPhoneNumber))) {
+      await logApiUsage(supabaseAdmin, partner.id, '/create-payment', 'POST', 400, Date.now() - startTime, req);
+      return new Response(
+        JSON.stringify({
+          error: 'Invalid phoneNumber format',
+          code: 'VALIDATION_ERROR',
+          details: 'Use only digits (9-15). Example: 923456789 or 244923456789. We ignore + and spaces.'
         }),
         { status: 400, headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } }
       );
@@ -299,9 +314,15 @@ async function createPayment(
       };
 
       // Verificar telefones de teste para Express
-      if (paymentMethod === 'express' && phoneNumber) {
-        const cleanPhone = phoneNumber.replace(/\D/g, '').slice(-9);
-        const testResult = SANDBOX_TEST_PHONES[phoneNumber] || SANDBOX_TEST_PHONES[cleanPhone] || SANDBOX_TEST_PHONES[`+244${cleanPhone}`];
+      if (paymentMethod === 'express' && rawPhoneNumber) {
+        const normalized = normalizePhoneNumber(rawPhoneNumber);
+        const cleanPhone = normalized.slice(-9);
+
+        const testResult =
+          SANDBOX_TEST_PHONES[rawPhoneNumber] ||
+          SANDBOX_TEST_PHONES[normalized] ||
+          SANDBOX_TEST_PHONES[cleanPhone] ||
+          SANDBOX_TEST_PHONES[`+244${cleanPhone}`];
 
         if (testResult === 'success') {
           paymentStatus = 'completed';
@@ -323,7 +344,7 @@ async function createPayment(
           status: paymentStatus,
           customer_name: customerName,
           customer_email: customerEmail,
-          customer_phone: phoneNumber || customerPhone,
+          customer_phone: rawPhoneNumber || null,
           appypay_transaction_id: appypayResponse.transactionId,
           reference_entity: appypayResponse.entity,
           reference_number: appypayResponse.reference,
@@ -363,7 +384,7 @@ async function createPayment(
           status: 'pending',
           customer_name: customerName,
           customer_email: customerEmail,
-          customer_phone: phoneNumber || customerPhone,
+          customer_phone: rawPhoneNumber || null,
           // ⚠️ IMPORTANTE: salvar merchantTransactionId primeiro, para o webhook encontrar imediatamente
           appypay_transaction_id: merchantTransactionId,
           reference_entity: null,
@@ -391,7 +412,7 @@ async function createPayment(
         appypayResponse = await createAppyPayCharge(oauthToken, {
           amount,
           paymentMethod,
-          phoneNumber,
+          phoneNumber: normalizedPhoneNumber || undefined,
           customerName,
           customerEmail,
           orderId,
@@ -471,9 +492,9 @@ async function createPayment(
 
     if (paymentMethod === 'express') {
       response.instructions = {
-        message: sandboxMode 
-          ? `[SANDBOX] Pagamento simulado para ${phoneNumber}.`
-          : `Um código USSD foi enviado para ${phoneNumber}. O cliente deve digitar o código no telefone para confirmar o pagamento.`,
+        message: sandboxMode
+          ? `[SANDBOX] Pagamento simulado para ${rawPhoneNumber || normalizedPhoneNumber || ''}.`
+          : `Uma notificação de pagamento foi enviada para ${rawPhoneNumber || normalizedPhoneNumber || ''}. O cliente deve confirmar no telemóvel (Multicaixa Express).`,
         transactionId: payment.appypay_transaction_id,
         expiresIn: '5 minutos',
       };
@@ -1082,6 +1103,15 @@ function sanitizeDescription(text: string): string {
   return sanitized.substring(0, 40).trim() || 'Pagamento Kambafy';
 }
 
+function normalizePhoneNumber(input: string): string {
+  return input.replace(/\D/g, '');
+}
+
+function isValidPhoneNumber(phoneDigits: string): boolean {
+  return /^\d{9,15}$/.test(phoneDigits);
+}
+
+
 // Helper: Criar cobrança AppyPay (Express ou Reference)
 async function createAppyPayCharge(token: string, data: {
   amount: number;
@@ -1121,7 +1151,7 @@ async function createAppyPayCharge(token: string, data: {
 
   // Adicionar phoneNumber para Express
   if (data.paymentMethod === 'express' && data.phoneNumber) {
-    payload.paymentInfo = { phoneNumber: data.phoneNumber };
+    payload.paymentInfo = { phoneNumber: normalizePhoneNumber(data.phoneNumber) };
   }
 
   const response = await fetch('https://gwy-api.appypay.co.ao/v2.0/charges', {

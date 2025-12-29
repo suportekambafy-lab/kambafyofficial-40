@@ -2,7 +2,7 @@
 
 ## ⚡ Quick Start - Comece em 2 minutos!
 
-### Pagamento Express (USSD) - Copie e cole:
+### Pagamento Express (Multicaixa Express / Push) - Copie e cole:
 
 ```bash
 curl -X POST "https://hcbkqygdtzpxvctfdqbd.supabase.co/functions/v1/kambafy-payments-api" \
@@ -41,10 +41,10 @@ curl -X POST "https://hcbkqygdtzpxvctfdqbd.supabase.co/functions/v1/kambafy-paym
 |-------|------|-------------|-----------|
 | `orderId` | string | ✅ Sim | ID único do pedido no seu sistema |
 | `amount` | number | ✅ Sim | Valor em **centavos** (5000 = 50,00 AOA) |
-| `paymentMethod` | string | ✅ Sim | `"express"` (USSD) ou `"reference"` (ATM) |
+| `paymentMethod` | string | ✅ Sim | `"express"` (Multicaixa Express / Push) ou `"reference"` (ATM) |
 | `customerName` | string | ✅ Sim | Nome completo do cliente |
 | `customerEmail` | string | ✅ Sim | Email do cliente |
-| `phoneNumber` | string | ⚠️ Condicional | **Obrigatório** se `paymentMethod = "express"` |
+| `phoneNumber` | string | ⚠️ Condicional | Telefone (9-15 dígitos; **apenas números**). `+` e espaços são ignorados |
 | `currency` | string | ❌ Não | Moeda (padrão: `"AOA"`) |
 | `metadata` | object | ❌ Não | Dados extras (productId, notes, etc.) |
 
@@ -66,7 +66,7 @@ curl -X POST "https://hcbkqygdtzpxvctfdqbd.supabase.co/functions/v1/kambafy-paym
   "expiresAt": "2024-11-24T11:00:00Z",
   "createdAt": "2024-11-24T10:55:00Z",
   "instructions": {
-    "message": "Um código USSD foi enviado para 923456789. O cliente deve digitar o código no telefone para confirmar o pagamento.",
+    "message": "Uma notificação de pagamento foi enviada para 923456789. O cliente deve confirmar no telemóvel (Multicaixa Express).",
     "transactionId": "TR123456ABC",
     "expiresIn": "5 minutos"
   }
