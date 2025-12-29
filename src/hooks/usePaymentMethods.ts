@@ -77,8 +77,18 @@ export const usePaymentMethods = (countryCode?: string, productPaymentMethods?: 
     // Países padrão (Angola, Portugal, Moçambique, etc.)
     let result = productPaymentMethods?.length ? productPaymentMethods : DEFAULT_PAYMENT_METHODS;
     
-    // Ordenar métodos de acordo com a ordem definida para o país
+    // Filtrar métodos específicos do país
     if (countryCode && paymentOrder[countryCode]) {
+      const allowedMethods = paymentOrder[countryCode];
+      
+      // Filtrar apenas métodos permitidos para o país que estão habilitados
+      result = result.filter((method: any) => {
+        const isAllowed = allowedMethods.includes(method.id);
+        const isEnabled = method.enabled !== false;
+        return isAllowed && isEnabled;
+      });
+      
+      // Ordenar métodos de acordo com a ordem definida para o país
       const order = paymentOrder[countryCode];
       result = [...result].sort((a: any, b: any) => {
         const indexA = order.indexOf(a.id);
