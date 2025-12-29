@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 
 // Países que devem usar apenas pagamento por cartão (Stripe)
-const CARD_ONLY_COUNTRIES: string[] = ['US', 'GB', 'MX', 'CL', 'AR'];
+const CARD_ONLY_COUNTRIES: string[] = ['US', 'GB', 'MX', 'CL', 'AR', 'ES'];
 
 // Nomes do método cartão por idioma
 const CARD_METHOD_NAMES: Record<string, string> = {
@@ -9,7 +9,8 @@ const CARD_METHOD_NAMES: Record<string, string> = {
   'GB': 'Credit/Debit Card',
   'MX': 'Tarjeta de Crédito/Débito',
   'CL': 'Tarjeta de Crédito/Débito',
-  'AR': 'Tarjeta de Crédito/Débito'
+  'AR': 'Tarjeta de Crédito/Débito',
+  'ES': 'Tarjeta de Crédito/Débito'
 };
 
 // Função para obter métodos de pagamento por cartão com nome localizado
@@ -19,8 +20,8 @@ const getCardPaymentMethods = (countryCode?: string) => [
     name: CARD_METHOD_NAMES[countryCode || 'US'] || 'Credit/Debit Card',
     image: '/lovable-uploads/3253c01d-89da-4a32-846f-4861dd03645c.png',
     enabled: true,
-    countryFlag: countryCode === 'AR' ? '🇦🇷' : countryCode === 'MX' ? '🇲🇽' : countryCode === 'CL' ? '🇨🇱' : countryCode === 'GB' ? '🇬🇧' : '🇺🇸',
-    countryName: countryCode === 'AR' ? 'Argentina' : countryCode === 'MX' ? 'México' : countryCode === 'CL' ? 'Chile' : countryCode === 'GB' ? 'United Kingdom' : 'United States'
+    countryFlag: countryCode === 'AR' ? '🇦🇷' : countryCode === 'MX' ? '🇲🇽' : countryCode === 'CL' ? '🇨🇱' : countryCode === 'GB' ? '🇬🇧' : countryCode === 'ES' ? '🇪🇸' : '🇺🇸',
+    countryName: countryCode === 'AR' ? 'Argentina' : countryCode === 'MX' ? 'México' : countryCode === 'CL' ? 'Chile' : countryCode === 'GB' ? 'United Kingdom' : countryCode === 'ES' ? 'Espanha' : 'United States'
   }
 ];
 
