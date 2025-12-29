@@ -9,6 +9,7 @@ const corsHeaders = {
 interface ResendAccessRequest {
   orderIds?: string[];  // Specific order IDs to resend
   resendAll?: boolean;  // Resend to all orders without auth accounts
+  overrideEmail?: string; // Optional: override the customer email (for manual resend with different email)
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -24,9 +25,9 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { orderIds, resendAll }: ResendAccessRequest = await req.json();
+    const { orderIds, resendAll, overrideEmail }: ResendAccessRequest = await req.json();
 
-    console.log('🔄 RESEND ACCESS START:', { orderIds, resendAll });
+    console.log('🔄 RESEND ACCESS START:', { orderIds, resendAll, overrideEmail: overrideEmail ? '(provided)' : '(not provided)' });
 
     // Criar cliente Supabase
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -138,8 +139,14 @@ const handler = async (req: Request): Promise<Response> => {
 
     for (const order of ordersToProcess) {
       try {
-        const normalizedEmail = order.customer_email.toLowerCase().trim();
-        console.log(`\n🔄 Processing order ${order.order_id} for ${normalizedEmail}`);
+        // Use overrideEmail if provided (for single order resend with different email)
+        const targetEmail = overrideEmail && orderIds?.length === 1 
+          ? overrideEmail.toLowerCase().trim() 
+          : order.customer_email.toLowerCase().trim();
+        const originalEmail = order.customer_email.toLowerCase().trim();
+        const isEmailOverridden = targetEmail !== originalEmail;
+        
+        console.log(`\n🔄 Processing order ${order.order_id} for ${targetEmail}${isEmailOverridden ? ` (overridden from ${originalEmail})` : ''}`);
 
         // 0) Verificar se já existe acesso (se existir, ainda assim reenviamos o email)
         const { data: existingAccess, error: accessCheckError } = await supabase
@@ -168,7 +175,7 @@ const handler = async (req: Request): Promise<Response> => {
         ).join('');
 
         const { error: createError } = await supabase.auth.admin.createUser({
-          email: normalizedEmail,
+          email: targetEmail,
           password: generatedPassword,
           email_confirm: true,
           user_metadata: {
@@ -186,7 +193,7 @@ const handler = async (req: Request): Promise<Response> => {
           console.error('❌ Error creating account:', createError);
           results.push({
             order_id: order.order_id,
-            email: normalizedEmail,
+            email: targetEmail,
             success: false,
             error: `Failed to create account: ${createError.message}`,
           });
@@ -199,7 +206,7 @@ const handler = async (req: Request): Promise<Response> => {
         if (!hasActiveAccessForOrder) {
           console.log('🔑 Creating customer_access...');
           const { error: grantAccessError } = await supabase.rpc('create_customer_access_manual', {
-            p_customer_email: normalizedEmail,
+            p_customer_email: targetEmail,
             p_customer_name: order.customer_name,
             p_order_id: order.order_id,
             p_product_id: order.product_id,
@@ -215,7 +222,7 @@ const handler = async (req: Request): Promise<Response> => {
             console.log('👨‍🎓 Adding student to member area...');
             const { error: addStudentError } = await supabase.rpc('admin_add_student_to_member_area', {
               p_member_area_id: product.member_area_id,
-              p_student_email: normalizedEmail,
+              p_student_email: targetEmail,
               p_student_name: order.customer_name,
               p_cohort_id: (order as any).cohort_id || null,
             });
@@ -234,7 +241,7 @@ const handler = async (req: Request): Promise<Response> => {
         const { error: emailError } = await supabase.functions.invoke('send-purchase-confirmation', {
           body: {
             customerName: order.customer_name,
-            customerEmail: normalizedEmail,
+            customerEmail: targetEmail,
             customerPhone: order.customer_phone,
             productName: product.name,
             orderId: order.order_id,
@@ -298,7 +305,7 @@ const handler = async (req: Request): Promise<Response> => {
               const { data: existingBumpAccess } = await supabase
                 .from('customer_access')
                 .select('id')
-                .eq('customer_email', normalizedEmail)
+                .eq('customer_email', targetEmail)
                 .eq('product_id', bumpProduct.id)
                 .maybeSingle();
 
@@ -314,7 +321,7 @@ const handler = async (req: Request): Promise<Response> => {
                 const { error: bumpAccessError } = await supabase
                   .from('customer_access')
                   .insert({
-                    customer_email: normalizedEmail,
+                    customer_email: targetEmail,
                     customer_name: order.customer_name,
                     order_id: bumpOrderId,
                     product_id: bumpProduct.id,
@@ -333,7 +340,7 @@ const handler = async (req: Request): Promise<Response> => {
                   console.log('👨‍🎓 Adding student to bump member area...');
                   const { error: addBumpStudentError } = await supabase.rpc('admin_add_student_to_member_area', {
                     p_member_area_id: bumpProduct.member_area_id,
-                    p_student_email: normalizedEmail,
+                    p_student_email: targetEmail,
                     p_student_name: order.customer_name,
                     p_cohort_id: null,
                   });
@@ -351,7 +358,7 @@ const handler = async (req: Request): Promise<Response> => {
               await supabase.functions.invoke('send-purchase-confirmation', {
                 body: {
                   customerName: order.customer_name,
-                  customerEmail: normalizedEmail,
+                  customerEmail: targetEmail,
                   customerPhone: order.customer_phone,
                   productName: bumpProduct.name,
                   orderId: bumpOrderId,
@@ -375,7 +382,7 @@ const handler = async (req: Request): Promise<Response> => {
 
         results.push({
           order_id: order.order_id,
-          email: normalizedEmail,
+          email: targetEmail,
           success: !emailError,
           account_created: isNewAccount,
           error: emailError ? `Failed to send emails: ${emailError.message || 'Unknown error'}` : (hasActiveAccessForOrder ? 'already_has_access' : undefined),
