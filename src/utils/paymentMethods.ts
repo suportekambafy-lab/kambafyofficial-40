@@ -242,6 +242,9 @@ export const getPaymentMethodsByCountry = (countryCode: string): PaymentMethod[]
       return getMozambiquePaymentMethods();
     case 'PT':
       return getPortugalPaymentMethods();
+    case 'ES':
+      // Espanha usa os métodos EUR (mesmo set de Portugal)
+      return getPortugalPaymentMethods();
     case 'GB':
       return getUKPaymentMethods();
     case 'US':
