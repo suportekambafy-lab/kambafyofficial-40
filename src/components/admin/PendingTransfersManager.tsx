@@ -497,21 +497,26 @@ export function PendingTransfersManager() {
             fonte: orderData.seller_commission ? 'banco_de_dados' : 'calculado_automaticamente'
           });
           
-          const { error: balanceError } = await supabase
-            .from('balance_transactions')
-            .insert({
-              user_id: orderData.product_user_id,
-              type: 'credit',
-              amount: sellerCommission,
-              currency: orderData.currency || 'KZ',
-              description: `Venda do produto: ${orderData.product_name}`,
-              order_id: orderData.order_id
+          // Usar função RPC com SECURITY DEFINER para bypass RLS
+          const { data: balanceResult, error: balanceError } = await supabase
+            .rpc('admin_create_balance_transaction', {
+              p_user_id: orderData.product_user_id,
+              p_type: 'credit',
+              p_amount: sellerCommission,
+              p_currency: orderData.currency || 'KZ',
+              p_description: `Venda do produto: ${orderData.product_name}`,
+              p_order_id: orderData.order_id
             });
 
-          if (balanceError && !balanceError.message.includes('duplicate key') && !balanceError.message.includes('already exists')) {
+          if (balanceError) {
             console.error('❌ Erro ao criar transação do vendedor:', balanceError);
           } else {
-            console.log('✅ Transação do vendedor criada/verificada com taxa aplicada');
+            const result = balanceResult as { success?: boolean; error?: string; message?: string } | null;
+            if (result?.success) {
+              console.log('✅ Transação do vendedor criada/verificada com taxa aplicada');
+            } else {
+              console.error('❌ Erro na transação:', result?.error || result?.message);
+            }
           }
 
           // 4. Processar dados do order bump se existirem
