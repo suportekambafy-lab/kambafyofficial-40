@@ -33,6 +33,24 @@ curl -X POST "https://hcbkqygdtzpxvctfdqbd.supabase.co/functions/v1/kambafy-paym
   }'
 ```
 
+### Pagamento com Cartão (Internacional) - Copie e cole:
+
+```bash
+curl -X POST "https://hcbkqygdtzpxvctfdqbd.supabase.co/functions/v1/kambafy-payments-api" \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: SUA_API_KEY" \
+  -d '{
+    "orderId": "pedido_003",
+    "amount": 2500,
+    "currency": "USD",
+    "paymentMethod": "card",
+    "customerName": "John Doe",
+    "customerEmail": "john@email.com",
+    "successUrl": "https://meusite.com/sucesso",
+    "cancelUrl": "https://meusite.com/checkout"
+  }'
+```
+
 ---
 
 ## 📋 Tabela de Campos
@@ -41,11 +59,13 @@ curl -X POST "https://hcbkqygdtzpxvctfdqbd.supabase.co/functions/v1/kambafy-paym
 |-------|------|-------------|-----------|
 | `orderId` | string | ✅ Sim | ID único do pedido no seu sistema |
 | `amount` | number | ✅ Sim | Valor em **centavos** (5000 = 50,00 AOA) |
-| `paymentMethod` | string | ✅ Sim | `"express"` (Multicaixa Express / Push) ou `"reference"` (ATM) |
+| `paymentMethod` | string | ✅ Sim | `"express"` (Multicaixa Express), `"reference"` (ATM) ou `"card"` (Cartão Internacional) |
 | `customerName` | string | ✅ Sim | Nome completo do cliente |
 | `customerEmail` | string | ✅ Sim | Email do cliente |
-| `phoneNumber` | string | ⚠️ Condicional | Telefone (9-15 dígitos; **apenas números**). `+` e espaços são ignorados |
-| `currency` | string | ❌ Não | Moeda (padrão: `"AOA"`) |
+| `phoneNumber` | string | ⚠️ Condicional | Telefone (9-15 dígitos; **apenas números**). `+` e espaços são ignorados. **Obrigatório para `express`** |
+| `currency` | string | ❌ Não | Moeda (padrão: `"AOA"`). Para `card` use `"USD"`, `"EUR"`, etc. |
+| `successUrl` | string | ❌ Não | URL de retorno após pagamento com sucesso (apenas `card`) |
+| `cancelUrl` | string | ❌ Não | URL de retorno se cliente cancelar (apenas `card`) |
 | `metadata` | object | ❌ Não | Dados extras (productId, notes, etc.) |
 
 ---
@@ -95,7 +115,26 @@ curl -X POST "https://hcbkqygdtzpxvctfdqbd.supabase.co/functions/v1/kambafy-paym
 }
 ```
 
----
+### ✅ Sucesso - Pagamento com Cartão (HTTP 200)
+
+```json
+{
+  "success": true,
+  "id": "550e8400-e29b-41d4-a716-446655440002",
+  "orderId": "pedido_003",
+  "status": "pending",
+  "amount": 2500,
+  "currency": "USD",
+  "paymentMethod": "card",
+  "expiresAt": "2024-11-25T10:55:00Z",
+  "createdAt": "2024-11-24T10:55:00Z",
+  "checkout": {
+    "url": "https://checkout.example.com/pay/cs_xxx",
+    "expiresIn": "24 horas"
+  },
+  "instructions": "Redirecione o cliente para a URL de checkout para completar o pagamento com cartão."
+}
+```
 
 ## ❌ Respostas de Erro
 
@@ -231,6 +270,53 @@ curl -X POST "https://hcbkqygdtzpxvctfdqbd.supabase.co/functions/v1/kambafy-paym
     }
   }'
 ```
+
+#### cURL Completo (Cartão)
+```bash
+curl -X POST "https://hcbkqygdtzpxvctfdqbd.supabase.co/functions/v1/kambafy-payments-api" \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: SUA_API_KEY" \
+  -d '{
+    "orderId": "ORDER_125",
+    "amount": 2500,
+    "currency": "USD",
+    "paymentMethod": "card",
+    "customerName": "John Doe",
+    "customerEmail": "john@email.com",
+    "successUrl": "https://meusite.com/sucesso?order=ORDER_125",
+    "cancelUrl": "https://meusite.com/checkout",
+    "metadata": {
+      "productId": "prod_789",
+      "productName": "Curso Premium"
+    }
+  }'
+```
+
+**Resposta Cartão:**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440002",
+  "orderId": "ORDER_125",
+  "status": "pending",
+  "amount": 2500,
+  "currency": "USD",
+  "paymentMethod": "card",
+  "expiresAt": "2024-11-25T10:55:00Z",
+  "createdAt": "2024-11-24T10:55:00Z",
+  "checkout": {
+    "url": "https://checkout.example.com/pay/cs_xxx",
+    "expiresIn": "24 horas"
+  },
+  "instructions": "Redirecione o cliente para a URL de checkout para completar o pagamento com cartão."
+}
+```
+
+**Fluxo do Pagamento com Cartão:**
+1. Criar pagamento via API → Recebe `checkout.url`
+2. Redirecionar cliente para `checkout.url`
+3. Cliente paga com cartão na página de checkout
+4. Após sucesso, cliente é redirecionado para `successUrl`
+5. Webhook `payment.completed` é enviado para sua URL configurada
 
 ---
 
@@ -518,10 +604,13 @@ const KAMBAFY_API = 'https://hcbkqygdtzpxvctfdqbd.supabase.co/functions/v1/kamba
 interface PaymentParams {
   orderId: string;
   amount: number;
-  paymentMethod: 'express' | 'reference';
+  paymentMethod: 'express' | 'reference' | 'card';
   customerName: string;
   customerEmail: string;
   phoneNumber?: string;
+  currency?: string;
+  successUrl?: string;  // Para card
+  cancelUrl?: string;   // Para card
   metadata?: Record<string, any>;
 }
 

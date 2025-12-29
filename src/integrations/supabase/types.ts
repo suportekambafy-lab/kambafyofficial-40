@@ -1158,6 +1158,8 @@ export type Database = {
         Row: {
           amount: number
           appypay_transaction_id: string | null
+          card_payment_intent_id: string | null
+          card_session_id: string | null
           completed_at: string | null
           created_at: string | null
           currency: string
@@ -1182,6 +1184,8 @@ export type Database = {
         Insert: {
           amount: number
           appypay_transaction_id?: string | null
+          card_payment_intent_id?: string | null
+          card_session_id?: string | null
           completed_at?: string | null
           created_at?: string | null
           currency?: string
@@ -1206,6 +1210,8 @@ export type Database = {
         Update: {
           amount?: number
           appypay_transaction_id?: string | null
+          card_payment_intent_id?: string | null
+          card_session_id?: string | null
           completed_at?: string | null
           created_at?: string | null
           currency?: string
