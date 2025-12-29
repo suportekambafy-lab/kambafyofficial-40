@@ -211,7 +211,19 @@ export const getAngolaPaymentMethods = (): PaymentMethod[] => {
 };
 
 export const getMozambiquePaymentMethods = (): PaymentMethod[] => {
-  return PAYMENT_METHODS.filter(method => method.isMozambique && method.enabled);
+  // Retorna cartão Stripe + métodos locais habilitados
+  const localMethods = PAYMENT_METHODS.filter(method => method.isMozambique && method.enabled);
+  return [
+    {
+      id: 'card',
+      name: 'Pagamento com Cartão',
+      image: '/lovable-uploads/3253c01d-89da-4a32-846f-4861dd03645c.png',
+      enabled: true,
+      countryFlag: '🇲🇿',
+      countryName: 'Moçambique'
+    },
+    ...localMethods
+  ];
 };
 
 export const getPortugalPaymentMethods = (): PaymentMethod[] => {
