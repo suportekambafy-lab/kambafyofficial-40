@@ -112,7 +112,8 @@ Democratizar o acesso à criação e venda de produtos digitais, oferecendo ferr
 ## Valores e Comissões
 
 ### Taxa de Plataforma
-- **7% por transação** - Uma das taxas mais competitivas do mercado
+- **8,99% por transação** - Para vendas em Angola (Multicaixa Express, Referência, Transferência)
+- **9,99% por transação** - Para vendas internacionais (Moçambique, Portugal, Cartões)
 
 ### Liberação de Pagamentos
 - **Pagamentos liberados após 3 dias** da confirmação
