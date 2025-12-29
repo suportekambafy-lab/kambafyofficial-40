@@ -1,12 +1,13 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { DEFAULT_COMMISSION_RATE } from "../_shared/commission-rates.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const PLATFORM_COMMISSION_RATE = 0.0899; // 8.99%
+// Manual renewal uses default rate (9.99%)
 
 const logStep = (step: string, details?: any) => {
   console.log(`[PROCESS-MANUAL-RENEWAL] ${step}${details ? ` - ${JSON.stringify(details)}` : ''}`);
@@ -136,9 +137,9 @@ serve(async (req) => {
       .update({ used_at: new Date().toISOString() })
       .eq('id', tokenData.id);
 
-    // 8. Criar transação para o vendedor
-    const sellerAmount = finalPrice * (1 - PLATFORM_COMMISSION_RATE);
-    const platformFee = finalPrice * PLATFORM_COMMISSION_RATE;
+    // 8. Criar transação para o vendedor (9.99% platform fee)
+    const sellerAmount = finalPrice * (1 - DEFAULT_COMMISSION_RATE);
+    const platformFee = finalPrice * DEFAULT_COMMISSION_RATE;
 
     await supabaseClient.from('balance_transactions').insert([
       {
@@ -154,7 +155,7 @@ serve(async (req) => {
         type: 'platform_fee',
         amount: -platformFee,
         currency: 'KZ',
-        description: `Taxa plataforma (8.99%) - Renovação ${product.name}`,
+        description: `Taxa plataforma (9.99%) - Renovação ${product.name}`,
         order_id: subscription.stripe_subscription_id || subscription.id
       }
     ]);

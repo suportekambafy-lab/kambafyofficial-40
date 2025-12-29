@@ -1,13 +1,15 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { DEFAULT_COMMISSION_RATE, getSellerRate } from "../_shared/commission-rates.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const PLATFORM_COMMISSION_RATE = 0.0899; // 8.99%
+// Stripe payments are always international (9.99%)
+const PLATFORM_COMMISSION_RATE = DEFAULT_COMMISSION_RATE;
 
 serve(async (req) => {
   console.log('🔄 Recover Stripe Payments called');
