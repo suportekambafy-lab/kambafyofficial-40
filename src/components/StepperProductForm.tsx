@@ -216,7 +216,7 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
         commission: editingProduct.commission || "10%",
         tags: editingProduct.tags || [],
         memberAreaId: editingProduct.member_area_id || "",
-        paymentMethods: editingProduct.payment_methods || getAllPaymentMethods().filter(m => m.enabled),
+        paymentMethods: (editingProduct.payment_methods || getAllPaymentMethods().filter(m => m.enabled)).filter((m: any) => m?.id !== 'epesa'),
         fantasyName: editingProduct.fantasy_name || "",
         customPrices: editingProduct.custom_prices || {},
         allowAffiliates: editingProduct.allow_affiliates || false,

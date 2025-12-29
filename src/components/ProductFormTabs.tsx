@@ -117,7 +117,7 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
         commission: editingProduct.commission || "10%",
         tags: editingProduct.tags || [],
         memberAreaId: editingProduct.member_area_id || "",
-        paymentMethods: editingProduct.payment_methods || [],
+        paymentMethods: (editingProduct.payment_methods || []).filter((m: any) => m?.id !== 'epesa'),
         fantasyName: editingProduct.fantasy_name || "",
         customPrices: editingProduct.custom_prices || {},
         allowAffiliates: editingProduct.allow_affiliates || false,

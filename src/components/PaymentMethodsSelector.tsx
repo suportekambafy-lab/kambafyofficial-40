@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { CreditCard } from "lucide-react";
-import { getAllPaymentMethods, PaymentMethod } from "@/utils/paymentMethods";
+import { getAllPaymentMethods, getCountryByPaymentMethod, PaymentMethod } from "@/utils/paymentMethods";
 
 interface PaymentMethodsSelectorProps {
   selectedMethods: PaymentMethod[];
@@ -23,19 +23,35 @@ export default function PaymentMethodsSelector({ selectedMethods, onMethodsChang
   }, [selectedMethods]);
 
   const mergedMethods: PaymentMethod[] = React.useMemo(() => {
-    const base = allMethods.map((method) => {
+    const selectedCountryCodes = hasSavedConfig
+      ? new Set(selectedMethods.map((m) => getCountryByPaymentMethod(m.id)?.code))
+      : null;
+
+    const scopedCatalog = selectedCountryCodes
+      ? allMethods.filter((m) => selectedCountryCodes.has(getCountryByPaymentMethod(m.id)?.code))
+      : allMethods;
+
+    const base = scopedCatalog.map((method) => {
       const selected = selectedById.get(method.id);
       if (!selected) {
-        // Novos métodos (como card_mz) devem vir ativos por padrão
+        // Para produtos já cadastrados, novos métodos do mesmo país:
+        // - card_mz deve vir ativo
+        // - demais vêm desativados para não “ligar” coisas novas automaticamente
+        if (hasSavedConfig) {
+          return { ...method, enabled: method.id === 'card_mz' ? true : false };
+        }
         return method;
       }
       const enabled = typeof selected.enabled === "boolean" ? selected.enabled : method.enabled;
       return { ...method, enabled };
     });
 
-    // Preservar métodos customizados (ou antigos) que existam no produto, mas não no catálogo global
-    const extras = selectedMethods.filter((m) => !allMethods.some((am) => am.id === m.id));
-    return [...base, ...extras];
+    // Preservar métodos customizados/antigos do produto, mas remover e-Pesa (não existe)
+    const extras = selectedMethods
+      .filter((m) => !scopedCatalog.some((am) => am.id === m.id))
+      .filter((m) => m.id !== 'epesa');
+
+    return [...base, ...extras].filter((m) => m.id !== 'epesa');
   }, [allMethods, hasSavedConfig, selectedById, selectedMethods]);
 
   const currentMethods = mergedMethods;
