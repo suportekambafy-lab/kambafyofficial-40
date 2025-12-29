@@ -9,6 +9,7 @@ import { ptBR } from 'date-fns/locale';
 import { useCurrencyToCountry } from "@/hooks/useCurrencyToCountry";
 import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { getCountryByPaymentMethod } from "@/utils/paymentMethods";
+import { usePreferredCurrency } from '@/hooks/usePreferredCurrency';
 
 interface RecentSale {
   id: string;
@@ -32,6 +33,7 @@ interface RecentSale {
 export function ModernRecentSales() {
   const { user } = useAuth();
   const { getCurrencyInfo, convertToKZ } = useCurrencyToCountry();
+  const { formatInPreferredCurrency, currencyConfig } = usePreferredCurrency();
   const [recentSales, setRecentSales] = useState<RecentSale[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalSalesCount, setTotalSalesCount] = useState(0);
@@ -304,7 +306,6 @@ export function ModernRecentSales() {
 
   const formatAmount = (sale: RecentSale) => {
     let amount = 0;
-    let currency = 'KZ'; // Sempre KZ pois agora salvamos convertido no banco
     
     if (sale.sale_type === 'affiliate') {
       amount = sale.affiliate_commission || 0;
@@ -323,16 +324,14 @@ export function ModernRecentSales() {
       amount = amount * 0.8;
     }
     
-    // A função formatPriceForSeller já faz a conversão automaticamente
-    const formattedPrice = formatPriceForSeller(amount, currency);
-    
-    const currencyInfo = getCurrencyInfo('KZ'); // Sempre mostrar flag de Angola
+    // Usar moeda preferida do vendedor
+    const formattedPrice = formatInPreferredCurrency(amount);
     
     return {
       main: formattedPrice,
-      flag: currencyInfo.flag,
-      countryName: currencyInfo.name,
-      showCountry: false // Sempre mostrar como KZ para vendedores
+      flag: currencyConfig.flag,
+      countryName: currencyConfig.name,
+      showCountry: false
     };
   };
 
