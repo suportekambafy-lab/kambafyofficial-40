@@ -6,7 +6,7 @@ import { Capacitor } from '@capacitor/core';
 import { ModernSalesChart } from './ModernSalesChart';
 import { ModernRecentSales } from './ModernRecentSales';
 import { ModernKambaAchievements } from './ModernKambaAchievements';
-import { RevenueByCountry } from '@/components/RevenueByCountry';
+
 import { AppDownloadBanner } from './AppDownloadBanner';
 import { ProductFilter } from '@/components/ProductFilter';
 import { CustomPeriodSelector, type DateRange } from '@/components/ui/custom-period-selector';
@@ -517,8 +517,6 @@ export function ModernDashboardHome() {
           <ModernSalesChart timeFilter={timeFilter} customDateRange={customDateRange} />
         </div>
 
-        {/* Revenue by Country */}
-        <RevenueByCountry orders={filteredOrders} loading={loading} />
 
         {/* Recent Sales and Achievements Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
