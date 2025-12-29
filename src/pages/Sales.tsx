@@ -23,6 +23,7 @@ import { getAllPaymentMethods, getPaymentMethodName, getAngolaPaymentMethods, ge
 import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { useCurrencyToCountry } from "@/hooks/useCurrencyToCountry";
 import { ProductFilter } from '@/components/ProductFilter';
+import { ResendAccessDialog } from '@/components/sales/ResendAccessDialog';
 
 interface Sale {
   id: string;
@@ -104,6 +105,8 @@ export default function Sales() {
   const [itemsPerPage] = useState(200); // Mostrar todas as vendas
   const [showAllPaymentMethods, setShowAllPaymentMethods] = useState(false);
   const [resendingAccessFor, setResendingAccessFor] = useState<string | null>(null); // ID da venda sendo processada
+  const [resendAccessDialogOpen, setResendAccessDialogOpen] = useState(false);
+  const [selectedSaleForResend, setSelectedSaleForResend] = useState<Sale | null>(null);
   const {
     loadOrdersWithStats,
     totalCount
@@ -900,21 +903,14 @@ export default function Sales() {
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      onClick={() => resendCustomerAccess(sale)}
-                                      disabled={resendingAccessFor === sale.id}
+                                      onClick={() => {
+                                        setSelectedSaleForResend(sale);
+                                        setResendAccessDialogOpen(true);
+                                      }}
                                       className="w-full"
                                     >
-                                      {resendingAccessFor === sale.id ? (
-                                        <>
-                                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                          Enviando...
-                                        </>
-                                      ) : (
-                                        <>
-                                          <Mail className="h-4 w-4 mr-2" />
-                                          Reenviar Acesso ao Cliente
-                                        </>
-                                      )}
+                                      <Mail className="h-4 w-4 mr-2" />
+                                      Reenviar Acesso ao Cliente
                                     </Button>
                                   </div>
                                 )}
@@ -963,5 +959,12 @@ export default function Sales() {
             </Card>}
         </div>}
       </div>}
+
+      {/* Diálogo de Reenviar Acesso */}
+      <ResendAccessDialog
+        open={resendAccessDialogOpen}
+        onOpenChange={setResendAccessDialogOpen}
+        sale={selectedSaleForResend}
+      />
     </OptimizedPageWrapper>;
 }
