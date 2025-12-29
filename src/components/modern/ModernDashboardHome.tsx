@@ -9,6 +9,7 @@ import { ModernKambaAchievements } from './ModernKambaAchievements';
 
 import { AppDownloadBanner } from './AppDownloadBanner';
 import { ProductFilter } from '@/components/ProductFilter';
+import { CurrencyFilter } from '@/components/dashboard/CurrencyFilter';
 import { CustomPeriodSelector, type DateRange } from '@/components/ui/custom-period-selector';
 import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
 import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist';
@@ -41,6 +42,7 @@ export function ModernDashboardHome() {
   const [timeFilter, setTimeFilter] = useState('ultimos-30-dias');
   const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>(undefined);
   const [selectedProduct, setSelectedProduct] = useState('todos');
+  const [selectedCurrency, setSelectedCurrency] = useState('all');
   const [allOrders, setAllOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [showValues, setShowValues] = useState({
@@ -260,6 +262,17 @@ export function ModernDashboardHome() {
     }
   }, [user]);
 
+  // Get available currencies from orders
+  const availableCurrencies = useMemo(() => {
+    const currencies = new Set<string>();
+    allOrders.forEach(order => {
+      if (order.currency) {
+        currencies.add(order.currency);
+      }
+    });
+    return Array.from(currencies).sort();
+  }, [allOrders]);
+
   // Filter orders in memory for instant response
   const filteredOrders = useMemo(() => {
     let filtered = [...allOrders];
@@ -267,6 +280,11 @@ export function ModernDashboardHome() {
     // Apply product filter
     if (selectedProduct !== 'todos') {
       filtered = filtered.filter(order => order.product_id === selectedProduct);
+    }
+
+    // Apply currency filter
+    if (selectedCurrency !== 'all') {
+      filtered = filtered.filter(order => order.currency === selectedCurrency);
     }
 
     // Apply time filter (include custom range)
@@ -315,7 +333,7 @@ export function ModernDashboardHome() {
     }
 
     return filtered;
-  }, [allOrders, selectedProduct, timeFilter, customDateRange]);
+  }, [allOrders, selectedProduct, selectedCurrency, timeFilter, customDateRange]);
 
   // Calculate previous period data for comparison
   const previousPeriodData = useMemo(() => {
@@ -369,13 +387,17 @@ export function ModernDashboardHome() {
       return sum + amount;
     }, 0);
 
+    // Determinar a moeda a exibir
+    const displayCurrency = selectedCurrency !== 'all' ? selectedCurrency : null;
+
     return {
       totalRevenue,
       totalSales: countTotalSales(filteredOrders),
       previousRevenue: previousPeriodData.totalRevenue,
       previousSales: previousPeriodData.totalSales,
+      displayCurrency,
     };
-  }, [filteredOrders, previousPeriodData]);
+  }, [filteredOrders, previousPeriodData, selectedCurrency]);
 
   useEffect(() => {
     if (user) {
@@ -490,15 +512,33 @@ export function ModernDashboardHome() {
           </div>
         </div>
 
+        {/* Currency Filter */}
+        {availableCurrencies.length > 1 && (
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-medium text-foreground">
+              Moeda
+            </label>
+            <CurrencyFilter
+              activeCurrency={selectedCurrency}
+              onCurrencyChange={setSelectedCurrency}
+              availableCurrencies={availableCurrencies}
+            />
+          </div>
+        )}
+
         {/* Total Sales Card - Compact */}
         <div className="bg-card rounded-xl border border-border/40 shadow-sm flex overflow-hidden" data-onboarding="revenue-card">
           <div className="w-1 bg-emerald-500 shrink-0" />
           <div className="flex-1 p-4">
-            <p className="text-xs text-muted-foreground mb-0.5">Total em vendas</p>
+            <p className="text-xs text-muted-foreground mb-0.5">
+              Total em vendas {dashboardData.displayCurrency ? `(${dashboardData.displayCurrency})` : ''}
+            </p>
             <div className="flex items-center justify-between">
               <h2 className="text-2xl md:text-3xl font-bold text-foreground">
                 {showValues.revenue 
-                  ? formatInPreferredCurrency(dashboardData.totalRevenue)
+                  ? dashboardData.displayCurrency 
+                    ? `${dashboardData.totalRevenue.toLocaleString('pt-AO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${dashboardData.displayCurrency}`
+                    : formatInPreferredCurrency(dashboardData.totalRevenue)
                   : "••••••••"}
               </h2>
               <Button
