@@ -141,18 +141,25 @@ serve(async (req) => {
     // Call SISLOG API to create payment reference
     const sislogEndpoint = `${SISLOG_API_URL}/mobile/reference/request`;
     
+    // Callback URL for SISLOG to notify us when payment is completed
+    const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
+    const callbackUrl = `${SUPABASE_URL}/functions/v1/sislog-callback`;
+    
     console.log('📤 Calling SISLOG API:', sislogEndpoint);
+    console.log('📤 Callback URL:', callbackUrl);
     
     // Payload conforme documentação SISLOG:
     // - username: obrigatório
     // - transactionId: máx 22 chars, único
     // - value: string com valor em centavos (ex: "5000" = 50,00 MZN)
     // - cel: opcional, para enviar PUSH ao cliente
+    // - urlCallback: URL para notificação quando pagamento for confirmado
     const sislogPayload = {
       username: SISLOG_USERNAME,
       transactionId: transactionId,
       value: amountInCentavos.toString(), // String conforme documentação
-      cel: phoneForSislog // Send just 9 digits without country code
+      cel: phoneForSislog, // Phone with country code
+      urlCallback: callbackUrl // CRITICAL: Callback URL for payment confirmation
     };
 
     console.log('📤 SISLOG payload:', sislogPayload);
