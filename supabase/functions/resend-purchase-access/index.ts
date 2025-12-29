@@ -148,11 +148,88 @@ const handler = async (req: Request): Promise<Response> => {
         
         console.log(`\n🔄 Processing order ${order.order_id} for ${targetEmail}${isEmailOverridden ? ` (overridden from ${originalEmail})` : ''}`);
 
-        // 0) Verificar se já existe acesso (se existir, ainda assim reenviamos o email)
+        const product = order.products as any;
+
+        // Se o email foi alterado, primeiro revogar acesso do email original
+        if (isEmailOverridden) {
+          console.log(`🔒 Revoking access from original email: ${originalEmail}`);
+          
+          // 1) Desativar customer_access do email original para este produto
+          const { error: revokeAccessError } = await supabase
+            .from('customer_access')
+            .update({ is_active: false })
+            .eq('customer_email', originalEmail)
+            .eq('product_id', order.product_id);
+
+          if (revokeAccessError) {
+            console.error('❌ Error revoking customer_access:', revokeAccessError);
+          } else {
+            console.log('✅ Customer access revoked for original email');
+          }
+
+          // 2) Remover da área de membros (se existir)
+          if (product?.member_area_id) {
+            console.log('👨‍🎓 Removing student from member area...');
+            
+            // Remover de member_area_students
+            const { error: removeStudentError } = await supabase
+              .from('member_area_students')
+              .delete()
+              .eq('member_area_id', product.member_area_id)
+              .eq('student_email', originalEmail);
+
+            if (removeStudentError) {
+              console.error('❌ Error removing student from member area:', removeStudentError);
+            } else {
+              console.log('✅ Student removed from member_area_students');
+            }
+
+            // Invalidar sessões da área de membros
+            const { error: invalidateSessionError } = await supabase
+              .from('member_area_sessions')
+              .delete()
+              .eq('member_area_id', product.member_area_id)
+              .eq('student_email', originalEmail);
+
+            if (invalidateSessionError) {
+              console.error('❌ Error invalidating sessions:', invalidateSessionError);
+            } else {
+              console.log('✅ Sessions invalidated for original email');
+            }
+
+            // Remover acesso aos módulos
+            const { error: removeModuleAccessError } = await supabase
+              .from('module_student_access')
+              .delete()
+              .eq('member_area_id', product.member_area_id)
+              .eq('student_email', originalEmail);
+
+            if (removeModuleAccessError) {
+              console.error('❌ Error removing module access:', removeModuleAccessError);
+            } else {
+              console.log('✅ Module access removed for original email');
+            }
+          }
+
+          // 3) Atualizar o email do pedido na tabela orders
+          const { error: updateOrderError } = await supabase
+            .from('orders')
+            .update({ customer_email: targetEmail })
+            .eq('id', order.id);
+
+          if (updateOrderError) {
+            console.error('❌ Error updating order email:', updateOrderError);
+          } else {
+            console.log('✅ Order email updated to new email');
+          }
+        }
+
+        // 0) Verificar se já existe acesso para o NOVO email (se existir, ainda assim reenviamos o email)
         const { data: existingAccess, error: accessCheckError } = await supabase
           .from('customer_access')
           .select('id, is_active')
           .eq('order_id', order.order_id)
+          .eq('customer_email', targetEmail)
           .maybeSingle();
 
         if (accessCheckError) {
@@ -201,7 +278,6 @@ const handler = async (req: Request): Promise<Response> => {
         }
 
         // 2) Conceder acesso (customer_access) - se ainda não existe
-        const product = order.products as any;
 
         if (!hasActiveAccessForOrder) {
           console.log('🔑 Creating customer_access...');
