@@ -1480,12 +1480,52 @@ const Checkout = () => {
       setProcessing(false);
     }
   };
-  const handleExpressPaymentTimeout = () => {
-    console.log('⏰ Express payment timeout - stopping processing');
+  const handleExpressPaymentTimeout = async () => {
+    console.log('⏰ Express payment timeout - checking if payment was completed...');
+    
+    // Antes de mostrar erro, verificar se o pagamento foi concluído no backend
+    try {
+      // Buscar a última ordem criada para este email
+      const { data: recentOrder, error } = await supabase
+        .from('orders')
+        .select('order_id, status, payment_method')
+        .eq('customer_email', formData.email.toLowerCase().trim())
+        .eq('payment_method', 'express')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (!error && recentOrder && recentOrder.status === 'completed') {
+        console.log('✅ Payment was actually completed! Redirecting to success page...');
+        setProcessing(false);
+        navigate(`/checkout/success?orderId=${recentOrder.order_id}`);
+        return;
+      }
+      
+      // Se não encontrou ordem completa, verificar se há ordem pendente recente
+      if (!error && recentOrder && recentOrder.status === 'pending') {
+        // Verificar status no AppyPay
+        const { data: verifyData } = await supabase.functions.invoke('check-order-status', {
+          body: { orderId: recentOrder.order_id }
+        });
+        
+        if (verifyData?.status === 'completed') {
+          console.log('✅ Payment verified as completed via check-order-status!');
+          setProcessing(false);
+          navigate(`/checkout/success?orderId=${recentOrder.order_id}`);
+          return;
+        }
+      }
+    } catch (checkError) {
+      console.error('Error checking payment status on timeout:', checkError);
+    }
+    
+    // Se chegou aqui, o pagamento realmente não foi concluído
+    console.log('⏰ Payment not completed - showing timeout error');
     setProcessing(false);
     toast({
       title: "Tempo Esgotado",
-      message: "O tempo para concluir o pagamento esgotou. Por favor, retaça o pagamento com rapidez.",
+      message: "O tempo para concluir o pagamento esgotou. Por favor, tente novamente.",
       variant: "error"
     });
   };
