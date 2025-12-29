@@ -60,6 +60,9 @@ const sanitizeDescription = (text: string): string => {
   return sanitized.trim() || 'Produto';
 };
 
+const normalizePhoneNumber = (input: string): string => input.replace(/\D/g, '');
+const isValidPhoneNumber = (phoneDigits: string): boolean => /^\d{9,15}$/.test(phoneDigits);
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -286,9 +289,38 @@ Deno.serve(async (req) => {
     };
 
     // Adicionar paymentInfo com phoneNumber para Multicaixa Express (GPO)
-    if (paymentMethod === 'express' && phoneNumber) {
+    if (paymentMethod === 'express') {
+      if (!phoneNumber) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: 'phoneNumber é obrigatório para pagamentos express.',
+            code: 'VALIDATION_ERROR'
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 400,
+          }
+        );
+      }
+
+      const normalizedPhone = normalizePhoneNumber(phoneNumber);
+      if (!isValidPhoneNumber(normalizedPhone)) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: 'phoneNumber inválido. Use apenas dígitos (9-15). Ex: 923456789 ou 244923456789',
+            code: 'VALIDATION_ERROR'
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 400,
+          }
+        );
+      }
+
       appyPayPayload.paymentInfo = {
-        phoneNumber: phoneNumber
+        phoneNumber: normalizedPhone,
       };
     }
 
