@@ -948,7 +948,7 @@ const Checkout = () => {
     // Definir ordem dos métodos por país
     const paymentOrder: Record<string, string[]> = {
       'AO': ['express', 'reference', 'transfer'],
-      'MZ': [], // e-Mola e M-Pesa estão indisponíveis
+      'MZ': ['card'], // Cartão Stripe disponível
       'PT': ['card', 'klarna', 'multibanco', 'mbway'],
       'ES': ['card'],
       'GB': ['card_uk', 'klarna_uk'],
@@ -964,7 +964,7 @@ const Checkout = () => {
         if (userCountry.code === 'AO') {
           return ['express', 'transfer', 'reference'].includes(method.id);
         } else if (userCountry.code === 'MZ') {
-          return false; // e-Mola e M-Pesa estão indisponíveis
+          return method.id === 'card'; // Cartão Stripe disponível
         } else if (userCountry.code === 'PT') {
           return ['card', 'klarna', 'multibanco', 'mbway'].includes(method.id);
         } else if (userCountry.code === 'ES') {
