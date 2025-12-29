@@ -1,52 +1,49 @@
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface CurrencyFilterProps {
-  activeCurrency: string;
-  onCurrencyChange: (currency: string) => void;
-  availableCurrencies: string[];
+  value: string;
+  onValueChange: (currency: string) => void;
 }
 
-const CURRENCY_INFO: Record<string, { symbol: string; flag: string }> = {
-  'all': { symbol: '∑', flag: '🌍' },
-  'KZ': { symbol: 'Kz', flag: '🇦🇴' },
-  'EUR': { symbol: '€', flag: '🇪🇺' },
-  'USD': { symbol: '$', flag: '🇺🇸' },
-  'MZN': { symbol: 'MT', flag: '🇲🇿' },
-  'GBP': { symbol: '£', flag: '🇬🇧' },
-  'BRL': { symbol: 'R$', flag: '🇧🇷' },
-};
+const CURRENCIES = [
+  { code: 'all', label: 'Todas', flag: '🌍' },
+  { code: 'KZ', label: 'KZ (Angola)', flag: '🇦🇴' },
+  { code: 'MZN', label: 'MZN (Moçambique)', flag: '🇲🇿' },
+  { code: 'EUR', label: 'EUR (Europa)', flag: '🇪🇺' },
+  { code: 'USD', label: 'USD (EUA)', flag: '🇺🇸' },
+  { code: 'GBP', label: 'GBP (Reino Unido)', flag: '🇬🇧' },
+  { code: 'BRL', label: 'BRL (Brasil)', flag: '🇧🇷' },
+];
 
-// Normalize AOA to KZ (same currency)
-const normalizeCurrency = (currency: string) => currency === 'AOA' ? 'KZ' : currency;
+export function CurrencyFilter({ value, onValueChange }: CurrencyFilterProps) {
+  const selectedCurrency = CURRENCIES.find(c => c.code === value) || CURRENCIES[0];
 
-export function CurrencyFilter({ activeCurrency, onCurrencyChange, availableCurrencies }: CurrencyFilterProps) {
-  // Normalize currencies and remove duplicates (AOA = KZ)
-  const normalizedCurrencies = [...new Set(availableCurrencies.map(normalizeCurrency))];
-  const currencies = ['all', ...normalizedCurrencies.filter(c => c !== 'all')];
-  
   return (
-    <div className="flex gap-2 flex-wrap">
-      {currencies.map((currency) => {
-        const info = CURRENCY_INFO[currency] || { symbol: currency, flag: '💰' };
-        const isActive = activeCurrency === currency;
-        
-        return (
-          <Button
-            key={currency}
-            variant={isActive ? "default" : "outline"}
-            size="sm"
-            onClick={() => onCurrencyChange(currency)}
-            className={cn(
-              "transition-all duration-200",
-              isActive && "shadow-md"
-            )}
-          >
-            <span className="mr-1.5">{info.flag}</span>
-            {currency === 'all' ? 'Todas' : currency}
-          </Button>
-        );
-      })}
-    </div>
+    <Select value={value} onValueChange={onValueChange}>
+      <SelectTrigger className="w-full bg-background">
+        <SelectValue>
+          <span className="flex items-center gap-2">
+            <span>{selectedCurrency.flag}</span>
+            <span>{selectedCurrency.code === 'all' ? 'Todas' : selectedCurrency.code}</span>
+          </span>
+        </SelectValue>
+      </SelectTrigger>
+      <SelectContent className="bg-background z-50">
+        {CURRENCIES.map((currency) => (
+          <SelectItem key={currency.code} value={currency.code}>
+            <span className="flex items-center gap-2">
+              <span>{currency.flag}</span>
+              <span>{currency.label}</span>
+            </span>
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }

@@ -265,17 +265,6 @@ export function ModernDashboardHome() {
   // Normalize AOA to KZ (same currency)
   const normalizeCurrency = (currency: string) => currency === 'AOA' ? 'KZ' : currency;
 
-  // Get available currencies from orders
-  const availableCurrencies = useMemo(() => {
-    const currencies = new Set<string>();
-    allOrders.forEach(order => {
-      if (order.currency) {
-        currencies.add(normalizeCurrency(order.currency));
-      }
-    });
-    return Array.from(currencies).sort();
-  }, [allOrders]);
-
   // Filter orders in memory for instant response
   const filteredOrders = useMemo(() => {
     let filtered = [...allOrders];
@@ -513,21 +502,17 @@ export function ModernDashboardHome() {
               onValueChange={setSelectedProduct}
             />
           </div>
-        </div>
 
-        {/* Currency Filter */}
-        {availableCurrencies.length > 1 && (
-          <div className="space-y-1.5">
+          <div className="flex-1 min-w-0 space-y-1.5">
             <label className="text-[13px] font-medium text-foreground">
               Moeda
             </label>
             <CurrencyFilter
-              activeCurrency={selectedCurrency}
-              onCurrencyChange={setSelectedCurrency}
-              availableCurrencies={availableCurrencies}
+              value={selectedCurrency}
+              onValueChange={setSelectedCurrency}
             />
           </div>
-        )}
+        </div>
 
         {/* Total Sales Card - Compact */}
         <div className="bg-card rounded-xl border border-border/40 shadow-sm flex overflow-hidden" data-onboarding="revenue-card">
