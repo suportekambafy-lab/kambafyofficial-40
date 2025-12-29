@@ -55,7 +55,7 @@ export const MozambiquePaymentForm = ({
 
   // Validate Mozambique phone number based on provider
   // M-Pesa (Vodacom): 84, 85
-  // e-Mola (Movitel): 87
+  // e-Mola (Movitel): 86, 87
   const validateMZPhone = (phone: string): { valid: boolean; error?: string } => {
     const cleanPhone = phone.replace(/\D/g, '');
     
@@ -79,11 +79,11 @@ export const MozambiquePaymentForm = ({
     
     // Validate prefix based on provider
     if (selectedProvider === 'emola') {
-      // e-Mola uses 87 (Movitel)
-      if (prefix !== '87') {
+      // e-Mola uses 86, 87 (Movitel)
+      if (!['86', '87'].includes(prefix)) {
         return { 
           valid: false, 
-          error: `Para e-Mola, use um número 87 (Movitel). Números ${prefix}X não são suportados.` 
+          error: `Para e-Mola, use um número 86 ou 87 (Movitel). Números ${prefix}X não são suportados.` 
         };
       }
     } else if (selectedProvider === 'mpesa') {
@@ -347,7 +347,7 @@ export const MozambiquePaymentForm = ({
             <Input
               id="mz-phone"
               type="tel"
-              placeholder={selectedProvider === 'emola' ? "87 XXX XXXX" : "84 ou 85 XXX XXXX"}
+              placeholder={selectedProvider === 'emola' ? "86 ou 87 XXX XXXX" : "84 ou 85 XXX XXXX"}
               value={phoneNumber.replace(/^(\+?258)?/, '')}
               onChange={(e) => {
                 const value = e.target.value.replace(/\D/g, '');
@@ -359,7 +359,7 @@ export const MozambiquePaymentForm = ({
           </div>
           <p className="text-xs text-muted-foreground">
             {selectedProvider === 'emola' 
-              ? "Use um número 87 (Movitel) associado à sua conta e-Mola"
+              ? "Use um número 86 ou 87 (Movitel) associado à sua conta e-Mola"
               : "Use um número 84 ou 85 (Vodacom) associado à sua conta M-Pesa"
             }
           </p>
