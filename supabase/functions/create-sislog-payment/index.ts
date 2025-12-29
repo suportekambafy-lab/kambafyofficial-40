@@ -142,24 +142,32 @@ serve(async (req) => {
     const sislogEndpoint = `${SISLOG_API_URL}/mobile/reference/request`;
     
     // Callback URL for SISLOG to notify us when payment is completed
+    // NOTE: SISLOG notifications typically come as GET with query params, handled by sislog-webhook.
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
-    const callbackUrl = `${SUPABASE_URL}/functions/v1/sislog-callback`;
+    const callbackUrl = `${SUPABASE_URL}/functions/v1/sislog-webhook`;
     
     console.log('📤 Calling SISLOG API:', sislogEndpoint);
-    console.log('📤 Callback URL:', callbackUrl);
+    console.log('📤 Callback URL (sislog-webhook):', callbackUrl);
     
     // Payload conforme documentação SISLOG:
     // - username: obrigatório
     // - transactionId: máx 22 chars, único
     // - value: string com valor em centavos (ex: "5000" = 50,00 MZN)
     // - cel: opcional, para enviar PUSH ao cliente
-    // - urlCallback: URL para notificação quando pagamento for confirmado
+    // - callback: alguns ambientes SISLOG enviam notificação via GET (query params)
+    //   e podem esperar nomes diferentes para a URL de callback.
     const sislogPayload = {
       username: SISLOG_USERNAME,
       transactionId: transactionId,
       value: amountInCentavos.toString(), // String conforme documentação
       cel: phoneForSislog, // Phone with country code
-      urlCallback: callbackUrl // CRITICAL: Callback URL for payment confirmation
+
+      // Enviar múltiplos nomes para maximizar compatibilidade com SISLOG
+      urlCallback: callbackUrl,
+      urlcallback: callbackUrl,
+      urlCallBack: callbackUrl,
+      callbackUrl: callbackUrl,
+      callback: callbackUrl,
     };
 
     console.log('📤 SISLOG payload:', sislogPayload);
