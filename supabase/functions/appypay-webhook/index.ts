@@ -324,50 +324,68 @@ const handler = async (req: Request): Promise<Response> => {
       console.log('[APPYPAY-WEBHOOK] Order not found in orders table, checking external_payments...');
       
       // ✅ NOVO: Buscar em external_payments (API de Parceiros)
+      // Observação: em pagamentos "express" o webhook pode chegar ANTES do registro ser inserido.
+      // Por isso fazemos uma pequena janela de retry para evitar que o pagamento fique preso em "pending".
       let externalPayment: any = null;
-      
-      // ✅ CORREÇÃO: Buscar por payload.id (charge ID do AppyPay) - é isso que salvamos em appypay_transaction_id
-      if (payload.id) {
-        const { data: extPayment } = await supabase
-          .from('external_payments')
-          .select('*, partners(webhook_url, webhook_secret)')
-          .eq('appypay_transaction_id', payload.id)
-          .single();
-        
-        if (extPayment) {
-          externalPayment = extPayment;
-          console.log(`[APPYPAY-WEBHOOK] External payment found by payload.id (charge ID): ${payload.id}`);
+
+      const lookupExternalPaymentOnce = async (): Promise<any | null> => {
+        // ✅ Buscar por payload.id (charge ID do AppyPay) - é isso que normalmente salvamos em appypay_transaction_id
+        if (payload.id) {
+          const { data: extPayment } = await supabase
+            .from('external_payments')
+            .select('*, partners(webhook_url, webhook_secret)')
+            .eq('appypay_transaction_id', payload.id)
+            .maybeSingle();
+
+          if (extPayment) {
+            console.log(`[APPYPAY-WEBHOOK] External payment found by payload.id (charge ID): ${payload.id}`);
+            return extPayment;
+          }
+        }
+
+        // Fallback: tentar por merchantTransactionId (algumas integrações antigas)
+        if (payload.merchantTransactionId) {
+          const { data: extPayment } = await supabase
+            .from('external_payments')
+            .select('*, partners(webhook_url, webhook_secret)')
+            .eq('appypay_transaction_id', payload.merchantTransactionId)
+            .maybeSingle();
+
+          if (extPayment) {
+            console.log('[APPYPAY-WEBHOOK] External payment found by merchantTransactionId (fallback)');
+            return extPayment;
+          }
+        }
+
+        // Tentar por reference_number (Referência)
+        if (payload.reference?.referenceNumber) {
+          const { data: extPayment } = await supabase
+            .from('external_payments')
+            .select('*, partners(webhook_url, webhook_secret)')
+            .eq('reference_number', payload.reference.referenceNumber)
+            .maybeSingle();
+
+          if (extPayment) {
+            console.log('[APPYPAY-WEBHOOK] External payment found by referenceNumber');
+            return extPayment;
+          }
+        }
+
+        return null;
+      };
+
+      const maxLookupAttempts = 5;
+      const retryDelayMs = 700;
+
+      for (let attempt = 1; attempt <= maxLookupAttempts && !externalPayment; attempt++) {
+        externalPayment = await lookupExternalPaymentOnce();
+
+        if (!externalPayment && attempt < maxLookupAttempts) {
+          console.log(`[APPYPAY-WEBHOOK] External payment not found yet. Retrying in ${retryDelayMs}ms (${attempt}/${maxLookupAttempts})...`);
+          await new Promise((resolve) => setTimeout(resolve, retryDelayMs));
         }
       }
-      
-      // Fallback: tentar por merchantTransactionId (algumas integrações antigas)
-      if (!externalPayment && payload.merchantTransactionId) {
-        const { data: extPayment } = await supabase
-          .from('external_payments')
-          .select('*, partners(webhook_url, webhook_secret)')
-          .eq('appypay_transaction_id', payload.merchantTransactionId)
-          .single();
-        
-        if (extPayment) {
-          externalPayment = extPayment;
-          console.log(`[APPYPAY-WEBHOOK] External payment found by merchantTransactionId (fallback)`);
-        }
-      }
-      
-      // Tentar por reference_number (Referência)
-      if (!externalPayment && payload.reference?.referenceNumber) {
-        const { data: extPayment } = await supabase
-          .from('external_payments')
-          .select('*, partners(webhook_url, webhook_secret)')
-          .eq('reference_number', payload.reference.referenceNumber)
-          .single();
-        
-        if (extPayment) {
-          externalPayment = extPayment;
-          console.log(`[APPYPAY-WEBHOOK] External payment found by referenceNumber`);
-        }
-      }
-      
+
       // Se encontrou external_payment, processar
       if (externalPayment) {
         console.log('[APPYPAY-WEBHOOK] Processing external payment for partner:', externalPayment.partner_id);
