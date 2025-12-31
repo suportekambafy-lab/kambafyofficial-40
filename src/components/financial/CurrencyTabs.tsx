@@ -7,6 +7,7 @@ interface CurrencyTabsProps {
   selectedCurrency: string;
   onCurrencyChange: (currency: string) => void;
   formatCurrency: (amount: number, currency: string) => string;
+  getTotalWithdrawn: (currency: string) => number;
   onWithdraw: (currency: string) => void;
   canWithdraw: boolean;
   isVerified: boolean;
@@ -20,6 +21,7 @@ export function CurrencyTabs({
   selectedCurrency,
   onCurrencyChange,
   formatCurrency,
+  getTotalWithdrawn,
   onWithdraw,
   canWithdraw,
   isVerified
@@ -68,6 +70,7 @@ export function CurrencyTabs({
             currency={balance.currency}
             balance={balance.balance}
             retainedBalance={balance.retained_balance}
+            totalWithdrawn={getTotalWithdrawn(balance.currency)}
             formatCurrency={formatCurrency}
             onWithdraw={() => onWithdraw(balance.currency)}
             canWithdraw={canWithdraw && balance.balance > 0}
