@@ -12,12 +12,12 @@ interface CurrencyFilterProps {
 }
 
 const CURRENCIES = [
-  { code: 'KZ', label: 'KZ (Angola)', flag: '🇦🇴' },
-  { code: 'MZN', label: 'MZN (Moçambique)', flag: '🇲🇿' },
-  { code: 'EUR', label: 'EUR (Europa)', flag: '🇪🇺' },
-  { code: 'USD', label: 'USD (EUA)', flag: '🇺🇸' },
-  { code: 'GBP', label: 'GBP (Reino Unido)', flag: '🇬🇧' },
-  { code: 'BRL', label: 'BRL (Brasil)', flag: '🇧🇷' },
+  { code: 'KZ', label: 'KZ (Angola)' },
+  { code: 'MZN', label: 'MZN (Moçambique)' },
+  { code: 'EUR', label: 'EUR (Europa)' },
+  { code: 'USD', label: 'USD (EUA)' },
+  { code: 'GBP', label: 'GBP (Reino Unido)' },
+  { code: 'BRL', label: 'BRL (Brasil)' },
 ];
 
 export function CurrencyFilter({ value, onValueChange }: CurrencyFilterProps) {
@@ -27,19 +27,13 @@ export function CurrencyFilter({ value, onValueChange }: CurrencyFilterProps) {
     <Select value={value} onValueChange={onValueChange}>
       <SelectTrigger className="w-full bg-background">
         <SelectValue>
-          <span className="flex items-center gap-2">
-            {selectedCurrency.flag && <span>{selectedCurrency.flag}</span>}
-            <span>{selectedCurrency.code}</span>
-          </span>
+          <span>{selectedCurrency.code}</span>
         </SelectValue>
       </SelectTrigger>
       <SelectContent className="bg-background z-50">
         {CURRENCIES.map((currency) => (
           <SelectItem key={currency.code} value={currency.code}>
-            <span className="flex items-center gap-2">
-              {currency.flag && <span>{currency.flag}</span>}
-              <span>{currency.label}</span>
-            </span>
+            <span>{currency.label}</span>
           </SelectItem>
         ))}
       </SelectContent>
