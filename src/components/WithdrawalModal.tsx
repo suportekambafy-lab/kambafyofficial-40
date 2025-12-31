@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
@@ -6,69 +5,67 @@ import { PiggyBank, AlertCircle, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCustomToast } from "@/hooks/useCustomToast";
-import { useCustomerBalance } from "@/hooks/useCustomerBalance";
 import { use2FA } from "@/hooks/use2FA";
 import TwoFactorVerification from "@/components/TwoFactorVerification";
+import { CURRENCY_CONFIG } from "@/hooks/useCurrencyBalances";
 
 export const WITHDRAWAL_2FA_KEY = 'withdrawal_2fa_pending';
 
 interface PendingWithdrawal {
   amount: number;
   roundedAmount: number;
-  expiresAt: number; // timestamp
+  currency: string;
+  expiresAt: number;
 }
 
 interface WithdrawalModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   availableBalance: number;
+  currency?: string;
   onWithdrawalSuccess?: () => void;
 }
 
 export function WithdrawalModal({ 
   open, 
   onOpenChange, 
-  availableBalance, 
+  availableBalance,
+  currency = 'KZ',
   onWithdrawalSuccess 
 }: WithdrawalModalProps) {
   const { user } = useAuth();
   const { toast } = useCustomToast();
-  const { useBalance } = useCustomerBalance();
   const { requires2FA, logSecurityEvent } = use2FA();
   
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [withdrawalAmount, setWithdrawalAmount] = useState<string>("");
   
-  // Estados para 2FA
+  // 2FA states
   const [show2FAVerification, setShow2FAVerification] = useState(false);
   const [pendingWithdrawal, setPendingWithdrawal] = useState<PendingWithdrawal | null>(null);
-  const [isReturningUser, setIsReturningUser] = useState(false); // Usuário está voltando após sair da página
+  const [isReturningUser, setIsReturningUser] = useState(false);
 
-  // ✅ Restaurar estado de 2FA pendente do sessionStorage quando o modal abre
+  const currencyConfig = CURRENCY_CONFIG[currency] || CURRENCY_CONFIG['KZ'];
+  const MINIMUM_WITHDRAWAL = currencyConfig.minimumWithdrawal;
+
+  // Restore pending 2FA state
   useEffect(() => {
     if (open && user) {
       const stored = sessionStorage.getItem(WITHDRAWAL_2FA_KEY);
       if (stored) {
         try {
           const data: PendingWithdrawal = JSON.parse(stored);
-          
-          // Verificar se ainda não expirou
-          // Também verificar o timer do TwoFactorVerification
           const timerKey = `2fa_timer_withdrawal_${user.email}`;
           const timerData = sessionStorage.getItem(timerKey);
           
           let isExpired = data.expiresAt <= Date.now();
           
-          // Se o timer do 2FA também expirou, considerar expirado
-          if (timerData) {
+          if (timerData && !isExpired) {
             try {
               const { timeLeft, timestamp } = JSON.parse(timerData);
               const elapsed = Math.floor((Date.now() - timestamp) / 1000);
-              const remaining = timeLeft - elapsed;
-              if (remaining <= 0) {
-                isExpired = true;
-              }
+              if (timeLeft - elapsed <= 0) isExpired = true;
             } catch {}
           }
           
@@ -76,9 +73,8 @@ export function WithdrawalModal({
             setPendingWithdrawal(data);
             setShow2FAVerification(true);
             setWithdrawalAmount(data.roundedAmount.toFixed(2));
-            setIsReturningUser(true); // Marcar que está voltando - NÃO pular envio de código
+            setIsReturningUser(true);
           } else {
-            // Expirado, limpar tudo
             sessionStorage.removeItem(WITHDRAWAL_2FA_KEY);
             sessionStorage.removeItem(timerKey);
           }
@@ -89,7 +85,7 @@ export function WithdrawalModal({
     }
   }, [open, user]);
 
-  // Limpar estados quando o modal fechar (mas NÃO limpar sessionStorage se tiver 2FA pendente)
+  // Clear states when modal closes
   useEffect(() => {
     if (!open && !show2FAVerification) {
       setWithdrawalAmount("");
@@ -98,7 +94,19 @@ export function WithdrawalModal({
     }
   }, [open, show2FAVerification]);
 
-  const MINIMUM_WITHDRAWAL = 20000; // Saque mínimo de 20.000 KZ
+  const formatCurrencyDisplay = (amount: number): string => {
+    const formatted = amount.toLocaleString(currencyConfig.locale, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+    
+    if (currency === 'EUR') return `€${formatted}`;
+    if (currency === 'USD') return `$${formatted}`;
+    if (currency === 'GBP') return `£${formatted}`;
+    if (currency === 'BRL') return `R$${formatted}`;
+    if (currency === 'MZN') return `${formatted} MT`;
+    return `${formatted} ${currencyConfig.symbol}`;
+  };
 
   const validateAndPrepareWithdrawal = async (): Promise<{ amount: number; roundedAmount: number } | null> => {
     if (!user) {
@@ -106,7 +114,6 @@ export function WithdrawalModal({
       return null;
     }
 
-    // Validar valor escolhido
     const amount = parseFloat(withdrawalAmount);
     
     if (!withdrawalAmount || isNaN(amount) || amount <= 0) {
@@ -114,29 +121,26 @@ export function WithdrawalModal({
       return null;
     }
 
-    // Arredondar ambos valores para 2 casas decimais para evitar erros de precisão
     const roundedAmount = Math.round(amount * 100) / 100;
     const roundedAvailableBalance = Math.round(availableBalance * 100) / 100;
 
-    // Validar saque mínimo
     if (roundedAmount < MINIMUM_WITHDRAWAL) {
-      setError(`O valor mínimo para saque é ${MINIMUM_WITHDRAWAL.toLocaleString('pt-AO')} KZ`);
+      setError(`O valor mínimo para saque é ${formatCurrencyDisplay(MINIMUM_WITHDRAWAL)}`);
       return null;
     }
 
     if (roundedAmount > roundedAvailableBalance) {
-      setError(`Valor máximo disponível: ${availableBalance.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} KZ`);
+      setError(`Valor máximo disponível: ${formatCurrencyDisplay(availableBalance)}`);
       return null;
     }
 
-    // ✅ Verificar se o usuário tem algum método de pagamento configurado
+    // Check payment methods
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('iban, account_holder, withdrawal_methods')
       .eq('user_id', user.id)
       .single();
 
-    // Verificar se tem IBAN ou withdrawal_methods configurados
     const hasIban = profile?.iban && profile?.account_holder;
     const hasWithdrawalMethods = profile?.withdrawal_methods && 
       Array.isArray(profile.withdrawal_methods) && 
@@ -147,7 +151,7 @@ export function WithdrawalModal({
       return null;
     }
 
-    // ✅ Verificar se o usuário tem identidade verificada
+    // Check identity verification
     const { data: identity, error: identityError } = await supabase
       .from('identity_verification')
       .select('status')
@@ -155,7 +159,7 @@ export function WithdrawalModal({
       .single();
 
     if (identityError || !identity || identity.status !== 'aprovado') {
-      setError("Para solicitar um saque, você precisa ter sua identidade verificada e aprovada. Acesse as configurações para enviar seus documentos.");
+      setError("Para solicitar um saque, você precisa ter sua identidade verificada e aprovada.");
       return null;
     }
 
@@ -171,20 +175,19 @@ export function WithdrawalModal({
       console.log('🔍 Iniciando solicitação de saque:', {
         user_id: user.id,
         amount: roundedAmount,
-        availableBalance: availableBalance
+        currency,
+        availableBalance
       });
 
-      // ✅ Criar solicitação de saque
       const { data: insertData, error: insertError } = await supabase
         .from('withdrawal_requests')
         .insert({
           user_id: user.id,
           amount: roundedAmount,
+          currency: currency,
           status: 'pendente'
         })
         .select();
-
-      console.log('📝 Resultado da inserção:', { insertData, insertError });
 
       if (insertError) {
         console.error('❌ Erro ao criar solicitação de saque:', insertError);
@@ -200,29 +203,22 @@ export function WithdrawalModal({
         return;
       }
 
-      console.log('✅ Solicitação de saque criada com sucesso:', insertData);
+      console.log('✅ Solicitação de saque criada:', insertData);
 
-      // Registrar evento de segurança
       await logSecurityEvent('withdrawal', true);
-
-      // ✅ Limpar sessionStorage após sucesso
       sessionStorage.removeItem(WITHDRAWAL_2FA_KEY);
 
       toast({
         title: "Saque solicitado com sucesso!",
-        message: `Seu saque de ${roundedAmount.toFixed(2).replace('.', ',')} KZ será processado em até 3 dias úteis.`,
+        message: `Seu saque de ${formatCurrencyDisplay(roundedAmount)} será processado em até 3 dias úteis.`,
       });
 
-      // Limpar estados
       setShow2FAVerification(false);
       setPendingWithdrawal(null);
       setWithdrawalAmount("");
       
       onOpenChange(false);
-      
-      if (onWithdrawalSuccess) {
-        onWithdrawalSuccess();
-      }
+      onWithdrawalSuccess?.();
       
     } catch (error) {
       console.error('💥 Erro inesperado:', error);
@@ -237,21 +233,19 @@ export function WithdrawalModal({
     setError("");
 
     try {
-      // Validar dados antes de verificar 2FA
       const withdrawalData = await validateAndPrepareWithdrawal();
       if (!withdrawalData) {
         setLoading(false);
         return;
       }
 
-      // Verificar se precisa de 2FA
       const needs2FA = await requires2FA('withdrawal');
       
       if (needs2FA) {
-        // Salvar dados do saque no sessionStorage com expiração de 5 minutos
         const pendingData: PendingWithdrawal = {
           ...withdrawalData,
-          expiresAt: Date.now() + (5 * 60 * 1000) // 5 minutos
+          currency,
+          expiresAt: Date.now() + (5 * 60 * 1000)
         };
         
         sessionStorage.setItem(WITHDRAWAL_2FA_KEY, JSON.stringify(pendingData));
@@ -259,7 +253,6 @@ export function WithdrawalModal({
         setShow2FAVerification(true);
         setLoading(false);
       } else {
-        // Submeter diretamente
         await submitWithdrawal(withdrawalData.roundedAmount);
       }
     } catch (error) {
@@ -271,13 +264,11 @@ export function WithdrawalModal({
 
   const handle2FASuccess = async () => {
     if (!pendingWithdrawal) return;
-    
     setShow2FAVerification(false);
     await submitWithdrawal(pendingWithdrawal.roundedAmount);
   };
 
   const handle2FABack = () => {
-    // Limpar tudo ao cancelar
     sessionStorage.removeItem(WITHDRAWAL_2FA_KEY);
     setShow2FAVerification(false);
     setPendingWithdrawal(null);
@@ -285,25 +276,16 @@ export function WithdrawalModal({
     setError("");
   };
 
-  // Renderizar tela de verificação 2FA
+  // 2FA verification screen
   if (show2FAVerification && user?.email && pendingWithdrawal) {
     return (
       <Drawer open={open} onOpenChange={(isOpen) => {
-        // Permitir fechar o drawer, mas manter o estado no sessionStorage
-        if (!isOpen) {
-          // Não limpa o sessionStorage, assim o usuário pode voltar
-          onOpenChange(false);
-        }
+        if (!isOpen) onOpenChange(false);
       }}>
         <DrawerContent className="sm:max-w-md mx-auto">
           <DrawerHeader>
             <DrawerTitle className="flex items-center gap-2">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={handle2FABack}
-                className="h-8 w-8"
-              >
+              <Button variant="ghost" size="icon" onClick={handle2FABack} className="h-8 w-8">
                 <ArrowLeft className="h-4 w-4" />
               </Button>
               Verificação de Segurança
@@ -313,8 +295,9 @@ export function WithdrawalModal({
           <div className="p-4">
             <div className="bg-primary/10 border border-primary/20 p-4 rounded-lg mb-4">
               <p className="text-sm text-muted-foreground mb-1">Valor do Saque</p>
-              <p className="text-xl font-bold text-primary">
-                {pendingWithdrawal.roundedAmount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} KZ
+              <p className="text-xl font-bold text-primary flex items-center gap-2">
+                <span>{currencyConfig.flag}</span>
+                {formatCurrencyDisplay(pendingWithdrawal.roundedAmount)}
               </p>
             </div>
 
@@ -343,21 +326,22 @@ export function WithdrawalModal({
         <DrawerHeader>
           <DrawerTitle className="flex items-center gap-2">
             <PiggyBank className="h-5 w-5" />
-            Solicitar Saque
+            Solicitar Saque em {currency}
           </DrawerTitle>
         </DrawerHeader>
         
         <div className="space-y-4 p-4">
           <div className="bg-primary/10 border border-primary/20 p-4 rounded-lg">
             <p className="text-sm text-muted-foreground mb-1">Saldo Disponível</p>
-            <p className="text-2xl font-bold text-primary mb-3">
-              {availableBalance.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} KZ
+            <p className="text-2xl font-bold text-primary flex items-center gap-2">
+              <span className="text-xl">{currencyConfig.flag}</span>
+              {formatCurrencyDisplay(availableBalance)}
             </p>
           </div>
 
           <div className="space-y-2">
             <label htmlFor="withdrawal-amount" className="text-sm font-medium">
-              Valor a Sacar (KZ)
+              Valor a Sacar ({currencyConfig.symbol})
             </label>
             <input
               id="withdrawal-amount"
@@ -370,12 +354,11 @@ export function WithdrawalModal({
                 setWithdrawalAmount(e.target.value);
                 setError("");
               }}
-              placeholder={`Máximo: ${availableBalance.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} KZ`}
+              placeholder={`Máximo: ${formatCurrencyDisplay(availableBalance)}`}
               className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               disabled={loading}
             />
             
-            {/* Botões de atalho para valores */}
             <div className="flex gap-2 flex-wrap">
               {[25, 50, 75, 100].map((percentage) => (
                 <Button
@@ -397,8 +380,9 @@ export function WithdrawalModal({
             </div>
 
             <p className="text-xs text-muted-foreground">
-              Saque mínimo: 20.000 KZ. O valor será descontado do seu saldo disponível.
+              Saque mínimo: {formatCurrencyDisplay(MINIMUM_WITHDRAWAL)}
             </p>
+            
             {error && (
               <div className="flex items-center gap-2 text-sm text-destructive">
                 <AlertCircle className="h-4 w-4" />
@@ -427,7 +411,7 @@ export function WithdrawalModal({
               className="flex-1"
               disabled={loading || availableBalance === 0 || !withdrawalAmount || parseFloat(withdrawalAmount) <= 0}
             >
-              {loading ? "Processando..." : "Solicitar Saque"}
+              {loading ? "Processando..." : `Sacar em ${currency}`}
             </Button>
           </div>
         </div>

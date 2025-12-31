@@ -929,6 +929,36 @@ export type Database = {
           },
         ]
       }
+      currency_balances: {
+        Row: {
+          balance: number
+          created_at: string
+          currency: string
+          id: string
+          retained_balance: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          retained_balance?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          retained_balance?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       customer_access: {
         Row: {
           access_expires_at: string | null
@@ -4199,6 +4229,7 @@ export type Database = {
           admin_processed_by: string | null
           amount: number
           created_at: string
+          currency: string
           id: string
           status: string
           updated_at: string
@@ -4209,6 +4240,7 @@ export type Database = {
           admin_processed_by?: string | null
           amount: number
           created_at?: string
+          currency?: string
           id?: string
           status?: string
           updated_at?: string
@@ -4219,6 +4251,7 @@ export type Database = {
           admin_processed_by?: string | null
           amount?: number
           created_at?: string
+          currency?: string
           id?: string
           status?: string
           updated_at?: string
@@ -4518,6 +4551,25 @@ export type Database = {
         Args: { p_buyer_email?: string; p_order_id: string; p_reason: string }
         Returns: string
       }
+      credit_currency_balance: {
+        Args: {
+          p_amount: number
+          p_currency: string
+          p_description: string
+          p_order_id?: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
+      debit_currency_balance: {
+        Args: {
+          p_amount: number
+          p_currency: string
+          p_description: string
+          p_user_id: string
+        }
+        Returns: boolean
+      }
       detect_abandoned_purchase: {
         Args: {
           _amount: number
@@ -4748,6 +4800,10 @@ export type Database = {
           total_users: number
           users_with_player_id: number
         }[]
+      }
+      get_or_create_currency_balance: {
+        Args: { p_currency: string; p_user_id: string }
+        Returns: number
       }
       get_order_details_for_admin: {
         Args: { p_order_id: string }
@@ -5021,6 +5077,10 @@ export type Database = {
       }
       recalculate_user_balance: {
         Args: { target_user_id: string }
+        Returns: undefined
+      }
+      recalculate_user_currency_balances: {
+        Args: { p_user_id: string }
         Returns: undefined
       }
       release_expired_retentions: { Args: never; Returns: Json }
