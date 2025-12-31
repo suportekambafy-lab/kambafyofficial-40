@@ -265,7 +265,6 @@ export default function Financial() {
           selectedCurrency={selectedCurrency}
           onCurrencyChange={setSelectedCurrency}
           formatCurrency={formatCurrency}
-          transactions={transactions}
           onWithdraw={handleWithdraw}
           canWithdraw={canWithdraw}
           isVerified={isVerified}

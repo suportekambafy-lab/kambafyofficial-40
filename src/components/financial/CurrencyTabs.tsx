@@ -1,36 +1,43 @@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { CurrencyBalance, CURRENCY_CONFIG } from "@/hooks/useCurrencyBalances";
 import { CurrencyBalanceCard } from "./CurrencyBalanceCard";
-import { CurrencyTransactionHistory } from "./CurrencyTransactionHistory";
 
 interface CurrencyTabsProps {
   balances: CurrencyBalance[];
   selectedCurrency: string;
   onCurrencyChange: (currency: string) => void;
   formatCurrency: (amount: number, currency: string) => string;
-  transactions: any[];
   onWithdraw: (currency: string) => void;
   canWithdraw: boolean;
   isVerified: boolean;
 }
+
+// All supported currencies in order
+const ALL_CURRENCIES = ['KZ', 'EUR', 'USD', 'GBP', 'MZN', 'BRL'];
 
 export function CurrencyTabs({
   balances,
   selectedCurrency,
   onCurrencyChange,
   formatCurrency,
-  transactions,
   onWithdraw,
   canWithdraw,
   isVerified
 }: CurrencyTabsProps) {
-  // Filter to only show currencies with balance
-  const activeCurrencies = balances.filter(b => b.balance > 0 || b.currency === 'KZ');
+  // Create a map of existing balances
+  const balanceMap = new Map(balances.map(b => [b.currency, b]));
   
-  // If no balances, show KZ by default
-  const displayBalances = activeCurrencies.length > 0 
-    ? activeCurrencies 
-    : [{ id: 'default', currency: 'KZ', balance: 0, retained_balance: 0, updated_at: new Date().toISOString() }];
+  // Show all currencies, using existing balance or 0
+  const displayBalances = ALL_CURRENCIES.map(currency => {
+    const existing = balanceMap.get(currency);
+    return existing || {
+      id: `default-${currency}`,
+      currency,
+      balance: 0,
+      retained_balance: 0,
+      updated_at: new Date().toISOString()
+    };
+  });
 
   return (
     <Tabs value={selectedCurrency} onValueChange={onCurrencyChange} className="w-full">
@@ -56,7 +63,7 @@ export function CurrencyTabs({
       </TabsList>
 
       {displayBalances.map((balance) => (
-        <TabsContent key={balance.currency} value={balance.currency} className="space-y-6">
+        <TabsContent key={balance.currency} value={balance.currency}>
           <CurrencyBalanceCard
             currency={balance.currency}
             balance={balance.balance}
@@ -65,12 +72,6 @@ export function CurrencyTabs({
             onWithdraw={() => onWithdraw(balance.currency)}
             canWithdraw={canWithdraw && balance.balance > 0}
             isVerified={isVerified}
-          />
-          
-          <CurrencyTransactionHistory
-            transactions={transactions}
-            currency={balance.currency}
-            formatCurrency={formatCurrency}
           />
         </TabsContent>
       ))}
