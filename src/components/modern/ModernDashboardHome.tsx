@@ -42,7 +42,7 @@ export function ModernDashboardHome() {
   const [timeFilter, setTimeFilter] = useState('ultimos-30-dias');
   const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>(undefined);
   const [selectedProduct, setSelectedProduct] = useState('todos');
-  const [selectedCurrency, setSelectedCurrency] = useState('all');
+  const [selectedCurrency, setSelectedCurrency] = useState('KZ');
   const [allOrders, setAllOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [showValues, setShowValues] = useState({

@@ -12,7 +12,6 @@ interface CurrencyFilterProps {
 }
 
 const CURRENCIES = [
-  { code: 'all', label: 'Todas as moedas', flag: '' },
   { code: 'KZ', label: 'KZ (Angola)', flag: '🇦🇴' },
   { code: 'MZN', label: 'MZN (Moçambique)', flag: '🇲🇿' },
   { code: 'EUR', label: 'EUR (Europa)', flag: '🇪🇺' },
@@ -30,7 +29,7 @@ export function CurrencyFilter({ value, onValueChange }: CurrencyFilterProps) {
         <SelectValue>
           <span className="flex items-center gap-2">
             {selectedCurrency.flag && <span>{selectedCurrency.flag}</span>}
-            <span>{selectedCurrency.code === 'all' ? 'Todas' : selectedCurrency.code}</span>
+            <span>{selectedCurrency.code}</span>
           </span>
         </SelectValue>
       </SelectTrigger>
