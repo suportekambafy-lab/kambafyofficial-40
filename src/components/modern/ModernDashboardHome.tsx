@@ -17,6 +17,7 @@ import { Eye, EyeOff, Radio } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { startOfDay, endOfDay, subDays, isWithinInterval } from 'date-fns';
 import { countTotalSales } from '@/utils/orderUtils';
+import { formatWithMaxTwoDecimals } from '@/utils/priceFormatting';
 import { useNavigate } from 'react-router-dom';
 import { usePreferredCurrency } from '@/hooks/usePreferredCurrency';
 
@@ -525,7 +526,7 @@ export function ModernDashboardHome() {
               <h2 className="text-2xl md:text-3xl font-bold text-foreground">
                 {showValues.revenue 
                   ? dashboardData.displayCurrency 
-                    ? `${dashboardData.totalRevenue.toLocaleString('pt-AO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${dashboardData.displayCurrency}`
+                    ? `${formatWithMaxTwoDecimals(dashboardData.totalRevenue)} ${dashboardData.displayCurrency}`
                     : formatInPreferredCurrency(dashboardData.totalRevenue)
                   : "••••••••"}
               </h2>
