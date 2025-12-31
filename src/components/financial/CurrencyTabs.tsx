@@ -54,10 +54,9 @@ export function CurrencyTabs({
           <span>Moeda:</span>
         </div>
         <Select value={selectedCurrency} onValueChange={onCurrencyChange}>
-          <SelectTrigger className="w-[200px] bg-background">
+          <SelectTrigger className="w-[180px] bg-background">
             <SelectValue>
               <div className="flex items-center gap-2">
-                <span className="text-lg">{config.flag}</span>
                 <span className="font-medium">{config.name}</span>
                 <span className="text-muted-foreground">({selectedCurrency})</span>
               </div>
@@ -74,7 +73,6 @@ export function CurrencyTabs({
                   className="cursor-pointer hover:bg-muted"
                 >
                   <div className="flex items-center gap-2 w-full">
-                    <span className="text-lg">{currencyConfig.flag}</span>
                     <span className="font-medium">{currencyConfig.name}</span>
                     <span className="text-muted-foreground">({currency})</span>
                     {balance.balance > 0 && (
