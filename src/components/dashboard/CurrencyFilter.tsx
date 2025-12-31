@@ -25,15 +25,15 @@ export function CurrencyFilter({ value, onValueChange }: CurrencyFilterProps) {
 
   return (
     <Select value={value} onValueChange={onValueChange}>
-      <SelectTrigger className="w-full bg-background">
-        <SelectValue>
-          <span>{selectedCurrency.code}</span>
+      <SelectTrigger className="w-full h-9 sm:h-10 rounded-lg text-xs sm:text-sm bg-card text-card-foreground border-border">
+        <SelectValue placeholder="Moeda" className="text-card-foreground">
+          {selectedCurrency.code}
         </SelectValue>
       </SelectTrigger>
-      <SelectContent className="bg-background z-50">
+      <SelectContent>
         {CURRENCIES.map((currency) => (
           <SelectItem key={currency.code} value={currency.code}>
-            <span>{currency.label}</span>
+            {currency.label}
           </SelectItem>
         ))}
       </SelectContent>
