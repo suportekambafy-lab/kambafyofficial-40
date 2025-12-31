@@ -1,6 +1,7 @@
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CurrencyBalance, CURRENCY_CONFIG } from "@/hooks/useCurrencyBalances";
 import { CurrencyBalanceCard } from "./CurrencyBalanceCard";
+import { Wallet } from "lucide-react";
 
 interface CurrencyTabsProps {
   balances: CurrencyBalance[];
@@ -29,8 +30,8 @@ export function CurrencyTabs({
   // Create a map of existing balances
   const balanceMap = new Map(balances.map(b => [b.currency, b]));
   
-  // Show all currencies, using existing balance or 0
-  const displayBalances = ALL_CURRENCIES.map(currency => {
+  // Get the current balance for selected currency
+  const getBalance = (currency: string) => {
     const existing = balanceMap.get(currency);
     return existing || {
       id: `default-${currency}`,
@@ -39,45 +40,67 @@ export function CurrencyTabs({
       retained_balance: 0,
       updated_at: new Date().toISOString()
     };
-  });
+  };
+
+  const currentBalance = getBalance(selectedCurrency);
+  const config = CURRENCY_CONFIG[selectedCurrency] || CURRENCY_CONFIG['KZ'];
 
   return (
-    <Tabs value={selectedCurrency} onValueChange={onCurrencyChange} className="w-full">
-      <TabsList className="flex flex-wrap h-auto gap-1 bg-muted/50 p-1 mb-4">
-        {displayBalances.map((balance) => {
-          const config = CURRENCY_CONFIG[balance.currency] || CURRENCY_CONFIG['KZ'];
-          return (
-            <TabsTrigger 
-              key={balance.currency} 
-              value={balance.currency}
-              className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm px-3 py-2"
-            >
-              <span className="text-lg">{config.flag}</span>
-              <span className="font-medium">{balance.currency}</span>
-              {balance.balance > 0 && (
-                <span className="text-xs text-muted-foreground hidden sm:inline">
-                  ({formatCurrency(balance.balance, balance.currency)})
-                </span>
-              )}
-            </TabsTrigger>
-          );
-        })}
-      </TabsList>
+    <div className="space-y-4">
+      {/* Currency Dropdown Filter */}
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+          <Wallet className="h-4 w-4" />
+          <span>Moeda:</span>
+        </div>
+        <Select value={selectedCurrency} onValueChange={onCurrencyChange}>
+          <SelectTrigger className="w-[200px] bg-background">
+            <SelectValue>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">{config.flag}</span>
+                <span className="font-medium">{config.name}</span>
+                <span className="text-muted-foreground">({selectedCurrency})</span>
+              </div>
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent className="bg-background border shadow-lg z-50">
+            {ALL_CURRENCIES.map((currency) => {
+              const currencyConfig = CURRENCY_CONFIG[currency] || CURRENCY_CONFIG['KZ'];
+              const balance = getBalance(currency);
+              return (
+                <SelectItem 
+                  key={currency} 
+                  value={currency}
+                  className="cursor-pointer hover:bg-muted"
+                >
+                  <div className="flex items-center gap-2 w-full">
+                    <span className="text-lg">{currencyConfig.flag}</span>
+                    <span className="font-medium">{currencyConfig.name}</span>
+                    <span className="text-muted-foreground">({currency})</span>
+                    {balance.balance > 0 && (
+                      <span className="ml-auto text-xs text-primary font-medium">
+                        {formatCurrency(balance.balance, currency)}
+                      </span>
+                    )}
+                  </div>
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
+      </div>
 
-      {displayBalances.map((balance) => (
-        <TabsContent key={balance.currency} value={balance.currency}>
-          <CurrencyBalanceCard
-            currency={balance.currency}
-            balance={balance.balance}
-            retainedBalance={balance.retained_balance}
-            totalWithdrawn={getTotalWithdrawn(balance.currency)}
-            formatCurrency={formatCurrency}
-            onWithdraw={() => onWithdraw(balance.currency)}
-            canWithdraw={canWithdraw && balance.balance > 0}
-            isVerified={isVerified}
-          />
-        </TabsContent>
-      ))}
-    </Tabs>
+      {/* Balance Card for Selected Currency */}
+      <CurrencyBalanceCard
+        currency={currentBalance.currency}
+        balance={currentBalance.balance}
+        retainedBalance={currentBalance.retained_balance}
+        totalWithdrawn={getTotalWithdrawn(currentBalance.currency)}
+        formatCurrency={formatCurrency}
+        onWithdraw={() => onWithdraw(currentBalance.currency)}
+        canWithdraw={canWithdraw && currentBalance.balance > 0}
+        isVerified={isVerified}
+      />
+    </div>
   );
 }
