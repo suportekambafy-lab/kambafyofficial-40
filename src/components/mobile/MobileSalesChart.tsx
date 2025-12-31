@@ -5,6 +5,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { BarChart, Bar, XAxis, YAxis } from 'recharts';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { formatWithMaxTwoDecimals } from '@/utils/priceFormatting';
 
 interface ChartData {
   day: string;
@@ -134,7 +135,7 @@ export function MobileSalesChart() {
               <YAxis hide />
               <ChartTooltip
                 content={<ChartTooltipContent />}
-                formatter={(value: number) => [`${value.toLocaleString()} KZ`, 'Vendas']}
+                formatter={(value: number) => [`${formatWithMaxTwoDecimals(value)} KZ`, 'Vendas']}
               />
               <Bar 
                 dataKey="vendas" 

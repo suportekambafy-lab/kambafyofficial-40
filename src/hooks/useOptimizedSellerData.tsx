@@ -79,6 +79,3 @@ export function useSellerData() {
     refetchOnReconnect: false,
   });
 }
-    refetchOnReconnect: false,
-  });
-}

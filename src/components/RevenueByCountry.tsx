@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Globe } from "lucide-react";
+import { formatWithMaxTwoDecimals } from '@/utils/priceFormatting';
 
 interface CountryRevenue {
   country: string;
@@ -49,10 +50,7 @@ const getCountryInfo = (country: string | undefined | null) => {
 };
 
 const formatCurrency = (amount: number, currency: string): string => {
-  const formatted = amount.toLocaleString('pt-AO', { 
-    minimumFractionDigits: 2, 
-    maximumFractionDigits: 2 
-  });
+  const formatted = formatWithMaxTwoDecimals(amount);
   
   switch (currency) {
     case 'EUR':
