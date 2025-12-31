@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { PiggyBank, Shield, Eye, EyeOff, AlertCircle } from "lucide-react";
+import { PiggyBank, Shield, Eye, EyeOff, AlertCircle, ArrowDownCircle } from "lucide-react";
 import { useState } from "react";
 import { CURRENCY_CONFIG } from "@/hooks/useCurrencyBalances";
 import { Link } from "react-router-dom";
@@ -10,6 +10,7 @@ interface CurrencyBalanceCardProps {
   currency: string;
   balance: number;
   retainedBalance: number;
+  totalWithdrawn: number;
   formatCurrency: (amount: number, currency: string) => string;
   onWithdraw: () => void;
   canWithdraw: boolean;
@@ -20,6 +21,7 @@ export function CurrencyBalanceCard({
   currency,
   balance,
   retainedBalance,
+  totalWithdrawn,
   formatCurrency,
   onWithdraw,
   canWithdraw,
@@ -91,6 +93,23 @@ export function CurrencyBalanceCard({
               </div>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Total Withdrawn Card */}
+      <Card className="border-green-500/30 bg-green-50/50 dark:bg-green-950/20">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-3">
+            <ArrowDownCircle className="h-5 w-5 text-green-600" />
+            <div>
+              <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                Total Sacado
+              </p>
+              <p className="text-lg font-bold text-green-600">
+                {showBalance ? formatCurrency(totalWithdrawn, currency) : '••••••'}
+              </p>
+            </div>
+          </div>
         </CardContent>
       </Card>
 

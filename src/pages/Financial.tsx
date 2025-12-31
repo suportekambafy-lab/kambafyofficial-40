@@ -43,7 +43,8 @@ export default function Financial() {
     setSelectedCurrency,
     loadBalances,
     formatCurrency,
-    getTotalBalanceInKZ
+    getTotalBalanceInKZ,
+    getTotalWithdrawn
   } = useCurrencyBalances();
 
   // Check for pending 2FA
@@ -265,6 +266,7 @@ export default function Financial() {
           selectedCurrency={selectedCurrency}
           onCurrencyChange={setSelectedCurrency}
           formatCurrency={formatCurrency}
+          getTotalWithdrawn={getTotalWithdrawn}
           onWithdraw={handleWithdraw}
           canWithdraw={canWithdraw}
           isVerified={isVerified}

@@ -40,6 +40,7 @@ export function useCurrencyBalances() {
   const { user } = useAuth();
   const [balances, setBalances] = useState<CurrencyBalance[]>([]);
   const [transactions, setTransactions] = useState<CurrencyTransaction[]>([]);
+  const [totalWithdrawn, setTotalWithdrawn] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [selectedCurrency, setSelectedCurrency] = useState<string>('KZ');
 
@@ -59,6 +60,22 @@ export function useCurrencyBalances() {
       if (balanceError) {
         console.error('Error fetching currency balances:', balanceError);
         return;
+      }
+
+      // Fetch total withdrawn per currency
+      const { data: withdrawals } = await supabase
+        .from('withdrawal_requests')
+        .select('amount, currency')
+        .eq('user_id', user.id)
+        .eq('status', 'completed');
+
+      if (withdrawals) {
+        const withdrawnByCurrency: Record<string, number> = {};
+        withdrawals.forEach(w => {
+          const currency = w.currency || 'KZ';
+          withdrawnByCurrency[currency] = (withdrawnByCurrency[currency] || 0) + Number(w.amount);
+        });
+        setTotalWithdrawn(withdrawnByCurrency);
       }
 
       // If no multi-currency balances, try to get legacy balance
@@ -194,9 +211,14 @@ export function useCurrencyBalances() {
     }, 0);
   };
 
+  const getTotalWithdrawn = (currency: string): number => {
+    return totalWithdrawn[currency] || 0;
+  };
+
   return {
     balances,
     transactions,
+    totalWithdrawn,
     loading,
     selectedCurrency,
     setSelectedCurrency,
@@ -205,6 +227,7 @@ export function useCurrencyBalances() {
     formatCurrency,
     getAvailableCurrencies,
     getTotalBalanceInKZ,
+    getTotalWithdrawn,
     CURRENCY_CONFIG
   };
 }
