@@ -742,7 +742,10 @@ serve(async (req) => {
               stripe_payment_intent_id: paymentIntent.id,
               seller_commission: sellerCommissionInKZ * 0.9101,
               amount: amountInKZ.toString(),
-              currency: 'KZ'
+              currency: 'KZ',
+              // ✅ SALVAR MOEDA E VALOR ORIGINAIS
+              original_amount: paidAmount,
+              original_currency: paidCurrency
             })
             .eq('order_id', orderId)
             .select('*')
@@ -773,7 +776,10 @@ serve(async (req) => {
               status: 'completed',
               payment_method: paymentIntent.metadata.paymentMethod || 'card',
               stripe_payment_intent_id: paymentIntent.id,
-              seller_commission: sellerCommissionInKZ * 0.9101
+              seller_commission: sellerCommissionInKZ * 0.9101,
+              // ✅ SALVAR MOEDA E VALOR ORIGINAIS
+              original_amount: paidAmount,
+              original_currency: paidCurrency
             })
             .select('*')
             .single();

@@ -112,11 +112,15 @@ serve(async (req) => {
     console.log('✅ Payment successful, processing...');
 
     // Update order to completed
+    const amount = parseFloat(order.amount);
     const { error: updateError } = await supabaseAdmin
       .from('orders')
       .update({
         status: 'completed',
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        // ✅ SALVAR MOEDA E VALOR ORIGINAIS (SISLOG = Moçambique = MZN)
+        original_amount: amount,
+        original_currency: 'MZN'
       })
       .eq('id', order.id);
 

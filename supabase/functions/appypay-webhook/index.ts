@@ -593,7 +593,10 @@ const handler = async (req: Request): Promise<Response> => {
         .from('orders')
         .update({ 
           status: newOrderStatus,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
+          // ✅ SALVAR MOEDA E VALOR ORIGINAIS (APPYPAY = Angola = KZ)
+          original_amount: parseFloat(order.amount) || 0,
+          original_currency: order.currency || 'KZ'
         })
         .eq('id', order.id);
 
