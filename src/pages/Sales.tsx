@@ -99,7 +99,7 @@ export default function Sales() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("todos");
   const [paymentFilter, setPaymentFilter] = useState("todos");
-  const [currencyFilter, setCurrencyFilter] = useState("todos");
+  const [currencyFilter, setCurrencyFilter] = useState("KZ");
   const [selectedProduct, setSelectedProduct] = useState("todos");
   const [periodFilter, setPeriodFilter] = useState("30"); // ✅ Padrão: 30 dias
   const [currentPage, setCurrentPage] = useState(1);
@@ -208,14 +208,13 @@ export default function Sales() {
     if (paymentFilter !== "todos") {
       filtered = filtered.filter(sale => sale.payment_method === paymentFilter);
     }
-    if (currencyFilter !== "todos") {
-      filtered = filtered.filter(sale => {
-        const saleCurrency = sale.original_currency || sale.currency || 'KZ';
-        // Normalizar AOA para KZ
-        const normalizedCurrency = saleCurrency === 'AOA' ? 'KZ' : saleCurrency;
-        return normalizedCurrency === currencyFilter;
-      });
-    }
+    // Filtrar por moeda
+    filtered = filtered.filter(sale => {
+      const saleCurrency = sale.original_currency || sale.currency || 'KZ';
+      // Normalizar AOA para KZ
+      const normalizedCurrency = saleCurrency === 'AOA' ? 'KZ' : saleCurrency;
+      return normalizedCurrency === currencyFilter;
+    });
     if (selectedProduct !== "todos") {
       filtered = filtered.filter(sale => sale.product_id === selectedProduct);
     }
@@ -529,10 +528,6 @@ export default function Sales() {
   };
   // ✅ Calcular estatísticas filtradas por moeda
   const filteredStats = useMemo(() => {
-    if (currencyFilter === "todos") {
-      return salesStats;
-    }
-    
     // Recalcular estatísticas baseado nas vendas filtradas por moeda
     const currencyFilteredSales = sales.filter(sale => {
       const saleCurrency = sale.original_currency || sale.currency || 'KZ';
@@ -571,8 +566,7 @@ export default function Sales() {
 
   // ✅ Formatar moeda baseado no filtro para os cards de stats
   const formatCurrencyForStats = useCallback((value: number) => {
-    const currency = currencyFilter === "todos" ? 'KZ' : currencyFilter;
-    return value.toLocaleString('pt-AO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + currency;
+    return value.toLocaleString('pt-AO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + currencyFilter;
   }, [currencyFilter]);
 
   return <OptimizedPageWrapper skeletonVariant="list">
@@ -593,7 +587,6 @@ export default function Sales() {
               <SelectValue placeholder="Moeda" />
             </SelectTrigger>
             <SelectContent className="bg-background border shadow-lg z-50">
-              <SelectItem value="todos">Todas moedas</SelectItem>
               <SelectItem value="KZ">Kwanza (KZ)</SelectItem>
               <SelectItem value="EUR">Euro (EUR)</SelectItem>
               <SelectItem value="USD">Dollar (USD)</SelectItem>
