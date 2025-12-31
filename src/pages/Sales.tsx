@@ -99,6 +99,7 @@ export default function Sales() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("todos");
   const [paymentFilter, setPaymentFilter] = useState("todos");
+  const [currencyFilter, setCurrencyFilter] = useState("todos");
   const [selectedProduct, setSelectedProduct] = useState("todos");
   const [periodFilter, setPeriodFilter] = useState("30"); // ✅ Padrão: 30 dias
   const [currentPage, setCurrentPage] = useState(1);
@@ -207,11 +208,19 @@ export default function Sales() {
     if (paymentFilter !== "todos") {
       filtered = filtered.filter(sale => sale.payment_method === paymentFilter);
     }
+    if (currencyFilter !== "todos") {
+      filtered = filtered.filter(sale => {
+        const saleCurrency = sale.original_currency || sale.currency || 'KZ';
+        // Normalizar AOA para KZ
+        const normalizedCurrency = saleCurrency === 'AOA' ? 'KZ' : saleCurrency;
+        return normalizedCurrency === currencyFilter;
+      });
+    }
     if (selectedProduct !== "todos") {
       filtered = filtered.filter(sale => sale.product_id === selectedProduct);
     }
     return filtered;
-  }, [sales, searchTerm, statusFilter, paymentFilter, selectedProduct]);
+  }, [sales, searchTerm, statusFilter, paymentFilter, currencyFilter, selectedProduct]);
 
   // Paginação
   const paginatedSales = useMemo(() => {
@@ -321,7 +330,7 @@ export default function Sales() {
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, statusFilter, paymentFilter, selectedProduct]);
+  }, [searchTerm, statusFilter, paymentFilter, currencyFilter, selectedProduct]);
   
   // ✅ Recarregar quando o período mudar
   useEffect(() => {
@@ -667,11 +676,26 @@ export default function Sales() {
               <SelectTrigger className="w-full md:w-40">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-background">
                 <SelectItem value="todos">Todos os métodos</SelectItem>
                 {getAllPaymentMethods().map(method => <SelectItem key={method.id} value={method.id}>
                     {method.name}
                   </SelectItem>)}
+              </SelectContent>
+            </Select>
+
+            <Select value={currencyFilter} onValueChange={setCurrencyFilter}>
+              <SelectTrigger className="w-full md:w-36">
+                <SelectValue placeholder="Moeda" />
+              </SelectTrigger>
+              <SelectContent className="bg-background">
+                <SelectItem value="todos">Todas moedas</SelectItem>
+                <SelectItem value="KZ">Kwanza (KZ)</SelectItem>
+                <SelectItem value="EUR">Euro (EUR)</SelectItem>
+                <SelectItem value="USD">Dollar (USD)</SelectItem>
+                <SelectItem value="GBP">Libra (GBP)</SelectItem>
+                <SelectItem value="MZN">Metical (MZN)</SelectItem>
+                <SelectItem value="BRL">Real (BRL)</SelectItem>
               </SelectContent>
             </Select>
 
