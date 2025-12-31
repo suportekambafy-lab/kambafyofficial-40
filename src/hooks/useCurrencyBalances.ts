@@ -62,12 +62,12 @@ export function useCurrencyBalances() {
         return;
       }
 
-      // Fetch total withdrawn per currency
+      // Fetch total withdrawn per currency (status = 'aprovado')
       const { data: withdrawals } = await supabase
         .from('withdrawal_requests')
         .select('amount, currency')
         .eq('user_id', user.id)
-        .eq('status', 'completed');
+        .eq('status', 'aprovado');
 
       if (withdrawals) {
         const withdrawnByCurrency: Record<string, number> = {};
