@@ -472,7 +472,7 @@ export default function Sales() {
       </TooltipProvider>
     );
   };
-  const formatCurrency = (amount: number, currency: string = 'KZ') => {
+  const formatCurrencyValue = (amount: number, currency: string = 'KZ') => {
     return formatPriceForSeller(amount, currency);
   };
   const exportSalesToCSV = () => {
@@ -489,7 +489,7 @@ export default function Sales() {
     const headers = ['ID do Pedido', 'Cliente', 'Email', 'Telefone', 'Produto', 'Valor', 'Moeda', 'Status', 'Método de Pagamento', 'Data da Venda', 'Tipo de Venda', 'Comissão Afiliado', 'Código Afiliado'];
 
     // Converter dados para CSV
-    const csvData = filteredSales.map(sale => [sale.order_id, sale.customer_name, sale.customer_email, sale.customer_phone || '', sale.products?.name || 'N/A', sale.original_amount || sale.amount, sale.original_currency || sale.currency, sale.status === 'completed' ? 'Paga' : sale.status === 'pending' ? 'Pendente' : 'Cancelada', getPaymentMethodName(sale.payment_method), new Date(sale.created_at).toLocaleDateString('pt-BR'), sale.sale_type === 'affiliate' ? 'Comissão Afiliado' : sale.sale_type === 'recovered' ? 'Recuperada' : sale.affiliate_code ? 'Com Afiliado' : 'Direta', sale.affiliate_commission ? formatCurrency(sale.affiliate_commission) : '', sale.affiliate_code || '']);
+    const csvData = filteredSales.map(sale => [sale.order_id, sale.customer_name, sale.customer_email, sale.customer_phone || '', sale.products?.name || 'N/A', sale.original_amount || sale.amount, sale.original_currency || sale.currency, sale.status === 'completed' ? 'Paga' : sale.status === 'pending' ? 'Pendente' : 'Cancelada', getPaymentMethodName(sale.payment_method), new Date(sale.created_at).toLocaleDateString('pt-BR'), sale.sale_type === 'affiliate' ? 'Comissão Afiliado' : sale.sale_type === 'recovered' ? 'Recuperada' : sale.affiliate_code ? 'Com Afiliado' : 'Direta', sale.affiliate_commission ? formatCurrencyValue(sale.affiliate_commission) : '', sale.affiliate_code || '']);
 
     // Criar conteúdo CSV
     const csvContent = [headers, ...csvData].map(row => row.map(field => `"${field}"`).join(',')).join('\n');
@@ -527,16 +527,83 @@ export default function Sales() {
       description: `${filteredSales.length} vendas exportadas com sucesso`
     });
   };
+  // ✅ Calcular estatísticas filtradas por moeda
+  const filteredStats = useMemo(() => {
+    if (currencyFilter === "todos") {
+      return salesStats;
+    }
+    
+    // Recalcular estatísticas baseado nas vendas filtradas por moeda
+    const currencyFilteredSales = sales.filter(sale => {
+      const saleCurrency = sale.original_currency || sale.currency || 'KZ';
+      const normalizedCurrency = saleCurrency === 'AOA' ? 'KZ' : saleCurrency;
+      return normalizedCurrency === currencyFilter;
+    });
+    
+    let paid = 0, pending = 0, cancelled = 0;
+    let paidTotal = 0, pendingTotal = 0, cancelledTotal = 0;
+    
+    currencyFilteredSales.forEach(sale => {
+      const amount = parseFloat(sale.seller_commission?.toString() || sale.amount || '0');
+      
+      if (sale.status === 'completed') {
+        paid++;
+        paidTotal += amount;
+      } else if (sale.status === 'pending') {
+        pending++;
+        pendingTotal += amount;
+      } else if (sale.status === 'failed' || sale.status === 'cancelled') {
+        cancelled++;
+        cancelledTotal += amount;
+      }
+    });
+    
+    return {
+      ...salesStats,
+      paid,
+      pending,
+      cancelled,
+      paidTotal,
+      pendingTotal,
+      cancelledTotal
+    };
+  }, [sales, salesStats, currencyFilter]);
+
+  // ✅ Formatar moeda baseado no filtro para os cards de stats
+  const formatCurrencyForStats = useCallback((value: number) => {
+    const currency = currencyFilter === "todos" ? 'KZ' : currencyFilter;
+    return value.toLocaleString('pt-AO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + currency;
+  }, [currencyFilter]);
+
   return <OptimizedPageWrapper skeletonVariant="list">
       {loading ? <PageSkeleton variant="sales" /> : <div className="p-3 md:p-6 space-y-4 md:space-y-6 max-w-full overflow-x-hidden">
-      {/* Header com total de vendas */}
+      {/* Header com total de vendas e filtro de moeda */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-xl md:text-2xl font-bold text-foreground">{t('sales.title')}</h1>
-          <p className="text-sm md:text-base text-muted-foreground">
-            {totalCount > 0 ? `${totalCount} ${t('sales.registered')}` : t('sales.subtitle')}
-          </p>
+        <div className="flex items-center gap-4">
+          <div>
+            <h1 className="text-xl md:text-2xl font-bold text-foreground">{t('sales.title')}</h1>
+            <p className="text-sm md:text-base text-muted-foreground">
+              {totalCount > 0 ? `${totalCount} ${t('sales.registered')}` : t('sales.subtitle')}
+            </p>
+          </div>
+          
+          {/* Filtro de Moeda Global */}
+          <Select value={currencyFilter} onValueChange={setCurrencyFilter}>
+            <SelectTrigger className="w-[140px] bg-background">
+              <SelectValue placeholder="Moeda" />
+            </SelectTrigger>
+            <SelectContent className="bg-background border shadow-lg z-50">
+              <SelectItem value="todos">Todas moedas</SelectItem>
+              <SelectItem value="KZ">Kwanza (KZ)</SelectItem>
+              <SelectItem value="EUR">Euro (EUR)</SelectItem>
+              <SelectItem value="USD">Dollar (USD)</SelectItem>
+              <SelectItem value="GBP">Libra (GBP)</SelectItem>
+              <SelectItem value="MZN">Metical (MZN)</SelectItem>
+              <SelectItem value="BRL">Real (BRL)</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
+        
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={exportSalesToCSV} disabled={filteredSales.length === 0} className="text-xs md:text-sm text-foreground">
             <Download className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
@@ -560,10 +627,10 @@ export default function Sales() {
           </HighlightedCardHeader>
           <HighlightedCardContent>
             <div className="text-2xl md:text-3xl font-bold text-green-600">
-              {formatCurrency(salesStats.paidTotal)}
+              {formatCurrencyForStats(filteredStats.paidTotal)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {salesStats.paid} {t('sales.confirmed')}
+              {filteredStats.paid} {t('sales.confirmed')}
             </p>
           </HighlightedCardContent>
         </HighlightedCard>
@@ -577,10 +644,10 @@ export default function Sales() {
           </HighlightedCardHeader>
           <HighlightedCardContent>
             <div className="text-2xl md:text-3xl font-bold text-yellow-600">
-              {formatCurrency(salesStats.pendingTotal)}
+              {formatCurrencyForStats(filteredStats.pendingTotal)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {salesStats.pending} {t('sales.awaitingConfirmation')}
+              {filteredStats.pending} {t('sales.awaitingConfirmation')}
             </p>
           </HighlightedCardContent>
         </HighlightedCard>
@@ -594,7 +661,7 @@ export default function Sales() {
           </HighlightedCardHeader>
           <HighlightedCardContent>
             <div className="text-2xl md:text-3xl font-bold text-red-600">
-              {formatCurrency(salesStats.cancelledTotal)}
+              {formatCurrencyForStats(filteredStats.cancelledTotal)}
             </div>
             <p className="text-xs text-muted-foreground">
               {salesStats.cancelled} vendas não processadas
@@ -684,20 +751,6 @@ export default function Sales() {
               </SelectContent>
             </Select>
 
-            <Select value={currencyFilter} onValueChange={setCurrencyFilter}>
-              <SelectTrigger className="w-full md:w-36">
-                <SelectValue placeholder="Moeda" />
-              </SelectTrigger>
-              <SelectContent className="bg-background">
-                <SelectItem value="todos">Todas moedas</SelectItem>
-                <SelectItem value="KZ">Kwanza (KZ)</SelectItem>
-                <SelectItem value="EUR">Euro (EUR)</SelectItem>
-                <SelectItem value="USD">Dollar (USD)</SelectItem>
-                <SelectItem value="GBP">Libra (GBP)</SelectItem>
-                <SelectItem value="MZN">Metical (MZN)</SelectItem>
-                <SelectItem value="BRL">Real (BRL)</SelectItem>
-              </SelectContent>
-            </Select>
 
             <div className="w-full md:w-48">
               <ProductFilter 
@@ -757,15 +810,15 @@ export default function Sales() {
                           <div className="flex items-center gap-2">
                             {sale.sale_type === 'affiliate' ? (
                               <span className="font-bold text-base md:text-lg text-blue-600">
-                                {formatCurrency(parseFloat(sale.affiliate_commission?.toString() || '0'))}
+                                {formatCurrencyValue(parseFloat(sale.affiliate_commission?.toString() || '0'), sale.original_currency || sale.currency)}
                               </span>
                             ) : sale.sale_type === 'recovered' ? (
                               <span className="font-bold text-base md:text-lg text-green-600">
-                                {formatCurrency(parseFloat(sale.amount) * 0.8, sale.currency)}
+                                {formatCurrencyValue(parseFloat(sale.amount) * 0.8, sale.currency)}
                               </span>
                             ) : sale.affiliate_code && sale.seller_commission ? (
                               <span className="font-bold text-base md:text-lg text-green-600">
-                                {formatCurrency(parseFloat(sale.seller_commission?.toString() || '0'))}
+                                {formatCurrencyValue(parseFloat(sale.seller_commission?.toString() || '0'), sale.original_currency || sale.currency)}
                               </span>
                             ) : (
                               <span className="font-bold text-base md:text-lg">
@@ -914,7 +967,7 @@ export default function Sales() {
                                             <span className="font-medium">{bump.bump_product_name || 'Order Bump'}</span>
                                           </div>
                                           <span className="font-bold text-green-600">
-                                            {formatCurrency(parseFloat(bump.bump_product_price || '0'))}
+                                            {formatCurrencyValue(parseFloat(bump.bump_product_price || '0'))}
                                           </span>
                                         </div>
                                       ))}
