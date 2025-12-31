@@ -283,8 +283,9 @@ const handler = async (req: Request): Promise<Response> => {
           customerPhone: order.customer_phone,
           productName: product?.name || order.product_id,
           orderId: order.order_id,
-          amount: order.amount,
-          currency: order.currency,
+          // ✅ USAR MOEDA ORIGINAL para email (não a convertida)
+          amount: order.original_amount?.toString() || order.amount,
+          currency: order.original_currency || order.currency,
           productId: order.product_id,
           shareLink: product?.share_link, // Link do E-book/produto para download
           memberAreaId: product?.member_area_id,

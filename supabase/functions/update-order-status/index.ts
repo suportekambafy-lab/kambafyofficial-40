@@ -278,8 +278,9 @@ serve(async (req) => {
             customerPhone: orderData.customer_phone,
             productName: product.name,
             orderId: orderData.order_id,
-            amount: orderData.amount,
-            currency: orderData.currency,
+            // ✅ USAR MOEDA ORIGINAL para email (não a convertida)
+            amount: orderData.original_amount?.toString() || orderData.amount,
+            currency: orderData.original_currency || orderData.currency,
             productId: orderData.product_id,
             shareLink: product.share_link, // Link do E-book/produto para download
             memberAreaId: product.member_area_id,
