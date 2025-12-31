@@ -218,7 +218,7 @@ export default function MyPurchases() {
                           </p>
                         </div>
                         <div className="text-right flex-shrink-0">
-                          <p className="text-base font-bold">{order.amount} {order.currency}</p>
+                          <p className="text-base font-bold">{order.original_amount || order.amount} {order.original_currency || order.currency}</p>
                           <Badge variant="default" className="text-xs">Pago</Badge>
                         </div>
                       </div>
