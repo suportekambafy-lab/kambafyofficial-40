@@ -39,49 +39,51 @@ export function CurrencyBalanceCard({
     <div className="space-y-4">
       {/* Main Balance Card */}
       <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-        <CardContent className="p-6">
-          <div className="flex items-start justify-between">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">{config.flag}</span>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Saldo Disponível em {config.name}
-                </p>
-              </div>
+        <CardContent className="p-4 sm:p-6">
+          <div className="flex flex-col gap-4">
+            {/* Header with label */}
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-medium text-muted-foreground">
+                Saldo Disponível em {config.name}
+              </p>
+            </div>
+            
+            {/* Balance and button row */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex items-center gap-3">
-                <h2 className="text-3xl font-bold text-primary">
+                <h2 className="text-2xl sm:text-3xl font-bold text-primary break-all">
                   {showBalance ? formatCurrency(availableBalance, currency) : '••••••'}
                 </h2>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => setShowBalance(!showBalance)}
-                  className="h-8 w-8"
+                  className="h-8 w-8 shrink-0"
                 >
                   {showBalance ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                 </Button>
               </div>
+
+              {canWithdrawNow && (
+                <Button onClick={onWithdraw} className="w-full sm:w-auto shrink-0">
+                  <PiggyBank className="h-4 w-4 mr-2" />
+                  Sacar em {currency}
+                </Button>
+              )}
             </div>
 
-            {canWithdrawNow && (
-              <Button onClick={onWithdraw} className="shrink-0">
-                <PiggyBank className="h-4 w-4 mr-2" />
-                Sacar em {currency}
-              </Button>
-            )}
-          </div>
-
-          {/* Minimum withdrawal info */}
-          <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
-            <AlertCircle className="h-3 w-3" />
-            <span>Saque mínimo: {formatCurrency(minimumWithdrawal, currency)}</span>
+            {/* Minimum withdrawal info */}
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <AlertCircle className="h-3 w-3 shrink-0" />
+              <span>Saque mínimo: {formatCurrency(minimumWithdrawal, currency)}</span>
+            </div>
           </div>
 
           {/* Verification warning */}
           {!isVerified && balance > 0 && (
             <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800 rounded-lg">
               <div className="flex items-start gap-2">
-                <AlertCircle className="h-4 w-4 text-yellow-600 mt-0.5" />
+                <AlertCircle className="h-4 w-4 text-yellow-600 mt-0.5 shrink-0" />
                 <div className="text-sm">
                   <p className="font-medium text-yellow-800 dark:text-yellow-200">
                     Verificação necessária para saques
