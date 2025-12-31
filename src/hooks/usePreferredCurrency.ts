@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { formatWithMaxTwoDecimals } from '@/utils/priceFormatting';
 
 export interface CurrencyConfig {
   code: string;
@@ -90,11 +91,8 @@ export const usePreferredCurrency = () => {
     const config = getCurrencyConfig(targetCurrency);
     const converted = convertFromKZ(amountInKZ, targetCurrency);
     
-    // Formatação específica por moeda
-    const formatted = converted.toLocaleString('pt-BR', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
+    // Formatação com ponto nos milhares
+    const formatted = formatWithMaxTwoDecimals(converted);
 
     switch (config.code) {
       case 'EUR':

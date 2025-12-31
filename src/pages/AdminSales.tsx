@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
+import { formatWithMaxTwoDecimals } from '@/utils/priceFormatting';
 import { 
   Search, Download, ShoppingCart, CheckCircle, XCircle, 
   Loader2, MoreHorizontal, Hash, RefreshCcw, ChevronLeft, ChevronRight,
@@ -99,17 +100,21 @@ type TabType = 'entradas' | 'repasses' | 'atividades';
 
 // Helper function to convert currency code
 const formatCurrency = (amount: number, currencyCode: string) => {
-  // Convert KZ to AOA (valid ISO 4217 code)
-  const validCurrency = currencyCode === 'KZ' ? 'AOA' : currencyCode;
+  const formatted = formatWithMaxTwoDecimals(amount);
   
-  try {
-    return amount.toLocaleString('pt-AO', { 
-      style: 'currency', 
-      currency: validCurrency 
-    });
-  } catch (error) {
-    // Fallback if currency code is still invalid
-    return `${amount.toLocaleString('pt-AO')} ${currencyCode}`;
+  switch (currencyCode) {
+    case 'EUR':
+      return `€${formatted}`;
+    case 'USD':
+      return `$${formatted}`;
+    case 'GBP':
+      return `£${formatted}`;
+    case 'BRL':
+      return `R$${formatted}`;
+    case 'MZN':
+      return `${formatted} MT`;
+    default:
+      return `${formatted} ${currencyCode}`;
   }
 };
 

@@ -566,7 +566,7 @@ export default function Sales() {
 
   // ✅ Formatar moeda baseado no filtro para os cards de stats
   const formatCurrencyForStats = useCallback((value: number) => {
-    return value.toLocaleString('pt-AO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + currencyFilter;
+    return formatPriceForSeller(value, currencyFilter);
   }, [currencyFilter]);
 
   return <OptimizedPageWrapper skeletonVariant="list">

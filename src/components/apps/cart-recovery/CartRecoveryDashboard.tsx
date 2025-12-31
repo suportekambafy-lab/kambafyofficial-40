@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { formatWithMaxTwoDecimals } from '@/utils/priceFormatting';
 import { 
   Loader2, 
   ShoppingCart, 
@@ -118,7 +119,7 @@ export function CartRecoveryDashboard({ productId }: CartRecoveryDashboardProps)
   };
 
   const formatCurrency = (amount: number, currency: string) => {
-    return `${amount.toLocaleString('pt-AO')} ${currency}`;
+    return `${formatWithMaxTwoDecimals(amount)} ${currency}`;
   };
 
   if (loading) {

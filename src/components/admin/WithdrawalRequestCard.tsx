@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { User, Calendar, DollarSign, CheckCircle, XCircle, PauseCircle, CreditCard, Wallet, Globe, Bitcoin, Building } from 'lucide-react';
 import { AdminActionBadge } from './AdminActionBadge';
+import { formatWithMaxTwoDecimals } from '@/utils/priceFormatting';
 
 interface WithdrawalMethod {
   type: string;
@@ -150,7 +151,7 @@ export function WithdrawalRequestCard({
             </div>
             <div>
               <CardTitle className="text-xl text-gray-900">
-                {Number(request.amount).toLocaleString('pt-AO')} KZ
+                {formatWithMaxTwoDecimals(Number(request.amount))} KZ
               </CardTitle>
               <div className="flex items-center gap-4 mt-1 text-sm text-gray-600">
                 <div className="flex items-center gap-1">

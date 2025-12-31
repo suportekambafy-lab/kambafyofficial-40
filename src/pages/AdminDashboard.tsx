@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { supabase } from '@/integrations/supabase/client';
 import type { AdminStats } from '@/types/admin';
+import { formatWithMaxTwoDecimals } from '@/utils/priceFormatting';
 import { 
   ArrowUpRight,
   TrendingUp,
@@ -567,12 +568,9 @@ export default function AdminDashboard() {
         />
         <MetricCard
           title="Montante Cobrado"
-          value={companyFinancials?.totalRevenue?.toLocaleString('pt-BR', { 
-            style: 'currency', 
-            currency: 'AOA',
-            notation: 'compact',
-            maximumFractionDigits: 2
-          }) || '0 AOA'}
+          value={companyFinancials?.totalRevenue 
+            ? `${formatWithMaxTwoDecimals(companyFinancials.totalRevenue)} KZ`
+            : '0,00 KZ'}
           subtitle={getFilterLabel()}
           icon={<DollarSign className="h-4 w-4 text-[hsl(var(--admin-warning))]" />}
         />
