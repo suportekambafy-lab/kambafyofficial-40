@@ -573,15 +573,14 @@ export default function Sales() {
       {loading ? <PageSkeleton variant="sales" /> : <div className="p-3 md:p-6 space-y-4 md:space-y-6 max-w-full overflow-x-hidden">
       {/* Header com total de vendas e filtro de moeda */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="flex items-center gap-4">
-          <div>
-            <h1 className="text-xl md:text-2xl font-bold text-foreground">{t('sales.title')}</h1>
-            <p className="text-sm md:text-base text-muted-foreground">
-              {totalCount > 0 ? `${totalCount} ${t('sales.registered')}` : t('sales.subtitle')}
-            </p>
-          </div>
-          
-          {/* Filtro de Moeda Global */}
+        <div>
+          <h1 className="text-xl md:text-2xl font-bold text-foreground">{t('sales.title')}</h1>
+          <p className="text-sm md:text-base text-muted-foreground">
+            {totalCount > 0 ? `${totalCount} ${t('sales.registered')}` : t('sales.subtitle')}
+          </p>
+        </div>
+        
+        <div className="flex items-center gap-2">
           <Select value={currencyFilter} onValueChange={setCurrencyFilter}>
             <SelectTrigger className="w-[140px] bg-background">
               <SelectValue placeholder="Moeda" />
@@ -595,16 +594,9 @@ export default function Sales() {
               <SelectItem value="BRL">Real (BRL)</SelectItem>
             </SelectContent>
           </Select>
-        </div>
-        
-        <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={exportSalesToCSV} disabled={filteredSales.length === 0} className="text-xs md:text-sm text-foreground">
             <Download className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
             {t('common.export')}
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleRefresh} className="text-xs md:text-sm text-foreground">
-            <RefreshCw className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
-            {t('common.refresh')}
           </Button>
         </div>
       </div>
