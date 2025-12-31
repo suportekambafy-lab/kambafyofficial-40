@@ -12,11 +12,11 @@ export interface CountryInfo {
 const formatWithMaxTwoDecimals = (value: number): string => {
   // Arredonda para 2 casas decimais
   const rounded = Math.round(value * 100) / 100;
-  // Formata com separador de milhares e vírgula decimal (pt-BR) - sempre 2 casas
-  return rounded.toLocaleString('pt-BR', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
+  // Formata manualmente com ponto como separador de milhares e vírgula decimal
+  const [intPart, decPart] = rounded.toFixed(2).split('.');
+  // Adiciona pontos como separadores de milhares
+  const formattedInt = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return `${formattedInt},${decPart}`;
 };
 
 export const formatPrice = (
