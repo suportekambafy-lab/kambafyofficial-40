@@ -34,6 +34,7 @@ export function CurrencyBalanceCard({
   const minimumWithdrawal = config.minimumWithdrawal;
 
   const canWithdrawNow = canWithdraw && availableBalance >= minimumWithdrawal;
+  const showWithdrawButton = canWithdraw || availableBalance > 0;
 
   return (
     <div className="space-y-4">
@@ -64,8 +65,12 @@ export function CurrencyBalanceCard({
                 </Button>
               </div>
 
-              {canWithdrawNow && (
-                <Button onClick={onWithdraw} className="w-full sm:w-auto shrink-0">
+              {showWithdrawButton && (
+                <Button 
+                  onClick={onWithdraw} 
+                  className="w-full sm:w-auto shrink-0"
+                  disabled={!canWithdrawNow}
+                >
                   <PiggyBank className="h-4 w-4 mr-2" />
                   Sacar em {currency}
                 </Button>
