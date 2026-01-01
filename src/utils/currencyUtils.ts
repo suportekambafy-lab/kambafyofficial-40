@@ -36,16 +36,26 @@ export const getActualCurrency = (sale: {
     return 'MZN';
   }
   
-  // Métodos europeus: usar original_currency se disponível e NÃO for KZ/AOA
-  // Se for KZ/AOA, é dado legado errado - assumir EUR
+  // Métodos europeus: respeitar original_currency se explicitamente definido
+  // Dados legados com original_currency=KZ devem ficar como KZ (não forçar EUR)
   if (EUROPEAN_PAYMENT_METHODS.includes(paymentMethod)) {
-    const origCurrency = sale.original_currency || sale.currency || '';
+    const origCurrency = sale.original_currency || '';
     const normalized = origCurrency === 'AOA' ? 'KZ' : origCurrency;
-    // Se moeda é KZ ou vazia para método europeu, é dado errado - assumir EUR
-    if (!normalized || normalized === 'KZ') {
-      return 'EUR';
+    
+    // Se original_currency está explicitamente definido e não é KZ, usar
+    if (normalized && normalized !== 'KZ') {
+      return normalized;
     }
-    return normalized;
+    
+    // Se currency é uma moeda europeia válida, usar
+    const currencyNormalized = (sale.currency || '') === 'AOA' ? 'KZ' : (sale.currency || '');
+    if (currencyNormalized && currencyNormalized !== 'KZ') {
+      return currencyNormalized;
+    }
+    
+    // Dados legados: método europeu mas moeda KZ → manter como KZ
+    // (eram vendas antigas com configuração incorreta)
+    return 'KZ';
   }
   
   // Fallback: usar original_currency se disponível e válido
@@ -72,33 +82,15 @@ export const getActualAmount = (sale: {
   const paymentMethod = (sale.payment_method || '').toLowerCase();
   const normalizedOrig = (sale.original_currency || '') === 'AOA' ? 'KZ' : (sale.original_currency || '');
 
-  // Para métodos europeus com dados legados errados (KZ quando deveria ser EUR),
-  // priorizar original_amount quando existir.
+  // Para métodos europeus, priorizar original_amount se existir e parecer válido
   if (EUROPEAN_PAYMENT_METHODS.includes(paymentMethod)) {
     if (sale.original_amount != null) {
       const origAmount = typeof sale.original_amount === 'number'
         ? sale.original_amount
         : parseFloat((sale.original_amount as any) || '0');
 
-      // Se o original_amount parece ser em EUR (valor baixo), usar
-      if (origAmount > 0 && origAmount < 10000) {
+      if (origAmount > 0) {
         return origAmount;
-      }
-    }
-
-    // ✅ Fallback legado: alguns registros antigos guardaram o amount convertido em KZ
-    // mas com payment_method europeu. Quando a moeda real é EUR e o campo currency está KZ,
-    // reverter a conversão para evitar mostrar "€249.000" (na prática eram ~249.000 KZ).
-    const normalizedCurrency = (sale.currency || '') === 'AOA' ? 'KZ' : (sale.currency || '');
-    if (actualCurrency === 'EUR' && normalizedCurrency === 'KZ' && sale.amount != null) {
-      const amountInKZ = typeof sale.amount === 'number'
-        ? sale.amount
-        : parseFloat((sale.amount as any) || '0');
-
-      // Taxa aproximada já usada em outras partes do app
-      const EUR_KZ_RATE = 1100;
-      if (amountInKZ > 0) {
-        return amountInKZ / EUR_KZ_RATE;
       }
     }
   }
