@@ -229,12 +229,21 @@ export default function Sales() {
     if (paymentFilter !== "todos") {
       filtered = filtered.filter(sale => sale.payment_method === paymentFilter);
     }
-    // Filtrar por moeda
+    // Filtrar por moeda (moeda real inferida pelo método de pagamento)
     filtered = filtered.filter(sale => {
-      const saleCurrency = sale.original_currency || sale.currency || 'KZ';
-      // Normalizar AOA para KZ
-      const normalizedCurrency = saleCurrency === 'AOA' ? 'KZ' : saleCurrency;
-      return normalizedCurrency === currencyFilter;
+      const paymentMethod = sale.payment_method?.toLowerCase() || '';
+      const angolaMethods = ['express', 'multicaixa_express', 'reference', 'bank_transfer', 'transfer', 'kambapay'];
+      const mozambiqueMethods = ['mpesa', 'emola', 'card_mz'];
+
+      let actualCurrency = sale.original_currency || sale.currency || 'KZ';
+      if (angolaMethods.includes(paymentMethod)) {
+        actualCurrency = 'KZ';
+      } else if (mozambiqueMethods.includes(paymentMethod)) {
+        actualCurrency = 'MZN';
+      }
+
+      actualCurrency = actualCurrency === 'AOA' ? 'KZ' : actualCurrency;
+      return actualCurrency === currencyFilter;
     });
     if (selectedProduct !== "todos") {
       filtered = filtered.filter(sale => sale.product_id === selectedProduct);
@@ -374,20 +383,11 @@ export default function Sales() {
     return `https://images.unsplash.com/${cover}`;
   };
   const formatPrice = (sale: Sale) => {
-    // ✅ USAR SELLER_COMMISSION (valor líquido com 8% descontado)
-    // Se não tiver seller_commission, usar amount (vendas antigas)
-    let displayAmount = parseFloat(sale.seller_commission?.toString() || '0');
-    
-    if (displayAmount === 0) {
-      // Venda antiga sem seller_commission - usar amount
-      displayAmount = parseFloat(sale.amount || '0');
-    }
-    
-    // ✅ Usar moeda real inferida pelo método de pagamento
+    // ✅ Moeda real inferida pelo método de pagamento
     const paymentMethod = sale.payment_method?.toLowerCase() || '';
     const angolaMethods = ['express', 'multicaixa_express', 'reference', 'bank_transfer', 'transfer', 'kambapay'];
     const mozambiqueMethods = ['mpesa', 'emola', 'card_mz'];
-    
+
     let actualCurrency = sale.original_currency || sale.currency || 'KZ';
     if (angolaMethods.includes(paymentMethod)) {
       actualCurrency = 'KZ';
@@ -395,12 +395,23 @@ export default function Sales() {
       actualCurrency = 'MZN';
     }
     actualCurrency = actualCurrency === 'AOA' ? 'KZ' : actualCurrency;
-    
-    return <div className="text-right">
+
+    // ✅ Valor correto na moeda exibida:
+    // - Se original_currency bater com a moeda exibida, usar original_amount (valor que o cliente pagou)
+    // - Caso contrário, usar amount
+    const normalizedOrig = (sale.original_currency || '') === 'AOA' ? 'KZ' : (sale.original_currency || '');
+    const shouldUseOriginal = sale.original_amount != null && normalizedOrig === actualCurrency;
+
+    const raw = shouldUseOriginal ? sale.original_amount : sale.amount;
+    const displayAmount = typeof raw === 'number' ? raw : parseFloat((raw as any) || '0');
+
+    return (
+      <div className="text-right">
         <div className="font-bold text-checkout-green">
           {formatCurrencyNative(displayAmount, actualCurrency)}
         </div>
-      </div>;
+      </div>
+    );
   };
   const getStatusBadge = (status: string) => {
     if (status === 'completed') {
@@ -590,8 +601,13 @@ export default function Sales() {
     let paidTotal = 0, pendingTotal = 0, cancelledTotal = 0;
     
     currencyFilteredSales.forEach(sale => {
-      const amount = parseFloat(sale.seller_commission?.toString() || sale.amount || '0');
-      
+      const actualCurrency = getActualCurrency(sale);
+      const normalizedOrig = (sale.original_currency || '') === 'AOA' ? 'KZ' : (sale.original_currency || '');
+      const shouldUseOriginal = sale.original_amount != null && normalizedOrig === actualCurrency;
+
+      const raw = shouldUseOriginal ? sale.original_amount : sale.amount;
+      const amount = typeof raw === 'number' ? raw : parseFloat((raw as any) || '0');
+
       if (sale.status === 'completed') {
         paid++;
         paidTotal += amount;
