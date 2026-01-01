@@ -794,15 +794,37 @@ const ThankYou = () => {
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Valor Total Pago</label>
                   <p className="text-2xl font-bold text-checkout-green">
-                    {/* Mostrar sempre em euro quando o pagamento é em euro */}
-                    {orderDetails.paymentMethod === 'multibanco' && multibancoData?.amount 
-                      ? `€${multibancoData.amount}` 
-                      : orderDetails.convertedCurrency === 'EUR' && orderDetails.convertedAmount
-                        ? `€${orderDetails.convertedAmount}`
-                        : orderDetails.currency === 'EUR'
-                          ? `€${orderDetails.amount}`
-                          : `${orderDetails.amount} ${orderDetails.currency}`
-                    }
+                    {/* Prioridade: converted > original > default */}
+                    {(() => {
+                      // 1. Multibanco usa dados específicos
+                      if (orderDetails.paymentMethod === 'multibanco' && multibancoData?.amount) {
+                        return `€${multibancoData.amount}`;
+                      }
+                      
+                      // 2. Usar converted_currency/converted_amount (moeda real paga pelo cliente)
+                      if (orderDetails.convertedCurrency && orderDetails.convertedAmount) {
+                        const curr = orderDetails.convertedCurrency;
+                        const amt = orderDetails.convertedAmount;
+                        if (curr === 'EUR') return `€${amt}`;
+                        if (curr === 'USD') return `$${amt}`;
+                        if (curr === 'GBP') return `£${amt}`;
+                        if (curr === 'MZN') return `${amt} MZN`;
+                        if (curr === 'BRL') return `R$${amt}`;
+                        return `${amt} ${curr}`;
+                      }
+                      
+                      // 3. Se a moeda é EUR/USD/GBP, formatar corretamente
+                      const curr = orderDetails.currency;
+                      const amt = orderDetails.amount;
+                      if (curr === 'EUR') return `€${amt}`;
+                      if (curr === 'USD') return `$${amt}`;
+                      if (curr === 'GBP') return `£${amt}`;
+                      if (curr === 'MZN') return `${amt} MZN`;
+                      if (curr === 'BRL') return `R$${amt}`;
+                      
+                      // 4. Fallback para KZ ou outra moeda
+                      return `${amt} ${curr}`;
+                    })()}
                   </p>
                 </div>
                 <div>
