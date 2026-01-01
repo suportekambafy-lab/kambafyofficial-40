@@ -23,7 +23,6 @@ export function MultiCurrencyOverview({
           const config = CURRENCY_CONFIG[balance.currency] || CURRENCY_CONFIG['KZ'];
           return (
             <div key={balance.currency} className="flex items-center gap-2">
-              <span className="text-xl">{config.flag}</span>
               <div>
                 <p className="text-xs text-muted-foreground">{config.name}</p>
                 <p className="font-bold text-foreground">
