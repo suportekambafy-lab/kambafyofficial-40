@@ -20,7 +20,28 @@ import { useToast } from "@/hooks/use-toast";
 import { OptimizedPageWrapper } from "@/components/ui/optimized-page-wrapper";
 import professionalManImage from "@/assets/professional-man.jpg";
 import { getAllPaymentMethods, getPaymentMethodName, getAngolaPaymentMethods, getCountryByPaymentMethod, getCountryFlag } from "@/utils/paymentMethods";
-import { formatPriceForSeller } from '@/utils/priceFormatting';
+import { formatWithMaxTwoDecimals } from '@/utils/priceFormatting';
+
+// ✅ Formatar valor na moeda original SEM conversão
+const formatCurrencyNative = (amount: number, currency: string = 'KZ'): string => {
+  const normalizedCurrency = currency === 'AOA' ? 'KZ' : currency;
+  
+  switch (normalizedCurrency) {
+    case 'EUR':
+      return `€${formatWithMaxTwoDecimals(amount)}`;
+    case 'GBP':
+      return `£${formatWithMaxTwoDecimals(amount)}`;
+    case 'USD':
+      return `$${formatWithMaxTwoDecimals(amount)}`;
+    case 'BRL':
+      return `R$${formatWithMaxTwoDecimals(amount)}`;
+    case 'MZN':
+      return `${formatWithMaxTwoDecimals(amount)} MZN`;
+    case 'KZ':
+    default:
+      return `${formatWithMaxTwoDecimals(amount)} KZ`;
+  }
+};
 import { useCurrencyToCountry } from "@/hooks/useCurrencyToCountry";
 import { ProductFilter } from '@/components/ProductFilter';
 import { ResendAccessDialog } from '@/components/sales/ResendAccessDialog';
@@ -362,13 +383,13 @@ export default function Sales() {
       displayAmount = parseFloat(sale.amount || '0');
     }
     
-    const originalCurrency = sale.original_currency || sale.currency;
+    // ✅ Usar moeda original SEM conversão
+    const originalCurrency = sale.original_currency || sale.currency || 'KZ';
     
     return <div className="text-right">
         <div className="font-bold text-checkout-green">
-          {formatPriceForSeller(displayAmount, originalCurrency)}
+          {formatCurrencyNative(displayAmount, originalCurrency)}
         </div>
-        {originalCurrency !== 'KZ'}
       </div>;
   };
   const getStatusBadge = (status: string) => {
@@ -471,8 +492,9 @@ export default function Sales() {
       </TooltipProvider>
     );
   };
+  // ✅ Formatar valor na moeda original SEM conversão
   const formatCurrencyValue = (amount: number, currency: string = 'KZ') => {
-    return formatPriceForSeller(amount, currency);
+    return formatCurrencyNative(amount, currency);
   };
   const exportSalesToCSV = () => {
     if (filteredSales.length === 0) {
@@ -564,9 +586,9 @@ export default function Sales() {
     };
   }, [sales, salesStats, currencyFilter]);
 
-  // ✅ Formatar moeda baseado no filtro para os cards de stats
+  // ✅ Formatar moeda baseado no filtro para os cards de stats (SEM conversão)
   const formatCurrencyForStats = useCallback((value: number) => {
-    return formatPriceForSeller(value, currencyFilter);
+    return formatCurrencyNative(value, currencyFilter);
   }, [currencyFilter]);
 
   return <OptimizedPageWrapper skeletonVariant="list">
