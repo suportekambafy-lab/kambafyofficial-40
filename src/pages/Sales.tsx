@@ -397,13 +397,15 @@ export default function Sales() {
     actualCurrency = actualCurrency === 'AOA' ? 'KZ' : actualCurrency;
 
     // ✅ Valor correto na moeda exibida:
-    // - Se original_currency bater com a moeda exibida, usar original_amount (valor que o cliente pagou)
-    // - Caso contrário, usar amount
     const normalizedOrig = (sale.original_currency || '') === 'AOA' ? 'KZ' : (sale.original_currency || '');
     const shouldUseOriginal = sale.original_amount != null && normalizedOrig === actualCurrency;
 
     const raw = shouldUseOriginal ? sale.original_amount : sale.amount;
-    const displayAmount = typeof raw === 'number' ? raw : parseFloat((raw as any) || '0');
+    let displayAmount = typeof raw === 'number' ? raw : parseFloat((raw as any) || '0');
+
+    // ✅ Aplicar taxa de comissão (8.99% Angola, 9.99% Internacional)
+    const commissionRate = actualCurrency === 'KZ' ? 0.0899 : 0.0999;
+    displayAmount = displayAmount * (1 - commissionRate);
 
     return (
       <div className="text-right">
@@ -606,7 +608,11 @@ export default function Sales() {
       const shouldUseOriginal = sale.original_amount != null && normalizedOrig === actualCurrency;
 
       const raw = shouldUseOriginal ? sale.original_amount : sale.amount;
-      const amount = typeof raw === 'number' ? raw : parseFloat((raw as any) || '0');
+      let amount = typeof raw === 'number' ? raw : parseFloat((raw as any) || '0');
+
+      // ✅ Aplicar taxa de comissão (8.99% Angola, 9.99% Internacional)
+      const commissionRate = actualCurrency === 'KZ' ? 0.0899 : 0.0999;
+      amount = amount * (1 - commissionRate);
 
       if (sale.status === 'completed') {
         paid++;
