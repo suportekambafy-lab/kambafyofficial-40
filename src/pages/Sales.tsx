@@ -700,7 +700,7 @@ export default function Sales() {
               {formatCurrencyForStats(filteredStats.cancelledTotal)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {salesStats.cancelled} vendas não processadas
+              {filteredStats.cancelled} vendas não processadas
             </p>
           </HighlightedCardContent>
         </HighlightedCard>
