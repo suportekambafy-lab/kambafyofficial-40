@@ -100,8 +100,8 @@ serve(async (req) => {
       headings: { en: title },
       contents: { en: message },
       data: data,
-      ios_sound: 'venda.caf', // Som personalizado para iOS
-      android_channel_id: 'canal_venda', // Canal Android para som personalizado (case-sensitive!)
+      ios_sound: 'default', // Som padrão para iOS
+      // android_channel_id removido - canal não configurado no OneSignal
     };
 
     let targetingMethod = '';
