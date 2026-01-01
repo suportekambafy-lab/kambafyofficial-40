@@ -20,6 +20,7 @@ import { countTotalSales } from '@/utils/orderUtils';
 import { formatWithMaxTwoDecimals } from '@/utils/priceFormatting';
 import { useNavigate } from 'react-router-dom';
 import { usePreferredCurrency } from '@/hooks/usePreferredCurrency';
+import { getActualCurrency, getActualAmount, calculateSellerEarning } from '@/utils/currencyUtils';
 
 interface Order {
   id: string;
@@ -196,21 +197,17 @@ export function ModernDashboardHome() {
 
       // Combinar vendas próprias, comissões de afiliado E pagamentos de módulos
       const allOrdersWithEarnings = [
-        // Vendas próprias - usar comissão do vendedor na moeda original
+        // Vendas próprias - usar moeda real baseada no método de pagamento
         ...(ownOrders || []).map((order: any) => {
-          // ✅ Usar original_currency/original_amount se disponível, senão currency/amount
-          const orderCurrency = order.original_currency || order.currency || 'KZ';
-          const orderAmount = parseFloat(order.original_amount?.toString() || order.amount?.toString() || '0');
-          
-          // Calcular comissão baseado na taxa correta por moeda
-          // Angola (KZ): 8.99%, Internacional: 9.99%
-          const commissionRate = orderCurrency === 'KZ' ? 0.0899 : 0.0999;
-          const earning_amount = orderAmount * (1 - commissionRate);
+          // ✅ Usar getActualCurrency para determinar moeda real pelo payment_method
+          const actualCurrency = getActualCurrency(order);
+          const actualAmount = getActualAmount(order);
+          const earning_amount = calculateSellerEarning(actualAmount, actualCurrency);
           
           return {
             ...order,
             earning_amount,
-            earning_currency: orderCurrency, // ✅ Usar moeda original
+            earning_currency: actualCurrency,
             order_type: 'own'
           };
         }),
