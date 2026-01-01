@@ -10,6 +10,7 @@ import { useCurrencyToCountry } from "@/hooks/useCurrencyToCountry";
 import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { getCountryByPaymentMethod } from "@/utils/paymentMethods";
 import { usePreferredCurrency } from '@/hooks/usePreferredCurrency';
+import { getActualCurrency, getActualAmount, calculateSellerEarning } from '@/utils/currencyUtils';
 
 interface RecentSale {
   id: string;
@@ -19,11 +20,14 @@ interface RecentSale {
   customer_phone: string;
   amount: string;
   currency: string;
-  created_at: string;
+  original_amount?: number | null;
+  original_currency?: string | null;
   payment_method?: string;
+  created_at: string;
   product_name?: string;
   sale_type?: 'own' | 'affiliate' | 'recovered';
   earning_amount?: number;
+  earning_currency?: string;
   affiliate_commission?: number;
   seller_commission?: number;
   country_flag?: string;
@@ -147,6 +151,8 @@ export function ModernRecentSales() {
               payment_method,
               amount,
               currency,
+              original_amount,
+              original_currency,
               created_at,
               updated_at,
               product_id,
@@ -245,28 +251,28 @@ export function ModernRecentSales() {
 
       // Combinar e formatar vendas
       const allOrders = [
-        // Vendas próprias - verificar se são recuperadas
+        // Vendas próprias - usar moeda real baseada no payment_method
         ...(ownOrders || []).map((order: any) => {
           const isRecovered = recoveredOrderIds.has(order.order_id);
           
-          // ✅ Calcular valor líquido do vendedor (descontar 8% se não tiver seller_commission)
-          let earning_amount = parseFloat(order.seller_commission?.toString() || '0');
-          if (earning_amount === 0) {
-            const grossAmount = parseFloat(order.amount || '0');
-            earning_amount = grossAmount * 0.92; // Descontar 8% da plataforma
-          }
+          // ✅ Usar getActualCurrency para determinar moeda real pelo payment_method
+          const actualCurrency = getActualCurrency(order);
+          const actualAmount = getActualAmount(order);
+          const earning_amount = calculateSellerEarning(actualAmount, actualCurrency);
           
           return {
             ...order,
             sale_type: isRecovered ? 'recovered' : 'own',
-            earning_amount
+            earning_amount,
+            earning_currency: actualCurrency
           };
         }),
-        // Vendas como afiliado
+        // Vendas como afiliado (sempre em KZ)
         ...(affiliateOrders || []).map((order: any) => ({
           ...order,
           sale_type: 'affiliate', 
-          earning_amount: parseFloat(order.affiliate_commission?.toString() || '0')
+          earning_amount: parseFloat(order.affiliate_commission?.toString() || '0'),
+          earning_currency: 'KZ'
         }))
       ];
 
@@ -285,10 +291,13 @@ export function ModernRecentSales() {
           payment_method: order.payment_method,
           amount: order.amount,
           currency: order.currency || 'KZ',
+          original_amount: order.original_amount,
+          original_currency: order.original_currency,
           created_at: order.created_at,
           product_name: (order.products as any)?.name,
           sale_type: order.sale_type,
           earning_amount: order.earning_amount,
+          earning_currency: order.earning_currency,
           affiliate_commission: order.affiliate_commission,
           seller_commission: order.seller_commission,
           country_flag: countryInfo.flag,
@@ -305,32 +314,36 @@ export function ModernRecentSales() {
   };
 
   const formatAmount = (sale: RecentSale) => {
-    let amount = 0;
-    
-    if (sale.sale_type === 'affiliate') {
-      amount = sale.affiliate_commission || 0;
-    } else {
-      // Para vendas próprias, verificar se há seller_commission
-      if (sale.seller_commission && sale.seller_commission > 0) {
-        amount = sale.seller_commission;
-      } else {
-        // Venda antiga - usar valor original da venda
-        amount = parseFloat(sale.amount);
-      }
-    }
+    // ✅ Usar earning_amount e earning_currency calculados corretamente
+    let amount = sale.earning_amount || 0;
+    const currency = sale.earning_currency || 'KZ';
     
     // Aplicar desconto de 20% para vendas recuperadas
     if (sale.sale_type === 'recovered') {
       amount = amount * 0.8;
     }
     
-    // Usar moeda preferida do vendedor
-    const formattedPrice = formatInPreferredCurrency(amount);
+    // Formatar baseado na moeda real da venda
+    let formattedPrice: string;
+    if (currency === 'EUR') {
+      formattedPrice = `€${amount.toFixed(2).replace('.', ',')}`;
+    } else if (currency === 'USD') {
+      formattedPrice = `$${amount.toFixed(2)}`;
+    } else if (currency === 'GBP') {
+      formattedPrice = `£${amount.toFixed(2)}`;
+    } else if (currency === 'MZN') {
+      formattedPrice = `${amount.toFixed(2).replace('.', ',')} MZN`;
+    } else if (currency === 'BRL') {
+      formattedPrice = `R$${amount.toFixed(2).replace('.', ',')}`;
+    } else {
+      // KZ - usar formatação padrão
+      formattedPrice = `${amount.toFixed(2).replace('.', ',')} KZ`;
+    }
     
     return {
       main: formattedPrice,
-      flag: currencyConfig.flag,
-      countryName: currencyConfig.name,
+      flag: sale.country_flag || currencyConfig.flag,
+      countryName: sale.country_name || currencyConfig.name,
       showCountry: false
     };
   };
