@@ -285,15 +285,35 @@ Deno.serve(async (req) => {
 
     console.log('Saving order with corrected data:', orderData);
 
-    // Usar upsert para evitar duplicação - atualizar se já existe
-    const { error: orderError } = await supabase
+    // Verificar se já existe ordem com esse order_id para evitar duplicação
+    const { data: existingOrder } = await supabase
       .from('orders')
-      .upsert(orderData, {
-        onConflict: 'order_id',
-        ignoreDuplicates: false
-      })
-      .select()
-      .single();
+      .select('id')
+      .eq('order_id', orderId)
+      .maybeSingle();
+    
+    let orderError = null;
+    if (existingOrder) {
+      // Atualizar ordem existente
+      const { error } = await supabase
+        .from('orders')
+        .update({
+          stripe_payment_intent_id: paymentIntent.id,
+          amount: finalAmount,
+          currency: finalCurrency,
+          status: orderStatus
+        })
+        .eq('order_id', orderId);
+      orderError = error;
+      console.log('Order updated with ID:', orderId);
+    } else {
+      // Inserir nova ordem
+      const { error } = await supabase
+        .from('orders')
+        .insert(orderData);
+      orderError = error;
+      console.log('Order inserted with ID:', orderId);
+    }
 
     if (orderError) {
       console.error('Erro ao salvar ordem:', orderError);
