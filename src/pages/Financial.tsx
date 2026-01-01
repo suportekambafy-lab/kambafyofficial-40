@@ -258,13 +258,6 @@ export default function Financial() {
           </Card>
         )}
 
-        {/* Total em Vendas (calculated from orders - same as Dashboard) */}
-        <SalesRevenueOverview
-          revenueByMoeda={revenueByMoeda}
-          formatCurrency={formatCurrency}
-          loading={revenueLoading}
-        />
-
         {/* Multi-Currency Overview (wallet balances) */}
         <MultiCurrencyOverview
           balances={balances}
