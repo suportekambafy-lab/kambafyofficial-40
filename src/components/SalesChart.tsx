@@ -5,7 +5,7 @@ import { TrendingUp } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-
+import { getActualCurrency, getActualAmount, calculateSellerEarning } from "@/utils/currencyUtils";
 interface SalesData {
   date: string;
   sales: number;
@@ -87,7 +87,7 @@ export function SalesChart({ dateFilter }: SalesChartProps) {
       // Buscar pedidos do período usando product_id
       const { data: orders, error } = await supabase
         .from('orders')
-        .select('amount, created_at, status, product_id, order_id, currency')
+        .select('amount, created_at, status, product_id, order_id, currency, payment_method, original_amount, original_currency')
         .in('product_id', userProductIds)
         .eq('status', 'completed')
         .gte('created_at', startDate.toISOString())
@@ -115,23 +115,26 @@ export function SalesChart({ dateFilter }: SalesChartProps) {
         if (salesByDate[orderDate]) {
           salesByDate[orderDate].sales += 1; // Cada pedido é uma venda
           
-          let amount = parseFloat(order.amount) || 0;
-          // Se não é KZ, converter para KZ usando as taxas corretas
-          if (order.currency && order.currency !== 'KZ') {
+          // Usar a moeda real baseada no método de pagamento
+          const actualCurrency = getActualCurrency(order);
+          const actualAmount = getActualAmount(order);
+          const sellerAmount = calculateSellerEarning(actualAmount, actualCurrency);
+          
+          // Converter para KZ para o gráfico agregado
+          let amountInKz = sellerAmount;
+          if (actualCurrency !== 'KZ') {
             const exchangeRates: Record<string, number> = {
-              'EUR': 1053, // 1 EUR = ~1053 KZ
-              'MZN': 14.3  // 1 MZN = ~14.3 KZ
+              'EUR': 1053,
+              'USD': 920,
+              'GBP': 1180,
+              'MZN': 14.3,
+              'BRL': 180
             };
-            const rate = exchangeRates[order.currency.toUpperCase()] || 1;
-            amount = Math.round(amount * rate);
-          }
-          // Aplicar desconto de 20% se for venda recuperada
-          const isRecovered = recoveredOrderIds.has(order.order_id);
-          if (isRecovered) {
-            amount = amount * 0.8;
+            const rate = exchangeRates[actualCurrency] || 1;
+            amountInKz = Math.round(sellerAmount * rate);
           }
           
-          salesByDate[orderDate].revenue += amount;
+          salesByDate[orderDate].revenue += amountInKz;
         }
       });
 

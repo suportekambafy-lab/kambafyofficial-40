@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import { usePreferredCurrency } from '@/hooks/usePreferredCurrency';
+import { getActualCurrency, getActualAmount, calculateSellerEarning } from '@/utils/currencyUtils';
 interface ChartData {
   time: string;
   vendas: number;
@@ -175,29 +176,32 @@ export function ModernSalesChart({
       const {
         data: orders,
         error
-      } = await supabase.from('orders').select('created_at, amount, seller_commission, currency, product_id, status').in('product_id', userProductIds).gte('created_at', startDate.toISOString()).lte('created_at', endDate.toISOString()).eq('status', 'completed').order('created_at', {
+      } = await supabase.from('orders').select('created_at, amount, seller_commission, currency, product_id, status, payment_method, original_amount, original_currency').in('product_id', userProductIds).gte('created_at', startDate.toISOString()).lte('created_at', endDate.toISOString()).eq('status', 'completed').order('created_at', {
         ascending: true
       });
       if (error) return;
       const completedOrders = orders || [];
 
-      // Calculate total revenue from completed orders
+      // Calculate total revenue from completed orders using actual currency
       let total = 0;
       completedOrders.forEach(order => {
-        let amount = parseFloat(order.seller_commission?.toString() || '0');
-        if (amount === 0) {
-          const grossAmount = parseFloat(order.amount || '0');
-          amount = grossAmount * 0.92;
-        }
-        if (order.currency && order.currency !== 'KZ') {
+        const actualCurrency = getActualCurrency(order);
+        const actualAmount = getActualAmount(order);
+        let sellerAmount = calculateSellerEarning(actualAmount, actualCurrency);
+        
+        // Convert to KZ for aggregated display
+        if (actualCurrency !== 'KZ') {
           const exchangeRates: Record<string, number> = {
             'EUR': 1053,
-            'MZN': 14.3
+            'USD': 920,
+            'GBP': 1180,
+            'MZN': 14.3,
+            'BRL': 180
           };
-          const rate = exchangeRates[order.currency.toUpperCase()] || 1;
-          amount = Math.round(amount * rate);
+          const rate = exchangeRates[actualCurrency] || 1;
+          sellerAmount = Math.round(sellerAmount * rate);
         }
-        total += amount;
+        total += sellerAmount;
       });
       setTotalValue(total);
 
@@ -214,21 +218,24 @@ export function ModernSalesChart({
           const orderDate = new Date(order.created_at);
           const hour = Math.floor(orderDate.getHours() / 2) * 2;
           const hourKey = `${hour.toString().padStart(2, '0')}:00`;
-          let amount = parseFloat(order.seller_commission?.toString() || '0');
-          if (amount === 0) {
-            const grossAmount = parseFloat(order.amount || '0');
-            amount = grossAmount * 0.92;
-          }
-          if (order.currency && order.currency !== 'KZ') {
+          
+          const actualCurrency = getActualCurrency(order);
+          const actualAmount = getActualAmount(order);
+          let sellerAmount = calculateSellerEarning(actualAmount, actualCurrency);
+          
+          if (actualCurrency !== 'KZ') {
             const exchangeRates: Record<string, number> = {
               'EUR': 1053,
-              'MZN': 14.3
+              'USD': 920,
+              'GBP': 1180,
+              'MZN': 14.3,
+              'BRL': 180
             };
-            const rate = exchangeRates[order.currency.toUpperCase()] || 1;
-            amount = Math.round(amount * rate);
+            const rate = exchangeRates[actualCurrency] || 1;
+            sellerAmount = Math.round(sellerAmount * rate);
           }
           if (salesByHour[hourKey] !== undefined) {
-            salesByHour[hourKey] += amount;
+            salesByHour[hourKey] += sellerAmount;
           }
         });
         const formattedData: ChartData[] = Object.entries(salesByHour).map(([time, amount]) => ({
@@ -250,21 +257,24 @@ export function ModernSalesChart({
         completedOrders.forEach(order => {
           const orderDate = new Date(order.created_at);
           const dayKey = orderDate.toISOString().split('T')[0];
-          let amount = parseFloat(order.seller_commission?.toString() || '0');
-          if (amount === 0) {
-            const grossAmount = parseFloat(order.amount || '0');
-            amount = grossAmount * 0.92;
-          }
-          if (order.currency && order.currency !== 'KZ') {
+          
+          const actualCurrency = getActualCurrency(order);
+          const actualAmount = getActualAmount(order);
+          let sellerAmount = calculateSellerEarning(actualAmount, actualCurrency);
+          
+          if (actualCurrency !== 'KZ') {
             const exchangeRates: Record<string, number> = {
               'EUR': 1053,
-              'MZN': 14.3
+              'USD': 920,
+              'GBP': 1180,
+              'MZN': 14.3,
+              'BRL': 180
             };
-            const rate = exchangeRates[order.currency.toUpperCase()] || 1;
-            amount = Math.round(amount * rate);
+            const rate = exchangeRates[actualCurrency] || 1;
+            sellerAmount = Math.round(sellerAmount * rate);
           }
           if (salesByDay[dayKey] !== undefined) {
-            salesByDay[dayKey] += amount;
+            salesByDay[dayKey] += sellerAmount;
           }
         });
         const formattedData: ChartData[] = Object.entries(salesByDay).map(([date, amount]) => ({
