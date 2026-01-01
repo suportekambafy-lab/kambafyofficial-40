@@ -278,7 +278,17 @@ export default function Financial() {
         {/* Withdrawal History */}
         <Card>
           <CardHeader className="pb-4">
-            <CardTitle className="text-base sm:text-lg">Histórico de Saques</CardTitle>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <CardTitle className="text-base sm:text-lg">Histórico de Saques</CardTitle>
+              {(totalWithdrawn[selectedCurrency] || 0) > 0 && (
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="text-muted-foreground">Total Sacado:</span>
+                  <span className="font-bold text-green-600">
+                    {formatCurrency(totalWithdrawn[selectedCurrency] || 0, selectedCurrency)}
+                  </span>
+                </div>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             {withdrawalRequests.length === 0 ? (

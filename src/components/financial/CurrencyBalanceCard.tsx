@@ -98,23 +98,6 @@ export function CurrencyBalanceCard({
         </CardContent>
       </Card>
 
-      {/* Total Withdrawn Card */}
-      <Card className="border-green-500/30 bg-green-50/50 dark:bg-green-950/20">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-3">
-            <ArrowDownCircle className="h-5 w-5 text-green-600" />
-            <div>
-              <p className="text-sm font-medium text-green-800 dark:text-green-200">
-                Total Sacado
-              </p>
-              <p className="text-lg font-bold text-green-600">
-                {showBalance ? formatCurrency(totalWithdrawn, currency) : '••••••'}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Retained Balance Card (if any) */}
       {retainedBalance > 0 && (
         <Card className="border-orange-500/30 bg-orange-50/50 dark:bg-orange-950/20">
