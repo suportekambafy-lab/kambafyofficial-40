@@ -19,21 +19,40 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Buscar pedidos pendentes com expires_at passado
-    const { data: expiredOrders, error: fetchError } = await supabase
+    const now = new Date();
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+    // Buscar pedidos pendentes: expires_at passado OU criados há mais de 7 dias
+    const { data: expiredByDate, error: fetchError1 } = await supabase
       .from('orders')
       .select('id, order_id, payment_method, expires_at, created_at')
       .eq('status', 'pending')
       .not('expires_at', 'is', null)
-      .lt('expires_at', new Date().toISOString())
-      .order('created_at', { ascending: false });
+      .lt('expires_at', now.toISOString());
 
-    if (fetchError) {
-      console.error('[AUTO-CANCEL] ❌ Erro ao buscar pedidos expirados:', fetchError);
-      throw fetchError;
+    const { data: expiredByAge, error: fetchError2 } = await supabase
+      .from('orders')
+      .select('id, order_id, payment_method, expires_at, created_at')
+      .eq('status', 'pending')
+      .lt('created_at', sevenDaysAgo);
+
+    if (fetchError1 || fetchError2) {
+      console.error('[AUTO-CANCEL] ❌ Erro ao buscar pedidos:', fetchError1 || fetchError2);
+      throw fetchError1 || fetchError2;
     }
 
-    console.log(`[AUTO-CANCEL] 📋 Encontrados ${expiredOrders?.length || 0} pedidos expirados`);
+    // Combinar e remover duplicados
+    const allExpired = [...(expiredByDate || []), ...(expiredByAge || [])];
+    const uniqueIds = new Set<string>();
+    const expiredOrders = allExpired.filter(order => {
+      if (uniqueIds.has(order.id)) return false;
+      uniqueIds.add(order.id);
+      return true;
+    });
+
+    console.log(`[AUTO-CANCEL] 📋 Encontrados ${expiredOrders.length} pedidos para cancelar`);
+    console.log(`[AUTO-CANCEL] ├─ Por expires_at: ${expiredByDate?.length || 0}`);
+    console.log(`[AUTO-CANCEL] └─ Por idade (>7 dias): ${expiredByAge?.length || 0}`);
 
     if (!expiredOrders || expiredOrders.length === 0) {
       return new Response(
