@@ -6,12 +6,17 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { formatWithMaxTwoDecimals } from '@/utils/priceFormatting';
 import { getActualCurrency, getActualAmount, calculateSellerEarning } from '@/utils/currencyUtils';
+
 interface ChartData {
   day: string;
   vendas: number;
 }
 
-export function MobileSalesChart() {
+interface MobileSalesChartProps {
+  selectedCurrency?: string;
+}
+
+export function MobileSalesChart({ selectedCurrency = 'KZ' }: MobileSalesChartProps) {
   const { user } = useAuth();
   const [chartData, setChartData] = useState<ChartData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -20,7 +25,7 @@ export function MobileSalesChart() {
     if (user) {
       fetchChartData();
     }
-  }, [user]);
+  }, [user, selectedCurrency]);
 
   const fetchChartData = async () => {
     if (!user) return;
@@ -70,27 +75,18 @@ export function MobileSalesChart() {
         salesByDay[dayKey] = 0;
       }
 
-      // Somar vendas por dia usando moeda real
+      // Somar vendas por dia, filtrando pela moeda selecionada
       orders?.forEach(order => {
         const orderDate = new Date(order.created_at);
         const dayKey = orderDate.toISOString().split('T')[0];
         
         const actualCurrency = getActualCurrency(order);
-        const actualAmount = getActualAmount(order);
-        let sellerAmount = calculateSellerEarning(actualAmount, actualCurrency);
         
-        // Converter para KZ para exibição agregada
-        if (actualCurrency !== 'KZ') {
-          const exchangeRates: Record<string, number> = {
-            'EUR': 1053,
-            'USD': 920,
-            'GBP': 1180,
-            'MZN': 14.3,
-            'BRL': 180
-          };
-          const rate = exchangeRates[actualCurrency] || 1;
-          sellerAmount = Math.round(sellerAmount * rate);
-        }
+        // Só incluir vendas na moeda selecionada
+        if (actualCurrency !== selectedCurrency) return;
+        
+        const actualAmount = getActualAmount(order);
+        const sellerAmount = calculateSellerEarning(actualAmount, actualCurrency);
         
         if (salesByDay[dayKey] !== undefined) {
           salesByDay[dayKey] += sellerAmount;
@@ -100,7 +96,7 @@ export function MobileSalesChart() {
       // Converter para formato do gráfico
       const formattedData: ChartData[] = Object.entries(salesByDay).map(([date, amount]) => ({
         day: new Date(date).toLocaleDateString('pt-BR', { weekday: 'short' }),
-        vendas: Math.round(amount)
+        vendas: Math.round(amount * 100) / 100
       }));
 
       setChartData(formattedData);
@@ -113,7 +109,7 @@ export function MobileSalesChart() {
 
   const chartConfig = {
     vendas: {
-      label: "Vendas",
+      label: `Vendas (${selectedCurrency})`,
       color: "#10b981"
     }
   };
@@ -121,7 +117,7 @@ export function MobileSalesChart() {
   return (
     <Card className="rounded-2xl shadow-sm">
       <CardHeader>
-        <CardTitle className="text-lg">Vendas dos Últimos 7 Dias</CardTitle>
+        <CardTitle className="text-lg">Vendas da Semana ({selectedCurrency})</CardTitle>
       </CardHeader>
       <CardContent className="p-4">
         {loading ? (
@@ -140,7 +136,7 @@ export function MobileSalesChart() {
               <YAxis hide />
               <ChartTooltip
                 content={<ChartTooltipContent />}
-                formatter={(value: number) => [`${formatWithMaxTwoDecimals(value)} KZ`, 'Vendas']}
+                formatter={(value: number) => [`${formatWithMaxTwoDecimals(value)} ${selectedCurrency}`, 'Vendas']}
               />
               <Bar 
                 dataKey="vendas" 
