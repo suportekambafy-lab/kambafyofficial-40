@@ -383,12 +383,22 @@ export default function Sales() {
       displayAmount = parseFloat(sale.amount || '0');
     }
     
-    // ✅ Usar moeda original SEM conversão
-    const originalCurrency = sale.original_currency || sale.currency || 'KZ';
+    // ✅ Usar moeda real inferida pelo método de pagamento
+    const paymentMethod = sale.payment_method?.toLowerCase() || '';
+    const angolaMethods = ['express', 'multicaixa_express', 'reference', 'bank_transfer', 'transfer', 'kambapay'];
+    const mozambiqueMethods = ['mpesa', 'emola', 'card_mz'];
+    
+    let actualCurrency = sale.original_currency || sale.currency || 'KZ';
+    if (angolaMethods.includes(paymentMethod)) {
+      actualCurrency = 'KZ';
+    } else if (mozambiqueMethods.includes(paymentMethod)) {
+      actualCurrency = 'MZN';
+    }
+    actualCurrency = actualCurrency === 'AOA' ? 'KZ' : actualCurrency;
     
     return <div className="text-right">
         <div className="font-bold text-checkout-green">
-          {formatCurrencyNative(displayAmount, originalCurrency)}
+          {formatCurrencyNative(displayAmount, actualCurrency)}
         </div>
       </div>;
   };
@@ -548,27 +558,32 @@ export default function Sales() {
       description: `${filteredSales.length} vendas exportadas com sucesso`
     });
   };
-  // ✅ Calcular estatísticas filtradas por moeda
-  // IMPORTANTE: Vendas genuínas em moeda estrangeira têm original_currency = currency (ambos iguais)
-  // Vendas antigas com original_currency diferente de currency são consideradas KZ
+  // ✅ Inferir moeda real pelo método de pagamento (métodos angolanos = KZ, Moçambique = MZN)
+  const getActualCurrency = useCallback((sale: any): string => {
+    const paymentMethod = sale.payment_method?.toLowerCase() || '';
+    
+    // Métodos angolanos: sempre KZ (independente do que está no banco)
+    const angolaMethods = ['express', 'multicaixa_express', 'reference', 'bank_transfer', 'transfer', 'kambapay'];
+    if (angolaMethods.includes(paymentMethod)) {
+      return 'KZ';
+    }
+    
+    // Métodos moçambicanos: sempre MZN
+    const mozambiqueMethods = ['mpesa', 'emola', 'card_mz'];
+    if (mozambiqueMethods.includes(paymentMethod)) {
+      return 'MZN';
+    }
+    
+    // Stripe/internacional: usar original_currency se disponível e válido
+    const origCurrency = sale.original_currency || sale.currency || 'KZ';
+    return origCurrency === 'AOA' ? 'KZ' : origCurrency;
+  }, []);
+
+  // ✅ Calcular estatísticas filtradas por moeda (usando moeda real pelo método)
   const filteredStats = useMemo(() => {
     const currencyFilteredSales = sales.filter(sale => {
-      const origCurrency = sale.original_currency || 'KZ';
-      const baseCurrency = sale.currency || 'KZ';
-      
-      // Normalizar AOA → KZ
-      const normalizedOrig = origCurrency === 'AOA' ? 'KZ' : origCurrency;
-      const normalizedBase = baseCurrency === 'AOA' ? 'KZ' : baseCurrency;
-      
-      // Venda genuína na moeda: original_currency E currency devem ser iguais à moeda filtrada
-      // Isso evita vendas antigas onde original_currency foi preenchido incorretamente
-      if (currencyFilter === 'KZ') {
-        // Para KZ: inclui vendas onde base é KZ (independente do original)
-        return normalizedBase === 'KZ';
-      } else {
-        // Para outras moedas: ambos devem ser a moeda filtrada (vendas genuínas)
-        return normalizedOrig === currencyFilter && normalizedBase === currencyFilter;
-      }
+      const actualCurrency = getActualCurrency(sale);
+      return actualCurrency === currencyFilter;
     });
     
     let paid = 0, pending = 0, cancelled = 0;
