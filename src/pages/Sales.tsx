@@ -21,7 +21,7 @@ import { OptimizedPageWrapper } from "@/components/ui/optimized-page-wrapper";
 import professionalManImage from "@/assets/professional-man.jpg";
 import { getAllPaymentMethods, getPaymentMethodName, getAngolaPaymentMethods, getCountryByPaymentMethod, getCountryFlag } from "@/utils/paymentMethods";
 import { formatWithMaxTwoDecimals } from '@/utils/priceFormatting';
-
+import { getActualCurrency, getActualAmount, calculateSellerEarning } from '@/utils/currencyUtils';
 // ✅ Formatar valor na moeda original SEM conversão
 const formatCurrencyNative = (amount: number, currency: string = 'KZ'): string => {
   const normalizedCurrency = currency === 'AOA' ? 'KZ' : currency;
@@ -229,20 +229,9 @@ export default function Sales() {
     if (paymentFilter !== "todos") {
       filtered = filtered.filter(sale => sale.payment_method === paymentFilter);
     }
-    // Filtrar por moeda (moeda real inferida pelo método de pagamento)
+    // Filtrar por moeda (moeda real inferida pelo método de pagamento usando utility centralizada)
     filtered = filtered.filter(sale => {
-      const paymentMethod = sale.payment_method?.toLowerCase() || '';
-      const angolaMethods = ['express', 'multicaixa_express', 'reference', 'bank_transfer', 'transfer', 'kambapay'];
-      const mozambiqueMethods = ['mpesa', 'emola', 'card_mz'];
-
-      let actualCurrency = sale.original_currency || sale.currency || 'KZ';
-      if (angolaMethods.includes(paymentMethod)) {
-        actualCurrency = 'KZ';
-      } else if (mozambiqueMethods.includes(paymentMethod)) {
-        actualCurrency = 'MZN';
-      }
-
-      actualCurrency = actualCurrency === 'AOA' ? 'KZ' : actualCurrency;
+      const actualCurrency = getActualCurrency(sale);
       return actualCurrency === currencyFilter;
     });
     if (selectedProduct !== "todos") {
@@ -571,28 +560,7 @@ export default function Sales() {
       description: `${filteredSales.length} vendas exportadas com sucesso`
     });
   };
-  // ✅ Inferir moeda real pelo método de pagamento (métodos angolanos = KZ, Moçambique = MZN)
-  const getActualCurrency = useCallback((sale: any): string => {
-    const paymentMethod = sale.payment_method?.toLowerCase() || '';
-    
-    // Métodos angolanos: sempre KZ (independente do que está no banco)
-    const angolaMethods = ['express', 'multicaixa_express', 'reference', 'bank_transfer', 'transfer', 'kambapay'];
-    if (angolaMethods.includes(paymentMethod)) {
-      return 'KZ';
-    }
-    
-    // Métodos moçambicanos: sempre MZN
-    const mozambiqueMethods = ['mpesa', 'emola', 'card_mz'];
-    if (mozambiqueMethods.includes(paymentMethod)) {
-      return 'MZN';
-    }
-    
-    // Stripe/internacional: usar original_currency se disponível e válido
-    const origCurrency = sale.original_currency || sale.currency || 'KZ';
-    return origCurrency === 'AOA' ? 'KZ' : origCurrency;
-  }, []);
-
-  // ✅ Calcular estatísticas filtradas por moeda (usando moeda real pelo método)
+  // ✅ Calcular estatísticas filtradas por moeda (usando utility centralizada)
   const filteredStats = useMemo(() => {
     const currencyFilteredSales = sales.filter(sale => {
       const actualCurrency = getActualCurrency(sale);
@@ -604,25 +572,18 @@ export default function Sales() {
     
     currencyFilteredSales.forEach(sale => {
       const actualCurrency = getActualCurrency(sale);
-      const normalizedOrig = (sale.original_currency || '') === 'AOA' ? 'KZ' : (sale.original_currency || '');
-      const shouldUseOriginal = sale.original_amount != null && normalizedOrig === actualCurrency;
-
-      const raw = shouldUseOriginal ? sale.original_amount : sale.amount;
-      let amount = typeof raw === 'number' ? raw : parseFloat((raw as any) || '0');
-
-      // ✅ Aplicar taxa de comissão (8.99% Angola, 9.99% Internacional)
-      const commissionRate = actualCurrency === 'KZ' ? 0.0899 : 0.0999;
-      amount = amount * (1 - commissionRate);
+      const actualAmount = getActualAmount(sale);
+      const sellerAmount = calculateSellerEarning(actualAmount, actualCurrency);
 
       if (sale.status === 'completed') {
         paid++;
-        paidTotal += amount;
+        paidTotal += sellerAmount;
       } else if (sale.status === 'pending') {
         pending++;
-        pendingTotal += amount;
+        pendingTotal += sellerAmount;
       } else if (sale.status === 'failed' || sale.status === 'cancelled') {
         cancelled++;
-        cancelledTotal += amount;
+        cancelledTotal += sellerAmount;
       }
     });
     
