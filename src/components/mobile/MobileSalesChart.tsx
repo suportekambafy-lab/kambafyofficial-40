@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
@@ -6,7 +5,7 @@ import { BarChart, Bar, XAxis, YAxis } from 'recharts';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { formatWithMaxTwoDecimals } from '@/utils/priceFormatting';
-
+import { getActualCurrency, getActualAmount, calculateSellerEarning } from '@/utils/currencyUtils';
 interface ChartData {
   day: string;
   vendas: number;
@@ -50,7 +49,7 @@ export function MobileSalesChart() {
 
       const { data: orders, error } = await supabase
         .from('orders')
-        .select('created_at, amount, currency, product_id')
+        .select('created_at, amount, currency, product_id, payment_method, original_amount, original_currency')
         .in('product_id', userProductIds)
         .eq('status', 'completed')
         .gte('created_at', sevenDaysAgo.toISOString())
@@ -71,24 +70,30 @@ export function MobileSalesChart() {
         salesByDay[dayKey] = 0;
       }
 
-      // Somar vendas por dia
+      // Somar vendas por dia usando moeda real
       orders?.forEach(order => {
         const orderDate = new Date(order.created_at);
         const dayKey = orderDate.toISOString().split('T')[0];
         
-        let amount = parseFloat(order.amount || '0');
-        // Converter para KZ se necessário (APENAS UMA VEZ)
-        if (order.currency && order.currency !== 'KZ') {
+        const actualCurrency = getActualCurrency(order);
+        const actualAmount = getActualAmount(order);
+        let sellerAmount = calculateSellerEarning(actualAmount, actualCurrency);
+        
+        // Converter para KZ para exibição agregada
+        if (actualCurrency !== 'KZ') {
           const exchangeRates: Record<string, number> = {
-            'EUR': 1053, // 1 EUR = ~1053 KZ
-            'MZN': 14.3  // 1 MZN = ~14.3 KZ
+            'EUR': 1053,
+            'USD': 920,
+            'GBP': 1180,
+            'MZN': 14.3,
+            'BRL': 180
           };
-          const rate = exchangeRates[order.currency.toUpperCase()] || 1;
-          amount = Math.round(amount * rate);
+          const rate = exchangeRates[actualCurrency] || 1;
+          sellerAmount = Math.round(sellerAmount * rate);
         }
         
         if (salesByDay[dayKey] !== undefined) {
-          salesByDay[dayKey] += amount;
+          salesByDay[dayKey] += sellerAmount;
         }
       });
 
