@@ -14,6 +14,7 @@ interface ChartData {
 interface ModernSalesChartProps {
   timeFilter?: string;
   customDateRange?: { from: Date; to: Date } | null;
+  selectedCurrency?: string;
 }
 const getFilterLabel = (filter: string) => {
   const labels: Record<string, string> = {
@@ -28,7 +29,8 @@ const getFilterLabel = (filter: string) => {
 };
 export function ModernSalesChart({
   timeFilter = 'hoje',
-  customDateRange = null
+  customDateRange = null,
+  selectedCurrency
 }: ModernSalesChartProps) {
   const {
     user
@@ -55,7 +57,7 @@ export function ModernSalesChart({
         supabase.removeChannel(channel);
       };
     }
-  }, [user, timeFilter, customDateRange]);
+  }, [user, timeFilter, customDateRange, selectedCurrency]);
   const fetchChartData = async () => {
     if (!user) return;
     try {
@@ -180,27 +182,18 @@ export function ModernSalesChart({
         ascending: true
       });
       if (error) return;
-      const completedOrders = orders || [];
+      // Filter orders by selected currency if provided
+      const filteredOrders = selectedCurrency 
+        ? (orders || []).filter(order => getActualCurrency(order) === selectedCurrency)
+        : (orders || []);
+      const completedOrders = filteredOrders;
 
       // Calculate total revenue from completed orders using actual currency
       let total = 0;
       completedOrders.forEach(order => {
         const actualCurrency = getActualCurrency(order);
         const actualAmount = getActualAmount(order);
-        let sellerAmount = calculateSellerEarning(actualAmount, actualCurrency);
-        
-        // Convert to KZ for aggregated display
-        if (actualCurrency !== 'KZ') {
-          const exchangeRates: Record<string, number> = {
-            'EUR': 1053,
-            'USD': 920,
-            'GBP': 1180,
-            'MZN': 14.3,
-            'BRL': 180
-          };
-          const rate = exchangeRates[actualCurrency] || 1;
-          sellerAmount = Math.round(sellerAmount * rate);
-        }
+        const sellerAmount = calculateSellerEarning(actualAmount, actualCurrency);
         total += sellerAmount;
       });
       setTotalValue(total);
@@ -221,19 +214,8 @@ export function ModernSalesChart({
           
           const actualCurrency = getActualCurrency(order);
           const actualAmount = getActualAmount(order);
-          let sellerAmount = calculateSellerEarning(actualAmount, actualCurrency);
+          const sellerAmount = calculateSellerEarning(actualAmount, actualCurrency);
           
-          if (actualCurrency !== 'KZ') {
-            const exchangeRates: Record<string, number> = {
-              'EUR': 1053,
-              'USD': 920,
-              'GBP': 1180,
-              'MZN': 14.3,
-              'BRL': 180
-            };
-            const rate = exchangeRates[actualCurrency] || 1;
-            sellerAmount = Math.round(sellerAmount * rate);
-          }
           if (salesByHour[hourKey] !== undefined) {
             salesByHour[hourKey] += sellerAmount;
           }
@@ -260,19 +242,8 @@ export function ModernSalesChart({
           
           const actualCurrency = getActualCurrency(order);
           const actualAmount = getActualAmount(order);
-          let sellerAmount = calculateSellerEarning(actualAmount, actualCurrency);
+          const sellerAmount = calculateSellerEarning(actualAmount, actualCurrency);
           
-          if (actualCurrency !== 'KZ') {
-            const exchangeRates: Record<string, number> = {
-              'EUR': 1053,
-              'USD': 920,
-              'GBP': 1180,
-              'MZN': 14.3,
-              'BRL': 180
-            };
-            const rate = exchangeRates[actualCurrency] || 1;
-            sellerAmount = Math.round(sellerAmount * rate);
-          }
           if (salesByDay[dayKey] !== undefined) {
             salesByDay[dayKey] += sellerAmount;
           }
