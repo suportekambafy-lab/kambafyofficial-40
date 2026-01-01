@@ -40,6 +40,16 @@ import { Capacitor } from '@capacitor/core';
 import { useOneSignal } from '@/hooks/useOneSignal';
 import { AppLiveView } from '@/components/app/AppLiveView';
 import { Radio } from 'lucide-react';
+import { getActualCurrency, getActualAmount, calculateSellerEarning } from '@/utils/currencyUtils';
+
+const CURRENCIES = [
+  { value: 'KZ', label: 'KZ' },
+  { value: 'EUR', label: 'EUR' },
+  { value: 'MZN', label: 'MZN' },
+  { value: 'USD', label: 'USD' },
+  { value: 'GBP', label: 'GBP' },
+  { value: 'BRL', label: 'BRL' },
+];
 export function AppHome() {
   const {
     user,
@@ -124,6 +134,7 @@ export function AppHome() {
   const [showQuickMenu, setShowQuickMenu] = useState(false);
   const [timeFilter, setTimeFilter] = useState<'today' | 'yesterday' | '7d' | '30d' | '90d' | 'all' | 'custom'>('7d');
   const [productFilter, setProductFilter] = useState<string>('all');
+  const [currencyFilter, setCurrencyFilter] = useState<string>('KZ');
   const [customDateRange, setCustomDateRange] = useState<{
     from?: Date;
     to?: Date;
@@ -1320,8 +1331,8 @@ export function AppHome() {
           </div>;
       default:
         return <div className="p-3 md:p-4 space-y-3 bg-background min-h-full max-w-full overflow-x-hidden">
-            {/* Header with Live View and Period Filter */}
-            <div className="flex items-center justify-between gap-2">
+            {/* Header with Filters */}
+            <div className="flex items-center gap-2">
               <select value={timeFilter} onChange={e => {
                 const value = e.target.value as typeof timeFilter;
                 setTimeFilter(value);
@@ -1337,10 +1348,22 @@ export function AppHome() {
                 <option value="all">Todo período</option>
                 <option value="custom">Personalizado</option>
               </select>
+              
+              {/* Currency Filter */}
+              <select 
+                value={currencyFilter} 
+                onChange={e => setCurrencyFilter(e.target.value)} 
+                className="w-20 h-9 px-2 rounded-lg border border-border/40 bg-card text-sm font-medium text-foreground shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+              >
+                {CURRENCIES.map(currency => (
+                  <option key={currency.value} value={currency.value}>{currency.label}</option>
+                ))}
+              </select>
+              
               <Button variant="outline" size="sm" onClick={() => setActiveTab('live-view')} className="flex items-center gap-2 text-foreground shrink-0">
                 <Radio className="h-4 w-4" />
                 <span className="flex items-center gap-1.5">
-                  Live View
+                  Live
                   <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                 </span>
               </Button>
@@ -1392,10 +1415,10 @@ export function AppHome() {
             <div className="bg-card rounded-xl border border-border/40 shadow-sm flex overflow-hidden">
               <div className="w-1 bg-emerald-500 shrink-0" />
               <div className="flex-1 p-4">
-                <p className="text-xs text-muted-foreground mb-0.5">Total em vendas</p>
+                <p className="text-xs text-muted-foreground mb-0.5">Receita Líquida ({currencyFilter})</p>
                 <div className="flex items-center justify-between">
                   <h2 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">
-                    {loading ? '...' : formatPriceForSeller(stats.totalRevenue, 'KZ')}
+                    {loading ? '...' : formatPriceForSeller(stats.totalRevenue, currencyFilter)}
                   </h2>
                 </div>
               </div>
@@ -1403,10 +1426,14 @@ export function AppHome() {
 
             {/* Sales Chart */}
             <div className="w-full">
-              <ModernSalesChart timeFilter={timeFilter === 'today' ? 'hoje' : timeFilter === 'yesterday' ? 'ontem' : timeFilter === '7d' ? 'ultimos-7-dias' : timeFilter === '30d' ? 'ultimos-30-dias' : timeFilter === '90d' ? 'ultimos-30-dias' : timeFilter === 'custom' ? 'custom' : 'ultimos-7-dias'} customDateRange={customDateRange.from && customDateRange.to ? {
-              from: customDateRange.from,
-              to: customDateRange.to
-            } : null} />
+              <ModernSalesChart 
+                timeFilter={timeFilter === 'today' ? 'hoje' : timeFilter === 'yesterday' ? 'ontem' : timeFilter === '7d' ? 'ultimos-7-dias' : timeFilter === '30d' ? 'ultimos-30-dias' : timeFilter === '90d' ? 'ultimos-30-dias' : timeFilter === 'custom' ? 'custom' : 'ultimos-7-dias'} 
+                customDateRange={customDateRange.from && customDateRange.to ? {
+                  from: customDateRange.from,
+                  to: customDateRange.to
+                } : null}
+                selectedCurrency={currencyFilter}
+              />
             </div>
 
             {/* Info Banners Carousel */}
