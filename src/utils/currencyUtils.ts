@@ -71,25 +71,41 @@ export const getActualAmount = (sale: {
   const actualCurrency = getActualCurrency(sale);
   const paymentMethod = (sale.payment_method || '').toLowerCase();
   const normalizedOrig = (sale.original_currency || '') === 'AOA' ? 'KZ' : (sale.original_currency || '');
-  
+
   // Para métodos europeus com dados legados errados (KZ quando deveria ser EUR),
-  // usar original_amount se disponível (provavelmente é o valor correto em EUR)
+  // priorizar original_amount quando existir.
   if (EUROPEAN_PAYMENT_METHODS.includes(paymentMethod)) {
-    // Se original_amount existe e é um valor razoável para EUR (< 10000), usar
     if (sale.original_amount != null) {
-      const origAmount = typeof sale.original_amount === 'number' 
-        ? sale.original_amount 
+      const origAmount = typeof sale.original_amount === 'number'
+        ? sale.original_amount
         : parseFloat((sale.original_amount as any) || '0');
+
       // Se o original_amount parece ser em EUR (valor baixo), usar
       if (origAmount > 0 && origAmount < 10000) {
         return origAmount;
       }
     }
+
+    // ✅ Fallback legado: alguns registros antigos guardaram o amount convertido em KZ
+    // mas com payment_method europeu. Quando a moeda real é EUR e o campo currency está KZ,
+    // reverter a conversão para evitar mostrar "€249.000" (na prática eram ~249.000 KZ).
+    const normalizedCurrency = (sale.currency || '') === 'AOA' ? 'KZ' : (sale.currency || '');
+    if (actualCurrency === 'EUR' && normalizedCurrency === 'KZ' && sale.amount != null) {
+      const amountInKZ = typeof sale.amount === 'number'
+        ? sale.amount
+        : parseFloat((sale.amount as any) || '0');
+
+      // Taxa aproximada já usada em outras partes do app
+      const EUR_KZ_RATE = 1100;
+      if (amountInKZ > 0) {
+        return amountInKZ / EUR_KZ_RATE;
+      }
+    }
   }
-  
+
   // Usar original_amount apenas se a moeda original corresponder à moeda real
   const shouldUseOriginal = sale.original_amount != null && normalizedOrig === actualCurrency;
-  
+
   const raw = shouldUseOriginal ? sale.original_amount : sale.amount;
   return typeof raw === 'number' ? raw : parseFloat((raw as any) || '0');
 };
