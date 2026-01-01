@@ -15,8 +15,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useCurrencyBalances, CURRENCY_CONFIG } from "@/hooks/useCurrencyBalances";
 import { CurrencyTabs } from "@/components/financial/CurrencyTabs";
 import { MultiCurrencyOverview } from "@/components/financial/MultiCurrencyOverview";
-import { SalesRevenueOverview } from "@/components/financial/SalesRevenueOverview";
-import { useSalesRevenue } from "@/hooks/useSalesRevenue";
 
 interface WithdrawalRequest {
   id: string;
@@ -48,9 +46,6 @@ export default function Financial() {
     getTotalBalanceInKZ,
     getTotalWithdrawn
   } = useCurrencyBalances();
-
-  // Sales revenue hook (same logic as Dashboard)
-  const { revenueByMoeda, loading: revenueLoading, refresh: refreshRevenue } = useSalesRevenue();
 
   // Check for pending 2FA
   const initialPending2FA = (() => {
@@ -215,7 +210,7 @@ export default function Financial() {
           <div className="flex gap-2 sm:gap-3">
             <Button 
               variant="outline" 
-              onClick={() => { loadBalances(); refreshRevenue(); }} 
+              onClick={() => loadBalances()} 
               className="flex items-center gap-2 dark:text-white" 
               size="sm"
             >
@@ -258,7 +253,7 @@ export default function Financial() {
           </Card>
         )}
 
-        {/* Multi-Currency Overview (wallet balances) */}
+        {/* Multi-Currency Overview */}
         <MultiCurrencyOverview
           balances={balances}
           formatCurrency={formatCurrency}
