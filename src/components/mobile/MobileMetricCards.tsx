@@ -9,17 +9,24 @@ interface SalesData {
     KZ: number;
     EUR: number;
     MZN: number;
+    USD: number;
+    GBP: number;
+    BRL: number;
   };
 }
 
 interface MobileMetricCardsProps {
   salesData: SalesData;
   loading: boolean;
-  formatPrice: (amount: number) => string;
+  formatPrice: (amount: number, currency?: string) => string;
+  selectedCurrency: string;
 }
 
-export function MobileMetricCards({ salesData, loading, formatPrice }: MobileMetricCardsProps) {
+export function MobileMetricCards({ salesData, loading, formatPrice, selectedCurrency }: MobileMetricCardsProps) {
   const [showRevenue, setShowRevenue] = useState(true);
+
+  // Get the revenue for the selected currency
+  const currencyRevenue = salesData.revenueByMoeda[selectedCurrency as keyof typeof salesData.revenueByMoeda] || 0;
 
   return (
     <div className="space-y-4">
@@ -28,9 +35,9 @@ export function MobileMetricCards({ salesData, loading, formatPrice }: MobileMet
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div className="flex-1">
-              <div className="text-sm text-muted-foreground mb-1">Total em vendas</div>
+              <div className="text-sm text-muted-foreground mb-1">Receita Líquida ({selectedCurrency})</div>
               <div className="text-2xl font-bold text-foreground">
-                {loading ? '...' : showRevenue ? formatPrice(salesData.totalRevenue) : '••••••••'}
+                {loading ? '...' : showRevenue ? formatPrice(currencyRevenue, selectedCurrency) : '••••••••'}
               </div>
             </div>
             <button 
@@ -53,9 +60,8 @@ export function MobileMetricCards({ salesData, loading, formatPrice }: MobileMet
         <Card className="rounded-xl shadow-sm bg-card">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-sm text-muted-foreground">Pedidos feitos</span>
+              <span className="text-sm text-muted-foreground">Pedidos ({selectedCurrency})</span>
             </div>
-            <div className="text-xs text-muted-foreground mb-2">Últimos 30 dias</div>
             <div className="text-2xl font-bold text-foreground">
               {loading ? '...' : salesData.totalSales}
             </div>
@@ -66,11 +72,10 @@ export function MobileMetricCards({ salesData, loading, formatPrice }: MobileMet
         <Card className="rounded-xl shadow-sm bg-card">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-sm text-muted-foreground">Pedidos pagos</span>
+              <span className="text-sm text-muted-foreground">Pagos ({selectedCurrency})</span>
             </div>
-            <div className="text-xs text-muted-foreground mb-2">Últimos 30 dias</div>
-            <div className="text-2xl font-bold text-foreground">
-              {loading ? '...' : Math.floor(salesData.totalSales * 0.3)}
+            <div className="text-2xl font-bold text-checkout-green">
+              {loading ? '...' : salesData.totalSales}
             </div>
           </CardContent>
         </Card>

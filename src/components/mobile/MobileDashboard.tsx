@@ -10,6 +10,7 @@ import { MobileSalesChart } from './MobileSalesChart';
 import { Button } from "@/components/ui/button";
 import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { Home, BarChart3, User } from 'lucide-react';
+import { getActualCurrency, getActualAmount, calculateSellerEarning } from '@/utils/currencyUtils';
 
 interface Order {
   id: string;
@@ -18,6 +19,9 @@ interface Order {
   status: string;
   created_at: string;
   product_id: string;
+  payment_method?: string | null;
+  original_amount?: string | number | null;
+  original_currency?: string | null;
 }
 
 interface SalesData {
@@ -27,6 +31,9 @@ interface SalesData {
     KZ: number;
     EUR: number;
     MZN: number;
+    USD: number;
+    GBP: number;
+    BRL: number;
   };
 }
 
@@ -34,6 +41,7 @@ export function MobileDashboard() {
   const { user, signOut } = useAuth();
   const [selectedProduct, setSelectedProduct] = useState('todos');
   const [timeFilter, setTimeFilter] = useState('hoje');
+  const [selectedCurrency, setSelectedCurrency] = useState('KZ');
   const [activeTab, setActiveTab] = useState('home');
   const [allOrders, setAllOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,7 +70,7 @@ export function MobileDashboard() {
 
       const { data: orders, error } = await supabase
         .from('orders')
-        .select('*')
+        .select('id, amount, currency, status, created_at, product_id, payment_method, original_amount, original_currency')
         .in('product_id', userProductIds)
         .eq('status', 'completed')
         .neq('payment_method', 'member_access');
@@ -108,29 +116,30 @@ export function MobileDashboard() {
       filtered = filtered.filter(order => order.product_id === selectedProduct);
     }
 
-    return filtered;
-  }, [allOrders, selectedProduct, timeFilter]);
+    // Apply currency filter using getActualCurrency
+    filtered = filtered.filter(order => {
+      const actualCurrency = getActualCurrency(order);
+      return actualCurrency === selectedCurrency;
+    });
 
-  // Calculate sales data from filtered orders
+    return filtered;
+  }, [allOrders, selectedProduct, timeFilter, selectedCurrency]);
+
+  // Calculate sales data from filtered orders using currencyUtils
   const salesData = useMemo(() => {
-    const revenueByMoeda = { KZ: 0, EUR: 0, MZN: 0 };
+    const revenueByMoeda: SalesData['revenueByMoeda'] = { KZ: 0, EUR: 0, MZN: 0, USD: 0, GBP: 0, BRL: 0 };
     let totalRevenue = 0;
     const totalSales = filteredOrders.length;
 
     filteredOrders.forEach(order => {
-      const amount = parseFloat(order.amount || '0');
-      const currency = order.currency || 'KZ';
+      const actualCurrency = getActualCurrency(order);
+      const actualAmount = getActualAmount(order);
+      const sellerEarning = calculateSellerEarning(actualAmount, actualCurrency);
       
-      if (currency === 'KZ') {
-        revenueByMoeda.KZ += amount;
-        totalRevenue += amount;
-      } else if (currency === 'EUR') {
-        revenueByMoeda.EUR += amount;
-        totalRevenue += amount * 833;
-      } else if (currency === 'MZN') {
-        revenueByMoeda.MZN += amount;
-        totalRevenue += amount * 13;
+      if (actualCurrency in revenueByMoeda) {
+        revenueByMoeda[actualCurrency as keyof typeof revenueByMoeda] += sellerEarning;
       }
+      totalRevenue += sellerEarning;
     });
 
     return {
@@ -140,32 +149,34 @@ export function MobileDashboard() {
     };
   }, [filteredOrders]);
 
-  // Calculate total sales data for progress bar
+  // Calculate total sales data for progress bar (all orders, gross value for gamification)
   const totalSalesData = useMemo(() => {
-    const revenueByMoeda = { KZ: 0, EUR: 0, MZN: 0 };
     let totalRevenue = 0;
     const totalSales = allOrders.length;
 
     allOrders.forEach(order => {
-      const amount = parseFloat(order.amount || '0');
-      const currency = order.currency || 'KZ';
+      const actualAmount = getActualAmount(order);
+      const actualCurrency = getActualCurrency(order);
       
-      if (currency === 'KZ') {
-        revenueByMoeda.KZ += amount;
-        totalRevenue += amount;
-      } else if (currency === 'EUR') {
-        revenueByMoeda.EUR += amount;
-        totalRevenue += amount * 833;
-      } else if (currency === 'MZN') {
-        revenueByMoeda.MZN += amount;
-        totalRevenue += amount * 13;
+      // Convert to KZ for goal progress (gross value)
+      if (actualCurrency === 'KZ') {
+        totalRevenue += actualAmount;
+      } else if (actualCurrency === 'EUR') {
+        totalRevenue += actualAmount * 833;
+      } else if (actualCurrency === 'MZN') {
+        totalRevenue += actualAmount * 13;
+      } else if (actualCurrency === 'USD') {
+        totalRevenue += actualAmount * 750;
+      } else if (actualCurrency === 'GBP') {
+        totalRevenue += actualAmount * 950;
+      } else if (actualCurrency === 'BRL') {
+        totalRevenue += actualAmount * 150;
       }
     });
 
     return {
       totalRevenue,
-      totalSales,
-      revenueByMoeda
+      totalSales
     };
   }, [allOrders]);
 
@@ -240,15 +251,18 @@ export function MobileDashboard() {
                 setTimeFilter={setTimeFilter}
                 selectedProduct={selectedProduct}
                 setSelectedProduct={setSelectedProduct}
+                selectedCurrency={selectedCurrency}
+                setSelectedCurrency={setSelectedCurrency}
               />
 
               <MobileMetricCards 
                 salesData={salesData}
                 loading={loading}
                 formatPrice={formatPrice}
+                selectedCurrency={selectedCurrency}
               />
 
-              <MobileSalesChart />
+              <MobileSalesChart selectedCurrency={selectedCurrency} />
             </div>
           </>
         );
