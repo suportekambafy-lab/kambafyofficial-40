@@ -14,7 +14,7 @@ import { Home, BarChart3, Package, User, TrendingUp, LayoutDashboard, LogOut, Ch
 import kambafyIconGreen from '@/assets/kambafy-icon-green.png';
 import { BannerCarousel } from '@/components/app/BannerCarousel';
 import { useSellerTheme } from '@/hooks/useSellerTheme';
-import { formatPriceForSeller } from '@/utils/priceFormatting';
+import { formatPriceForSeller, formatWithMaxTwoDecimals } from '@/utils/priceFormatting';
 import { countTotalSales, countOrderItems } from '@/utils/orderUtils';
 import { ComposedChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Tooltip } from 'recharts';
 import { useToast } from '@/hooks/use-toast';
@@ -327,7 +327,7 @@ export function AppHome() {
   useEffect(() => {
     loadStats();
     loadProfile();
-  }, [user, timeFilter, productFilter, customDateRange]);
+  }, [user, timeFilter, productFilter, customDateRange, currencyFilter]);
   const loadProfile = async () => {
     if (!user) return;
     try {
@@ -479,12 +479,13 @@ export function AppHome() {
       }
 
       // ✅ PRIMEIRO: Buscar TODAS as vendas (produtos próprios + afiliados + módulos) para Meta Kamba
-      const ownOrdersMetaPromise = productIds.length > 0 ? supabase.from('orders').select('amount, seller_commission, currency, created_at, payment_method, order_id, order_bump_data').in('product_id', productIds).eq('status', 'completed').neq('payment_method', 'member_access').order('created_at', {
+      // Incluir original_amount e original_currency para cálculo correto de moeda
+      const ownOrdersMetaPromise = productIds.length > 0 ? supabase.from('orders').select('amount, seller_commission, currency, created_at, payment_method, order_id, order_bump_data, original_amount, original_currency').in('product_id', productIds).eq('status', 'completed').neq('payment_method', 'member_access').order('created_at', {
         ascending: true
       }) : Promise.resolve({
         data: []
       });
-      const affiliateOrdersMetaPromise = affiliateCodes.length > 0 ? supabase.from('orders').select('amount, affiliate_commission, currency, created_at, payment_method, order_id, order_bump_data').in('affiliate_code', affiliateCodes).eq('status', 'completed').neq('payment_method', 'member_access').order('created_at', {
+      const affiliateOrdersMetaPromise = affiliateCodes.length > 0 ? supabase.from('orders').select('amount, affiliate_commission, currency, created_at, payment_method, order_id, order_bump_data, original_amount, original_currency').in('affiliate_code', affiliateCodes).eq('status', 'completed').neq('payment_method', 'member_access').order('created_at', {
         ascending: true
       }) : Promise.resolve({
         data: []
@@ -496,17 +497,50 @@ export function AppHome() {
       });
       const [ownOrdersMeta, affiliateOrdersMeta, modulePaymentsMeta] = await Promise.all([ownOrdersMetaPromise, affiliateOrdersMetaPromise, modulePaymentsMetaPromise]);
 
-      // ✅ Combinar vendas próprias + comissões de afiliado + módulos
-      const allOrdersForMeta = [...(ownOrdersMeta.data || []), ...(affiliateOrdersMeta.data || []), ...(modulePaymentsMeta.data || [])];
+      // ✅ Combinar vendas próprias + comissões de afiliado + módulos com earning_amount/earning_currency
+      const allOrdersForMeta = [
+        // Vendas próprias - usar getActualCurrency
+        ...(ownOrdersMeta.data || []).map((order: any) => {
+          const actualCurrency = getActualCurrency(order);
+          const actualAmount = getActualAmount(order);
+          const earning_amount = calculateSellerEarning(actualAmount, actualCurrency);
+          return { ...order, earning_amount, earning_currency: actualCurrency, order_type: 'own' };
+        }),
+        // Comissões de afiliado - sempre KZ
+        ...(affiliateOrdersMeta.data || []).map((order: any) => ({
+          ...order,
+          earning_amount: parseFloat(order.affiliate_commission?.toString() || '0'),
+          earning_currency: 'KZ',
+          order_type: 'affiliate'
+        })),
+        // Pagamentos de módulos
+        ...(modulePaymentsMeta.data || []).map((mp: any) => {
+          const mpCurrency = mp.currency || 'KZ';
+          const grossAmount = parseFloat(mp.amount?.toString() || '0');
+          const netAmount = grossAmount * 0.92; // Módulos usam 8% fixo
+          return {
+            ...mp,
+            earning_amount: netAmount,
+            earning_currency: mpCurrency,
+            order_type: 'module'
+          };
+        })
+      ];
+      
+      // Para meta Kamba: converter tudo para KZ (é gamificação)
       let totalRevenueForMeta = 0;
       allOrdersForMeta.forEach(order => {
-        let amount = parseFloat(order.seller_commission?.toString() || order.affiliate_commission?.toString() || order.amount || '0');
-        if (order.currency && order.currency !== 'KZ') {
+        let amount = order.earning_amount || 0;
+        const currency = order.earning_currency || 'KZ';
+        if (currency !== 'KZ') {
           const exchangeRates: Record<string, number> = {
             'EUR': 1053,
-            'MZN': 14.3
+            'MZN': 14.3,
+            'USD': 900,
+            'GBP': 1150,
+            'BRL': 180
           };
-          const rate = exchangeRates[order.currency.toUpperCase()] || 1;
+          const rate = exchangeRates[currency.toUpperCase()] || 1;
           amount = Math.round(amount * rate);
         }
         totalRevenueForMeta += amount;
@@ -520,8 +554,9 @@ export function AppHome() {
       });
 
       // ✅ SEGUNDO: Buscar vendas COM FILTROS (produtos próprios + afiliados + módulos) - APENAS COMPLETED
-      let ownOrdersQuery = supabase.from('orders').select('amount, seller_commission, currency, created_at, payment_method, product_id, order_id, order_bump_data').in('product_id', productIds).eq('status', 'completed').neq('payment_method', 'member_access');
-      let affiliateOrdersQuery = supabase.from('orders').select('amount, affiliate_commission, currency, created_at, payment_method, order_id, order_bump_data').in('affiliate_code', affiliateCodes).eq('status', 'completed').neq('payment_method', 'member_access');
+      // Incluir original_amount e original_currency
+      let ownOrdersQuery = supabase.from('orders').select('amount, seller_commission, currency, created_at, payment_method, product_id, order_id, order_bump_data, original_amount, original_currency').in('product_id', productIds).eq('status', 'completed').neq('payment_method', 'member_access');
+      let affiliateOrdersQuery = supabase.from('orders').select('amount, affiliate_commission, currency, created_at, payment_method, order_id, order_bump_data, original_amount, original_currency').in('affiliate_code', affiliateCodes).eq('status', 'completed').neq('payment_method', 'member_access');
       let modulePaymentsQuery = supabase.from('module_payments').select('amount, currency, created_at, payment_method, order_id, member_area_id').in('member_area_id', memberAreaIds).eq('status', 'completed');
 
       // Aplicar filtros de tempo em todas as queries
@@ -584,7 +619,43 @@ export function AppHome() {
       }) : Promise.resolve({
         data: []
       })]);
-      const orders = [...(ownOrdersResult.data || []), ...(affiliateOrdersResult.data || []), ...(modulePaymentsResult.data || [])];
+      
+      // ✅ Combinar e calcular earning_amount/earning_currency IGUAL ao web (ModernDashboardHome)
+      const ordersWithEarnings = [
+        // Vendas próprias
+        ...(ownOrdersResult.data || []).map((order: any) => {
+          const actualCurrency = getActualCurrency(order);
+          const actualAmount = getActualAmount(order);
+          const earning_amount = calculateSellerEarning(actualAmount, actualCurrency);
+          return { ...order, earning_amount, earning_currency: actualCurrency, order_type: 'own' };
+        }),
+        // Comissões de afiliado - sempre KZ
+        ...(affiliateOrdersResult.data || []).map((order: any) => ({
+          ...order,
+          earning_amount: parseFloat(order.affiliate_commission?.toString() || '0'),
+          earning_currency: 'KZ',
+          order_type: 'affiliate'
+        })),
+        // Pagamentos de módulos
+        ...(modulePaymentsResult.data || []).map((mp: any) => {
+          const mpCurrency = mp.currency || 'KZ';
+          const grossAmount = parseFloat(mp.amount?.toString() || '0');
+          const netAmount = grossAmount * 0.92;
+          return {
+            ...mp,
+            earning_amount: netAmount,
+            earning_currency: mpCurrency,
+            order_type: 'module'
+          };
+        })
+      ];
+
+      // ✅ Filtrar por moeda selecionada (IGUAL ao web)
+      const filteredByMoeda = currencyFilter 
+        ? ordersWithEarnings.filter(order => order.earning_currency === currencyFilter)
+        : ordersWithEarnings;
+
+      // ✅ Calcular receita na moeda selecionada (SEM converter para KZ)
       let totalRevenue = 0;
       const dailySales: Record<string, {
         date: string;
@@ -609,19 +680,10 @@ export function AppHome() {
           revenue: 0
         };
       }
-      orders.forEach(order => {
-        // ✅ Usar comissão correta (seller ou affiliate)
-        let amount = parseFloat(order.seller_commission?.toString() || order.affiliate_commission?.toString() || order.amount || '0');
-
-        // Converter para KZ se necessário
-        if (order.currency && order.currency !== 'KZ') {
-          const exchangeRates: Record<string, number> = {
-            'EUR': 1053,
-            'MZN': 14.3
-          };
-          const rate = exchangeRates[order.currency.toUpperCase()] || 1;
-          amount = Math.round(amount * rate);
-        }
+      
+      filteredByMoeda.forEach(order => {
+        // ✅ Usar earning_amount já calculado (SEM conversão)
+        const amount = order.earning_amount || 0;
         totalRevenue += amount;
 
         // Agrupar por dia
@@ -635,7 +697,7 @@ export function AppHome() {
       // Preparar dados do gráfico
       const chartData = Object.values(dailySales);
       setStats({
-        totalSales: countTotalSales(orders),
+        totalSales: countTotalSales(filteredByMoeda),
         totalRevenue,
         totalProducts: activeProducts.length
       });
@@ -1415,10 +1477,10 @@ export function AppHome() {
             <div className="bg-card rounded-xl border border-border/40 shadow-sm flex overflow-hidden">
               <div className="w-1 bg-emerald-500 shrink-0" />
               <div className="flex-1 p-4">
-                <p className="text-xs text-muted-foreground mb-0.5">Receita Líquida ({currencyFilter})</p>
+                <p className="text-xs text-muted-foreground mb-0.5">Total em vendas ({currencyFilter})</p>
                 <div className="flex items-center justify-between">
                   <h2 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">
-                    {loading ? '...' : formatPriceForSeller(stats.totalRevenue, currencyFilter)}
+                    {loading ? '...' : `${formatWithMaxTwoDecimals(stats.totalRevenue)} ${currencyFilter}`}
                   </h2>
                 </div>
               </div>
