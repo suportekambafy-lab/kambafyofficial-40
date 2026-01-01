@@ -41,6 +41,7 @@ import { useOneSignal } from '@/hooks/useOneSignal';
 import { AppLiveView } from '@/components/app/AppLiveView';
 import { Radio } from 'lucide-react';
 import { getActualCurrency, getActualAmount, calculateSellerEarning } from '@/utils/currencyUtils';
+import { FinancialView } from '@/components/financial/FinancialView';
 
 const CURRENCIES = [
   { value: 'KZ', label: 'KZ' },
@@ -1055,98 +1056,12 @@ export function AppHome() {
               </div>}
           </div>;
       case 'stats':
-        return <div className="p-3 md:p-4 space-y-3 bg-background min-h-full">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-lg md:text-xl font-semibold text-foreground">Financeiro</h1>
-                <p className="text-muted-foreground text-xs">Gestão de saldo e saques</p>
-              </div>
-            </div>
-            
-            {/* Financial Cards */}
-            <div className="space-y-3">
-              {/* Available Balance Card */}
-              <div className="bg-card rounded-xl border border-border/40 shadow-sm flex overflow-hidden">
-                <div className="w-1 bg-emerald-500 shrink-0" />
-                <div className="flex-1 p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                        <Wallet className="h-4 w-4 text-emerald-600" />
-                      </div>
-                      <p className="text-xs text-muted-foreground font-medium">Disponível para Saque</p>
-                    </div>
-                    {financialData.availableBalance > 0 && (
-                      <Button 
-                        onClick={() => {
-                          triggerHaptic('medium');
-                          setShowWithdrawalModal(true);
-                        }} 
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white h-7 px-2.5 text-[10px]"
-                        size="sm"
-                      >
-                        Sacar
-                      </Button>
-                    )}
-                  </div>
-                  <div className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
-                    {formatPriceForSeller(financialData.availableBalance, 'KZ')}
-                  </div>
-                </div>
-              </div>
+        return (
+          <div className="bg-background min-h-full">
+            <FinancialView />
+          </div>
+        );
 
-              {/* Total Withdrawn Card */}
-              <div className="bg-card rounded-xl border border-border/40 shadow-sm flex overflow-hidden">
-                <div className="w-1 bg-blue-500 shrink-0" />
-                <div className="flex-1 p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                      <ArrowDownToLine className="h-4 w-4 text-blue-600" />
-                    </div>
-                    <p className="text-xs text-muted-foreground font-medium">Total de Saques</p>
-                  </div>
-                  <div className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
-                    {formatPriceForSeller(financialData.totalWithdrawn, 'KZ')}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Withdrawal History */}
-            <div className="bg-card rounded-xl border border-border/40 shadow-sm overflow-hidden">
-              <div className="p-4 border-b border-border/30">
-                <h3 className="font-semibold text-sm text-foreground">Histórico de Saques</h3>
-                <p className="text-xs text-muted-foreground">Últimas solicitações</p>
-              </div>
-              <div className="p-4">
-                {withdrawalHistory.length === 0 ? <div className="text-center py-6 text-muted-foreground">
-                    <ArrowDownToLine className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                    <p className="text-sm">Nenhum saque solicitado ainda</p>
-                  </div> : <div className="space-y-2">
-                    {withdrawalHistory.slice(0, 5).map(withdrawal => <div key={withdrawal.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-semibold text-foreground">
-                              {formatPriceForSeller(parseFloat(withdrawal.amount || '0'), 'KZ')}
-                            </span>
-                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${withdrawal.status === 'aprovado' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : withdrawal.status === 'rejeitado' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'}`}>
-                              {withdrawal.status === 'aprovado' ? 'Aprovado' : withdrawal.status === 'rejeitado' ? 'Rejeitado' : 'Pendente'}
-                            </span>
-                          </div>
-                          <p className="text-[11px] text-muted-foreground mt-0.5">
-                            {new Date(withdrawal.created_at).toLocaleDateString('pt-AO', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric'
-                      })}
-                          </p>
-                        </div>
-                      </div>)}
-                  </div>}
-              </div>
-            </div>
-          </div>;
       case 'my-courses':
         return <AppCourses onCourseSelect={(courseId, courseName) => {
           console.log('🎓 Curso selecionado:', {
@@ -1595,10 +1510,18 @@ export function AppHome() {
         </div>
       </nav>}
 
-      {/* Withdrawal Modal */}
-      <WithdrawalModal open={showWithdrawalModal} onOpenChange={setShowWithdrawalModal} availableBalance={financialData.availableBalance} onWithdrawalSuccess={() => {
-        loadStats();
-      }} />
+      {/* Withdrawal Modal (mantido para fluxos rápidos do app; no Financeiro usamos o modal da FinancialView) */}
+      {activeTab !== 'stats' && (
+        <WithdrawalModal
+          open={showWithdrawalModal}
+          onOpenChange={setShowWithdrawalModal}
+          availableBalance={financialData.availableBalance}
+          onWithdrawalSuccess={() => {
+            loadStats();
+          }}
+        />
+      )}
+
 
       {/* Course Viewer */}
       {selectedCourse && <>
