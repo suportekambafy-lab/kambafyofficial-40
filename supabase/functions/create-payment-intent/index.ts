@@ -218,54 +218,34 @@ Deno.serve(async (req) => {
 
     // Salvar ordem no banco com status "pending" para todos os métodos Stripe
     const orderStatus = 'pending';
-    
-    // CORREÇÃO CRÍTICA: Converter valores corretamente para KZ antes de salvar no banco
-    // Taxas de conversão para KZ (alinhadas com useGeoLocation)
-    const exchangeRates: Record<string, number> = {
-      'EUR': 1100, // 1 EUR = ~1100 KZ (atualizado)
-      'MZN': 14.3, // 1 MZN = ~14.3 KZ  
-      'USD': 825,  // 1 USD = ~825 KZ
-      'GBP': 1300, // 1 GBP = ~1300 KZ
-      'MXN': 45,   // 1 MXN = ~45 KZ
-      'CLP': 0.9   // 1 CLP = ~0.9 KZ
-    };
-    
-    let finalAmount: string;
-    let finalCurrency: string = 'KZ'; // SEMPRE KZ no banco
-    
-    console.log('🔍 PAYMENT INTENT - DADOS DE ENTRADA:', {
-      originalAmount,
-      originalCurrency,
-      convertedAmount,
-      targetCurrency,
-      stripeAmount: amount,
-      stripeCurrency: currency
-    });
-    
-    // LÓGICA CORRIGIDA - PRIORIDADE PARA CONVERSÃO DE MOEDA ESTRANGEIRA:
-    // 1. PRIMEIRA PRIORIDADE: Se há targetCurrency diferente de KZ E convertedAmount, usar conversão
-    if (targetCurrency && targetCurrency !== 'KZ' && convertedAmount && convertedAmount > 0) {
-      // Cliente está pagando em moeda estrangeira (EUR, MZN, USD) - CONVERTER PARA KZ
-      const rate = exchangeRates[targetCurrency] || 1;
-      const convertedValueToKZ = Math.round(convertedAmount * rate);
-      finalAmount = convertedValueToKZ.toString();
-      console.log(`💱 PAGAMENTO EM MOEDA ESTRANGEIRA: ${convertedAmount} ${targetCurrency} → ${finalAmount} KZ (taxa: ${rate})`);
-    } 
-    // 2. SEGUNDA PRIORIDADE: Cliente está pagando direto em KZ
-    else if (originalCurrency === 'KZ' && originalAmount && (!targetCurrency || targetCurrency === 'KZ')) {
-      finalAmount = originalAmount.toString();
-      console.log(`💰 PAGAMENTO DIRETO EM KZ: ${finalAmount} KZ`);
+
+    // ✅ MULTI-CURRENCY: salvar a venda na moeda original do pagamento (sem converter para KZ)
+    const targetCurrencyUpper = (targetCurrency || '').toString().toUpperCase();
+    const originalCurrencyUpper = (originalCurrency || '').toString().toUpperCase();
+    const stripeCurrencyUpper = (currency || '').toString().toUpperCase();
+
+    // Moeda de exibição/contabilização da venda (wallet)
+    const saleCurrency = targetCurrencyUpper || stripeCurrencyUpper || originalCurrencyUpper || 'KZ';
+
+    // Valor na moeda da venda
+    let saleAmountNumber: number;
+
+    // 1) Preferir o valor convertido para a moeda alvo (ex: EUR, MZN)
+    if (targetCurrencyUpper && typeof convertedAmount === 'number' && convertedAmount > 0) {
+      saleAmountNumber = convertedAmount;
+      console.log(`💱 Venda em moeda alvo: ${saleAmountNumber} ${saleCurrency}`);
     }
-    // 3. FALLBACK: converter do amount do Stripe para KZ
+    // 2) Se for KZ, usar o valor original do sistema
+    else if (saleCurrency === 'KZ' && typeof originalAmount === 'number' && originalAmount > 0) {
+      saleAmountNumber = originalAmount;
+      console.log(`💰 Venda em KZ: ${saleAmountNumber} ${saleCurrency}`);
+    }
+    // 3) Fallback: usar o valor do Stripe (em unidades, não centavos)
     else {
-      const stripeAmount = amount / 100; // Converter de centavos
-      const stripeCurrency = currency.toUpperCase();
-      const rate = exchangeRates[stripeCurrency] || 1;
-      const convertedValue = Math.round(stripeAmount * rate);
-      finalAmount = convertedValue.toString();
-      console.log(`💱 FALLBACK - Convertendo: ${stripeAmount} ${stripeCurrency} → ${finalAmount} KZ (taxa: ${rate})`);
+      saleAmountNumber = amount / 100;
+      console.log(`🧩 Fallback valor Stripe: ${saleAmountNumber} ${stripeCurrencyUpper} (registrando como ${saleCurrency})`);
     }
-    
+
     const orderData = {
       product_id: productId,
       order_id: orderId,
@@ -273,14 +253,21 @@ Deno.serve(async (req) => {
       customer_email: customerData.email,
       customer_phone: customerData.phone,
       customer_country: customerCountry || null,
-      amount: finalAmount,
-      currency: finalCurrency,
+
+      // Campos atuais usados em várias telas
+      amount: saleAmountNumber.toString(),
+      currency: saleCurrency,
+
+      // Campos de preservação (multi-moeda)
+      original_amount: saleAmountNumber,
+      original_currency: saleCurrency,
+
       payment_method: paymentMethod,
       status: orderStatus,
       user_id: product.user_id,
       stripe_payment_intent_id: paymentIntent.id,
       // Stripe payments = 9.99% platform fee (seller gets 90.01%)
-      seller_commission: parseFloat(finalAmount) * 0.9001 // 9.99% platform fee
+      seller_commission: saleAmountNumber * 0.9001
     };
 
     console.log('Saving order with corrected data:', orderData);
@@ -291,7 +278,7 @@ Deno.serve(async (req) => {
       .select('id')
       .eq('order_id', orderId)
       .maybeSingle();
-    
+
     let orderError = null;
     if (existingOrder) {
       // Atualizar ordem existente
@@ -299,9 +286,14 @@ Deno.serve(async (req) => {
         .from('orders')
         .update({
           stripe_payment_intent_id: paymentIntent.id,
-          amount: finalAmount,
-          currency: finalCurrency,
-          status: orderStatus
+          amount: orderData.amount,
+          currency: orderData.currency,
+          original_amount: orderData.original_amount,
+          original_currency: orderData.original_currency,
+          payment_method: paymentMethod,
+          status: orderStatus,
+          customer_country: customerCountry || null,
+          seller_commission: orderData.seller_commission,
         })
         .eq('order_id', orderId);
       orderError = error;
