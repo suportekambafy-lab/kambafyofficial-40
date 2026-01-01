@@ -9,6 +9,9 @@ const ANGOLA_PAYMENT_METHODS = ['express', 'multicaixa_express', 'reference', 'b
 // Métodos de pagamento moçambicanos - sempre MZN
 const MOZAMBIQUE_PAYMENT_METHODS = ['mpesa', 'emola', 'card_mz'];
 
+// Métodos de pagamento europeus (Stripe PT/EU) - nunca KZ, usar original_currency ou EUR
+const EUROPEAN_PAYMENT_METHODS = ['multibanco', 'mbway', 'klarna', 'klarna_uk', 'card', 'card_uk', 'apple_pay', 'google_pay'];
+
 /**
  * Determines the actual currency of a sale based on the payment method
  * This is necessary because older sales may have incorrect original_currency values
@@ -33,7 +36,19 @@ export const getActualCurrency = (sale: {
     return 'MZN';
   }
   
-  // Stripe/internacional: usar original_currency se disponível e válido
+  // Métodos europeus: usar original_currency se disponível e NÃO for KZ/AOA
+  // Se for KZ/AOA, é dado legado errado - assumir EUR
+  if (EUROPEAN_PAYMENT_METHODS.includes(paymentMethod)) {
+    const origCurrency = sale.original_currency || sale.currency || '';
+    const normalized = origCurrency === 'AOA' ? 'KZ' : origCurrency;
+    // Se moeda é KZ ou vazia para método europeu, é dado errado - assumir EUR
+    if (!normalized || normalized === 'KZ') {
+      return 'EUR';
+    }
+    return normalized;
+  }
+  
+  // Fallback: usar original_currency se disponível e válido
   const origCurrency = sale.original_currency || sale.currency || 'KZ';
   // Normalizar AOA para KZ
   return origCurrency === 'AOA' ? 'KZ' : origCurrency;
@@ -54,7 +69,23 @@ export const getActualAmount = (sale: {
   currency?: string | null;
 }): number => {
   const actualCurrency = getActualCurrency(sale);
+  const paymentMethod = (sale.payment_method || '').toLowerCase();
   const normalizedOrig = (sale.original_currency || '') === 'AOA' ? 'KZ' : (sale.original_currency || '');
+  
+  // Para métodos europeus com dados legados errados (KZ quando deveria ser EUR),
+  // usar original_amount se disponível (provavelmente é o valor correto em EUR)
+  if (EUROPEAN_PAYMENT_METHODS.includes(paymentMethod)) {
+    // Se original_amount existe e é um valor razoável para EUR (< 10000), usar
+    if (sale.original_amount != null) {
+      const origAmount = typeof sale.original_amount === 'number' 
+        ? sale.original_amount 
+        : parseFloat((sale.original_amount as any) || '0');
+      // Se o original_amount parece ser em EUR (valor baixo), usar
+      if (origAmount > 0 && origAmount < 10000) {
+        return origAmount;
+      }
+    }
+  }
   
   // Usar original_amount apenas se a moeda original corresponder à moeda real
   const shouldUseOriginal = sale.original_amount != null && normalizedOrig === actualCurrency;
@@ -76,4 +107,4 @@ export const calculateSellerEarning = (grossAmount: number, currency: string): n
   return grossAmount * (1 - commissionRate);
 };
 
-export { ANGOLA_PAYMENT_METHODS, MOZAMBIQUE_PAYMENT_METHODS };
+export { ANGOLA_PAYMENT_METHODS, MOZAMBIQUE_PAYMENT_METHODS, EUROPEAN_PAYMENT_METHODS };
