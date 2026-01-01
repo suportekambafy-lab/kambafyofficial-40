@@ -376,6 +376,8 @@ export const useStreamingQuery = () => {
               customer_phone,
               amount,
               currency,
+              original_amount,
+              original_currency,
               status,
               payment_method,
               created_at,
@@ -432,9 +434,9 @@ export const useStreamingQuery = () => {
             
             return {
               ...order,
-              // Preservar moeda e valor originais para exibição
-              original_amount: order.amount,
-              original_currency: order.currency,
+              // ✅ Usar campos original_amount/original_currency do BD se existirem, senão fallback
+              original_amount: order.original_amount || order.amount,
+              original_currency: order.original_currency || order.currency,
               products: productMap.get(order.product_id) || null,
               sale_type: isRecovered ? 'recovered' : 'own' // Marcar como recuperada ou própria
             };
@@ -544,6 +546,8 @@ export const useStreamingQuery = () => {
             customer_phone,
             amount,
             currency,
+            original_amount,
+            original_currency,
             status,
             payment_method,
             created_at,
@@ -585,9 +589,9 @@ export const useStreamingQuery = () => {
             
             return {
               ...order,
-              // Preservar moeda e valor originais para exibição
-              original_amount: order.amount,
-              original_currency: order.currency,
+              // ✅ Usar campos original_amount/original_currency do BD se existirem, senão fallback
+              original_amount: order.original_amount || order.amount,
+              original_currency: order.original_currency || order.currency,
               sale_type: 'affiliate' // Marcar como venda de afiliado
             };
           });
