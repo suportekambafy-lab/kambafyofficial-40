@@ -343,8 +343,8 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
               customer_name: customerData.name,
               customer_email: customerData.email,
               product_name: 'Produto Digital',
-              amount: amount.toString(),
-              currency: 'KZ',
+              amount: convertedAmount.toString(),
+              currency: currency, // ✅ Usar a moeda real (EUR, etc.)
               product_id: productId,
               payment_method: 'mbway',
               payment_intent_id: confirmResult.paymentIntent.id,
@@ -427,8 +427,8 @@ const StripeCardForm: React.FC<StripeCardFormProps> = ({
             customer_name: customerData.name,
             customer_email: customerData.email,
             product_name: 'Produto Digital',
-            amount: amount.toString(),
-            currency: 'KZ',
+            amount: convertedAmount.toString(),
+            currency: currency, // ✅ Usar a moeda real (EUR, etc.)
             product_id: productId,
             payment_method: 'multibanco',
             payment_intent_id: confirmResult.paymentIntent.id,

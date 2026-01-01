@@ -593,10 +593,15 @@ const Checkout = () => {
       // Verificar o status do pagamento e redirecionar adequadamente
       if (redirectStatus === 'succeeded' && orderId) {
         // Pagamento bem-sucedido, redirecionar para página de obrigado
+        // Buscar amount e currency da URL original
+        const returnAmount = urlParams.get('amount') || '0';
+        const returnCurrency = urlParams.get('currency') || 'EUR';
         const params = new URLSearchParams({
           order_id: orderId,
           payment_intent_id: paymentIntentId || '',
-          status: 'completed'
+          status: 'completed',
+          amount: returnAmount,
+          currency: returnCurrency
         });
         // ✅ STRIPE/KLARNA: Disparar evento do Facebook Pixel (pagamento já confirmado pelo gateway)
         const currentParams = new URLSearchParams(window.location.search);
@@ -664,11 +669,16 @@ const Checkout = () => {
           
           if (data?.status === 'succeeded') {
             // Pagamento bem-sucedido, redirecionar para página de obrigado
+            // Buscar amount e currency da URL original
+            const returnAmount = urlParams.get('amount') || '0';
+            const returnCurrency = urlParams.get('currency') || 'EUR';
             const params = new URLSearchParams({
               order_id: orderId || '',
               payment_intent_id: paymentIntentId || '',
               status: 'paid',
-              payment_method: 'mbway'
+              payment_method: 'mbway',
+              amount: returnAmount,
+              currency: returnCurrency
             });
             navigate(`/obrigado?${params.toString()}`);
           } else if (data?.status === 'canceled' || data?.status === 'requires_payment_method') {
