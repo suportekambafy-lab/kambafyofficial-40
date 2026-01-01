@@ -31,8 +31,9 @@ interface Order {
   affiliate_code?: string;
   affiliate_commission?: number;
   seller_commission?: number;
-  order_type?: 'own' | 'affiliate';
+  order_type?: 'own' | 'affiliate' | 'module';
   earning_amount?: number;
+  earning_currency?: string;
 }
 
 export function ModernDashboardHome() {
@@ -195,49 +196,51 @@ export function ModernDashboardHome() {
 
       // Combinar vendas próprias, comissões de afiliado E pagamentos de módulos
       const allOrdersWithEarnings = [
-        // Vendas próprias - usar comissão do vendedor ou converter vendas antigas
+        // Vendas próprias - usar comissão do vendedor na moeda original
         ...(ownOrders || []).map((order: any) => {
-          let earning_amount = parseFloat(order.seller_commission?.toString() || '0');
-          let earning_currency = 'KZ'; // seller_commission sempre está em KZ
+          // ✅ Usar original_currency/original_amount se disponível, senão currency/amount
+          const orderCurrency = order.original_currency || order.currency || 'KZ';
+          const orderAmount = parseFloat(order.original_amount?.toString() || order.amount?.toString() || '0');
           
-          if (earning_amount === 0) {
-            // ✅ Venda antiga sem comissão registrada - descontar 8% da plataforma
-            const grossAmount = parseFloat(order.amount || '0');
-            earning_amount = grossAmount * 0.92;
-            earning_currency = order.currency;
-          }
+          // Calcular comissão baseado na taxa correta por moeda
+          // Angola (KZ): 8.99%, Internacional: 9.99%
+          const commissionRate = orderCurrency === 'KZ' ? 0.0899 : 0.0999;
+          const earning_amount = orderAmount * (1 - commissionRate);
           
           return {
             ...order,
             earning_amount,
-            earning_currency,
+            earning_currency: orderCurrency, // ✅ Usar moeda original
             order_type: 'own'
           };
         }),
-        // Vendas como afiliado - usar apenas comissão do afiliado
+        // Vendas como afiliado - usar apenas comissão do afiliado (sempre em KZ)
         ...(affiliateOrders || []).map((order: any) => ({
           ...order,
           earning_amount: parseFloat(order.affiliate_commission?.toString() || '0'),
+          earning_currency: 'KZ',
           order_type: 'affiliate'
         })),
-        // ✅ Pagamentos de módulos - converter para formato compatível (descontando 8%)
+        // ✅ Pagamentos de módulos - converter para formato compatível
         ...(modulePayments || []).map((mp: any) => {
+          const mpCurrency = mp.currency || 'KZ';
           const grossAmount = parseFloat(mp.amount?.toString() || '0');
-          const netAmount = grossAmount * 0.92; // Descontar 8% da plataforma
+          // Módulos usam 8% fixo
+          const netAmount = grossAmount * 0.92;
           
           return {
             id: mp.id,
             order_id: mp.order_id,
-            amount: netAmount.toString(), // Valor líquido
-            currency: mp.currency || 'KZ',
+            amount: netAmount.toString(),
+            currency: mpCurrency,
             created_at: mp.created_at,
             status: mp.status,
             product_id: mp.module_id,
             customer_name: mp.student_name,
             customer_email: mp.student_email,
-            order_bump_data: null, // Módulos não têm order bumps
-            earning_amount: netAmount, // ✅ Valor líquido (já descontado 8%)
-            earning_currency: mp.currency || 'KZ',
+            order_bump_data: null,
+            earning_amount: netAmount,
+            earning_currency: mpCurrency,
             order_type: 'module'
           };
         })
@@ -275,9 +278,12 @@ export function ModernDashboardHome() {
       filtered = filtered.filter(order => order.product_id === selectedProduct);
     }
 
-    // Apply currency filter (normalize AOA to KZ)
+    // Apply currency filter based on earning_currency (normalize AOA to KZ)
     if (selectedCurrency !== 'all') {
-      filtered = filtered.filter(order => normalizeCurrency(order.currency) === selectedCurrency);
+      filtered = filtered.filter(order => {
+        const earningCurrency = normalizeCurrency(order.earning_currency || order.currency);
+        return earningCurrency === selectedCurrency;
+      });
     }
 
     // Apply time filter (include custom range)
