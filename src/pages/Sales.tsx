@@ -549,16 +549,26 @@ export default function Sales() {
     });
   };
   // ✅ Calcular estatísticas filtradas por moeda
-  // IMPORTANTE: Apenas vendas com original_currency preenchido são consideradas na moeda filtrada
-  // Vendas antigas sem original_currency são tratadas como KZ
+  // IMPORTANTE: Vendas genuínas em moeda estrangeira têm original_currency = currency (ambos iguais)
+  // Vendas antigas com original_currency diferente de currency são consideradas KZ
   const filteredStats = useMemo(() => {
     const currencyFilteredSales = sales.filter(sale => {
-      // Se não tem original_currency, é venda antiga → tratar como KZ
-      if (!sale.original_currency) {
-        return currencyFilter === 'KZ';
+      const origCurrency = sale.original_currency || 'KZ';
+      const baseCurrency = sale.currency || 'KZ';
+      
+      // Normalizar AOA → KZ
+      const normalizedOrig = origCurrency === 'AOA' ? 'KZ' : origCurrency;
+      const normalizedBase = baseCurrency === 'AOA' ? 'KZ' : baseCurrency;
+      
+      // Venda genuína na moeda: original_currency E currency devem ser iguais à moeda filtrada
+      // Isso evita vendas antigas onde original_currency foi preenchido incorretamente
+      if (currencyFilter === 'KZ') {
+        // Para KZ: inclui vendas onde base é KZ (independente do original)
+        return normalizedBase === 'KZ';
+      } else {
+        // Para outras moedas: ambos devem ser a moeda filtrada (vendas genuínas)
+        return normalizedOrig === currencyFilter && normalizedBase === currencyFilter;
       }
-      const normalizedCurrency = sale.original_currency === 'AOA' ? 'KZ' : sale.original_currency;
-      return normalizedCurrency === currencyFilter;
     });
     
     let paid = 0, pending = 0, cancelled = 0;
