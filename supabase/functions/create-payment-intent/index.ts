@@ -6,6 +6,20 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const formatMoney = (value: number, currencyCode: string): string => {
+  const upper = (currencyCode || '').toString().toUpperCase();
+  const iso = upper === 'KZ' ? 'AOA' : upper;
+
+  try {
+    return new Intl.NumberFormat('pt-PT', {
+      style: 'currency',
+      currency: iso,
+    }).format(value);
+  } catch {
+    return `${value.toFixed(2)} ${upper || 'KZ'}`;
+  }
+};
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -311,6 +325,50 @@ Deno.serve(async (req) => {
       console.error('Erro ao salvar ordem:', orderError);
     } else {
       console.log('Order saved/updated successfully with ID:', orderId);
+
+      // 🔔 OneSignal: referência Multibanco gerada (somente quando a ordem é criada, para evitar duplicados)
+      if (!existingOrder && paymentMethod === 'multibanco') {
+        try {
+          const { data: sellerProfile, error: sellerProfileError } = await supabase
+            .from('profiles')
+            .select('email, full_name')
+            .eq('user_id', product.user_id)
+            .single();
+
+          if (sellerProfileError) {
+            console.log('⚠️ Erro ao buscar perfil do vendedor (push):', sellerProfileError);
+          } else if (sellerProfile?.email) {
+            const commissionAmount = Number(orderData.seller_commission || 0);
+            const formattedCommission = formatMoney(commissionAmount, orderData.currency);
+
+            const { error: notificationError } = await supabase.functions.invoke('send-onesignal-notification', {
+              body: {
+                external_id: sellerProfile.email,
+                title: 'Kambafy - Referência gerada',
+                message: `Sua comissão: ${formattedCommission}`,
+                data: {
+                  type: 'reference_generated',
+                  order_id: orderData.order_id,
+                  amount: orderData.amount,
+                  seller_commission: orderData.seller_commission,
+                  currency: orderData.currency,
+                  customer_name: orderData.customer_name,
+                  product_name: product.name,
+                  url: 'https://mobile.kambafy.com/app'
+                }
+              }
+            });
+
+            if (notificationError) {
+              console.log('⚠️ Erro ao enviar push OneSignal (Multibanco):', notificationError);
+            } else {
+              console.log('✅ Push OneSignal (Multibanco) enviado para:', sellerProfile.email);
+            }
+          }
+        } catch (notifError) {
+          console.log('⚠️ Erro inesperado ao processar push OneSignal (Multibanco):', notifError);
+        }
+      }
     }
 
     const response = {
