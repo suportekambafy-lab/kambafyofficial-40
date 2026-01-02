@@ -404,9 +404,29 @@ export const useGeoLocation = () => {
     }
   };
 
-  const convertPrice = (priceInKZ: number, targetCountry?: CountryInfo, customPrices?: Record<string, string>): number => {
+  // Taxas de conversão entre moedas (base: 1 unidade da moeda origem)
+  const getCrossRate = (fromCurrency: string, toCurrency: string): number => {
+    if (fromCurrency === toCurrency) return 1;
+    
+    // Taxas aproximadas baseadas em valores reais
+    const rates: Record<string, Record<string, number>> = {
+      'EUR': { 'KZ': 950, 'MZN': 68, 'GBP': 0.85, 'USD': 1.08, 'MXN': 18.5, 'CLP': 1000, 'ARS': 950 },
+      'KZ': { 'EUR': 0.00105, 'MZN': 0.072, 'GBP': 0.00089, 'USD': 0.00114, 'MXN': 0.0195, 'CLP': 1.05, 'ARS': 1.0 },
+      'USD': { 'EUR': 0.93, 'KZ': 875, 'MZN': 63, 'GBP': 0.79, 'MXN': 17.2, 'CLP': 925, 'ARS': 880 },
+      'GBP': { 'EUR': 1.18, 'KZ': 1120, 'MZN': 80, 'USD': 1.27, 'MXN': 21.8, 'CLP': 1175, 'ARS': 1100 },
+      'MZN': { 'EUR': 0.015, 'KZ': 14, 'GBP': 0.0125, 'USD': 0.016, 'MXN': 0.27, 'CLP': 14.7, 'ARS': 14 },
+      'MXN': { 'EUR': 0.054, 'KZ': 51, 'GBP': 0.046, 'USD': 0.058, 'MZN': 3.7, 'CLP': 54, 'ARS': 51 },
+      'CLP': { 'EUR': 0.001, 'KZ': 0.95, 'GBP': 0.00085, 'USD': 0.00108, 'MZN': 0.068, 'MXN': 0.0185, 'ARS': 0.95 },
+      'ARS': { 'EUR': 0.00105, 'KZ': 1.0, 'GBP': 0.00091, 'USD': 0.00114, 'MZN': 0.071, 'MXN': 0.0196, 'CLP': 1.05 }
+    };
+    
+    return rates[fromCurrency]?.[toCurrency] || 1;
+  };
+
+  const convertPrice = (priceValue: number, targetCountry?: CountryInfo, customPrices?: Record<string, string>, sourceCurrency?: string): number => {
     const country = targetCountry || userCountry;
     
+    // Se há preço personalizado para o país, usar diretamente
     if (customPrices && customPrices[country.code]) {
       const customPrice = parseFloat(customPrices[country.code]);
       if (!isNaN(customPrice)) {
@@ -414,7 +434,15 @@ export const useGeoLocation = () => {
       }
     }
     
-    const convertedValue = priceInKZ * country.exchangeRate;
+    // Se a moeda de origem é a mesma do destino, retornar o valor original
+    const fromCurrency = sourceCurrency || 'KZ';
+    if (fromCurrency === country.currency) {
+      return priceValue;
+    }
+    
+    // Converter usando taxa cruzada
+    const rate = getCrossRate(fromCurrency, country.currency);
+    const convertedValue = priceValue * rate;
     let roundedValue = Math.round(convertedValue * 100) / 100;
     
     // Garantir mínimo de 1 para GBP e EUR
@@ -425,72 +453,65 @@ export const useGeoLocation = () => {
     return roundedValue;
   };
 
-  const formatPrice = (priceInKZ: number, targetCountry?: CountryInfo, customPrices?: Record<string, string>): string => {
+  const formatPrice = (priceValue: number, targetCountry?: CountryInfo, customPrices?: Record<string, string>, sourceCurrency?: string): string => {
     const country = targetCountry || userCountry;
     
     console.log('🔄 formatPrice DEBUG:', {
-      priceInKZ,
+      priceValue,
+      sourceCurrency,
       countryCode: country?.code,
-      currency: country?.currency,
-      exchangeRate: country?.exchangeRate,
+      targetCurrency: country?.currency,
       customPrices,
       hasCustomPrice: customPrices && customPrices[country?.code]
     });
     
+    // Se há preço personalizado para o país, usar diretamente
     if (customPrices && customPrices[country.code]) {
       const customPrice = parseFloat(customPrices[country.code]);
       
       if (!isNaN(customPrice)) {
         console.log('🔄 Using custom price:', customPrice);
-        switch (country.currency) {
-          case 'EUR':
-            return `€${customPrice.toFixed(2)}`;
-          case 'GBP':
-            return `£${customPrice.toFixed(2)}`;
-          case 'USD':
-            return `$${customPrice.toFixed(2)}`;
-          case 'MXN':
-            return `$${customPrice.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN`;
-          case 'CLP':
-            return `$${Math.round(customPrice).toLocaleString('es-CL')} CLP`;
-          case 'ARS':
-            const hasDecimalsCustomGeo = customPrice % 1 !== 0;
-            return hasDecimalsCustomGeo 
-              ? `$${customPrice.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ARS`
-              : `$${Math.round(customPrice).toLocaleString('es-AR')} ARS`;
-          case 'MZN':
-            return `${customPrice.toFixed(2)} MZN`;
-          case 'KZ':
-          default:
-            return `${parseFloat(customPrice.toString()).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KZ`;
-        }
+        return formatCurrencyValue(customPrice, country.currency);
       }
     }
     
-    const convertedPrice = convertPrice(priceInKZ, country);
-    console.log('🔄 Converted price:', convertedPrice, 'from', priceInKZ, '* rate', country?.exchangeRate);
+    // Se a moeda de origem é a mesma do destino, formatar diretamente
+    const fromCurrency = sourceCurrency || 'KZ';
+    if (fromCurrency === country.currency) {
+      console.log('🔄 Same currency, no conversion:', priceValue, fromCurrency);
+      return formatCurrencyValue(priceValue, country.currency);
+    }
     
-    switch (country?.currency) {
+    // Converter e formatar
+    const convertedPrice = convertPrice(priceValue, country, undefined, fromCurrency);
+    console.log('🔄 Converted price:', convertedPrice, 'from', priceValue, fromCurrency, 'to', country?.currency);
+    
+    return formatCurrencyValue(convertedPrice, country.currency);
+  };
+  
+  // Helper para formatar valor em moeda específica
+  const formatCurrencyValue = (value: number, currency: string): string => {
+    switch (currency) {
       case 'EUR':
-        return `€${convertedPrice.toFixed(2)}`;
+        return `€${value.toFixed(2)}`;
       case 'GBP':
-        return `£${convertedPrice.toFixed(2)}`;
+        return `£${value.toFixed(2)}`;
       case 'USD':
-        return `$${convertedPrice.toFixed(2)}`;
+        return `$${value.toFixed(2)}`;
       case 'MXN':
-        return `$${convertedPrice.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN`;
+        return `$${value.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN`;
       case 'CLP':
-        return `$${Math.round(convertedPrice).toLocaleString('es-CL')} CLP`;
+        return `$${Math.round(value).toLocaleString('es-CL')} CLP`;
       case 'ARS':
-        const hasDecimalsConvertedGeo = convertedPrice % 1 !== 0;
-        return hasDecimalsConvertedGeo 
-          ? `$${convertedPrice.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ARS`
-          : `$${Math.round(convertedPrice).toLocaleString('es-AR')} ARS`;
+        const hasDecimals = value % 1 !== 0;
+        return hasDecimals 
+          ? `$${value.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ARS`
+          : `$${Math.round(value).toLocaleString('es-AR')} ARS`;
       case 'MZN':
-        return `${convertedPrice.toFixed(2)} MZN`;
+        return `${value.toFixed(2)} MZN`;
       case 'KZ':
       default:
-        return `${parseFloat(convertedPrice.toString()).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KZ`;
+        return `${parseFloat(value.toString()).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KZ`;
     }
   };
 
