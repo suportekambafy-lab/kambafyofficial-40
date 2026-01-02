@@ -12,6 +12,7 @@ import { useLogin2FA } from '@/hooks/useLogin2FA';
 import TwoFactorVerification from '@/components/TwoFactorVerification';
 import KambafyLogo from '@/assets/kambafy-logo-gray.svg';
 import { motion } from 'framer-motion';
+import { SignUpWizard, SignUpData } from '@/components/auth/SignUpWizard';
 
 const sampleTestimonials: Testimonial[] = [
   {
@@ -47,10 +48,9 @@ const Auth = () => {
     password: string;
     fullName: string;
     country: string;
+    alreadySells?: boolean;
+    productTypes?: string[];
   } | null>(null);
-  
-  // Estado para país selecionado no signup
-  const [selectedCountry, setSelectedCountry] = useState('AO');
   
   // Estados para 2FA após login
   const [pending2FAData, setPending2FAData] = useState<{
@@ -236,18 +236,7 @@ const Auth = () => {
   };
 
 
-  const handleSignup = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const rawEmail = (formData.get('email') as string) || '';
-    const email = rawEmail.trim().toLowerCase();
-    const password = (formData.get('password') as string) || '';
-
-    if (!email || !password || !fullName) {
-      setErrorField("Por favor, preencha todos os campos.");
-      return;
-    }
-
+  const handleWizardComplete = async (data: SignUpData) => {
     setLoading(true);
     setErrorField('');
 
@@ -257,7 +246,7 @@ const Auth = () => {
 
       // Fazer o signup AGORA (mas ficará não-confirmado)
       console.log('🔄 Fazendo signup inicial...');
-      const { error: signupError } = await signUp(email, password, fullName);
+      const { error: signupError } = await signUp(data.email, data.password, data.fullName);
 
       if (signupError) {
         let message = "Ocorreu um erro. Tente novamente.";
@@ -271,6 +260,7 @@ const Auth = () => {
         }
 
         setErrorField(message);
+        setLoading(false);
         return;
       }
 
@@ -278,16 +268,20 @@ const Auth = () => {
 
       // Salvar dados para verificação e confirmação posterior
       setSignupData({
-        email,
-        password,
-        fullName,
-        country: selectedCountry
+        email: data.email,
+        password: data.password,
+        fullName: data.fullName,
+        country: data.country,
+        alreadySells: data.alreadySells,
+        productTypes: data.productTypes
       });
       setCurrentView('signup-verification');
       setErrorField('');
 
-      // Guardar país no localStorage para usar após confirmação
-      localStorage.setItem('signupCountry', selectedCountry);
+      // Guardar país e preferências no localStorage para usar após confirmação
+      localStorage.setItem('signupCountry', data.country);
+      localStorage.setItem('signupAlreadySells', data.alreadySells ? 'true' : 'false');
+      localStorage.setItem('signupProductTypes', JSON.stringify(data.productTypes));
 
     } catch (error) {
       console.error('Erro no processo de signup:', error);
@@ -584,134 +578,39 @@ const Auth = () => {
 
   if (currentView === 'signup') {
     return (
-      <div className="h-[100dvh] flex flex-col md:flex-row font-geist w-[100dvw]">
-        <section className="flex-1 flex items-center justify-center p-8">
-          <div className="w-full max-w-md">
-            <div className="flex flex-col gap-6">
-              <div className="animate-element animate-delay-50 flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                <button
-                  onClick={() => setCurrentView('login')}
-                  className="text-primary hover:underline"
-                >
-                  ← Voltar para login
-                </button>
-                <span>•</span>
-                <span>
-                  {selectedUserType === 'customer' ? 'Cadastro de Cliente' : 'Cadastro de Vendedor'}
-                </span>
-              </div>
-              
-              <h1 className="animate-element animate-delay-100 text-4xl md:text-5xl font-semibold leading-tight">
-                <span className="font-light text-foreground tracking-tighter">Criar Conta</span>
-              </h1>
-              <p className="animate-element animate-delay-200 text-muted-foreground">Preencha os dados para criar sua conta</p>
-
-              {errorField && (
-                <div className="animate-element animate-delay-250 p-4 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive text-sm">
-                  {errorField}
-                </div>
-              )}
-
-              <form className="space-y-5" onSubmit={handleSignup}>
-                <div className="animate-element animate-delay-300">
-                  <label className="text-sm font-medium text-muted-foreground">Nome Completo</label>
-                  <div className="rounded-2xl border border-border bg-foreground/5 backdrop-blur-sm transition-colors focus-within:border-violet-400/70 focus-within:bg-violet-500/10">
-                    <input 
-                      type="text"
-                      placeholder="Digite seu nome completo"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      className="w-full bg-transparent text-sm p-4 rounded-2xl focus:outline-none"
-                      style={{ fontSize: '16px' }}
-                      disabled={loading}
-                      required 
-                    />
-                  </div>
-                </div>
-
-                {/* Country Selector */}
-                <div className="animate-element animate-delay-350">
-                  <label className="text-sm font-medium text-muted-foreground">País</label>
-                  <select
-                    value={selectedCountry}
-                    onChange={(e) => setSelectedCountry(e.target.value)}
-                    className="w-full bg-foreground/5 text-sm p-4 rounded-2xl border border-border focus:outline-none focus:border-violet-400/70"
-                    style={{ fontSize: '16px' }}
-                    disabled={loading}
-                  >
-                    <option value="AO">🇦🇴 Angola (KZ)</option>
-                    <option value="MZ">🇲🇿 Moçambique (MZN)</option>
-                    <option value="PT">🇵🇹 Portugal (EUR)</option>
-                    <option value="ES">🇪🇸 Espanha (EUR)</option>
-                    <option value="BR">🇧🇷 Brasil (BRL)</option>
-                    <option value="GB">🇬🇧 Reino Unido (GBP)</option>
-                  </select>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Define a moeda base da sua conta
-                  </p>
-                </div>
-
-                <div className="animate-element animate-delay-400">
-                  <label className="text-sm font-medium text-muted-foreground">Endereço de Email</label>
-                  <div className="rounded-2xl border border-border bg-foreground/5 backdrop-blur-sm transition-colors focus-within:border-violet-400/70 focus-within:bg-violet-500/10">
-                    <input 
-                      name="email" 
-                      type="email" 
-                      placeholder="Digite seu endereço de email" 
-                      className="w-full bg-transparent text-sm p-4 rounded-2xl focus:outline-none"
-                      style={{ fontSize: '16px' }}
-                      disabled={loading}
-                      required 
-                    />
-                  </div>
-                </div>
-
-                <div className="animate-element animate-delay-450">
-                  <label className="text-sm font-medium text-muted-foreground">Senha</label>
-                  <div className="rounded-2xl border border-border bg-foreground/5 backdrop-blur-sm transition-colors focus-within:border-violet-400/70 focus-within:bg-violet-500/10">
-                    <input 
-                      name="password" 
-                      type="password" 
-                      placeholder="Crie uma senha segura" 
-                      className="w-full bg-transparent text-sm p-4 rounded-2xl focus:outline-none"
-                      style={{ fontSize: '16px' }}
-                      autoCapitalize="off"
-                      autoCorrect="off"
-                      spellCheck="false"
-                      disabled={loading}
-                      required 
-                    />
-                  </div>
-                </div>
-
-                <button 
-                  type="submit" 
-                  className="animate-element animate-delay-500 w-full rounded-2xl bg-primary py-4 font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
-                  disabled={loading}
-                >
-                  {loading ? "Criando conta..." : "Criar Conta"}
-                </button>
-              </form>
-
-              <p className="animate-element animate-delay-550 text-center text-sm text-muted-foreground">
-                Já tem uma conta? <a href="#" onClick={(e) => { e.preventDefault(); setCurrentView('login'); }} className="text-violet-400 hover:underline transition-colors">Fazer Login</a>
-              </p>
-            </div>
-          </div>
+      <div className="min-h-screen flex flex-col md:flex-row font-geist w-full overflow-x-hidden bg-background">
+        <section className="flex-1 flex items-center justify-center p-4 md:p-8 py-8">
+          <SignUpWizard
+            onComplete={handleWizardComplete}
+            onBack={() => setCurrentView('login')}
+            loading={loading}
+            error={errorField}
+          />
         </section>
 
         {sampleTestimonials.length > 0 && (
           <section className="hidden md:block flex-1 relative p-4">
-            <div className="animate-slide-right animate-delay-300 absolute inset-4 rounded-3xl bg-cover bg-center" style={{ backgroundImage: `url(${loginHeroImage})` }}></div>
+            <motion.div 
+              className="absolute inset-4 rounded-3xl bg-cover bg-center shadow-2xl" 
+              style={{ backgroundImage: `url(${loginHeroImage})` }}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+            />
             <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-4 px-8 w-full justify-center">
-              <div className={`animate-testimonial animate-delay-1000 flex items-start gap-3 rounded-3xl bg-card/40 dark:bg-zinc-800/40 backdrop-blur-xl border border-white/10 p-5 w-64`}>
+              <motion.div 
+                className="flex items-start gap-3 rounded-3xl bg-card/40 dark:bg-zinc-800/40 backdrop-blur-xl border border-white/10 p-5 w-64"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5, duration: 0.4 }}
+              >
                 <img src={sampleTestimonials[0].avatarSrc} className="h-10 w-10 object-cover rounded-2xl" alt="avatar" />
                 <div className="text-sm leading-snug">
                   <p className="flex items-center gap-1 font-medium">{sampleTestimonials[0].name}</p>
                   <p className="text-muted-foreground">{sampleTestimonials[0].handle}</p>
                   <p className="mt-1 text-foreground/80">{sampleTestimonials[0].text}</p>
                 </div>
-              </div>
+              </motion.div>
             </div>
           </section>
         )}
