@@ -102,51 +102,41 @@ export const formatPriceFromString = (
   return formatPrice(priceNumber, targetCountry, useToLocaleString, customPrices);
 };
 
-// Função específica para vendedores - sempre mostra em KZ original ou convertido
+// Função específica para vendedores - formata no currency informado (SEM conversão)
 export const formatPriceForSeller = (
   amount: number,
   currency: string = 'KZ',
   useToLocaleString: boolean = true
 ): string => {
-  // Se não é KZ, converter para KZ
-  let amountInKZ = amount;
-  
-  if (currency.toUpperCase() !== 'KZ') {
-    // Taxas de conversão para KZ (baseadas nas taxas reais do useGeoLocation)
-    const exchangeRates: Record<string, number> = {
-      'EUR': 1100, // 1 EUR = ~1100 KZ (aproximado - ajustado)
-      'GBP': 1300, // 1 GBP = ~1300 KZ (aproximado)
-      'MZN': 14.3  // 1 MZN = ~14.3 KZ (aproximado)
-    };
-    
-    const rate = exchangeRates[currency.toUpperCase()] || 1;
-    amountInKZ = Math.round(amount * rate);
+  const normalizedCurrency = (currency || 'KZ') === 'AOA' ? 'KZ' : (currency || 'KZ');
+  const code = normalizedCurrency.toUpperCase();
+  const formatted = formatWithMaxTwoDecimals(amount);
+
+  switch (code) {
+    case 'EUR':
+      return `€${formatted}`;
+    case 'GBP':
+      return `£${formatted}`;
+    case 'USD':
+      return `$${formatted}`;
+    case 'BRL':
+      return `R$${formatted}`;
+    case 'MZN':
+      return `${formatted} MZN`;
+    case 'KZ':
+      return `${formatted} KZ`;
+    default:
+      return `${formatted} ${code}`;
   }
-  
-  return `${formatWithMaxTwoDecimals(amountInKZ)} KZ`;
 };
 
-// Função específica para admin - mostra valor completo (com taxa) em KZ
+// Função específica para admin - formata no currency informado (SEM conversão)
 export const formatPriceForAdmin = (
   amount: number,
   currency: string = 'KZ',
   useToLocaleString: boolean = true
 ): string => {
-  // Se não é KZ, converter para KZ
-  let amountInKZ = amount;
-  
-  if (currency.toUpperCase() !== 'KZ') {
-    const exchangeRates: Record<string, number> = {
-      'EUR': 1053,
-      'GBP': 1250,
-      'MZN': 14.3
-    };
-    
-    const rate = exchangeRates[currency.toUpperCase()] || 1;
-    amountInKZ = Math.round(amount * rate);
-  }
-  
-  return `${formatWithMaxTwoDecimals(amountInKZ)} KZ`;
+  return formatPriceForSeller(amount, currency, useToLocaleString);
 };
 
 // Helper para obter o texto do intervalo de assinatura

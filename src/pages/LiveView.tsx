@@ -433,7 +433,7 @@ export default function LiveView() {
                       <span className="text-sm truncate max-w-[200px] text-foreground">{product.name}</span>
                       <div className="flex items-center gap-4">
                         <span className="text-sm text-muted-foreground">{product.sales} vendas</span>
-                        <span className="text-sm font-medium text-foreground">{formatPriceForSeller(product.revenue, 'KZ')}</span>
+                        <span className="text-sm font-medium text-foreground">{formatPriceForSeller(product.revenue, currencyLabel)}</span>
                       </div>
                     </div>)}
                 </div>
