@@ -5,7 +5,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { useKambaLevels, KAMBA_LEVELS } from "@/hooks/useKambaLevels";
+import { useKambaLevels } from "@/hooks/useKambaLevels";
 import { usePreferredCurrency } from "@/hooks/usePreferredCurrency";
 import { X, Lock, LockOpen, Target, ChevronLeft, ChevronRight } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
@@ -17,16 +17,6 @@ interface KambaLevelsModalProps {
   onOpenChange: (open: boolean) => void;
   totalRevenue: number;
 }
-
-// Taxas de conversão de KZ para outras moedas
-const RATES_FROM_KZ: Record<string, number> = {
-  EUR: 0.00095,
-  MZN: 0.0722,
-  GBP: 0.0008,
-  USD: 0.0011,
-  BRL: 0.0056,
-  KZ: 1,
-};
 
 export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
   open,
@@ -50,26 +40,20 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
     }
   };
 
-  const convertFromKZ = (valueKZ: number) => {
-    return valueKZ * (RATES_FROM_KZ[displayCurrency] ?? 1);
-  };
-
   const formatCurrency = (value: number) => {
-    const converted = convertFromKZ(value);
-    const parts = converted.toFixed(2).split('.');
+    const parts = value.toFixed(2).split('.');
     const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
     const decimalPart = parts[1];
     return `${integerPart},${decimalPart} ${displayCurrency}`;
   };
 
   const formatCurrencyShort = (value: number) => {
-    const converted = convertFromKZ(value);
-    if (converted >= 1000000) {
-      return `${(converted / 1000000).toFixed(1)}M ${displayCurrency}`;
-    } else if (converted >= 1000) {
-      return `${Math.round(converted / 1000)}K ${displayCurrency}`;
+    if (value >= 1000000) {
+      return `${(value / 1000000).toFixed(1)}M ${displayCurrency}`;
+    } else if (value >= 1000) {
+      return `${Math.round(value / 1000)}K ${displayCurrency}`;
     } else {
-      return `${Math.round(converted)} ${displayCurrency}`;
+      return `${Math.round(value)} ${displayCurrency}`;
     }
   };
 
