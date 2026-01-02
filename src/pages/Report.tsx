@@ -8,8 +8,10 @@ import { SubdomainLink } from "@/components/SubdomainLink";
 import { AlertCircle, CheckCircle2, ShieldAlert, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useTranslation } from "@/contexts/TranslationContext";
 
 const Report = () => {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -23,12 +25,12 @@ const Report = () => {
   });
 
   const categories = [
-    'Produto fraudulento',
-    'Conteúdo pirata',
-    'Golpe/Burla',
-    'Informações enganosas',
-    'Violação de direitos autorais',
-    'Outro'
+    { value: 'fraud', label: t('report.catFraud') },
+    { value: 'piracy', label: t('report.catPiracy') },
+    { value: 'scam', label: t('report.catScam') },
+    { value: 'misleading', label: t('report.catMisleading') },
+    { value: 'copyright', label: t('report.catCopyright') },
+    { value: 'other', label: t('report.catOther') }
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -36,7 +38,6 @@ const Report = () => {
     setIsSubmitting(true);
 
     try {
-      // Insert report into database
       const { data: reportData, error: insertError } = await supabase
         .from('reports')
         .insert({
@@ -45,7 +46,7 @@ const Report = () => {
           reported_url: formData.reportedUrl,
           category: formData.category,
           description: formData.description,
-          ip_address: null, // Will be captured server-side if needed
+          ip_address: null,
           user_agent: navigator.userAgent
         })
         .select('id')
@@ -53,14 +54,13 @@ const Report = () => {
 
       if (insertError) {
         console.error('Error inserting report:', insertError);
-        throw new Error('Erro ao enviar denúncia. Tente novamente.');
+        throw new Error(t('report.errorMessage'));
       }
 
       console.log('Report inserted:', reportData);
       const reportId = reportData.id;
       const protocol = reportId.substring(0, 8).toUpperCase();
 
-      // Send emails via edge function
       const { error: emailError } = await supabase.functions.invoke('send-report-email', {
         body: {
           reportId,
@@ -74,16 +74,15 @@ const Report = () => {
 
       if (emailError) {
         console.error('Error sending emails:', emailError);
-        // Don't throw - report was saved, just notify about email issue
         toast({
-          title: "Denúncia registrada",
-          description: "Sua denúncia foi registrada, mas houve um problema ao enviar o email de confirmação.",
+          title: t('report.registeredTitle'),
+          description: t('report.registeredEmailError'),
           variant: "default"
         });
       } else {
         toast({
-          title: "Denúncia enviada com sucesso",
-          description: "Vamos analisar sua denúncia em até 48 horas."
+          title: t('report.sentTitle'),
+          description: t('report.sentMessage')
         });
       }
 
@@ -92,8 +91,8 @@ const Report = () => {
     } catch (error: any) {
       console.error('Error submitting report:', error);
       toast({
-        title: "Erro ao enviar denúncia",
-        description: error.message || "Ocorreu um erro. Tente novamente.",
+        title: t('report.errorTitle'),
+        description: error.message || t('report.errorMessage'),
         variant: "destructive"
       });
     } finally {
@@ -111,16 +110,16 @@ const Report = () => {
   const copyProtocol = () => {
     navigator.clipboard.writeText(protocolNumber);
     toast({
-      title: "Copiado!",
-      description: "Número do protocolo copiado para a área de transferência."
+      title: t('report.copiedTitle'),
+      description: t('report.copiedMessage')
     });
   };
 
   return (
     <>
       <SEO 
-        title="Denuncie - Kambafy" 
-        description="Denuncie fraudes, burlas e conteúdos suspeitos na plataforma Kambafy" 
+        title={t('report.seoTitle')} 
+        description={t('report.seoDescription')} 
       />
       
       <div className="min-h-screen bg-background">
@@ -131,7 +130,7 @@ const Report = () => {
               <img src="/kambafy-logo-green.png" alt="Kambafy" className="h-16 w-auto" />
             </SubdomainLink>
             <SubdomainLink to="/">
-              <Button variant="ghost">Voltar à Página Inicial</Button>
+              <Button variant="ghost">{t('report.backHome')}</Button>
             </SubdomainLink>
           </div>
         </header>
@@ -144,9 +143,9 @@ const Report = () => {
                 <div className="inline-flex items-center justify-center w-16 h-16 bg-destructive/10 rounded-full mb-4">
                   <ShieldAlert className="w-8 h-8 text-destructive" />
                 </div>
-                <h1 className="font-bold mb-4 text-xl">Denuncie Conteúdo Suspeito</h1>
+                <h1 className="font-bold mb-4 text-xl">{t('report.title')}</h1>
                 <p className="text-muted-foreground max-w-2xl mx-auto text-base">
-                  Ajude-nos a manter a Kambafy segura. Se encontrou algo suspeito, fraudulento ou que viole nossas políticas, denuncie aqui.
+                  {t('report.subtitle')}
                 </p>
               </div>
 
@@ -154,16 +153,16 @@ const Report = () => {
               <div className="grid md:grid-cols-2 gap-4 mb-8">
                 <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
                   <AlertCircle className="w-5 h-5 text-blue-500 mb-2" />
-                  <h3 className="font-semibold text-sm mb-1">Confidencialidade</h3>
+                  <h3 className="font-semibold text-sm mb-1">{t('report.confidentiality')}</h3>
                   <p className="text-xs text-muted-foreground">
-                    Suas informações serão mantidas confidenciais e usadas apenas para investigação.
+                    {t('report.confidentialityDesc')}
                   </p>
                 </div>
                 <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
                   <CheckCircle2 className="w-5 h-5 text-green-500 mb-2" />
-                  <h3 className="font-semibold text-sm mb-1">Análise em 48h</h3>
+                  <h3 className="font-semibold text-sm mb-1">{t('report.analysis48h')}</h3>
                   <p className="text-xs text-muted-foreground">
-                    Analisamos todas as denúncias em até 48 horas úteis.
+                    {t('report.analysis48hDesc')}
                   </p>
                 </div>
               </div>
@@ -172,19 +171,19 @@ const Report = () => {
               <form onSubmit={handleSubmit} className="bg-card border border-border rounded-lg p-8">
                 <div className="space-y-6">
                   <div>
-                    <Label htmlFor="reporterName">Seu Nome (Opcional)</Label>
+                    <Label htmlFor="reporterName">{t('report.yourName')}</Label>
                     <Input 
                       id="reporterName" 
                       name="reporterName" 
                       value={formData.reporterName} 
                       onChange={handleChange} 
-                      placeholder="Digite seu nome" 
+                      placeholder={t('report.yourNamePlaceholder')} 
                       className="mt-2" 
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="reporterEmail">Seu Email *</Label>
+                    <Label htmlFor="reporterEmail">{t('report.yourEmail')}</Label>
                     <Input 
                       id="reporterEmail" 
                       name="reporterEmail" 
@@ -196,25 +195,25 @@ const Report = () => {
                       required 
                     />
                     <p className="text-xs text-muted-foreground mt-1">
-                      Usado apenas para atualizações sobre sua denúncia
+                      {t('report.emailUsage')}
                     </p>
                   </div>
 
                   <div>
-                    <Label htmlFor="reportedUrl">URL ou Nome do Produto/Vendedor *</Label>
+                    <Label htmlFor="reportedUrl">{t('report.urlLabel')}</Label>
                     <Input 
                       id="reportedUrl" 
                       name="reportedUrl" 
                       value={formData.reportedUrl} 
                       onChange={handleChange} 
-                      placeholder="https://kambafy.com/produto/exemplo ou @username" 
+                      placeholder={t('report.urlPlaceholder')} 
                       className="mt-2" 
                       required 
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="category">Categoria da Denúncia *</Label>
+                    <Label htmlFor="category">{t('report.categoryLabel')}</Label>
                     <select 
                       id="category" 
                       name="category" 
@@ -223,26 +222,26 @@ const Report = () => {
                       className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" 
                       required
                     >
-                      <option value="">Selecione uma categoria</option>
+                      <option value="">{t('report.selectCategory')}</option>
                       {categories.map(cat => (
-                        <option key={cat} value={cat}>{cat}</option>
+                        <option key={cat.value} value={cat.value}>{cat.label}</option>
                       ))}
                     </select>
                   </div>
 
                   <div>
-                    <Label htmlFor="description">Descrição Detalhada *</Label>
+                    <Label htmlFor="description">{t('report.descriptionLabel')}</Label>
                     <Textarea 
                       id="description" 
                       name="description" 
                       value={formData.description} 
                       onChange={handleChange} 
-                      placeholder="Descreva o problema em detalhes. Inclua evidências, capturas de tela ou qualquer informação relevante." 
+                      placeholder={t('report.descriptionPlaceholder')} 
                       className="mt-2 min-h-[150px]" 
                       required 
                     />
                     <p className="text-xs text-muted-foreground mt-1">
-                      Mínimo 50 caracteres. Quanto mais detalhes, melhor.
+                      {t('report.minChars')}
                     </p>
                   </div>
 
@@ -251,19 +250,19 @@ const Report = () => {
                     className="w-full" 
                     disabled={isSubmitting || formData.description.length < 50}
                   >
-                    {isSubmitting ? "Enviando..." : "Enviar Denúncia"}
+                    {isSubmitting ? t('report.submitting') : t('report.submit')}
                   </Button>
                 </div>
               </form>
 
               {/* Additional Info */}
               <div className="mt-8 bg-muted/50 rounded-lg p-6">
-                <h3 className="font-semibold mb-2">O que acontece após denunciar?</h3>
+                <h3 className="font-semibold mb-2">{t('report.whatHappens')}</h3>
                 <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li>• Nossa equipe receberá e analisará sua denúncia</li>
-                  <li>• Investigaremos o conteúdo reportado em até 48 horas</li>
-                  <li>• Se confirmada a violação, tomaremos medidas apropriadas</li>
-                  <li>• Você receberá uma atualização por email sobre o resultado</li>
+                  <li>• {t('report.step1')}</li>
+                  <li>• {t('report.step2')}</li>
+                  <li>• {t('report.step3')}</li>
+                  <li>• {t('report.step4')}</li>
                 </ul>
               </div>
             </>
@@ -272,14 +271,14 @@ const Report = () => {
               <div className="inline-flex items-center justify-center w-20 h-20 bg-green-500/10 rounded-full mb-6">
                 <CheckCircle2 className="w-10 h-10 text-green-500" />
               </div>
-              <h2 className="text-3xl font-bold mb-4">Denúncia Recebida!</h2>
+              <h2 className="text-3xl font-bold mb-4">{t('report.successTitle')}</h2>
               <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                Obrigado por ajudar a manter a Kambafy segura. Vamos analisar sua denúncia e entraremos em contato em até 48 horas.
+                {t('report.successMessage')}
               </p>
               
               {/* Protocol Number */}
               <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-6 max-w-sm mx-auto mb-8">
-                <p className="text-sm text-muted-foreground mb-2">Número do Protocolo</p>
+                <p className="text-sm text-muted-foreground mb-2">{t('report.protocolNumber')}</p>
                 <div className="flex items-center justify-center gap-2">
                   <span className="text-2xl font-bold font-mono text-green-600">#{protocolNumber}</span>
                   <Button 
@@ -292,7 +291,7 @@ const Report = () => {
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">
-                  Guarde este número para acompanhar sua denúncia
+                  {t('report.saveProtocol')}
                 </p>
               </div>
               
@@ -310,10 +309,10 @@ const Report = () => {
                     });
                   }}
                 >
-                  Fazer Outra Denúncia
+                  {t('report.makeAnother')}
                 </Button>
                 <SubdomainLink to="/">
-                  <Button variant="outline">Voltar à Página Inicial</Button>
+                  <Button variant="outline">{t('report.backHome')}</Button>
                 </SubdomainLink>
               </div>
             </div>

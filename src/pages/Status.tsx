@@ -1,36 +1,38 @@
-
 import { PageLayout } from "@/components/PageLayout";
 import { CheckCircle, AlertCircle, Clock } from 'lucide-react';
+import { useTranslation } from "@/contexts/TranslationContext";
 
 const Status = () => {
+  const { t } = useTranslation();
+
   const services = [
-    { name: "Plataforma Principal", status: "operational", uptime: "99.9%" },
-    { name: "Sistema de Pagamentos", status: "operational", uptime: "99.8%" },
-    { name: "Upload de Conteúdo", status: "operational", uptime: "99.7%" },
-    { name: "API", status: "maintenance", uptime: "99.5%" },
-    { name: "Suporte ao Cliente", status: "operational", uptime: "100%" }
+    { name: t('status.mainPlatform'), status: "operational", uptime: "99.9%" },
+    { name: t('status.paymentSystem'), status: "operational", uptime: "99.8%" },
+    { name: t('status.contentUpload'), status: "operational", uptime: "99.7%" },
+    { name: t('status.api'), status: "maintenance", uptime: "99.5%" },
+    { name: t('status.customerSupport'), status: "operational", uptime: "100%" }
   ];
 
   const incidents = [
     {
       date: "01 Jul 2025",
-      title: "Manutenção Programada da API",
-      description: "Manutenção de rotina para melhorar a performance da API.",
-      status: "Em andamento",
+      title: t('status.incident1.title'),
+      description: t('status.incident1.description'),
+      status: t('status.inProgress'),
       severity: "low"
     },
     {
       date: "28 Jun 2025",
-      title: "Problema Resolvido - Lentidão nos Uploads",
-      description: "Identificamos e corrigimos um problema que causava lentidão no upload de vídeos.",
-      status: "Resolvido",
+      title: t('status.incident2.title'),
+      description: t('status.incident2.description'),
+      status: t('status.resolved'),
       severity: "medium"
     },
     {
       date: "25 Jun 2025",
-      title: "Atualização de Segurança",
-      description: "Implementação de novas medidas de segurança na plataforma.",
-      status: "Concluído",
+      title: t('status.incident3.title'),
+      description: t('status.incident3.description'),
+      status: t('status.completed'),
       severity: "low"
     }
   ];
@@ -51,13 +53,13 @@ const Status = () => {
   const getStatusText = (status: string) => {
     switch (status) {
       case 'operational':
-        return 'Operacional';
+        return t('status.operational');
       case 'maintenance':
-        return 'Manutenção';
+        return t('status.maintenance');
       case 'incident':
-        return 'Incidente';
+        return t('status.incident');
       default:
-        return 'Operacional';
+        return t('status.operational');
     }
   };
 
@@ -74,21 +76,27 @@ const Status = () => {
     }
   };
 
+  const getIncidentStatusColor = (status: string) => {
+    if (status === t('status.resolved')) return 'bg-green-100 text-green-700';
+    if (status === t('status.inProgress')) return 'bg-orange-100 text-orange-700';
+    return 'bg-blue-100 text-blue-700';
+  };
+
   return (
-    <PageLayout title="Status da Plataforma">
+    <PageLayout title={t('status.pageTitle')}>
       <div className="space-y-6 sm:space-y-8 px-4">
         <div className="text-center">
           <div className="inline-flex items-center space-x-2 bg-green-50 text-green-700 px-3 sm:px-4 py-2 rounded-full border border-green-200">
             <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="text-sm sm:text-base font-medium">Todos os sistemas operacionais</span>
+            <span className="text-sm sm:text-base font-medium">{t('status.allOperational')}</span>
           </div>
           <p className="text-xs sm:text-sm text-muted-foreground mt-3 sm:mt-4">
-            Última atualização: {new Date().toLocaleString('pt-BR')}
+            {t('status.lastUpdate')} {new Date().toLocaleString('pt-BR')}
           </p>
         </div>
 
         <div>
-          <h3 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6">Status dos Serviços</h3>
+          <h3 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6">{t('status.servicesTitle')}</h3>
           <div className="space-y-3 sm:space-y-4">
             {services.map((service, index) => (
               <div key={index} className="flex items-center justify-between p-3 sm:p-4 bg-background border border-gray-200 rounded-lg">
@@ -103,8 +111,8 @@ const Status = () => {
                 </div>
                 <div className="text-right">
                   <p className="text-sm sm:text-base font-medium text-checkout-green">{service.uptime}</p>
-                  <p className="text-xs text-muted-foreground hidden sm:block">Uptime 30 dias</p>
-                  <p className="text-xs text-muted-foreground sm:hidden">30d</p>
+                  <p className="text-xs text-muted-foreground hidden sm:block">{t('status.uptime30days')}</p>
+                  <p className="text-xs text-muted-foreground sm:hidden">{t('status.uptime30daysShort')}</p>
                 </div>
               </div>
             ))}
@@ -112,7 +120,7 @@ const Status = () => {
         </div>
 
         <div>
-          <h3 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6">Histórico de Incidentes</h3>
+          <h3 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6">{t('status.incidentHistory')}</h3>
           <div className="space-y-3 sm:space-y-4">
             {incidents.map((incident, index) => (
               <div key={index} className={`p-4 sm:p-6 rounded-lg border ${getSeverityColor(incident.severity)}`}>
@@ -121,11 +129,7 @@ const Status = () => {
                   <span className="text-xs text-muted-foreground mt-1 sm:mt-0">{incident.date}</span>
                 </div>
                 <p className="text-xs sm:text-sm text-muted-foreground mb-2">{incident.description}</p>
-                <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${
-                  incident.status === 'Resolvido' ? 'bg-green-100 text-green-700' :
-                  incident.status === 'Em andamento' ? 'bg-orange-100 text-orange-700' :
-                  'bg-blue-100 text-blue-700'
-                }`}>
+                <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${getIncidentStatusColor(incident.status)}`}>
                   {incident.status}
                 </span>
               </div>
@@ -134,16 +138,16 @@ const Status = () => {
         </div>
 
         <div className="bg-checkout-green/5 border border-checkout-green/20 rounded-2xl p-6 text-center">
-          <h3 className="text-lg font-semibold mb-3">Receba Atualizações</h3>
+          <h3 className="text-lg font-semibold mb-3">{t('status.updatesTitle')}</h3>
           <p className="text-muted-foreground mb-4">
-            Mantenha-se informado sobre o status da plataforma em tempo real.
+            {t('status.updatesDescription')}
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button className="px-4 py-2 bg-checkout-green text-white rounded-lg hover:bg-checkout-green/90">
-              Seguir no Twitter
+              {t('status.followTwitter')}
             </button>
             <button className="px-4 py-2 border border-checkout-green text-checkout-green rounded-lg hover:bg-checkout-green/10">
-              RSS Feed
+              {t('status.rssFeed')}
             </button>
           </div>
         </div>
