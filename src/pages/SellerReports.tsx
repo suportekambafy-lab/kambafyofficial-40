@@ -21,6 +21,7 @@ import { format } from 'date-fns';
 import { getCountryByPaymentMethod } from '@/utils/paymentMethods';
 import { pt } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { usePreferredCurrency } from '@/hooks/usePreferredCurrency';
 interface OrderBumpData {
   bump_product_id?: string;
   bump_product_name?: string;
@@ -77,6 +78,8 @@ export default function SellerReports() {
   const {
     toast
   } = useToast();
+  const { preferredCurrency } = usePreferredCurrency();
+  const currencyLabel = preferredCurrency || 'KZ';
   const [sales, setSales] = useState<Sale[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -472,8 +475,8 @@ export default function SellerReports() {
     rows.push(['=== RESUMO ===']);
     rows.push(['Total de Vendas', stats.total.toString()]);
     rows.push(['Vendas Aprovadas', stats.completed.toString()]);
-    rows.push(['Receita Total', formatPriceForSeller(stats.totalRevenue, 'KZ')]);
-    rows.push(['Ticket Médio', formatPriceForSeller(stats.avgTicket, 'KZ')]);
+    rows.push(['Receita Total', formatPriceForSeller(stats.totalRevenue, currencyLabel)]);
+    rows.push(['Ticket Médio', formatPriceForSeller(stats.avgTicket, currencyLabel)]);
     rows.push(['Taxa de Conversão', `${stats.conversionRate}%`]);
     const csvContent = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
     const blob = new Blob([csvContent], {
@@ -606,7 +609,7 @@ export default function SellerReports() {
             <div className="space-y-1">
               <p className="text-xs text-muted-foreground">Receita Total</p>
               <p className="text-base md:text-lg font-bold text-green-600 truncate">
-                {formatPriceForSeller(stats.totalRevenue, 'KZ')}
+                {formatPriceForSeller(stats.totalRevenue, currencyLabel)}
               </p>
               <div className={`flex items-center text-xs ${stats.revenueTrend >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {stats.revenueTrend >= 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
@@ -633,7 +636,7 @@ export default function SellerReports() {
           <CardContent className="p-3">
             <p className="text-xs text-muted-foreground">Ticket Médio</p>
             <p className="text-base md:text-lg font-bold text-primary truncate">
-              {formatPriceForSeller(stats.avgTicket, 'KZ')}
+              {formatPriceForSeller(stats.avgTicket, currencyLabel)}
             </p>
           </CardContent>
         </Card>
@@ -795,7 +798,7 @@ export default function SellerReports() {
                   <div className="space-y-1">
                     <p className="text-xs text-muted-foreground">Vendas Diretas</p>
                     <p className="text-base md:text-lg font-bold text-blue-600">{affiliateStats.directSales}</p>
-                    <p className="text-xs text-green-600">{formatPriceForSeller(affiliateStats.directRevenue, 'KZ')}</p>
+                    <p className="text-xs text-green-600">{formatPriceForSeller(affiliateStats.directRevenue, currencyLabel)}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -805,7 +808,7 @@ export default function SellerReports() {
                   <div className="space-y-1">
                     <p className="text-xs text-muted-foreground">Via Afiliados</p>
                     <p className="text-base md:text-lg font-bold text-purple-600">{affiliateStats.affiliateSales}</p>
-                    <p className="text-xs text-green-600">{formatPriceForSeller(affiliateStats.affiliateRevenue, 'KZ')}</p>
+                    <p className="text-xs text-green-600">{formatPriceForSeller(affiliateStats.affiliateRevenue, currencyLabel)}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -814,7 +817,7 @@ export default function SellerReports() {
                 <CardContent className="p-3">
                   <div className="space-y-1">
                     <p className="text-xs text-muted-foreground">Comissões Pagas</p>
-                    <p className="text-base md:text-lg font-bold text-orange-600">{formatPriceForSeller(affiliateStats.totalCommissions, 'KZ')}</p>
+                    <p className="text-base md:text-lg font-bold text-orange-600">{formatPriceForSeller(affiliateStats.totalCommissions, currencyLabel)}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -870,7 +873,7 @@ export default function SellerReports() {
                             </div>
                             <div className="flex items-center gap-3 text-sm">
                               <span className="text-muted-foreground">{affiliate.vendas} vendas</span>
-                              <span className="font-semibold text-green-600">{formatPriceForSeller(affiliate.receita, 'KZ')}</span>
+                              <span className="font-semibold text-green-600">{formatPriceForSeller(affiliate.receita, currencyLabel)}</span>
                             </div>
                           </div>
                           <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -880,7 +883,7 @@ export default function SellerReports() {
                             />
                           </div>
                           <p className="text-xs text-muted-foreground">
-                            Comissão: {formatPriceForSeller(affiliate.comissao, 'KZ')}
+                            Comissão: {formatPriceForSeller(affiliate.comissao, currencyLabel)}
                           </p>
                         </div>
                       );
@@ -926,7 +929,7 @@ export default function SellerReports() {
                     }} />
                           </div>
                           <p className="text-xs text-muted-foreground">
-                            Receita: {formatPriceForSeller(item.receita, 'KZ')}
+                            Receita: {formatPriceForSeller(item.receita, currencyLabel)}
                           </p>
                         </div>;
               })}
@@ -960,7 +963,7 @@ export default function SellerReports() {
                             <span className="text-sm font-medium truncate max-w-[150px]">{product.name}</span>
                             <div className="flex items-center gap-3">
                               <span className="text-sm text-muted-foreground">{product.vendas} vendas</span>
-                              <span className="text-sm font-semibold text-green-600">{formatPriceForSeller(product.receita, 'KZ')}</span>
+                              <span className="text-sm font-semibold text-green-600">{formatPriceForSeller(product.receita, currencyLabel)}</span>
                             </div>
                           </div>
                           <div className="h-2 bg-muted rounded-full overflow-hidden">

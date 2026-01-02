@@ -42,6 +42,7 @@ import { AppLiveView } from '@/components/app/AppLiveView';
 import { Radio } from 'lucide-react';
 import { getActualCurrency, getActualAmount, calculateSellerEarning } from '@/utils/currencyUtils';
 import { FinancialView } from '@/components/financial/FinancialView';
+import { usePreferredCurrency } from '@/hooks/usePreferredCurrency';
 
 const CURRENCIES = [
   { value: 'KZ', label: 'KZ' },
@@ -59,6 +60,8 @@ export function AppHome() {
   const {
     toast
   } = useToast();
+  const { preferredCurrency } = usePreferredCurrency();
+  const currencyLabel = preferredCurrency || 'KZ';
   const {
     theme,
     setTheme,
@@ -1016,7 +1019,7 @@ export function AppHome() {
                                 {product.name}
                               </h3>
                               <p className="text-sm text-muted-foreground">
-                                {formatPriceForSeller(parseFloat(product.price || '0'), 'KZ')}
+                                {formatPriceForSeller(parseFloat(product.price || '0'), currencyLabel)}
                               </p>
                             </div>
                             <button 
@@ -1648,7 +1651,7 @@ export function AppHome() {
                   Nível: {currentLevel.name} {currentLevel.emoji}
                 </p>}
               {nextLevel && <p className="text-[10px] text-muted-foreground mt-1">
-                  Falta: {formatPriceForSeller(monthlyGoal - totalRevenueUnfiltered, 'KZ')}
+                  Falta: {formatPriceForSeller(monthlyGoal - totalRevenueUnfiltered, currencyLabel)}
                 </p>}
             </div>
             
@@ -1659,7 +1662,7 @@ export function AppHome() {
                 <span className="text-xs text-muted-foreground">Saldo disponível</span>
               </div>
               <span className="font-bold text-sm text-card-foreground">
-                {formatPriceForSeller(financialData.availableBalance, 'KZ')}
+                {formatPriceForSeller(financialData.availableBalance, currencyLabel)}
               </span>
             </div>
 
@@ -1681,7 +1684,7 @@ export function AppHome() {
                 <span className="text-xs text-muted-foreground">Faturamento</span>
               </div>
               <span className="font-bold text-sm text-card-foreground">
-                {formatPriceForSeller(statsUnfiltered.totalRevenue, 'KZ')}
+                {formatPriceForSeller(statsUnfiltered.totalRevenue, currencyLabel)}
               </span>
             </div>
 
