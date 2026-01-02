@@ -158,7 +158,7 @@ export function ModernSidebar({
     }
   };
 
-  // Meta (gamificação) usa o valor bruto/"score" já calculado, mas exibimos na moeda preferida do utilizador
+  // Meta (gamificação) usa o valor bruto/"score" já calculado; mostramos apenas a sigla da moeda preferida.
   const kambaLevels = [1000000, 5000000, 15000000, 50000000, 100000000];
   let nextGoal = 1000000;
 
@@ -171,20 +171,9 @@ export function ModernSidebar({
 
   const progressPercent = Math.min((dashboardData.totalRevenue / nextGoal) * 100, 100);
 
-  const convertFromKZ = (valueKZ: number) => {
-    if (!displayCurrency || displayCurrency === 'KZ') return valueKZ;
-
-    const ratesFromKZ: Record<string, number> = {
-      EUR: 0.00095,
-      MZN: 0.0722,
-      GBP: 0.0008,
-      USD: 0.0011,
-      BRL: 0.0056,
-      KZ: 1,
-    };
-
-    return valueKZ * (ratesFromKZ[displayCurrency] ?? 1);
-  };
+  // Importante: estas metas são um "score" de gamificação (valores fixos do sistema).
+  // Aqui apenas exibimos a *sigla* da moeda preferida, sem conversão cambial.
+  const convertFromKZ = (valueKZ: number) => valueKZ;
 
   const formatCurrency = (value: number) => {
     if (value >= 1000000) {
