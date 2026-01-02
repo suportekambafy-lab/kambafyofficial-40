@@ -95,6 +95,7 @@ export const SignUpWizard: React.FC<SignUpWizardProps> = ({
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [country, setCountry] = useState('AO');
+  const [countryManuallySet, setCountryManuallySet] = useState(false);
   const [alreadySells, setAlreadySells] = useState<boolean | null>(null);
   const [productTypes, setProductTypes] = useState<string[]>([]);
 
@@ -113,13 +114,16 @@ export const SignUpWizard: React.FC<SignUpWizardProps> = ({
 
   // Atualizar país detectado
   useEffect(() => {
+    // Importante: se o usuário escolheu manualmente, não sobrescrever pelo país detectado
+    if (countryManuallySet) return;
+
     if (userCountry?.code && !geoLoading) {
       const supportedCountry = COUNTRIES.find(c => c.code === userCountry.code);
       if (supportedCountry) {
         setCountry(userCountry.code);
       }
     }
-  }, [userCountry, geoLoading]);
+  }, [userCountry, geoLoading, countryManuallySet]);
   const checkEmailExists = async (emailToCheck: string): Promise<boolean> => {
     try {
       const {
@@ -383,7 +387,10 @@ export const SignUpWizard: React.FC<SignUpWizardProps> = ({
                   </div>}
                 
                 <div className="grid grid-cols-1 gap-2">
-                  {COUNTRIES.map(c => <button key={c.code} type="button" onClick={() => setCountry(c.code)} className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all ${country === c.code ? 'border-primary bg-primary/10 text-foreground' : 'border-border bg-foreground/5 text-muted-foreground hover:border-muted-foreground'}`}>
+                  {COUNTRIES.map(c => <button key={c.code} type="button" onClick={() => {
+                    setCountry(c.code);
+                    setCountryManuallySet(true);
+                  }} className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all ${country === c.code ? 'border-primary bg-primary/10 text-foreground' : 'border-border bg-foreground/5 text-muted-foreground hover:border-muted-foreground'}`}>
                       <span className="text-2xl">{c.flag}</span>
                       <div className="flex-1 text-left">
                         <span className="font-medium">{c.name}</span>
