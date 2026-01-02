@@ -4,14 +4,12 @@ import { ArrowLeft, ArrowRight, Mail, Lock, User, MapPin, Briefcase, BookOpen, V
 import { useGeoLocation } from '@/hooks/useGeoLocation';
 import { supabase } from '@/integrations/supabase/client';
 import KambafyLogoGreen from '@/assets/kambafy-logo-green.png';
-
 interface SignUpWizardProps {
   onComplete: (data: SignUpData) => void;
   onBack: () => void;
   loading?: boolean;
   error?: string;
 }
-
 export interface SignUpData {
   email: string;
   password: string;
@@ -20,7 +18,6 @@ export interface SignUpData {
   alreadySells: boolean;
   productTypes: string[];
 }
-
 const COUNTRIES = [{
   code: 'AO',
   name: 'Angola',
@@ -57,7 +54,6 @@ const COUNTRIES = [{
   flag: '🇺🇸',
   currency: 'USD'
 }];
-
 const PRODUCT_TYPES = [{
   id: 'ebook',
   label: 'E-books',
@@ -84,7 +80,6 @@ const PRODUCT_TYPES = [{
   icon: Sparkles,
   description: 'Serviços, físicos'
 }];
-
 export const SignUpWizard: React.FC<SignUpWizardProps> = ({
   onComplete,
   onBack,
@@ -125,10 +120,11 @@ export const SignUpWizard: React.FC<SignUpWizardProps> = ({
       }
     }
   }, [userCountry, geoLoading]);
-
   const checkEmailExists = async (emailToCheck: string): Promise<boolean> => {
     try {
-      const { data } = await supabase.rpc('get_auth_user_id_by_email', {
+      const {
+        data
+      } = await supabase.rpc('get_auth_user_id_by_email', {
         _email: emailToCheck.trim().toLowerCase()
       });
       return !!data;
@@ -136,12 +132,11 @@ export const SignUpWizard: React.FC<SignUpWizardProps> = ({
       return false;
     }
   };
-
   const validateStep = async (currentStep: number): Promise<boolean> => {
     setLocalError('');
-    
     switch (currentStep) {
-      case 1: // Apenas email
+      case 1:
+        // Apenas email
         if (!email.trim()) {
           setLocalError('Por favor, insira seu email');
           return false;
@@ -150,12 +145,11 @@ export const SignUpWizard: React.FC<SignUpWizardProps> = ({
           setLocalError('Por favor, insira um email válido');
           return false;
         }
-        
+
         // Verificar se email já existe
         setCheckingEmail(true);
         const exists = await checkEmailExists(email);
         setCheckingEmail(false);
-        
         if (exists) {
           setEmailExists(true);
           setLocalError('Este email já tem uma conta.');
@@ -163,7 +157,8 @@ export const SignUpWizard: React.FC<SignUpWizardProps> = ({
         }
         setEmailExists(false);
         return true;
-      case 2: // Senha
+      case 2:
+        // Senha
         if (!password) {
           setLocalError('Por favor, crie uma senha');
           return false;
@@ -177,8 +172,8 @@ export const SignUpWizard: React.FC<SignUpWizardProps> = ({
           return false;
         }
         return true;
-        
-      case 3: // Nome
+      case 3:
+        // Nome
         if (!fullName.trim()) {
           setLocalError('Por favor, insira seu nome completo');
           return false;
@@ -188,15 +183,15 @@ export const SignUpWizard: React.FC<SignUpWizardProps> = ({
           return false;
         }
         return true;
-        
-      case 4: // País
+      case 4:
+        // País
         if (!country) {
           setLocalError('Por favor, selecione seu país');
           return false;
         }
         return true;
-        
-      case 5: // Negócio
+      case 5:
+        // Negócio
         if (alreadySells === null) {
           setLocalError('Por favor, selecione uma opção');
           return false;
@@ -206,12 +201,10 @@ export const SignUpWizard: React.FC<SignUpWizardProps> = ({
           return false;
         }
         return true;
-        
       default:
         return true;
     }
   };
-  
   const handleNext = async () => {
     const isValid = await validateStep(step);
     if (isValid) {
@@ -222,7 +215,6 @@ export const SignUpWizard: React.FC<SignUpWizardProps> = ({
       }
     }
   };
-
   const handleBack = () => {
     if (step === 1) {
       onBack();
@@ -231,7 +223,6 @@ export const SignUpWizard: React.FC<SignUpWizardProps> = ({
       setLocalError('');
     }
   };
-
   const handleSubmit = () => {
     onComplete({
       email: email.trim().toLowerCase(),
@@ -242,11 +233,9 @@ export const SignUpWizard: React.FC<SignUpWizardProps> = ({
       productTypes
     });
   };
-
   const toggleProductType = (typeId: string) => {
     setProductTypes(prev => prev.includes(typeId) ? prev.filter(t => t !== typeId) : [...prev, typeId]);
   };
-
   const stepVariants = {
     enter: (direction: number) => ({
       x: direction > 0 ? 100 : -100,
@@ -261,34 +250,32 @@ export const SignUpWizard: React.FC<SignUpWizardProps> = ({
       opacity: 0
     })
   };
-
-  return (
-    <div className="w-full max-w-md mx-auto">
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }} 
-        animate={{ opacity: 1, y: 0 }} 
-        className="bg-card rounded-3xl border border-border shadow-xl p-6 md:p-8"
-      >
+  return <div className="w-full max-w-md mx-auto">
+      <motion.div initial={{
+      opacity: 0,
+      y: 20
+    }} animate={{
+      opacity: 1,
+      y: 0
+    }} className="bg-card rounded-3xl border border-border shadow-xl p-6 md:p-8">
         {/* Logo */}
-        <motion.div 
-          className="flex justify-center mb-6" 
-          initial={{ scale: 0.8, opacity: 0 }} 
-          animate={{ scale: 1, opacity: 1 }} 
-          transition={{ delay: 0.1 }}
-        >
+        <motion.div className="flex justify-center mb-6" initial={{
+        scale: 0.8,
+        opacity: 0
+      }} animate={{
+        scale: 1,
+        opacity: 1
+      }} transition={{
+        delay: 0.1
+      }}>
           <img src={KambafyLogoGreen} alt="Kambafy" className="h-10 object-contain" />
         </motion.div>
         
         {/* Barra de progresso */}
         <div className="flex gap-2 mb-6">
-          {Array.from({ length: totalSteps }).map((_, i) => (
-            <div 
-              key={i} 
-              className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
-                i < step ? 'bg-primary' : i === step - 1 ? 'bg-primary' : 'bg-muted'
-              }`} 
-            />
-          ))}
+          {Array.from({
+          length: totalSteps
+        }).map((_, i) => <div key={i} className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${i < step ? 'bg-primary' : i === step - 1 ? 'bg-primary' : 'bg-muted'}`} />)}
         </div>
         
         {/* Indicador de step */}
@@ -298,59 +285,38 @@ export const SignUpWizard: React.FC<SignUpWizardProps> = ({
         
         {/* Conteúdo do step */}
         <AnimatePresence mode="wait" custom={step}>
-          <motion.div 
-            key={step} 
-            custom={step} 
-            variants={stepVariants} 
-            initial="enter" 
-            animate="center" 
-            exit="exit" 
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
-          >
+          <motion.div key={step} custom={step} variants={stepVariants} initial="enter" animate="center" exit="exit" transition={{
+          duration: 0.3,
+          ease: 'easeInOut'
+        }}>
             {/* Step 1: Apenas Email */}
-            {step === 1 && (
-              <div className="space-y-4">
+            {step === 1 && <div className="space-y-4">
                 <div className="text-center mb-6">
-                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <Mail className="w-6 h-6 text-primary" />
-                  </div>
+                  
                   <h2 className="text-xl font-semibold text-foreground">Vamos começar!</h2>
                   <p className="text-sm text-muted-foreground mt-1">Qual é o seu email?</p>
                 </div>
                 
                 <div>
                   <label className="text-sm font-medium text-muted-foreground block mb-1">Email</label>
-                  <input 
-                    type="email" 
-                    value={email} 
-                    onChange={e => {
-                      setEmail(e.target.value);
-                      setEmailExists(false);
-                      setLocalError('');
-                    }} 
-                    placeholder="seu@email.com" 
-                    className="w-full bg-foreground/5 border border-border rounded-xl p-3 text-sm focus:outline-none focus:border-primary transition-colors" 
-                    style={{ fontSize: '16px' }} 
-                    autoComplete="email" 
-                  />
+                  <input type="email" value={email} onChange={e => {
+                setEmail(e.target.value);
+                setEmailExists(false);
+                setLocalError('');
+              }} placeholder="seu@email.com" className="w-full bg-foreground/5 border border-border rounded-xl p-3 text-sm focus:outline-none focus:border-primary transition-colors" style={{
+                fontSize: '16px'
+              }} autoComplete="email" />
                 </div>
                 
-                {emailExists && (
-                  <div className="text-center">
-                    <button 
-                      onClick={onBack} 
-                      className="text-primary hover:underline text-sm font-medium"
-                    >
+                {emailExists && <div className="text-center">
+                    <button onClick={onBack} className="text-primary hover:underline text-sm font-medium">
                       Fazer Login →
                     </button>
-                  </div>
-                )}
-              </div>
-            )}
+                  </div>}
+              </div>}
             
             {/* Step 2: Senha */}
-            {step === 2 && (
-              <div className="space-y-4">
+            {step === 2 && <div className="space-y-4">
                 <div className="text-center mb-6">
                   <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
                     <Lock className="w-6 h-6 text-primary" />
@@ -363,23 +329,10 @@ export const SignUpWizard: React.FC<SignUpWizardProps> = ({
                   <div>
                     <label className="text-sm font-medium text-muted-foreground block mb-1">Senha</label>
                     <div className="relative">
-                      <input 
-                        type={showPassword ? "text" : "password"}
-                        value={password} 
-                        onChange={e => setPassword(e.target.value)} 
-                        placeholder="Mínimo 6 caracteres" 
-                        className="w-full bg-foreground/5 border border-border rounded-xl p-3 pr-10 text-sm focus:outline-none focus:border-primary transition-colors" 
-                        style={{ fontSize: '16px' }} 
-                        autoComplete="new-password" 
-                        autoCapitalize="off" 
-                        autoCorrect="off" 
-                        spellCheck="false" 
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                      >
+                      <input type={showPassword ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" className="w-full bg-foreground/5 border border-border rounded-xl p-3 pr-10 text-sm focus:outline-none focus:border-primary transition-colors" style={{
+                    fontSize: '16px'
+                  }} autoComplete="new-password" autoCapitalize="off" autoCorrect="off" spellCheck="false" />
+                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
@@ -388,34 +341,19 @@ export const SignUpWizard: React.FC<SignUpWizardProps> = ({
                   <div>
                     <label className="text-sm font-medium text-muted-foreground block mb-1">Confirmar Senha</label>
                     <div className="relative">
-                      <input 
-                        type={showConfirmPassword ? "text" : "password"}
-                        value={confirmPassword} 
-                        onChange={e => setConfirmPassword(e.target.value)} 
-                        placeholder="Repita a senha" 
-                        className="w-full bg-foreground/5 border border-border rounded-xl p-3 pr-10 text-sm focus:outline-none focus:border-primary transition-colors" 
-                        style={{ fontSize: '16px' }} 
-                        autoComplete="new-password" 
-                        autoCapitalize="off" 
-                        autoCorrect="off" 
-                        spellCheck="false" 
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                      >
+                      <input type={showConfirmPassword ? "text" : "password"} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Repita a senha" className="w-full bg-foreground/5 border border-border rounded-xl p-3 pr-10 text-sm focus:outline-none focus:border-primary transition-colors" style={{
+                    fontSize: '16px'
+                  }} autoComplete="new-password" autoCapitalize="off" autoCorrect="off" spellCheck="false" />
+                      <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
                         {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
+              </div>}
             
             {/* Step 3: Nome Completo */}
-            {step === 3 && (
-              <div className="space-y-4">
+            {step === 3 && <div className="space-y-4">
                 <div className="text-center mb-6">
                   <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
                     <User className="w-6 h-6 text-primary" />
@@ -426,22 +364,14 @@ export const SignUpWizard: React.FC<SignUpWizardProps> = ({
                 
                 <div>
                   <label className="text-sm font-medium text-muted-foreground block mb-1">Nome Completo</label>
-                  <input 
-                    type="text" 
-                    value={fullName} 
-                    onChange={e => setFullName(e.target.value)} 
-                    placeholder="Seu nome e sobrenome" 
-                    className="w-full bg-foreground/5 border border-border rounded-xl p-3 text-sm focus:outline-none focus:border-primary transition-colors" 
-                    style={{ fontSize: '16px' }} 
-                    autoComplete="name" 
-                  />
+                  <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Seu nome e sobrenome" className="w-full bg-foreground/5 border border-border rounded-xl p-3 text-sm focus:outline-none focus:border-primary transition-colors" style={{
+                fontSize: '16px'
+              }} autoComplete="name" />
                 </div>
-              </div>
-            )}
+              </div>}
             
             {/* Step 4: País */}
-            {step === 4 && (
-              <div className="space-y-4">
+            {step === 4 && <div className="space-y-4">
                 <div className="text-center mb-6">
                   <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
                     <MapPin className="w-6 h-6 text-primary" />
@@ -450,39 +380,24 @@ export const SignUpWizard: React.FC<SignUpWizardProps> = ({
                   <p className="text-sm text-muted-foreground mt-1">Isso define a moeda da sua conta</p>
                 </div>
                 
-                {geoLoading && (
-                  <div className="text-center text-sm text-muted-foreground py-2">
+                {geoLoading && <div className="text-center text-sm text-muted-foreground py-2">
                     <span className="animate-pulse">Detectando sua localização...</span>
-                  </div>
-                )}
+                  </div>}
                 
                 <div className="grid grid-cols-1 gap-2">
-                  {COUNTRIES.map(c => (
-                    <button 
-                      key={c.code} 
-                      type="button" 
-                      onClick={() => setCountry(c.code)} 
-                      className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all ${
-                        country === c.code 
-                          ? 'border-primary bg-primary/10 text-foreground' 
-                          : 'border-border bg-foreground/5 text-muted-foreground hover:border-muted-foreground'
-                      }`}
-                    >
+                  {COUNTRIES.map(c => <button key={c.code} type="button" onClick={() => setCountry(c.code)} className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all ${country === c.code ? 'border-primary bg-primary/10 text-foreground' : 'border-border bg-foreground/5 text-muted-foreground hover:border-muted-foreground'}`}>
                       <span className="text-2xl">{c.flag}</span>
                       <div className="flex-1 text-left">
                         <span className="font-medium">{c.name}</span>
                       </div>
                       <span className="text-xs text-muted-foreground">{c.currency}</span>
                       {country === c.code && <Check className="w-5 h-5 text-primary" />}
-                    </button>
-                  ))}
+                    </button>)}
                 </div>
-              </div>
-            )}
+              </div>}
             
             {/* Step 5: O que vende */}
-            {step === 5 && (
-              <div className="space-y-4">
+            {step === 5 && <div className="space-y-4">
                 <div className="text-center mb-6">
                   <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
                     <Briefcase className="w-6 h-6 text-primary" />
@@ -497,26 +412,10 @@ export const SignUpWizard: React.FC<SignUpWizardProps> = ({
                     Você já vende produtos digitais?
                   </label>
                   <div className="grid grid-cols-2 gap-2">
-                    <button 
-                      type="button" 
-                      onClick={() => setAlreadySells(true)} 
-                      className={`p-3 rounded-xl border transition-all ${
-                        alreadySells === true 
-                          ? 'border-primary bg-primary/10 text-foreground' 
-                          : 'border-border bg-foreground/5 text-muted-foreground hover:border-muted-foreground'
-                      }`}
-                    >
+                    <button type="button" onClick={() => setAlreadySells(true)} className={`p-3 rounded-xl border transition-all ${alreadySells === true ? 'border-primary bg-primary/10 text-foreground' : 'border-border bg-foreground/5 text-muted-foreground hover:border-muted-foreground'}`}>
                       <span className="font-medium">Sim, já vendo</span>
                     </button>
-                    <button 
-                      type="button" 
-                      onClick={() => setAlreadySells(false)} 
-                      className={`p-3 rounded-xl border transition-all ${
-                        alreadySells === false 
-                          ? 'border-primary bg-primary/10 text-foreground' 
-                          : 'border-border bg-foreground/5 text-muted-foreground hover:border-muted-foreground'
-                      }`}
-                    >
+                    <button type="button" onClick={() => setAlreadySells(false)} className={`p-3 rounded-xl border transition-all ${alreadySells === false ? 'border-primary bg-primary/10 text-foreground' : 'border-border bg-foreground/5 text-muted-foreground hover:border-muted-foreground'}`}>
                       <span className="font-medium">Ainda não</span>
                     </button>
                   </div>
@@ -530,19 +429,9 @@ export const SignUpWizard: React.FC<SignUpWizardProps> = ({
                   </label>
                   <div className="grid grid-cols-1 gap-2">
                     {PRODUCT_TYPES.map(type => {
-                      const Icon = type.icon;
-                      const isSelected = productTypes.includes(type.id);
-                      return (
-                        <button 
-                          key={type.id} 
-                          type="button" 
-                          onClick={() => toggleProductType(type.id)} 
-                          className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all ${
-                            isSelected 
-                              ? 'border-primary bg-primary/10 text-foreground' 
-                              : 'border-border bg-foreground/5 text-muted-foreground hover:border-muted-foreground'
-                          }`}
-                        >
+                  const Icon = type.icon;
+                  const isSelected = productTypes.includes(type.id);
+                  return <button key={type.id} type="button" onClick={() => toggleProductType(type.id)} className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all ${isSelected ? 'border-primary bg-primary/10 text-foreground' : 'border-border bg-foreground/5 text-muted-foreground hover:border-muted-foreground'}`}>
                           <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isSelected ? 'bg-primary/20' : 'bg-muted'}`}>
                             <Icon className={`w-4 h-4 ${isSelected ? 'text-primary' : 'text-muted-foreground'}`} />
                           </div>
@@ -551,56 +440,40 @@ export const SignUpWizard: React.FC<SignUpWizardProps> = ({
                             <span className="text-xs text-muted-foreground ml-2">{type.description}</span>
                           </div>
                           {isSelected && <Check className="w-5 h-5 text-primary" />}
-                        </button>
-                      );
-                    })}
+                        </button>;
+                })}
                   </div>
                 </div>
-              </div>
-            )}
+              </div>}
           </motion.div>
         </AnimatePresence>
         
         {/* Erros */}
-        {(localError || error) && (
-          <motion.div 
-            initial={{ opacity: 0, y: -10 }} 
-            animate={{ opacity: 1, y: 0 }} 
-            className="mt-4 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm text-center"
-          >
+        {(localError || error) && <motion.div initial={{
+        opacity: 0,
+        y: -10
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} className="mt-4 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm text-center">
             {localError || error}
-          </motion.div>
-        )}
+          </motion.div>}
         
         {/* Botões de navegação */}
         <div className="flex gap-3 mt-6">
-          <button 
-            type="button" 
-            onClick={handleBack} 
-            disabled={loading || checkingEmail} 
-            className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl border border-border bg-foreground/5 text-foreground hover:bg-foreground/10 transition-colors disabled:opacity-50"
-          >
+          <button type="button" onClick={handleBack} disabled={loading || checkingEmail} className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl border border-border bg-foreground/5 text-foreground hover:bg-foreground/10 transition-colors disabled:opacity-50">
             <ArrowLeft className="w-4 h-4" />
             <span>{step === 1 ? 'Voltar' : 'Anterior'}</span>
           </button>
           
-          <button 
-            type="button" 
-            onClick={handleNext} 
-            disabled={loading || checkingEmail} 
-            className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
-          >
-            {checkingEmail ? (
-              <>
+          <button type="button" onClick={handleNext} disabled={loading || checkingEmail} className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors disabled:opacity-50">
+            {checkingEmail ? <>
                 <Loader2 className="w-4 h-4 animate-spin" />
                 <span>Processando...</span>
-              </>
-            ) : (
-              <>
-                <span>{step === totalSteps ? (loading ? 'Criando...' : 'Criar Conta') : 'Continuar'}</span>
+              </> : <>
+                <span>{step === totalSteps ? loading ? 'Criando...' : 'Criar Conta' : 'Continuar'}</span>
                 {step < totalSteps && <ArrowRight className="w-4 h-4" />}
-              </>
-            )}
+              </>}
           </button>
         </div>
         
@@ -612,6 +485,5 @@ export const SignUpWizard: React.FC<SignUpWizardProps> = ({
           </button>
         </p>
       </motion.div>
-    </div>
-  );
+    </div>;
 };
