@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, memo, lazy, Suspense, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Shield, Check, AlertTriangle, CheckCircle, Wallet, Receipt, Copy } from "lucide-react";
+import { COUNTRY_TO_CURRENCY } from "@/utils/accountCurrency";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -128,16 +129,26 @@ const Checkout = () => {
   const [productNotFound, setProductNotFound] = useState(false);
   const [processing, setProcessing] = useState(false);
 
-  // Wrappers que passam a moeda base do produto
+  // Wrappers que passam a moeda base do produto (derivada do país do vendedor)
+  const getSellerBaseCurrency = useCallback(() => {
+    // Usa o país do vendedor para determinar a moeda base do produto
+    const sellerCountry = product?.profiles?.country;
+    if (sellerCountry && COUNTRY_TO_CURRENCY[sellerCountry]) {
+      return COUNTRY_TO_CURRENCY[sellerCountry];
+    }
+    return 'KZ'; // Fallback para KZ se não conseguir determinar
+  }, [product?.profiles?.country]);
+
   const formatPrice = useCallback((priceValue: number, targetCountry?: any, customPrices?: Record<string, string>) => {
-    const sourceCurrency = product?.currency || 'KZ';
+    const sourceCurrency = getSellerBaseCurrency();
+    console.log('💱 formatPrice usando sourceCurrency:', sourceCurrency, 'do vendedor país:', product?.profiles?.country);
     return formatPriceOriginal(priceValue, targetCountry || userCountry, customPrices, sourceCurrency);
-  }, [formatPriceOriginal, userCountry, product?.currency]);
+  }, [formatPriceOriginal, userCountry, getSellerBaseCurrency, product?.profiles?.country]);
 
   const convertPrice = useCallback((priceValue: number, targetCountry?: any, customPrices?: Record<string, string>) => {
-    const sourceCurrency = product?.currency || 'KZ';
+    const sourceCurrency = getSellerBaseCurrency();
     return convertPriceOriginal(priceValue, targetCountry || userCountry, customPrices, sourceCurrency);
-  }, [convertPriceOriginal, userCountry, product?.currency]);
+  }, [convertPriceOriginal, userCountry, getSellerBaseCurrency]);
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
