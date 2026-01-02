@@ -1,6 +1,10 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { pricingTranslations } from '@/translations/pricing';
+import { howItWorksTranslations } from '@/translations/howItWorks';
+import { featuresTranslations } from '@/translations/features';
+import { termsTranslations } from '@/translations/terms';
+import { privacyTranslations } from '@/translations/privacy';
 
 export type Language = 'pt' | 'en' | 'es';
 
@@ -12,9 +16,12 @@ const mergeTranslations = (): Record<Language, Record<string, string>> => {
     es: {}
   };
   
-  // Merge pricing translations
-  Object.entries(pricingTranslations).forEach(([lang, translations]) => {
-    base[lang as Language] = { ...base[lang as Language], ...translations };
+  // Merge all translation modules
+  const modules = [pricingTranslations, howItWorksTranslations, featuresTranslations, termsTranslations, privacyTranslations];
+  modules.forEach(module => {
+    Object.entries(module).forEach(([lang, translations]) => {
+      base[lang as Language] = { ...base[lang as Language], ...translations };
+    });
   });
   
   return base;
