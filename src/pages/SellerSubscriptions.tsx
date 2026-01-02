@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { usePreferredCurrency } from '@/hooks/usePreferredCurrency';
+import { formatPriceForSeller } from '@/utils/priceFormatting';
 
 interface Subscription {
   id: string;
@@ -28,6 +30,8 @@ interface Subscription {
 
 export default function SellerSubscriptions() {
   const { t } = useTranslation();
+  const { preferredCurrency } = usePreferredCurrency();
+  const currencyLabel = preferredCurrency || 'KZ';
   
   const { data: subscriptions, isLoading, refetch } = useQuery({
     queryKey: ['seller-subscriptions'],
@@ -101,7 +105,7 @@ export default function SellerSubscriptions() {
 
   const formatPrice = (price: string) => {
     const numPrice = parseFloat(price.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
-    return `Kz ${numPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+    return formatPriceForSeller(numPrice, currencyLabel);
   };
 
   return (
@@ -149,7 +153,7 @@ export default function SellerSubscriptions() {
               <Skeleton className="h-8 w-24" />
             ) : (
               <>
-                <div className="text-2xl font-bold">Kz {mrr.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+                <div className="text-2xl font-bold">{formatPriceForSeller(mrr, currencyLabel)}</div>
                 <p className="text-xs text-muted-foreground">{t('financial.totalEarnings')}</p>
               </>
             )}
