@@ -2,6 +2,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { CurrencyBalance, CURRENCY_CONFIG } from "@/hooks/useCurrencyBalances";
 import { CurrencyBalanceCard } from "./CurrencyBalanceCard";
 import { Wallet } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface CurrencyTabsProps {
   balances: CurrencyBalance[];
@@ -27,6 +28,8 @@ export function CurrencyTabs({
   canWithdraw,
   isVerified
 }: CurrencyTabsProps) {
+  const { t } = useTranslation();
+  
   // Create a map of existing balances
   const balanceMap = new Map(balances.map(b => [b.currency, b]));
   
@@ -51,7 +54,7 @@ export function CurrencyTabs({
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
           <Wallet className="h-4 w-4" />
-          <span>Moeda:</span>
+          <span>{t("common.table.currency")}:</span>
         </div>
         <Select value={selectedCurrency} onValueChange={onCurrencyChange}>
           <SelectTrigger className="w-[180px] bg-background">

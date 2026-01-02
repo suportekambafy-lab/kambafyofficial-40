@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ArrowUpRight, ArrowDownLeft, Wallet, Receipt } from "lucide-react";
 import { CurrencyTransaction } from "@/hooks/useCurrencyBalances";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface CurrencyTransactionHistoryProps {
   transactions: CurrencyTransaction[];
@@ -10,40 +11,42 @@ interface CurrencyTransactionHistoryProps {
   formatCurrency: (amount: number, currency: string) => string;
 }
 
-const TRANSACTION_TYPES: Record<string, {
-  label: string;
-  color: string;
-  icon: typeof ArrowUpRight;
-  isPositive: boolean;
-}> = {
-  'sale_revenue': { label: 'Venda', color: 'bg-green-500', icon: ArrowDownLeft, isPositive: true },
-  'subscription_sale': { label: 'Assinatura', color: 'bg-green-500', icon: ArrowDownLeft, isPositive: true },
-  'subscription_renewal': { label: 'Renovação', color: 'bg-green-500', icon: ArrowDownLeft, isPositive: true },
-  'platform_fee': { label: 'Taxa Kambafy', color: 'bg-orange-500', icon: Receipt, isPositive: false },
-  'kambafy_fee': { label: 'Taxa Kambafy', color: 'bg-orange-500', icon: Receipt, isPositive: false },
-  'withdrawal': { label: 'Saque', color: 'bg-blue-500', icon: ArrowUpRight, isPositive: false },
-  'refund': { label: 'Reembolso', color: 'bg-red-500', icon: ArrowUpRight, isPositive: false },
-  'platform_fee_refund': { label: 'Taxa Reembolso', color: 'bg-red-500', icon: Receipt, isPositive: false },
-  'adjustment': { label: 'Ajuste', color: 'bg-purple-500', icon: Wallet, isPositive: true },
-  'credit': { label: 'Crédito', color: 'bg-green-500', icon: ArrowDownLeft, isPositive: true },
-  'debit': { label: 'Débito', color: 'bg-red-500', icon: ArrowUpRight, isPositive: false },
-};
-
 export function CurrencyTransactionHistory({
   transactions,
   currency,
   formatCurrency
 }: CurrencyTransactionHistoryProps) {
+  const { t } = useTranslation();
+
+  const TRANSACTION_TYPES: Record<string, {
+    label: string;
+    color: string;
+    icon: typeof ArrowUpRight;
+    isPositive: boolean;
+  }> = {
+    'sale_revenue': { label: t('financial.transactions.sale'), color: 'bg-green-500', icon: ArrowDownLeft, isPositive: true },
+    'subscription_sale': { label: t('subscriptions.title'), color: 'bg-green-500', icon: ArrowDownLeft, isPositive: true },
+    'subscription_renewal': { label: t('subscriptions.title'), color: 'bg-green-500', icon: ArrowDownLeft, isPositive: true },
+    'platform_fee': { label: t('financial.transactions.fee'), color: 'bg-orange-500', icon: Receipt, isPositive: false },
+    'kambafy_fee': { label: t('financial.transactions.fee'), color: 'bg-orange-500', icon: Receipt, isPositive: false },
+    'withdrawal': { label: t('financial.transactions.withdrawal'), color: 'bg-blue-500', icon: ArrowUpRight, isPositive: false },
+    'refund': { label: t('financial.transactions.refund'), color: 'bg-red-500', icon: ArrowUpRight, isPositive: false },
+    'platform_fee_refund': { label: t('financial.transactions.refund'), color: 'bg-red-500', icon: Receipt, isPositive: false },
+    'adjustment': { label: t('financial.transactions.adjustment'), color: 'bg-purple-500', icon: Wallet, isPositive: true },
+    'credit': { label: t('financial.transactions.sale'), color: 'bg-green-500', icon: ArrowDownLeft, isPositive: true },
+    'debit': { label: t('financial.transactions.withdrawal'), color: 'bg-red-500', icon: ArrowUpRight, isPositive: false },
+  };
+
   if (transactions.length === 0) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Histórico de Transações</CardTitle>
+          <CardTitle className="text-base">{t('financial.transactions.title')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8 text-muted-foreground">
             <Wallet className="h-12 w-12 mx-auto mb-3 opacity-50" />
-            <p>Nenhuma transação em {currency} ainda</p>
+            <p>{t('common.message.noData')}</p>
           </div>
         </CardContent>
       </Card>
@@ -54,8 +57,8 @@ export function CurrencyTransactionHistory({
     <Card>
       <CardHeader>
         <CardTitle className="text-base flex items-center justify-between">
-          <span>Histórico de Transações</span>
-          <Badge variant="secondary">{transactions.length} transações</Badge>
+          <span>{t('financial.transactions.title')}</span>
+          <Badge variant="secondary">{transactions.length}</Badge>
         </CardTitle>
       </CardHeader>
       <CardContent>
