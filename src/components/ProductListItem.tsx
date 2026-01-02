@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Edit, Trash2, Share, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { usePreferredCurrency } from '@/hooks/usePreferredCurrency';
 
 interface Product {
   id: string;
@@ -41,6 +42,9 @@ export const ProductListItem = memo(({
   onToggleStatus,
   onRequestRevision
 }: ProductListItemProps) => {
+  const { preferredCurrency } = usePreferredCurrency();
+  const currencyLabel = preferredCurrency || 'KZ';
+
   const getStatusBadge = () => {
     const statusConfig: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline'; label: string }> = {
       'Ativo': { variant: 'default', label: 'Ativo' },
@@ -98,7 +102,7 @@ export const ProductListItem = memo(({
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm text-muted-foreground">
-            <span className="font-medium">{formatPrice(product.price)} KZ</span>
+            <span className="font-medium">{formatPrice(product.price)} {currencyLabel}</span>
             <span>{product.sales} vendas</span>
             <span className="capitalize">{product.type}</span>
           </div>
