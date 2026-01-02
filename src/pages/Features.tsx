@@ -20,130 +20,132 @@ import {
   Settings
 } from 'lucide-react';
 import { SEO, pageSEO } from "@/components/SEO";
+import { useTranslation } from "@/contexts/TranslationContext";
 
 const Features = () => {
+  const { t } = useTranslation();
+
   const features = [
     {
       icon: <BookOpen className="w-8 h-8 text-checkout-green" />,
-      title: "Área de Membros Completa",
-      description: "Crie cursos interativos com módulos, lições, vídeos, quizzes e acompanhe o progresso dos alunos em tempo real."
+      title: t('features.memberArea.title'),
+      description: t('features.memberArea.description')
     },
     {
       icon: <DollarSign className="w-8 h-8 text-checkout-green" />,
-      title: "Pagamentos em Multimoedas",
-      description: "Aceite pagamentos em Angola (Multicaixa Express, Referência, Transferência), Portugal (Cartão, Multibanco, Apple Pay, Klarna) e Moçambique (e-Mola, M-Pesa)."
+      title: t('features.multiCurrency.title'),
+      description: t('features.multiCurrency.description')
     },
     {
       icon: <ShoppingCart className="w-8 h-8 text-checkout-green" />,
-      title: "Checkout Inteligente",
-      description: "Páginas de checkout otimizadas com Order Bumps, recuperação de carrinho abandonado e provas sociais."
+      title: t('features.checkout.title'),
+      description: t('features.checkout.description')
     },
     {
       icon: <TrendingUp className="w-8 h-8 text-checkout-green" />,
-      title: "Sistema de Afiliados",
-      description: "Expanda suas vendas com programa de afiliados automático. Gestão completa de comissões e códigos."
+      title: t('features.affiliates.title'),
+      description: t('features.affiliates.description')
     },
     {
       icon: <RefreshCw className="w-8 h-8 text-checkout-green" />,
-      title: "Recuperação de Vendas",
-      description: "Sistema automático que recupera vendas abandonadas via WhatsApp e email com taxa de 20%."
+      title: t('features.recovery.title'),
+      description: t('features.recovery.description')
     },
     {
       icon: <BarChart className="w-8 h-8 text-checkout-green" />,
-      title: "Dashboard Analítico",
-      description: "Métricas em tempo real, gráficos de vendas, metas de faturamento e relatórios financeiros detalhados."
+      title: t('features.analytics.title'),
+      description: t('features.analytics.description')
     },
     {
       icon: <CreditCard className="w-8 h-8 text-checkout-green" />,
-      title: "KambaPay Wallet",
-      description: "Carteira digital integrada para receber, enviar e sacar dinheiro com taxas competitivas."
+      title: t('features.wallet.title'),
+      description: t('features.wallet.description')
     },
     {
       icon: <Target className="w-8 h-8 text-checkout-green" />,
-      title: "Facebook Pixel & Analytics",
-      description: "Integração completa com Facebook Pixel para otimizar campanhas publicitárias e acompanhar conversões."
+      title: t('features.pixel.title'),
+      description: t('features.pixel.description')
     },
     {
       icon: <UserCheck className="w-8 h-8 text-checkout-green" />,
-      title: "Verificação de Identidade",
-      description: "Sistema KYC completo para verificação de identidade dos vendedores com aprovação administrativa."
+      title: t('features.kyc.title'),
+      description: t('features.kyc.description')
     },
     {
       icon: <Mail className="w-8 h-8 text-checkout-green" />,
-      title: "Automação de Email",
-      description: "Emails automáticos para confirmação de compra, detalhes de pagamento e notificações de acesso."
+      title: t('features.email.title'),
+      description: t('features.email.description')
     },
     {
       icon: <Lock className="w-8 h-8 text-checkout-green" />,
-      title: "Autenticação 2FA",
-      description: "Segurança avançada com autenticação de dois fatores inteligente baseada em comportamento do usuário."
+      title: t('features.2fa.title'),
+      description: t('features.2fa.description')
     },
     {
       icon: <Smartphone className="w-8 h-8 text-checkout-green" />,
-      title: "Interface Mobile Otimizada",
-      description: "Dashboard mobile responsivo com navegação intuitiva e todas as funcionalidades principais."
+      title: t('features.mobile.title'),
+      description: t('features.mobile.description')
     },
     {
       icon: <Settings className="w-8 h-8 text-checkout-green" />,
-      title: "Personalização Avançada",
-      description: "Customize páginas de checkout, cores, logos e configure webhooks para integrações externas."
+      title: t('features.customization.title'),
+      description: t('features.customization.description')
     },
     {
       icon: <Users className="w-8 h-8 text-checkout-green" />,
-      title: "Gestão de Estudantes",
-      description: "Adicione estudantes a cursos, acompanhe progresso, permita comentários e interação nas lições."
+      title: t('features.students.title'),
+      description: t('features.students.description')
     },
     {
       icon: <Shield className="w-8 h-8 text-checkout-green" />,
-      title: "Proteção Anti-Fraude",
-      description: "Sistema de detecção de fraudes, proteção contra chargeback e validação de transações."
+      title: t('features.antiFraud.title'),
+      description: t('features.antiFraud.description')
     },
     {
       icon: <Globe className="w-8 h-8 text-checkout-green" />,
-      title: "SEO Otimizado",
-      description: "URLs amigáveis, meta tags automáticas, sitemap e otimização para mecanismos de busca."
+      title: t('features.seo.title'),
+      description: t('features.seo.description')
     }
   ];
 
   const appsFeatures = [
     {
-      title: "Dashboard Moderno",
-      description: "Interface redesenhada com métricas em tempo real e navegação intuitiva"
+      title: t('features.apps.dashboard.title'),
+      description: t('features.apps.dashboard.description')
     },
     {
-      title: "Sistema Financeiro",
-      description: "Controle total de receitas, saques e liberação automática de pagamentos após 3 dias"
+      title: t('features.apps.financial.title'),
+      description: t('features.apps.financial.description')
     },
     {
-      title: "Gestão de Produtos",
-      description: "Criação, edição e gerenciamento completo de produtos digitais e cursos"
+      title: t('features.apps.products.title'),
+      description: t('features.apps.products.description')
     },
     {
-      title: "Portal de Afiliados",
-      description: "Plataforma dedicada para afiliados gerirem seus links e comissões"
+      title: t('features.apps.affiliatePortal.title'),
+      description: t('features.apps.affiliatePortal.description')
     },
     {
-      title: "Painel Administrativo",
-      description: "Sistema completo para administradores gerirem usuários, saques e verificações"
+      title: t('features.apps.admin.title'),
+      description: t('features.apps.admin.description')
     },
     {
-      title: "Centro de Ajuda",
-      description: "Base de conhecimento integrada com guias e tutoriais"
+      title: t('features.apps.helpCenter.title'),
+      description: t('features.apps.helpCenter.description')
     }
   ];
 
   return (
     <>
       <SEO {...pageSEO.features} />
-      <PageLayout title="Recursos">
+      <PageLayout title={t('features.pageTitle')}>
         <div className="space-y-8 md:space-y-12">
           <div className="text-center px-4">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4">
-              Plataforma Completa para <span className="text-checkout-green">Vender Online</span>
+              {t('features.heroTitle')} <span className="text-checkout-green">{t('features.heroTitleHighlight')}</span>
             </h2>
             <p className="text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto">
-              Descubra todos os recursos avançados que a Kambafy oferece para transformar 
-              seu conhecimento em um negócio digital próspero e escalável.
+              {t('features.heroSubtitle')}
             </p>
           </div>
 
@@ -167,10 +169,10 @@ const Features = () => {
           <div className="bg-gradient-to-r from-checkout-green/5 to-emerald-500/5 rounded-2xl p-4 sm:p-6 lg:p-8 mx-4">
             <div className="text-center mb-6 sm:mb-8">
               <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-3 sm:mb-4">
-                Apps & Funcionalidades Especiais
+                {t('features.appsTitle')}
               </h3>
               <p className="text-sm sm:text-base lg:text-lg text-muted-foreground max-w-2xl mx-auto">
-                Acesse ferramentas específicas desenvolvidas para otimizar seu negócio digital.
+                {t('features.appsSubtitle')}
               </p>
             </div>
             
@@ -193,29 +195,28 @@ const Features = () => {
 
           {/* Recursos em Desenvolvimento */}
           <div className="bg-gradient-to-r from-checkout-green/10 to-emerald-500/10 rounded-2xl p-4 sm:p-6 lg:p-8 text-center mx-4">
-            <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">Próximos Lançamentos</h3>
+            <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">{t('features.comingSoonTitle')}</h3>
             <p className="text-sm sm:text-base lg:text-lg text-muted-foreground mb-4 sm:mb-6 max-w-2xl mx-auto">
-              Estamos constantemente inovando e desenvolvendo novos recursos baseados no feedback 
-              da nossa comunidade de criadores.
+              {t('features.comingSoonSubtitle')}
             </p>
             <div className="flex flex-wrap justify-center gap-2 sm:gap-4 text-xs sm:text-sm">
               <span className="bg-checkout-green/20 text-checkout-green px-2 sm:px-3 py-1 rounded-full">
-                App Mobile Nativo
+                {t('features.upcoming.mobileApp')}
               </span>
               <span className="bg-checkout-green/20 text-checkout-green px-2 sm:px-3 py-1 rounded-full">
-                Webinars ao Vivo
+                {t('features.upcoming.webinars')}
               </span>
               <span className="bg-checkout-green/20 text-checkout-green px-2 sm:px-3 py-1 rounded-full">
-                Marketplace de Cursos
+                {t('features.upcoming.marketplace')}
               </span>
               <span className="bg-checkout-green/20 text-checkout-green px-2 sm:px-3 py-1 rounded-full">
-                API Pública
+                {t('features.upcoming.publicApi')}
               </span>
               <span className="bg-checkout-green/20 text-checkout-green px-2 sm:px-3 py-1 rounded-full">
-                Certificados Digitais
+                {t('features.upcoming.certificates')}
               </span>
               <span className="bg-checkout-green/20 text-checkout-green px-2 sm:px-3 py-1 rounded-full">
-                Integração Zoom
+                {t('features.upcoming.zoom')}
               </span>
             </div>
           </div>
@@ -223,23 +224,23 @@ const Features = () => {
           {/* Call to Action */}
           <div className="text-center px-4">
             <h3 className="text-xl sm:text-2xl font-bold mb-4">
-              Pronto para Começar?
+              {t('features.ctaTitle')}
             </h3>
             <p className="text-sm sm:text-base text-muted-foreground mb-6 max-w-xl mx-auto">
-              Junte-se a centenas de criadores que já estão monetizando seu conhecimento na Kambafy.
+              {t('features.ctaSubtitle')}
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
               <a 
                 href="/auth" 
                 className="inline-block bg-checkout-green hover:bg-checkout-green/90 text-white font-medium px-6 sm:px-8 py-3 rounded-xl transition-colors duration-300"
               >
-                Criar Conta Grátis
+                {t('features.ctaButton')}
               </a>
               <a 
                 href="/como-funciona" 
                 className="inline-block border border-checkout-green text-checkout-green hover:bg-checkout-green hover:text-white font-medium px-6 sm:px-8 py-3 rounded-xl transition-colors duration-300"
               >
-                Ver Como Funciona
+                {t('features.ctaSecondary')}
               </a>
             </div>
           </div>

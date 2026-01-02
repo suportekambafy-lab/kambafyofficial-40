@@ -5,6 +5,9 @@ import { howItWorksTranslations } from '@/translations/howItWorks';
 import { featuresTranslations } from '@/translations/features';
 import { termsTranslations } from '@/translations/terms';
 import { privacyTranslations } from '@/translations/privacy';
+import { helpCenterTranslations } from '@/translations/helpCenter';
+import { statusTranslations } from '@/translations/status';
+import { reportTranslations } from '@/translations/report';
 
 export type Language = 'pt' | 'en' | 'es';
 
@@ -17,10 +20,24 @@ const mergeTranslations = (): Record<Language, Record<string, string>> => {
   };
   
   // Merge all translation modules
-  const modules = [pricingTranslations, howItWorksTranslations, featuresTranslations, termsTranslations, privacyTranslations];
+  const modules = [
+    pricingTranslations, 
+    howItWorksTranslations, 
+    featuresTranslations, 
+    termsTranslations, 
+    privacyTranslations,
+    helpCenterTranslations,
+    statusTranslations,
+    reportTranslations
+  ];
   modules.forEach(module => {
-    Object.entries(module).forEach(([lang, translations]) => {
-      base[lang as Language] = { ...base[lang as Language], ...translations };
+    Object.entries(module).forEach(([key, value]) => {
+      if (typeof value === 'object' && value !== null && 'pt' in value) {
+        const translationEntry = value as { pt: string; en: string; es: string };
+        base.pt[key] = translationEntry.pt;
+        base.en[key] = translationEntry.en;
+        base.es[key] = translationEntry.es;
+      }
     });
   });
   
