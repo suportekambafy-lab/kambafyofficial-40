@@ -562,9 +562,11 @@ export function ModernDashboardHome() {
             </p>
             <div className="flex items-center justify-between">
               <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-                {showValues.revenue 
-                  ? `${formatWithMaxTwoDecimals(dashboardData.totalRevenue)} ${dashboardData.displayCurrency || selectedCurrency || 'KZ'}`
-                  : "••••••••"}
+                {currencyLoading || !selectedCurrency
+                  ? "••••••••"
+                  : showValues.revenue 
+                    ? `${formatWithMaxTwoDecimals(dashboardData.totalRevenue)} ${dashboardData.displayCurrency || selectedCurrency}`
+                    : "••••••••"}
               </h2>
               <Button
                 variant="ghost"
