@@ -138,32 +138,129 @@ const getInitialRates = (): Record<string, CountryInfo> => {
   return SUPPORTED_COUNTRIES;
 };
 
-// Lista de APIs de geolocalização ordenadas por confiabilidade
+// ======================================
+// DETECÇÃO DE PAÍS - OTIMIZADA
+// ======================================
+
+// Detectar país pelo timezone (instantâneo, sem rede)
+const detectCountryByTimezone = (): string | null => {
+  try {
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const timezoneMap: Record<string, string> = {
+      'Africa/Luanda': 'AO',
+      'Africa/Maputo': 'MZ',
+      'Europe/Lisbon': 'PT',
+      'Atlantic/Madeira': 'PT',
+      'Atlantic/Azores': 'PT',
+      'Europe/Madrid': 'ES',
+      'Atlantic/Canary': 'ES',
+      'Europe/London': 'GB',
+      'America/New_York': 'US',
+      'America/Los_Angeles': 'US',
+      'America/Chicago': 'US',
+      'America/Denver': 'US',
+      'America/Phoenix': 'US',
+      'America/Mexico_City': 'MX',
+      'America/Cancun': 'MX',
+      'America/Tijuana': 'MX',
+      'America/Santiago': 'CL',
+      'America/Punta_Arenas': 'CL',
+      'America/Argentina/Buenos_Aires': 'AR',
+      'America/Argentina/Cordoba': 'AR',
+      'America/Argentina/Mendoza': 'AR',
+      'America/Sao_Paulo': 'BR',
+      'America/Fortaleza': 'BR',
+      'America/Recife': 'BR',
+      'America/Bahia': 'BR'
+    };
+    const detected = timezoneMap[timezone] || null;
+    if (detected) {
+      console.log('⏰ Timezone detected country:', detected, 'from', timezone);
+    }
+    return detected;
+  } catch {
+    return null;
+  }
+};
+
+// Detectar país pelo idioma do navegador (fallback)
+const detectCountryByLanguage = (): string | null => {
+  try {
+    const lang = navigator.language || (navigator as any).languages?.[0];
+    if (!lang) return null;
+    
+    // Mapeamento preciso de locale -> país
+    const langMap: Record<string, string> = {
+      'pt-AO': 'AO',
+      'pt-MZ': 'MZ',
+      'pt-PT': 'PT',
+      'pt-BR': 'PT', // Brasileiros podem comprar como PT
+      'es-ES': 'ES',
+      'es-MX': 'MX',
+      'es-CL': 'CL',
+      'es-AR': 'AR',
+      'en-GB': 'GB',
+      'en-US': 'US',
+      'en-AU': 'US', // Fallback para US
+      'en-CA': 'US'  // Fallback para US
+    };
+    
+    // Primeiro tentar match exato
+    if (langMap[lang]) {
+      console.log('🌐 Language exact match:', langMap[lang], 'from', lang);
+      return langMap[lang];
+    }
+    
+    // Depois tentar pelo prefixo do idioma
+    const prefix = lang.split('-')[0];
+    const prefixMap: Record<string, string> = {
+      'pt': 'AO', // Maioria dos users portugueses são de Angola
+      'es': 'ES',
+      'en': 'US'
+    };
+    
+    if (prefixMap[prefix]) {
+      console.log('🌐 Language prefix match:', prefixMap[prefix], 'from', prefix);
+      return prefixMap[prefix];
+    }
+    
+    return null;
+  } catch {
+    return null;
+  }
+};
+
+// Lista de APIs de geolocalização ordenadas por velocidade/confiabilidade
 const GEO_APIS = [
   {
-    url: 'https://ipapi.co/json/',
-    getCountryCode: (data: any) => data.country_code,
-    timeout: 3000
+    url: 'https://ip-api.com/json/?fields=countryCode',
+    getCountryCode: (data: any) => data.countryCode,
+    timeout: 2000,
+    priority: 1
   },
   {
     url: 'https://ipwho.is/',
     getCountryCode: (data: any) => data.country_code,
-    timeout: 3000
-  },
-  {
-    url: 'https://ip-api.com/json/?fields=countryCode',
-    getCountryCode: (data: any) => data.countryCode,
-    timeout: 3000
+    timeout: 2000,
+    priority: 2
   },
   {
     url: 'https://api.country.is/',
     getCountryCode: (data: any) => data.country,
-    timeout: 3000
+    timeout: 2000,
+    priority: 3
+  },
+  {
+    url: 'https://ipapi.co/json/',
+    getCountryCode: (data: any) => data.country_code,
+    timeout: 2500,
+    priority: 4
   },
   {
     url: 'https://freeipapi.com/api/json',
     getCountryCode: (data: any) => data.countryCode,
-    timeout: 3000
+    timeout: 2500,
+    priority: 5
   }
 ];
 
@@ -187,70 +284,144 @@ const fetchWithTimeout = async (url: string, timeout: number): Promise<Response>
   }
 };
 
-// Função robusta para detectar país com múltiplos fallbacks
-const detectCountryRobust = async (): Promise<string | null> => {
-  console.log('🌍 Starting robust IP detection...');
+// Interface para resultado de detecção com confiança
+interface DetectionResult {
+  country: string;
+  confidence: 'high' | 'medium' | 'low';
+  source: string;
+}
+
+// Função robusta para detectar país com múltiplos fallbacks e race agressivo
+const detectCountryRobust = async (): Promise<DetectionResult | null> => {
+  console.log('🌍 Starting optimized IP detection...');
   
-  // Tentar todas as APIs em paralelo para máxima velocidade
-  const promises = GEO_APIS.map(async (api, index) => {
-    try {
-      const response = await fetchWithTimeout(api.url, api.timeout);
-      
-      if (!response.ok) {
-        console.log(`⚠️ API ${index + 1} returned status:`, response.status);
-        return null;
-      }
-      
-      const data = await response.json();
-      const countryCode = api.getCountryCode(data);
-      
-      if (countryCode && typeof countryCode === 'string' && countryCode.length === 2) {
-        console.log(`✅ API ${index + 1} (${api.url}) detected:`, countryCode);
-        return countryCode.toUpperCase();
-      }
-      
-      console.log(`⚠️ API ${index + 1} returned invalid country code:`, countryCode);
-      return null;
-    } catch (error) {
-      console.log(`⚠️ API ${index + 1} (${api.url}) failed:`, error instanceof Error ? error.message : 'Unknown error');
-      return null;
+  // 1. Verificar cache válido primeiro (24h)
+  try {
+    const storedCountry = localStorage.getItem('userCountry');
+    const lastIpDetection = localStorage.getItem('lastIpDetection');
+    const now = Date.now();
+    const twentyFourHours = 24 * 60 * 60 * 1000;
+    
+    if (storedCountry && lastIpDetection && (now - parseInt(lastIpDetection)) < twentyFourHours) {
+      console.log('✅ Using cached country (valid):', storedCountry);
+      return { country: storedCountry, confidence: 'high', source: 'cache' };
     }
-  });
+  } catch {}
   
-  // Usar Promise.allSettled para obter todos os resultados
-  const results = await Promise.allSettled(promises);
+  // 2. Tentar timezone primeiro (instantâneo)
+  const timezoneCountry = detectCountryByTimezone();
   
-  // Filtrar resultados válidos
-  const validResults = results
-    .filter((r): r is PromiseFulfilledResult<string> => r.status === 'fulfilled' && r.value !== null)
-    .map(r => r.value);
-  
-  if (validResults.length === 0) {
-    console.log('❌ All APIs failed to detect country');
-    return null;
-  }
-  
-  // Contar ocorrências de cada país para votação por maioria
+  // 3. Race de APIs com early exit quando 2+ concordam
+  const results: string[] = [];
   const countryVotes: Record<string, number> = {};
-  validResults.forEach(country => {
-    countryVotes[country] = (countryVotes[country] || 0) + 1;
+  
+  // Promise que resolve quando temos consenso (2+ APIs concordam)
+  const racePromise = new Promise<DetectionResult | null>((resolve) => {
+    let resolved = false;
+    let completedApis = 0;
+    
+    GEO_APIS.forEach(async (api, index) => {
+      try {
+        const response = await fetchWithTimeout(api.url, api.timeout);
+        
+        if (!response.ok) {
+          completedApis++;
+          return;
+        }
+        
+        const data = await response.json();
+        const countryCode = api.getCountryCode(data);
+        
+        if (countryCode && typeof countryCode === 'string' && countryCode.length === 2) {
+          const code = countryCode.toUpperCase();
+          results.push(code);
+          countryVotes[code] = (countryVotes[code] || 0) + 1;
+          
+          console.log(`✅ API ${index + 1} (${api.url.split('/')[2]}) detected:`, code);
+          
+          // Se 2+ APIs concordam, retornar imediatamente (alta confiança)
+          if (!resolved && countryVotes[code] >= 2) {
+            resolved = true;
+            console.log('🎯 Early consensus reached:', code, 'with', countryVotes[code], 'votes');
+            resolve({ country: code, confidence: 'high', source: 'api-consensus' });
+          }
+          
+          // Se timezone concorda com API, retornar (alta confiança)
+          if (!resolved && timezoneCountry && code === timezoneCountry) {
+            resolved = true;
+            console.log('🎯 Timezone + API match:', code);
+            resolve({ country: code, confidence: 'high', source: 'timezone-api-match' });
+          }
+        }
+        
+        completedApis++;
+        
+        // Se todas as APIs completaram sem consenso
+        if (!resolved && completedApis === GEO_APIS.length) {
+          // Usar o mais votado
+          const sortedCountries = Object.entries(countryVotes).sort((a, b) => b[1] - a[1]);
+          if (sortedCountries.length > 0) {
+            const [winner, votes] = sortedCountries[0];
+            const confidence = votes >= 2 ? 'high' : votes === 1 ? 'medium' : 'low';
+            resolve({ country: winner, confidence, source: 'api-majority' });
+          } else {
+            resolve(null);
+          }
+        }
+      } catch (error) {
+        completedApis++;
+        
+        // Se todas falharam
+        if (!resolved && completedApis === GEO_APIS.length && results.length === 0) {
+          resolve(null);
+        }
+      }
+    });
+    
+    // Timeout global de 3 segundos
+    setTimeout(() => {
+      if (!resolved) {
+        resolved = true;
+        if (results.length > 0) {
+          const sortedCountries = Object.entries(countryVotes).sort((a, b) => b[1] - a[1]);
+          const [winner, votes] = sortedCountries[0];
+          console.log('⏱️ Timeout reached, using best result:', winner);
+          resolve({ country: winner, confidence: votes >= 2 ? 'medium' : 'low', source: 'api-timeout' });
+        } else if (timezoneCountry) {
+          console.log('⏱️ Timeout, using timezone fallback:', timezoneCountry);
+          resolve({ country: timezoneCountry, confidence: 'medium', source: 'timezone-fallback' });
+        } else {
+          resolve(null);
+        }
+      }
+    }, 3000);
   });
   
-  // Encontrar o país com mais votos
-  let mostVotedCountry = validResults[0];
-  let maxVotes = 1;
+  const apiResult = await racePromise;
   
-  for (const [country, votes] of Object.entries(countryVotes)) {
-    if (votes > maxVotes) {
-      mostVotedCountry = country;
-      maxVotes = votes;
-    }
+  if (apiResult) {
+    return apiResult;
   }
   
-  console.log('🗳️ Country votes:', countryVotes, '-> Winner:', mostVotedCountry);
+  // 4. Fallback para timezone se APIs falharam
+  if (timezoneCountry) {
+    console.log('⚠️ APIs failed, using timezone:', timezoneCountry);
+    return { country: timezoneCountry, confidence: 'medium', source: 'timezone-only' };
+  }
   
-  return mostVotedCountry;
+  // 5. Último fallback: idioma do navegador
+  const languageCountry = detectCountryByLanguage();
+  if (languageCountry) {
+    console.log('⚠️ Using browser language fallback:', languageCountry);
+    return { country: languageCountry, confidence: 'low', source: 'language' };
+  }
+  
+  console.log('❌ All detection methods failed');
+  return null;
 };
+
+// Exportar funções auxiliares para uso em outros hooks
+export { detectCountryByTimezone, detectCountryByLanguage, detectCountryRobust };
 
 export const useGeoLocation = () => {
   // Inicializar com dados do cache IMEDIATAMENTE
@@ -333,36 +504,38 @@ export const useGeoLocation = () => {
 
   const detectCountryByIP = async () => {
     try {
-      console.log('🌍 Iniciando detecção de país por IP...');
+      console.log('🌍 Iniciando detecção de país otimizada...');
       
-      // Usar a função robusta de detecção
-      const countryCode = await detectCountryRobust();
+      // Usar a função robusta de detecção com confiança
+      const result = await detectCountryRobust();
       
-      if (countryCode) {
-        const detectedCountry = supportedCountries[countryCode];
+      if (result) {
+        const detectedCountry = supportedCountries[result.country];
         
         if (detectedCountry) {
-          console.log('✅ País detectado e suportado:', countryCode);
+          console.log(`✅ País detectado e suportado: ${result.country} (confiança: ${result.confidence}, fonte: ${result.source})`);
           setUserCountry(detectedCountry);
-          localStorage.setItem('userCountry', countryCode);
+          localStorage.setItem('userCountry', result.country);
           localStorage.setItem('lastIpDetection', Date.now().toString());
+          localStorage.setItem('detectionConfidence', result.confidence);
+          localStorage.setItem('detectionSource', result.source);
           
-          const language = COUNTRY_LANGUAGES[countryCode] || 'pt';
+          const language = COUNTRY_LANGUAGES[result.country] || 'pt';
           setDetectedLanguage(language);
           applyLanguage(language);
         } else {
           // País não suportado - usar Angola como padrão (maioria dos users)
-          console.log('🌍 País não suportado, usando AO como padrão:', countryCode);
+          console.log('🌍 País não suportado, usando AO como padrão:', result.country);
           setUserCountry(supportedCountries.AO);
           localStorage.setItem('userCountry', 'AO');
-          localStorage.setItem('detectedButUnsupported', countryCode);
+          localStorage.setItem('detectedButUnsupported', result.country);
           localStorage.setItem('lastIpDetection', Date.now().toString());
           setDetectedLanguage('pt');
           applyLanguage('pt');
         }
       } else {
-        // Nenhuma API funcionou - usar Angola como fallback (maioria dos utilizadores)
-        console.log('⚠️ Todas as APIs de IP falharam, usando AO como fallback');
+        // Nenhum método funcionou - usar Angola como fallback (maioria dos utilizadores)
+        console.log('⚠️ Todos os métodos de detecção falharam, usando AO como fallback');
         const storedCountry = localStorage.getItem('userCountry');
         
         // Só atualizar se não tivermos nenhum país guardado
@@ -375,7 +548,7 @@ export const useGeoLocation = () => {
         }
       }
     } catch (err) {
-      console.error('❌ Erro ao detectar país por IP:', err);
+      console.error('❌ Erro ao detectar país:', err);
       // Em caso de erro - manter país existente ou usar Angola
       const storedCountry = localStorage.getItem('userCountry');
       if (!storedCountry) {
