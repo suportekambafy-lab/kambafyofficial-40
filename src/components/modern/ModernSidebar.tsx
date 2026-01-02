@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useSellerTheme } from '@/hooks/useSellerTheme';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useSellerPendingRefunds } from '@/hooks/useSellerPendingRefunds';
+import { usePreferredCurrency } from '@/hooks/usePreferredCurrency';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -74,6 +75,8 @@ export function ModernSidebar({
   const { isDark } = useSellerTheme();
   const { t } = useTranslation();
   const { count: pendingRefundsCount } = useSellerPendingRefunds();
+  const { preferredCurrency } = usePreferredCurrency();
+  const displayCurrency = preferredCurrency || '';
   const [dashboardData, setDashboardData] = useState({
     totalRevenue: 0,
   });
@@ -155,9 +158,10 @@ export function ModernSidebar({
     }
   };
 
+  // Meta (gamificação) usa o valor bruto/"score" já calculado, mas exibimos na moeda preferida do utilizador
   const kambaLevels = [1000000, 5000000, 15000000, 50000000, 100000000];
   let nextGoal = 1000000;
-  
+
   for (let i = 0; i < kambaLevels.length; i++) {
     if (dashboardData.totalRevenue < kambaLevels[i]) {
       nextGoal = kambaLevels[i];
@@ -166,6 +170,21 @@ export function ModernSidebar({
   }
 
   const progressPercent = Math.min((dashboardData.totalRevenue / nextGoal) * 100, 100);
+
+  const convertFromKZ = (valueKZ: number) => {
+    if (!displayCurrency || displayCurrency === 'KZ') return valueKZ;
+
+    const ratesFromKZ: Record<string, number> = {
+      EUR: 0.00095,
+      MZN: 0.0722,
+      GBP: 0.0008,
+      USD: 0.0011,
+      BRL: 0.0056,
+      KZ: 1,
+    };
+
+    return valueKZ * (ratesFromKZ[displayCurrency] ?? 1);
+  };
 
   const formatCurrency = (value: number) => {
     if (value >= 1000000) {
@@ -216,7 +235,10 @@ export function ModernSidebar({
             <div className="px-4 py-2 border-b border-sidebar-border">
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
-                  <span>Meta: {formatCurrency(dashboardData.totalRevenue)} / {formatCurrency(nextGoal)} KZ</span>
+                  <span>
+                    Meta: {formatCurrency(convertFromKZ(dashboardData.totalRevenue))} / {formatCurrency(convertFromKZ(nextGoal))}
+                    {displayCurrency ? ` ${displayCurrency}` : ''}
+                  </span>
                   <span className="text-yellow-500 font-semibold">{progressPercent.toFixed(0)}%</span>
                 </div>
                 <div className="w-full h-1.5 bg-sidebar-accent rounded-full overflow-hidden">
@@ -328,9 +350,12 @@ export function ModernSidebar({
       </div>
 
       {/* Progress Section */}
-      <div className={`${collapsed ? 'px-2 py-2' : 'px-4 py-2'}`}>
-        {collapsed ? (
-          <div className="flex flex-col items-center gap-1.5" title={`${formatCurrency(dashboardData.totalRevenue)} / ${formatCurrency(nextGoal)} KZ`}>
+            <div className={`${collapsed ? 'px-2 py-2' : 'px-4 py-2'}`}>
+              {collapsed ? (
+                <div
+                  className="flex flex-col items-center gap-1.5"
+                  title={`${formatCurrency(convertFromKZ(dashboardData.totalRevenue))} / ${formatCurrency(convertFromKZ(nextGoal))}${displayCurrency ? ` ${displayCurrency}` : ''}`}
+                >
             <div className="w-full h-1.5 bg-sidebar-accent rounded-full overflow-hidden">
               <motion.div 
                 initial={{ width: 0 }}
@@ -342,11 +367,14 @@ export function ModernSidebar({
             <span className="text-[10px] text-yellow-500 font-semibold">{progressPercent.toFixed(0)}%</span>
           </div>
         ) : (
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
-              <span>Meta: {formatCurrency(dashboardData.totalRevenue)} / {formatCurrency(nextGoal)} KZ</span>
-              <span className="text-yellow-500 font-semibold">{progressPercent.toFixed(0)}%</span>
-            </div>
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
+                <span>
+                  Meta: {formatCurrency(convertFromKZ(dashboardData.totalRevenue))} / {formatCurrency(convertFromKZ(nextGoal))}
+                  {displayCurrency ? ` ${displayCurrency}` : ''}
+                </span>
+                <span className="text-yellow-500 font-semibold">{progressPercent.toFixed(0)}%</span>
+              </div>
             <div className="w-full h-1.5 bg-sidebar-accent rounded-full overflow-hidden">
               <motion.div 
                 initial={{ width: 0 }}
