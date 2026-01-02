@@ -173,18 +173,18 @@ export function FinancialView() {
 
   const handleGenerateReport = async () => {
     toast({
-      title: "Relatório em desenvolvimento",
-      message: "Funcionalidade de relatórios será disponibilizada em breve.",
+      title: t("financial.report.inDevelopment"),
+      message: t("financial.report.inDevelopment"),
       variant: "warning",
     });
   };
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      pendente: { color: "bg-yellow-500", text: "Pendente" },
-      suspenso: { color: "bg-orange-500", text: "Em Análise" },
-      aprovado: { color: "bg-green-500", text: "Aprovado" },
-      rejeitado: { color: "bg-red-500", text: "Rejeitado" },
+      pendente: { color: "bg-yellow-500", text: t("financial.status.pending") },
+      suspenso: { color: "bg-orange-500", text: t("financial.status.inReview") },
+      aprovado: { color: "bg-green-500", text: t("financial.status.approved") },
+      rejeitado: { color: "bg-red-500", text: t("financial.status.rejected") },
     };
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pendente;
     return <Badge className={`${config.color} text-white`}>{config.text}</Badge>;
@@ -240,14 +240,14 @@ export function FinancialView() {
                 <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
                 <div>
                   <h3 className="font-semibold text-yellow-900 dark:text-yellow-100">
-                    Verificação de Identidade Pendente
+                    {t("financial.verification.pendingTitle")}
                   </h3>
                   <p className="text-sm text-yellow-800 dark:text-yellow-200 mt-1">
-                    Complete a verificação de identidade para solicitar saques.
+                    {t("financial.verification.pendingDescription")}
                   </p>
                   <Link to="/identidade">
                     <Button variant="outline" size="sm" className="mt-3">
-                      Verificar Agora
+                      {t("financial.verification.verifyNow")}
                     </Button>
                   </Link>
                 </div>
@@ -278,10 +278,10 @@ export function FinancialView() {
         <Card>
           <CardHeader className="pb-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <CardTitle className="text-base sm:text-lg">Histórico de Saques</CardTitle>
+              <CardTitle className="text-base sm:text-lg">{t("financial.withdrawal.historyTitle")}</CardTitle>
               {(totalWithdrawn[selectedCurrency] || 0) > 0 && (
                 <div className="flex items-center gap-2 text-sm">
-                  <span className="text-muted-foreground">Total Sacado:</span>
+                  <span className="text-muted-foreground">{t("financial.withdrawal.totalWithdrawn")}</span>
                   <span className="font-bold text-green-600">
                     {formatCurrency(totalWithdrawn[selectedCurrency] || 0, selectedCurrency)}
                   </span>
@@ -293,7 +293,7 @@ export function FinancialView() {
             {withdrawalRequests.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <PiggyBank className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                <p className="text-sm sm:text-base">Nenhum saque solicitado ainda</p>
+                <p className="text-sm sm:text-base">{t("financial.withdrawal.noWithdrawals")}</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -301,10 +301,10 @@ export function FinancialView() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="text-xs sm:text-sm">Data</TableHead>
-                        <TableHead className="text-xs sm:text-sm">Valor</TableHead>
-                        <TableHead className="text-xs sm:text-sm">Moeda</TableHead>
-                        <TableHead className="text-xs sm:text-sm">Status</TableHead>
+                        <TableHead className="text-xs sm:text-sm">{t("common.table.date")}</TableHead>
+                        <TableHead className="text-xs sm:text-sm">{t("common.table.value")}</TableHead>
+                        <TableHead className="text-xs sm:text-sm">{t("common.table.currency")}</TableHead>
+                        <TableHead className="text-xs sm:text-sm">{t("common.table.status")}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
