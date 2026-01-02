@@ -15,6 +15,7 @@ import CountryPriceConfig from "./CountryPriceConfig";
 import { ImageUploader } from "./ImageUploader";
 import { getAllPaymentMethods, PaymentMethod } from "@/utils/paymentMethods";
 import SubscriptionConfig from "./product-form/SubscriptionConfig";
+import { usePreferredCurrency } from "@/hooks/usePreferredCurrency";
 
 interface StepperProductFormProps {
   editingProduct?: any;
@@ -119,33 +120,16 @@ const getSteps = (productType: string) => {
 export default function StepperProductForm({ editingProduct, onSuccess, onCancel, selectedType }: StepperProductFormProps) {
   const { user } = useAuth();
   const { collapsed, isMobile } = useSidebar();
+  const { preferredCurrency } = usePreferredCurrency();
   const [currentStep, setCurrentStep] = useState(1);
   const [saving, setSaving] = useState(false);
   const [memberAreas, setMemberAreas] = useState<any[]>([]);
   const [newTag, setNewTag] = useState("");
-  const [userBaseCurrency, setUserBaseCurrency] = useState("KZ");
+  
+  // Usar preferredCurrency do hook, sem fallback para KZ
+  const userBaseCurrency = preferredCurrency || '';
   
   const STEPS = getSteps(selectedType || "");
-
-  // Load user's preferred currency
-  useEffect(() => {
-    const loadUserCurrency = async () => {
-      if (!user) return;
-      try {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('preferred_currency')
-          .eq('user_id', user.id)
-          .single();
-        if (profile?.preferred_currency) {
-          setUserBaseCurrency(profile.preferred_currency);
-        }
-      } catch (error) {
-        console.error('Error loading user currency:', error);
-      }
-    };
-    loadUserCurrency();
-  }, [user]);
 
   // Extrair o subtipo de assinatura (course ou software)
   const getSubscriptionType = (type: string): 'course' | 'software' | undefined => {
@@ -642,7 +626,7 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
           {currentStep === 2 && (
             <>
               <div>
-                <Label htmlFor="price">Preço (KZ) *</Label>
+                <Label htmlFor="price">Preço{userBaseCurrency ? ` (${userBaseCurrency})` : ''} *</Label>
                 <Input
                   id="price"
                   type="number"
