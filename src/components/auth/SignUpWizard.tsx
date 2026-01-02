@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Mail, Lock, User, MapPin, Briefcase, BookOpen, Video, Package, Sparkles, Check } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Mail, Lock, User, MapPin, Briefcase, BookOpen, Video, Package, Sparkles, Check, Loader2 } from 'lucide-react';
 import { useGeoLocation } from '@/hooks/useGeoLocation';
+import { supabase } from '@/integrations/supabase/client';
 import KambafyLogoGreen from '@/assets/kambafy-logo-green.png';
 
 interface SignUpWizardProps {
@@ -102,8 +103,10 @@ export const SignUpWizard: React.FC<SignUpWizardProps> = ({
   const [alreadySells, setAlreadySells] = useState<boolean | null>(null);
   const [productTypes, setProductTypes] = useState<string[]>([]);
 
-  // Erros locais
+  // Erros locais e verificação de email
   const [localError, setLocalError] = useState('');
+  const [checkingEmail, setCheckingEmail] = useState(false);
+  const [emailExists, setEmailExists] = useState(false);
 
   // Detecção de país por IP
   const {
@@ -121,7 +124,18 @@ export const SignUpWizard: React.FC<SignUpWizardProps> = ({
     }
   }, [userCountry, geoLoading]);
 
-  const validateStep = (currentStep: number): boolean => {
+  const checkEmailExists = async (emailToCheck: string): Promise<boolean> => {
+    try {
+      const { data } = await supabase.rpc('get_auth_user_id_by_email', {
+        _email: emailToCheck.trim().toLowerCase()
+      });
+      return !!data;
+    } catch {
+      return false;
+    }
+  };
+
+  const validateStep = async (currentStep: number): Promise<boolean> => {
     setLocalError('');
     
     switch (currentStep) {
@@ -134,6 +148,18 @@ export const SignUpWizard: React.FC<SignUpWizardProps> = ({
           setLocalError('Por favor, insira um email válido');
           return false;
         }
+        
+        // Verificar se email já existe
+        setCheckingEmail(true);
+        const exists = await checkEmailExists(email);
+        setCheckingEmail(false);
+        
+        if (exists) {
+          setEmailExists(true);
+          setLocalError('Este email já tem uma conta.');
+          return false;
+        }
+        setEmailExists(false);
         return true;
       case 2: // Senha
         if (!password) {
@@ -184,8 +210,9 @@ export const SignUpWizard: React.FC<SignUpWizardProps> = ({
     }
   };
   
-  const handleNext = () => {
-    if (validateStep(step)) {
+  const handleNext = async () => {
+    const isValid = await validateStep(step);
+    if (isValid) {
       if (step === totalSteps) {
         handleSubmit();
       } else {
@@ -296,6 +323,7 @@ export const SignUpWizard: React.FC<SignUpWizardProps> = ({
                     value={email} 
                     onChange={e => {
                       setEmail(e.target.value);
+                      setEmailExists(false);
                       setLocalError('');
                     }} 
                     placeholder="seu@email.com" 
@@ -304,6 +332,17 @@ export const SignUpWizard: React.FC<SignUpWizardProps> = ({
                     autoComplete="email" 
                   />
                 </div>
+                
+                {emailExists && (
+                  <div className="text-center">
+                    <button 
+                      onClick={onBack} 
+                      className="text-primary hover:underline text-sm font-medium"
+                    >
+                      Fazer Login →
+                    </button>
+                  </div>
+                )}
               </div>
             )}
             
@@ -518,7 +557,7 @@ export const SignUpWizard: React.FC<SignUpWizardProps> = ({
           <button 
             type="button" 
             onClick={handleBack} 
-            disabled={loading} 
+            disabled={loading || checkingEmail} 
             className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl border border-border bg-foreground/5 text-foreground hover:bg-foreground/10 transition-colors disabled:opacity-50"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -528,11 +567,20 @@ export const SignUpWizard: React.FC<SignUpWizardProps> = ({
           <button 
             type="button" 
             onClick={handleNext} 
-            disabled={loading} 
+            disabled={loading || checkingEmail} 
             className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
           >
-            <span>{step === totalSteps ? (loading ? 'Criando...' : 'Criar Conta') : 'Continuar'}</span>
-            {step < totalSteps && <ArrowRight className="w-4 h-4" />}
+            {checkingEmail ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Processando...</span>
+              </>
+            ) : (
+              <>
+                <span>{step === totalSteps ? (loading ? 'Criando...' : 'Criar Conta') : 'Continuar'}</span>
+                {step < totalSteps && <ArrowRight className="w-4 h-4" />}
+              </>
+            )}
           </button>
         </div>
         
