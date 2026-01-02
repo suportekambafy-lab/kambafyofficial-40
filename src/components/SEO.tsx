@@ -62,6 +62,9 @@ export const SEO = ({
     // Update canonical URL
     updateCanonical(canonical || `https://kambafy.com${location.pathname}`);
     
+    // Update hreflang tags for multilingual SEO
+    updateHreflangTags(location.pathname);
+    
     // Add structured data with priority
     if (structuredData) {
       addStructuredData(structuredData);
@@ -109,6 +112,37 @@ const updateCanonical = (href: string) => {
     document.head.appendChild(element);
   }
   element.href = href;
+};
+
+// Add or update hreflang tags for multilingual SEO
+const updateHreflangTags = (pathname: string) => {
+  // Remove existing hreflang tags
+  document.querySelectorAll('link[rel="alternate"][hreflang]').forEach(el => el.remove());
+  
+  // Get clean path without language prefix
+  const cleanPath = pathname.replace(/^\/(pt|en|es)(\/|$)/, '/').replace(/^\/+/, '/');
+  const basePath = cleanPath === '/' ? '' : cleanPath;
+  
+  const languages = [
+    { lang: 'pt', prefix: '' },
+    { lang: 'en', prefix: '/en' },
+    { lang: 'es', prefix: '/es' },
+  ];
+  
+  languages.forEach(({ lang, prefix }) => {
+    const link = document.createElement('link');
+    link.rel = 'alternate';
+    link.hreflang = lang;
+    link.href = `https://kambafy.com${prefix}${basePath}`;
+    document.head.appendChild(link);
+  });
+  
+  // Add x-default
+  const xDefault = document.createElement('link');
+  xDefault.rel = 'alternate';
+  xDefault.hreflang = 'x-default';
+  xDefault.href = `https://kambafy.com${basePath}`;
+  document.head.appendChild(xDefault);
 };
 
 const addStructuredData = (data: object) => {

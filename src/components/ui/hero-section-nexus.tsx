@@ -30,6 +30,7 @@ import { AppStoreButton } from "@/components/ui/app-store-button";
 import { BookOpen, DollarSign, Users, Shield, Star, Play, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { SubdomainLink } from "@/components/SubdomainLink";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { TopSellersRanking } from "@/components/TopSellersRanking";
 import kambafy_icon from "@/assets/kambafy-icon-gray.png";
 import teamImage from "@/assets/team-collaboration.jpg";
@@ -609,7 +610,8 @@ const InteractiveHero: React.FC = () => {
                     <NavLink href="#sobre">Sobre</NavLink>
                 </div>
 
-                <div className="flex items-center flex-shrink-0 space-x-4 lg:space-x-6">
+                <div className="flex items-center flex-shrink-0 space-x-2 lg:space-x-4">
+                    <LanguageSwitcher variant="ghost" className="text-gray-300 hover:text-white" />
                     <button onClick={() => handleAuthNavigation('login')} className="hidden md:inline-block text-sm font-medium text-gray-300 hover:text-white transition-colors duration-200">Entrar</button>
 
                     <motion.button
