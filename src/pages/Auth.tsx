@@ -11,6 +11,7 @@ import victorAvatar from '@/assets/testimonial-victor-muabi.jpg';
 import { useLogin2FA } from '@/hooks/useLogin2FA';
 import TwoFactorVerification from '@/components/TwoFactorVerification';
 import KambafyLogo from '@/assets/kambafy-logo-gray.svg';
+import KambafyIconWhite from '@/assets/kambafy-icon-white.png';
 import { motion } from 'framer-motion';
 import { SignUpWizard, SignUpData } from '@/components/auth/SignUpWizard';
 
@@ -600,8 +601,8 @@ const Auth = () => {
         
         {/* Logo no topo */}
         <div className="absolute top-6 left-6 z-20">
-          <div className="w-10 h-10 bg-foreground rounded-lg flex items-center justify-center p-1.5 shadow-lg">
-            <img src={KambafyLogo} alt="Kambafy" className="w-full h-full object-contain" />
+          <div className="w-10 h-10 flex items-center justify-center">
+            <img src={KambafyIconWhite} alt="Kambafy" className="w-full h-full object-contain" />
           </div>
         </div>
 
