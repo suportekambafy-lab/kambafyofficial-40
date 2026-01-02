@@ -22,6 +22,7 @@ import professionalManImage from "@/assets/professional-man.jpg";
 import { getAllPaymentMethods, getPaymentMethodName, getAngolaPaymentMethods, getCountryByPaymentMethod, getCountryFlag } from "@/utils/paymentMethods";
 import { formatWithMaxTwoDecimals } from '@/utils/priceFormatting';
 import { getActualCurrency, getActualAmount, calculateSellerEarning } from '@/utils/currencyUtils';
+import { usePreferredCurrency } from '@/hooks/usePreferredCurrency';
 // ✅ Formatar valor na moeda original SEM conversão
 const formatCurrencyNative = (amount: number, currency: string = 'KZ'): string => {
   const normalizedCurrency = currency === 'AOA' ? 'KZ' : currency;
@@ -116,16 +117,24 @@ export default function Sales() {
       return acc;
     }, {} as Record<string, number>)
   });
+  const { preferredCurrency } = usePreferredCurrency();
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("todos");
   const [paymentFilter, setPaymentFilter] = useState("todos");
-  const [currencyFilter, setCurrencyFilter] = useState("KZ");
+  const [currencyFilter, setCurrencyFilter] = useState("");
   const [selectedProduct, setSelectedProduct] = useState("todos");
   const [periodFilter, setPeriodFilter] = useState("30"); // ✅ Padrão: 30 dias
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(200); // Mostrar todas as vendas
   const [showAllPaymentMethods, setShowAllPaymentMethods] = useState(false);
+
+  // Set default currency from user's preferred currency
+  useEffect(() => {
+    if (preferredCurrency && !currencyFilter) {
+      setCurrencyFilter(preferredCurrency);
+    }
+  }, [preferredCurrency, currencyFilter]);
   const [resendingAccessFor, setResendingAccessFor] = useState<string | null>(null); // ID da venda sendo processada
   const [resendAccessDialogOpen, setResendAccessDialogOpen] = useState(false);
   const [selectedSaleForResend, setSelectedSaleForResend] = useState<Sale | null>(null);

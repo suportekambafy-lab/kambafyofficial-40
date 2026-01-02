@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { Home, BarChart3, User } from 'lucide-react';
 import { getActualCurrency, getActualAmount, calculateSellerEarning } from '@/utils/currencyUtils';
+import { usePreferredCurrency } from '@/hooks/usePreferredCurrency';
 
 interface Order {
   id: string;
@@ -39,12 +40,20 @@ interface SalesData {
 
 export function MobileDashboard() {
   const { user, signOut } = useAuth();
+  const { preferredCurrency } = usePreferredCurrency();
   const [selectedProduct, setSelectedProduct] = useState('todos');
   const [timeFilter, setTimeFilter] = useState('hoje');
-  const [selectedCurrency, setSelectedCurrency] = useState('KZ');
+  const [selectedCurrency, setSelectedCurrency] = useState('');
   const [activeTab, setActiveTab] = useState('home');
   const [allOrders, setAllOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Set default currency from user's preferred currency
+  useEffect(() => {
+    if (preferredCurrency && !selectedCurrency) {
+      setSelectedCurrency(preferredCurrency);
+    }
+  }, [preferredCurrency, selectedCurrency]);
 
   // Load all orders once and filter in memory for instant response
   const loadAllOrders = useCallback(async () => {

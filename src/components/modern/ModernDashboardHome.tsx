@@ -41,17 +41,24 @@ export function ModernDashboardHome() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { formatInPreferredCurrency } = usePreferredCurrency();
+  const { preferredCurrency, loading: currencyLoading } = usePreferredCurrency();
   const [timeFilter, setTimeFilter] = useState('ultimos-30-dias');
   const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>(undefined);
   const [selectedProduct, setSelectedProduct] = useState('todos');
-  const [selectedCurrency, setSelectedCurrency] = useState('KZ');
+  const [selectedCurrency, setSelectedCurrency] = useState('');
   const [allOrders, setAllOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [showValues, setShowValues] = useState({
     revenue: true,
     sales: true,
   });
+
+  // Set default currency from user's preferred currency
+  useEffect(() => {
+    if (preferredCurrency && !selectedCurrency) {
+      setSelectedCurrency(preferredCurrency);
+    }
+  }, [preferredCurrency, selectedCurrency]);
 
   // Load all orders (own sales + affiliate commissions + module payments)
   const loadAllOrders = useCallback(async () => {
@@ -528,9 +535,7 @@ export function ModernDashboardHome() {
             <div className="flex items-center justify-between">
               <h2 className="text-2xl md:text-3xl font-bold text-foreground">
                 {showValues.revenue 
-                  ? dashboardData.displayCurrency 
-                    ? `${formatWithMaxTwoDecimals(dashboardData.totalRevenue)} ${dashboardData.displayCurrency}`
-                    : formatInPreferredCurrency(dashboardData.totalRevenue)
+                  ? `${formatWithMaxTwoDecimals(dashboardData.totalRevenue)} ${dashboardData.displayCurrency || selectedCurrency || 'KZ'}`
                   : "••••••••"}
               </h2>
               <Button

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatWithMaxTwoDecimals } from '@/utils/priceFormatting';
+
 export interface CurrencyBalance {
   id: string;
   currency: string;
@@ -42,7 +43,33 @@ export function useCurrencyBalances() {
   const [transactions, setTransactions] = useState<CurrencyTransaction[]>([]);
   const [totalWithdrawn, setTotalWithdrawn] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
-  const [selectedCurrency, setSelectedCurrency] = useState<string>('KZ');
+  const [selectedCurrency, setSelectedCurrency] = useState<string>('');
+  const [preferredCurrencyLoaded, setPreferredCurrencyLoaded] = useState(false);
+
+  // Load user's preferred currency from profile
+  useEffect(() => {
+    const loadPreferredCurrency = async () => {
+      if (!user || preferredCurrencyLoaded) return;
+      
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('preferred_currency')
+          .eq('user_id', user.id)
+          .single();
+        
+        const currency = profile?.preferred_currency || 'KZ';
+        setSelectedCurrency(currency);
+        setPreferredCurrencyLoaded(true);
+      } catch (error) {
+        console.error('Error loading preferred currency:', error);
+        setSelectedCurrency('KZ');
+        setPreferredCurrencyLoaded(true);
+      }
+    };
+
+    loadPreferredCurrency();
+  }, [user, preferredCurrencyLoaded]);
 
   const loadBalances = useCallback(async () => {
     if (!user) return;
