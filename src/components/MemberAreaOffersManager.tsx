@@ -47,7 +47,27 @@ export function MemberAreaOffersManager({ memberAreaId, userId }: MemberAreaOffe
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingOffer, setEditingOffer] = useState<MemberAreaOffer | null>(null);
+  const [userBaseCurrency, setUserBaseCurrency] = useState("KZ");
   
+  // Load user's preferred currency
+  useEffect(() => {
+    const loadUserCurrency = async () => {
+      if (!userId) return;
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('preferred_currency')
+          .eq('user_id', userId)
+          .single();
+        if (profile?.preferred_currency) {
+          setUserBaseCurrency(profile.preferred_currency);
+        }
+      } catch (error) {
+        console.error('Error loading user currency:', error);
+      }
+    };
+    loadUserCurrency();
+  }, [userId]);
   const [formData, setFormData] = useState({
     product_id: '',
     title: '',
@@ -285,7 +305,7 @@ export function MemberAreaOffersManager({ memberAreaId, userId }: MemberAreaOffe
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="price">Preço (KZ) *</Label>
+                  <Label htmlFor="price">Preço ({userBaseCurrency}) *</Label>
                   <Input
                     id="price"
                     value={formData.price}
