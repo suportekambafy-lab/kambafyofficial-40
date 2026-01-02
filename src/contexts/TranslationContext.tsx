@@ -8,6 +8,8 @@ import { privacyTranslations } from '@/translations/privacy';
 import { helpCenterTranslations } from '@/translations/helpCenter';
 import { statusTranslations } from '@/translations/status';
 import { reportTranslations } from '@/translations/report';
+import { commonTranslations } from '@/translations/common';
+import { financialTranslations } from '@/translations/financial';
 
 export type Language = 'pt' | 'en' | 'es';
 
@@ -19,8 +21,8 @@ const mergeTranslations = (): Record<Language, Record<string, string>> => {
     es: {}
   };
   
-  // Merge all translation modules
-  const modules = [
+  // Merge all translation modules - modular files with {key: {pt, en, es}} format
+  const keyBasedModules = [
     pricingTranslations, 
     howItWorksTranslations, 
     featuresTranslations, 
@@ -30,13 +32,28 @@ const mergeTranslations = (): Record<Language, Record<string, string>> => {
     statusTranslations,
     reportTranslations
   ];
-  modules.forEach(module => {
+  
+  // Merge modules with {pt: {}, en: {}, es: {}} format
+  const langBasedModules = [
+    commonTranslations,
+    financialTranslations
+  ];
+  keyBasedModules.forEach(module => {
     Object.entries(module).forEach(([key, value]) => {
       if (typeof value === 'object' && value !== null && 'pt' in value) {
         const translationEntry = value as { pt: string; en: string; es: string };
         base.pt[key] = translationEntry.pt;
         base.en[key] = translationEntry.en;
         base.es[key] = translationEntry.es;
+      }
+    });
+  });
+  
+  // Merge lang-based modules
+  langBasedModules.forEach(module => {
+    (['pt', 'en', 'es'] as const).forEach(lang => {
+      if (module[lang]) {
+        Object.assign(base[lang], module[lang]);
       }
     });
   });
