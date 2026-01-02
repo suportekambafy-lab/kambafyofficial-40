@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Package, Eye, TrendingUp, TrendingDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { usePreferredCurrency } from '@/hooks/usePreferredCurrency';
 
 interface OptimizedProductCardProps {
   id: string;
@@ -27,6 +28,9 @@ export const OptimizedProductCard = memo(({
   onView,
   loading = false 
 }: OptimizedProductCardProps) => {
+  const { preferredCurrency } = usePreferredCurrency();
+  const currencyLabel = preferredCurrency || 'KZ';
+
   const statusVariant = useMemo(() => {
     switch (status) {
       case 'Ativo': return 'default';
@@ -85,7 +89,7 @@ export const OptimizedProductCard = memo(({
               {trend === 'down' && <TrendingDown className="h-3 w-3 text-red-500" />}
             </div>
             <p className="text-sm font-medium">
-              {price.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} KZ
+              {price.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} {currencyLabel}
             </p>
           </div>
           <Button 

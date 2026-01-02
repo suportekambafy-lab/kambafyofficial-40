@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Edit, Share, Trash2, Power, PowerOff, AlertCircle, RefreshCw } from "lucide-react";
 import { useCustomToast } from "@/hooks/useCustomToast";
+import { usePreferredCurrency } from "@/hooks/usePreferredCurrency";
 
 interface Product {
   id: string;
@@ -44,6 +45,9 @@ export const ProductCard = memo(({ product, onEdit, onShare, onDelete, onToggleS
   const salesCount = product.sales || 0;
   const isAffiliate = product.is_affiliate;
   const { toast } = useCustomToast();
+  const { preferredCurrency } = usePreferredCurrency();
+  
+  const currencyLabel = preferredCurrency || 'KZ';
   
   return (
     <Card className={`hover:shadow-lg transition-shadow h-full flex flex-col ${isAffiliate ? 'border-l-4 border-l-blue-500' : ''}`}>
@@ -119,7 +123,7 @@ export const ProductCard = memo(({ product, onEdit, onShare, onDelete, onToggleS
           <div className="flex justify-between items-center">
             <div>
               <p className="text-sm md:text-lg font-bold text-[hsl(var(--checkout-green-dark))]">
-                {parseFloat(product.price).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} KZ
+                {parseFloat(product.price).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace(/\.(\d{2})$/, ',$1')} {currencyLabel}
               </p>
               {isAffiliate && product.affiliate_commission ? (
                 <p className="text-xs text-green-600 font-medium">
