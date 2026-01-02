@@ -61,6 +61,7 @@ interface ProductWithProfile {
   profiles?: {
     full_name: string;
     email: string;
+    preferred_currency: string | null;
   } | null;
 }
 
@@ -132,7 +133,7 @@ export default function AdminProducts() {
           const batch = userIds.slice(i, i + PROFILE_BATCH_SIZE);
           const { data: profiles, error: profileError } = await supabase
             .from('profiles')
-            .select('user_id, full_name, email')
+            .select('user_id, full_name, email, preferred_currency')
             .in('user_id', batch);
 
           if (profileError) {
@@ -878,7 +879,7 @@ export default function AdminProducts() {
                   </TableCell>
                   <TableCell className="capitalize text-sm">{product.type}</TableCell>
                   <TableCell className="font-medium text-green-600">
-                    {parseFloat(product.price).toLocaleString('pt-AO')} KZ
+                    {parseFloat(product.price).toLocaleString('pt-AO')} {product.profiles?.preferred_currency || 'KZ'}
                   </TableCell>
                   <TableCell className="text-sm">{product.sales || 0}</TableCell>
                   <TableCell>{getStatusBadge(product)}</TableCell>
@@ -1029,7 +1030,7 @@ export default function AdminProducts() {
                 </div>
 
                 <div className="text-sm font-bold text-green-600 mb-3">
-                  {parseFloat(product.price).toLocaleString('pt-AO')} KZ
+                  {parseFloat(product.price).toLocaleString('pt-AO')} {product.profiles?.preferred_currency || 'KZ'}
                 </div>
               </CardHeader>
 
