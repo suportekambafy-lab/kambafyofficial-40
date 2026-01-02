@@ -58,8 +58,8 @@ const Checkout = () => {
   const {
     userCountry,
     loading: geoLoading,
-    formatPrice,
-    convertPrice,
+    formatPrice: formatPriceOriginal,
+    convertPrice: convertPriceOriginal,
     changeCountry,
     supportedCountries,
     isReady: geoReady
@@ -127,6 +127,17 @@ const Checkout = () => {
   const [error, setError] = useState<string>("");
   const [productNotFound, setProductNotFound] = useState(false);
   const [processing, setProcessing] = useState(false);
+
+  // Wrappers que passam a moeda base do produto
+  const formatPrice = useCallback((priceValue: number, targetCountry?: any, customPrices?: Record<string, string>) => {
+    const sourceCurrency = product?.currency || 'KZ';
+    return formatPriceOriginal(priceValue, targetCountry || userCountry, customPrices, sourceCurrency);
+  }, [formatPriceOriginal, userCountry, product?.currency]);
+
+  const convertPrice = useCallback((priceValue: number, targetCountry?: any, customPrices?: Record<string, string>) => {
+    const sourceCurrency = product?.currency || 'KZ';
+    return convertPriceOriginal(priceValue, targetCountry || userCountry, customPrices, sourceCurrency);
+  }, [convertPriceOriginal, userCountry, product?.currency]);
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",

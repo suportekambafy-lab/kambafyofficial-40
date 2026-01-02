@@ -84,11 +84,25 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
 
   const { fetchBalanceByEmail } = useKambaPayBalance();
 
+  // Wrapper para formatPrice que passa a moeda base do produto
+  const formatPriceWithProductCurrency = useCallback((priceValue: number, targetCountry?: any, customPrices?: Record<string, string>) => {
+    const sourceCurrency = product?.currency || 'KZ';
+    const country = targetCountry || userCountry;
+    return formatPrice(priceValue, country, customPrices, sourceCurrency);
+  }, [formatPrice, userCountry, product?.currency]);
+
+  // Wrapper para convertPrice que passa a moeda base do produto
+  const convertPriceWithProductCurrency = useCallback((priceValue: number, targetCountry?: any, customPrices?: Record<string, string>) => {
+    const sourceCurrency = product?.currency || 'KZ';
+    const country = targetCountry || userCountry;
+    return convertPrice(priceValue, country, customPrices, sourceCurrency);
+  }, [convertPrice, userCountry, product?.currency]);
+
   const totalAmountForDetection = useMemo(() => {
     if (!product) return 0;
     
     // Calcular preço do produto principal na moeda do país usando preços personalizados
-    const productPriceInTargetCurrency = convertPrice(parseFloat(product.price), userCountry, product?.custom_prices);
+    const productPriceInTargetCurrency = convertPriceWithProductCurrency(parseFloat(product.price), product?.custom_prices);
     
     // Somar order bumps (que já estão na moeda do país) - usar o cálculo atualizado
     const totalOrderBumpPrice = Array.from(selectedOrderBumps.values()).reduce((sum, { price }) => sum + price, 0);
@@ -96,6 +110,7 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
     
     console.log(`🔥 TOTAL AMOUNT DETECTION - DEBUGGING:`, {
       productPrice: parseFloat(product.price),
+      productCurrency: product?.currency,
       productPriceInTargetCurrency,
       totalOrderBumpPrice,
       selectedOrderBumpsCount: selectedOrderBumps.size,
@@ -109,7 +124,7 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
     });
     
     return total;
-  }, [product, selectedOrderBumps, accessExtensionPrice, userCountry, convertPrice]);
+  }, [product, selectedOrderBumps, accessExtensionPrice, userCountry, convertPriceWithProductCurrency]);
 
   // Função memoizada para obter métodos de pagamento
   const availablePaymentMethods = useMemo(() => {
@@ -570,12 +585,12 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
     couponDiscount,
     handleCouponApplied,
     
-    // Geolocalização
+    // Geolocalização - com wrappers que respeitam moeda do produto
     userCountry,
     geoLoading,
     geoReady,
-    formatPrice,
-    convertPrice,
+    formatPrice: formatPriceWithProductCurrency,
+    convertPrice: convertPriceWithProductCurrency,
     supportedCountries,
     
     // Afiliados
