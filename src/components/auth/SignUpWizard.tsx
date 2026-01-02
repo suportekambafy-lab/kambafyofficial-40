@@ -318,9 +318,7 @@ export const SignUpWizard: React.FC<SignUpWizardProps> = ({
             {/* Step 2: Senha */}
             {step === 2 && <div className="space-y-4">
                 <div className="text-center mb-6">
-                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <Lock className="w-6 h-6 text-primary" />
-                  </div>
+                  
                   <h2 className="text-xl font-semibold text-foreground">Crie sua senha</h2>
                   <p className="text-sm text-muted-foreground mt-1">Escolha uma senha segura</p>
                 </div>
