@@ -578,42 +578,42 @@ const Auth = () => {
 
   if (currentView === 'signup') {
     return (
-      <div className="min-h-screen flex flex-col md:flex-row font-geist w-full overflow-x-hidden bg-background">
-        <section className="flex-1 flex items-center justify-center p-4 md:p-8 py-8">
+      <div className="min-h-screen w-full relative font-geist overflow-hidden">
+        {/* Background Video */}
+        <div className="absolute inset-0 z-0">
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full h-full object-cover"
+            poster="https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1920&q=80"
+          >
+            <source 
+              src="https://cdn.shopify.com/videos/c/o/v/bcf68bbb61a044f8883e977f71c7c55f.mp4" 
+              type="video/mp4" 
+            />
+          </video>
+          {/* Overlay escuro */}
+          <div className="absolute inset-0 bg-black/50" />
+        </div>
+        
+        {/* Logo no topo */}
+        <div className="absolute top-6 left-6 z-20">
+          <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center p-1.5 shadow-lg">
+            <img src={KambafyLogo} alt="Kambafy" className="w-full h-full object-contain invert" />
+          </div>
+        </div>
+
+        {/* Formulário centralizado */}
+        <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
           <SignUpWizard
             onComplete={handleWizardComplete}
             onBack={() => setCurrentView('login')}
             loading={loading}
             error={errorField}
           />
-        </section>
-
-        {sampleTestimonials.length > 0 && (
-          <section className="hidden md:block flex-1 relative p-4">
-            <motion.div 
-              className="absolute inset-4 rounded-3xl bg-cover bg-center shadow-2xl" 
-              style={{ backgroundImage: `url(${loginHeroImage})` }}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2, duration: 0.5 }}
-            />
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-4 px-8 w-full justify-center">
-              <motion.div 
-                className="flex items-start gap-3 rounded-3xl bg-card/40 dark:bg-zinc-800/40 backdrop-blur-xl border border-white/10 p-5 w-64"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5, duration: 0.4 }}
-              >
-                <img src={sampleTestimonials[0].avatarSrc} className="h-10 w-10 object-cover rounded-2xl" alt="avatar" />
-                <div className="text-sm leading-snug">
-                  <p className="flex items-center gap-1 font-medium">{sampleTestimonials[0].name}</p>
-                  <p className="text-muted-foreground">{sampleTestimonials[0].handle}</p>
-                  <p className="mt-1 text-foreground/80">{sampleTestimonials[0].text}</p>
-                </div>
-              </motion.div>
-            </div>
-          </section>
-        )}
+        </div>
       </div>
     );
   }
