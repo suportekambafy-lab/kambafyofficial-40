@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Mail, Lock, User, MapPin, Briefcase, BookOpen, Video, Package, Sparkles, Check } from 'lucide-react';
 import { useGeoLocation } from '@/hooks/useGeoLocation';
-import KambafyLogo from '@/assets/kambafy-logo-gray.svg';
+import KambafyLogoGreen from '@/assets/kambafy-logo-green.png';
 
 interface SignUpWizardProps {
   onComplete: (data: SignUpData) => void;
@@ -202,9 +202,7 @@ export const SignUpWizard: React.FC<SignUpWizardProps> = ({
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.1 }}
         >
-          <div className="w-16 h-16 bg-foreground rounded-2xl flex items-center justify-center p-2.5 shadow-lg">
-            <img src={KambafyLogo} alt="Kambafy" className="w-full h-full object-contain" />
-          </div>
+          <img src={KambafyLogoGreen} alt="Kambafy" className="h-10 object-contain" />
         </motion.div>
         
         {/* Barra de progresso */}
