@@ -196,16 +196,33 @@ const SignUpCodeVerification = ({
             'PT': 'EUR',
             'ES': 'EUR',
             'BR': 'BRL',
-            'GB': 'GBP'
+            'GB': 'GBP',
+            'US': 'USD'
           };
           
-          await supabase.from('profiles').update({
+          const preferredCurrency = currencyMap[savedCountry] || 'KZ';
+          
+          // Usar upsert para garantir que o perfil seja atualizado mesmo se foi criado pelo trigger
+          const { error: updateError } = await supabase.from('profiles').upsert({
+            user_id: authUser.user.id,
             country: savedCountry,
-            preferred_currency: currencyMap[savedCountry] || 'KZ'
-          }).eq('user_id', authUser.user.id);
+            preferred_currency: preferredCurrency
+          }, { 
+            onConflict: 'user_id',
+            ignoreDuplicates: false 
+          });
+          
+          if (updateError) {
+            console.error('❌ Erro ao salvar país no perfil:', updateError);
+            // Tentar update como fallback
+            await supabase.from('profiles').update({
+              country: savedCountry,
+              preferred_currency: preferredCurrency
+            }).eq('user_id', authUser.user.id);
+          }
           
           localStorage.removeItem('signupCountry');
-          console.log('✅ País salvo no perfil:', savedCountry);
+          console.log('✅ País salvo no perfil:', savedCountry, '- Moeda:', preferredCurrency);
         }
       }
       
