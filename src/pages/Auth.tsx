@@ -600,8 +600,8 @@ const Auth = () => {
         
         {/* Logo no topo */}
         <div className="absolute top-6 left-6 z-20">
-          <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center p-1.5 shadow-lg">
-            <img src={KambafyLogo} alt="Kambafy" className="w-full h-full object-contain invert" />
+          <div className="w-10 h-10 bg-foreground rounded-lg flex items-center justify-center p-1.5 shadow-lg">
+            <img src={KambafyLogo} alt="Kambafy" className="w-full h-full object-contain" />
           </div>
         </div>
 
