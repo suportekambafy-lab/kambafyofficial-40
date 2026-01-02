@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Mail, Lock, User, MapPin, Briefcase, BookOpen, Video, Package, Sparkles, Check, Loader2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Mail, Lock, User, MapPin, Briefcase, BookOpen, Video, Package, Sparkles, Check, Loader2, Eye, EyeOff } from 'lucide-react';
 import { useGeoLocation } from '@/hooks/useGeoLocation';
 import { supabase } from '@/integrations/supabase/client';
 import KambafyLogoGreen from '@/assets/kambafy-logo-green.png';
@@ -107,6 +107,8 @@ export const SignUpWizard: React.FC<SignUpWizardProps> = ({
   const [localError, setLocalError] = useState('');
   const [checkingEmail, setCheckingEmail] = useState(false);
   const [emailExists, setEmailExists] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Detecção de país por IP
   const {
@@ -360,34 +362,52 @@ export const SignUpWizard: React.FC<SignUpWizardProps> = ({
                 <div className="space-y-3">
                   <div>
                     <label className="text-sm font-medium text-muted-foreground block mb-1">Senha</label>
-                    <input 
-                      type="password" 
-                      value={password} 
-                      onChange={e => setPassword(e.target.value)} 
-                      placeholder="Mínimo 6 caracteres" 
-                      className="w-full bg-foreground/5 border border-border rounded-xl p-3 text-sm focus:outline-none focus:border-primary transition-colors" 
-                      style={{ fontSize: '16px' }} 
-                      autoComplete="new-password" 
-                      autoCapitalize="off" 
-                      autoCorrect="off" 
-                      spellCheck="false" 
-                    />
+                    <div className="relative">
+                      <input 
+                        type={showPassword ? "text" : "password"}
+                        value={password} 
+                        onChange={e => setPassword(e.target.value)} 
+                        placeholder="Mínimo 6 caracteres" 
+                        className="w-full bg-foreground/5 border border-border rounded-xl p-3 pr-10 text-sm focus:outline-none focus:border-primary transition-colors" 
+                        style={{ fontSize: '16px' }} 
+                        autoComplete="new-password" 
+                        autoCapitalize="off" 
+                        autoCorrect="off" 
+                        spellCheck="false" 
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
                   </div>
                   
                   <div>
                     <label className="text-sm font-medium text-muted-foreground block mb-1">Confirmar Senha</label>
-                    <input 
-                      type="password" 
-                      value={confirmPassword} 
-                      onChange={e => setConfirmPassword(e.target.value)} 
-                      placeholder="Repita a senha" 
-                      className="w-full bg-foreground/5 border border-border rounded-xl p-3 text-sm focus:outline-none focus:border-primary transition-colors" 
-                      style={{ fontSize: '16px' }} 
-                      autoComplete="new-password" 
-                      autoCapitalize="off" 
-                      autoCorrect="off" 
-                      spellCheck="false" 
-                    />
+                    <div className="relative">
+                      <input 
+                        type={showConfirmPassword ? "text" : "password"}
+                        value={confirmPassword} 
+                        onChange={e => setConfirmPassword(e.target.value)} 
+                        placeholder="Repita a senha" 
+                        className="w-full bg-foreground/5 border border-border rounded-xl p-3 pr-10 text-sm focus:outline-none focus:border-primary transition-colors" 
+                        style={{ fontSize: '16px' }} 
+                        autoComplete="new-password" 
+                        autoCapitalize="off" 
+                        autoCorrect="off" 
+                        spellCheck="false" 
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
