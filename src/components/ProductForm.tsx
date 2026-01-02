@@ -38,6 +38,7 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
   const [memberAreas, setMemberAreas] = useState<MemberArea[]>([]);
   const [loadingMemberAreas, setLoadingMemberAreas] = useState(false);
   const [showEbookUploader, setShowEbookUploader] = useState(false);
+  const [userBaseCurrency, setUserBaseCurrency] = useState("KZ");
 
   const [formData, setFormData] = useState({
     name: "",
@@ -64,6 +65,26 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
   });
 
   const [newTag, setNewTag] = useState("");
+
+  // Load user's preferred currency
+  useEffect(() => {
+    const loadUserCurrency = async () => {
+      if (!user) return;
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('preferred_currency')
+          .eq('user_id', user.id)
+          .single();
+        if (profile?.preferred_currency) {
+          setUserBaseCurrency(profile.preferred_currency);
+        }
+      } catch (error) {
+        console.error('Error loading user currency:', error);
+      }
+    };
+    loadUserCurrency();
+  }, [user]);
 
   useEffect(() => {
     const loadMemberAreas = async () => {
@@ -496,7 +517,7 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="price">Preço (KZ) *</Label>
+              <Label htmlFor="price">Preço ({userBaseCurrency}) *</Label>
               <Input
                 id="price"
                 type="number"
@@ -510,6 +531,7 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
             {/* Configuração de preços por país */}
             <CountryPriceConfig
               basePrice={formData.price}
+              baseCurrency={userBaseCurrency}
               customPrices={formData.customPrices}
               onCustomPricesChange={(prices) => handleInputChange("customPrices", prices)}
             />

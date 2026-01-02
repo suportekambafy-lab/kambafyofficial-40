@@ -41,6 +41,7 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
   const [loadingMemberAreas, setLoadingMemberAreas] = useState(false);
   const [showEbookUploader, setShowEbookUploader] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
+  const [userBaseCurrency, setUserBaseCurrency] = useState("KZ");
 
   const [formData, setFormData] = useState({
     name: "",
@@ -66,6 +67,26 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
   });
 
   const [newTag, setNewTag] = useState("");
+
+  // Load user's preferred currency
+  useEffect(() => {
+    const loadUserCurrency = async () => {
+      if (!user) return;
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('preferred_currency')
+          .eq('user_id', user.id)
+          .single();
+        if (profile?.preferred_currency) {
+          setUserBaseCurrency(profile.preferred_currency);
+        }
+      } catch (error) {
+        console.error('Error loading user currency:', error);
+      }
+    };
+    loadUserCurrency();
+  }, [user]);
 
   useEffect(() => {
     const loadMemberAreas = async () => {
@@ -643,7 +664,7 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="price">Preço (KZ) *</Label>
+          <Label htmlFor="price">Preço ({userBaseCurrency}) *</Label>
           <Input
             id="price"
             type="number"
@@ -674,6 +695,7 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
       {/* Configuração de preços por país */}
       <CountryPriceConfig
         basePrice={formData.price}
+        baseCurrency={userBaseCurrency}
         customPrices={formData.customPrices}
         onCustomPricesChange={(prices) => handleInputChange("customPrices", prices)}
       />
