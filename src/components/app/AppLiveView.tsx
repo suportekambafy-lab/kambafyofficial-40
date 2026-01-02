@@ -556,7 +556,7 @@ export function AppLiveView({
                   <p className="text-xs text-muted-foreground">{product.sales} vendas</p>
                 </div>
                 <p className="text-sm font-semibold text-foreground">
-                  {formatPriceForSeller(product.revenue, 'KZ')}
+                  {formatPriceForSeller(product.revenue, currencyLabel)}
                 </p>
               </div>)}
         </CardContent>
