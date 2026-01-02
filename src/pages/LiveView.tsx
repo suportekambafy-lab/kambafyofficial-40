@@ -11,6 +11,7 @@ import RotatingEarth from '@/components/app/RotatingEarth';
 import { useCheckoutPresenceCount } from '@/hooks/useCheckoutPresenceCount';
 import { Progress } from '@/components/ui/progress';
 import { useTranslation } from '@/hooks/useTranslation';
+import { usePreferredCurrency } from '@/hooks/usePreferredCurrency';
 interface SessionLocation {
   country: string;
   region: string;
@@ -28,6 +29,8 @@ export default function LiveView() {
   const {
     user
   } = useAuth();
+  const { preferredCurrency } = usePreferredCurrency();
+  const currencyLabel = preferredCurrency || 'KZ';
   const [loading, setLoading] = useState(true);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [productIds, setProductIds] = useState<string[]>([]);
@@ -330,7 +333,7 @@ export default function LiveView() {
                 <p className="text-sm text-muted-foreground mb-1">{t('liveView.netSales')}</p>
                 <div className="flex items-center gap-2">
                   <p className="text-xl font-bold text-foreground">
-                    {isInitialLoad ? <Skeleton className="h-8 w-24" /> : formatPriceForSeller(metrics.totalSales, 'KZ')}
+                    {isInitialLoad ? <Skeleton className="h-8 w-24" /> : formatPriceForSeller(metrics.totalSales, currencyLabel)}
                   </p>
                 </div>
               </CardContent>

@@ -9,6 +9,7 @@ import { ChevronLeft, TrendingDown, TrendingUp, CreditCard, CheckCircle, Users }
 import { formatPriceForSeller } from '@/utils/priceFormatting';
 import RotatingEarth from './RotatingEarth';
 import { useCheckoutPresenceCount } from '@/hooks/useCheckoutPresenceCount';
+import { usePreferredCurrency } from '@/hooks/usePreferredCurrency';
 interface LiveViewProps {
   onBack: () => void;
 }
@@ -47,6 +48,8 @@ export function AppLiveView({
   const {
     user
   } = useAuth();
+  const { preferredCurrency } = usePreferredCurrency();
+  const currencyLabel = preferredCurrency || 'KZ';
   const [loading, setLoading] = useState(true);
   const [productIds, setProductIds] = useState<string[]>([]);
 
@@ -414,7 +417,7 @@ export function AppLiveView({
             <div className="flex items-center gap-2">
               {isInitialLoad ? <Skeleton className="h-6 w-20" /> : (
                 <p className="text-base font-bold text-foreground">
-                  {formatPriceForSeller(metrics.totalSales, 'KZ')}
+                  {formatPriceForSeller(metrics.totalSales, currencyLabel)}
                 </p>
               )}
             </div>
