@@ -583,7 +583,7 @@ export const SignUpWizard: React.FC<SignUpWizardProps> = ({
             {checkingEmail ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Verificando...</span>
+                <span>Processando...</span>
               </>
             ) : (
               <>
