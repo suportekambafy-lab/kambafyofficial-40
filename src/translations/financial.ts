@@ -9,13 +9,16 @@ export const financialTranslations = {
     'financial.verification.pendingDescription': 'Complete a verificação de identidade para solicitar saques.',
     'financial.verification.verifyNow': 'Verificar Agora',
     'financial.verification.complete': 'Verificação Completa',
+    'financial.verification.required': 'Verificação necessária para saques',
+    'financial.verification.securityCheck': 'Verificação de Segurança',
+    'financial.verification.confirmIdentity': 'Por segurança, confirme sua identidade para alterar dados bancários',
     
     // Withdrawal history
     'financial.withdrawal.historyTitle': 'Histórico de Saques',
     'financial.withdrawal.totalWithdrawn': 'Total Sacado:',
     'financial.withdrawal.noWithdrawals': 'Nenhum saque solicitado ainda',
     'financial.withdrawal.requestWithdrawal': 'Solicitar Saque',
-    'financial.withdrawal.minAmount': 'Valor mínimo:',
+    'financial.withdrawal.minAmount': 'Saque mínimo:',
     'financial.withdrawal.maxAmount': 'Valor máximo:',
     'financial.withdrawal.availableBalance': 'Saldo disponível:',
     'financial.withdrawal.amount': 'Valor do saque',
@@ -23,8 +26,8 @@ export const financialTranslations = {
     'financial.withdrawal.quickSelect': 'Seleção rápida:',
     
     // Balance
-    'financial.balance.available': 'Saldo Disponível',
-    'financial.balance.retained': 'Saldo Retido',
+    'financial.balance.available': 'Saldo Disponível em',
+    'financial.balance.retained': 'Valor Retido',
     'financial.balance.total': 'Saldo Total',
     'financial.balance.pending': 'Pendente',
     'financial.balance.showBalance': 'Mostrar saldo',
@@ -37,11 +40,25 @@ export const financialTranslations = {
     // Banking info
     'financial.banking.title': 'Informações Bancárias',
     'financial.banking.noMethod': 'Nenhum método de pagamento cadastrado',
-    'financial.banking.addMethod': 'Adicionar método de pagamento',
+    'financial.banking.addMethod': 'Adicionar Método de Recebimento',
     'financial.banking.bankName': 'Nome do banco',
     'financial.banking.accountNumber': 'Número da conta',
     'financial.banking.iban': 'IBAN',
     'financial.banking.swift': 'SWIFT/BIC',
+    'financial.banking.methodType': 'Tipo de Método',
+    'financial.banking.selectType': 'Selecione o tipo...',
+    'financial.banking.fillAllFields': 'Preencha todos os campos',
+    'financial.banking.fillAllFieldsDesc': 'Por favor, preencha todos os campos do método de recebimento',
+    'financial.banking.selectTypeDesc': 'Por favor, selecione o tipo de método de recebimento',
+    'financial.banking.added': 'Adicionado',
+    'financial.banking.addedDesc': 'Método de recebimento adicionado com sucesso!',
+    'financial.banking.removed': 'Removido',
+    'financial.banking.removedDesc': 'Método de recebimento removido com sucesso!',
+    'financial.banking.error': 'Erro',
+    'financial.banking.errorSaving': 'Erro ao salvar métodos de recebimento',
+    'financial.banking.errorUnexpected': 'Erro inesperado ao salvar',
+    'financial.banking.addFirst': 'Adicione seu primeiro método de recebimento',
+    'financial.banking.clickToAdd': 'Clique no botão acima para adicionar',
     
     // Report
     'financial.report.generate': 'Gerar Relatório',
@@ -81,6 +98,9 @@ export const financialTranslations = {
     'financial.verification.pendingDescription': 'Complete identity verification to request withdrawals.',
     'financial.verification.verifyNow': 'Verify Now',
     'financial.verification.complete': 'Verification Complete',
+    'financial.verification.required': 'Verification required for withdrawals',
+    'financial.verification.securityCheck': 'Security Verification',
+    'financial.verification.confirmIdentity': 'For security, confirm your identity to change banking details',
     
     // Withdrawal history
     'financial.withdrawal.historyTitle': 'Withdrawal History',
@@ -95,7 +115,7 @@ export const financialTranslations = {
     'financial.withdrawal.quickSelect': 'Quick select:',
     
     // Balance
-    'financial.balance.available': 'Available Balance',
+    'financial.balance.available': 'Available Balance in',
     'financial.balance.retained': 'Retained Balance',
     'financial.balance.total': 'Total Balance',
     'financial.balance.pending': 'Pending',
@@ -109,11 +129,25 @@ export const financialTranslations = {
     // Banking info
     'financial.banking.title': 'Banking Information',
     'financial.banking.noMethod': 'No payment method registered',
-    'financial.banking.addMethod': 'Add payment method',
+    'financial.banking.addMethod': 'Add Payment Method',
     'financial.banking.bankName': 'Bank name',
     'financial.banking.accountNumber': 'Account number',
     'financial.banking.iban': 'IBAN',
     'financial.banking.swift': 'SWIFT/BIC',
+    'financial.banking.methodType': 'Method Type',
+    'financial.banking.selectType': 'Select type...',
+    'financial.banking.fillAllFields': 'Fill all fields',
+    'financial.banking.fillAllFieldsDesc': 'Please fill all fields for the payment method',
+    'financial.banking.selectTypeDesc': 'Please select the type of payment method',
+    'financial.banking.added': 'Added',
+    'financial.banking.addedDesc': 'Payment method added successfully!',
+    'financial.banking.removed': 'Removed',
+    'financial.banking.removedDesc': 'Payment method removed successfully!',
+    'financial.banking.error': 'Error',
+    'financial.banking.errorSaving': 'Error saving payment methods',
+    'financial.banking.errorUnexpected': 'Unexpected error saving',
+    'financial.banking.addFirst': 'Add your first payment method',
+    'financial.banking.clickToAdd': 'Click the button above to add',
     
     // Report
     'financial.report.generate': 'Generate Report',
@@ -153,6 +187,9 @@ export const financialTranslations = {
     'financial.verification.pendingDescription': 'Complete la verificación de identidad para solicitar retiros.',
     'financial.verification.verifyNow': 'Verificar Ahora',
     'financial.verification.complete': 'Verificación Completa',
+    'financial.verification.required': 'Verificación necesaria para retiros',
+    'financial.verification.securityCheck': 'Verificación de Seguridad',
+    'financial.verification.confirmIdentity': 'Por seguridad, confirme su identidad para cambiar datos bancarios',
     
     // Withdrawal history
     'financial.withdrawal.historyTitle': 'Historial de Retiros',
@@ -167,7 +204,7 @@ export const financialTranslations = {
     'financial.withdrawal.quickSelect': 'Selección rápida:',
     
     // Balance
-    'financial.balance.available': 'Saldo Disponible',
+    'financial.balance.available': 'Saldo Disponible en',
     'financial.balance.retained': 'Saldo Retenido',
     'financial.balance.total': 'Saldo Total',
     'financial.balance.pending': 'Pendiente',
@@ -181,11 +218,25 @@ export const financialTranslations = {
     // Banking info
     'financial.banking.title': 'Información Bancaria',
     'financial.banking.noMethod': 'Ningún método de pago registrado',
-    'financial.banking.addMethod': 'Agregar método de pago',
+    'financial.banking.addMethod': 'Agregar Método de Pago',
     'financial.banking.bankName': 'Nombre del banco',
     'financial.banking.accountNumber': 'Número de cuenta',
     'financial.banking.iban': 'IBAN',
     'financial.banking.swift': 'SWIFT/BIC',
+    'financial.banking.methodType': 'Tipo de Método',
+    'financial.banking.selectType': 'Seleccione el tipo...',
+    'financial.banking.fillAllFields': 'Complete todos los campos',
+    'financial.banking.fillAllFieldsDesc': 'Por favor, complete todos los campos del método de pago',
+    'financial.banking.selectTypeDesc': 'Por favor, seleccione el tipo de método de pago',
+    'financial.banking.added': 'Agregado',
+    'financial.banking.addedDesc': '¡Método de pago agregado con éxito!',
+    'financial.banking.removed': 'Eliminado',
+    'financial.banking.removedDesc': '¡Método de pago eliminado con éxito!',
+    'financial.banking.error': 'Error',
+    'financial.banking.errorSaving': 'Error al guardar métodos de pago',
+    'financial.banking.errorUnexpected': 'Error inesperado al guardar',
+    'financial.banking.addFirst': 'Agregue su primer método de pago',
+    'financial.banking.clickToAdd': 'Haga clic en el botón de arriba para agregar',
     
     // Report
     'financial.report.generate': 'Generar Informe',

@@ -5,6 +5,7 @@ import { PiggyBank, Shield, Eye, EyeOff, AlertCircle, ArrowDownCircle } from "lu
 import { useState } from "react";
 import { CURRENCY_CONFIG } from "@/hooks/useCurrencyBalances";
 import { Link } from "react-router-dom";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface CurrencyBalanceCardProps {
   currency: string;
@@ -27,6 +28,7 @@ export function CurrencyBalanceCard({
   canWithdraw,
   isVerified
 }: CurrencyBalanceCardProps) {
+  const { t } = useTranslation();
   const [showBalance, setShowBalance] = useState(true);
   const config = CURRENCY_CONFIG[currency] || CURRENCY_CONFIG['KZ'];
   
@@ -45,7 +47,7 @@ export function CurrencyBalanceCard({
             {/* Header with label */}
             <div className="flex items-center gap-2">
               <p className="text-sm font-medium text-muted-foreground">
-                Saldo Disponível em {config.name}
+                {t("financial.balance.available")} {config.name}
               </p>
             </div>
             
@@ -72,7 +74,7 @@ export function CurrencyBalanceCard({
                   disabled={!canWithdrawNow}
                 >
                   <PiggyBank className="h-4 w-4 mr-2" />
-                  Sacar em {currency}
+                  {t("financial.withdrawal.requestWithdrawal")}
                 </Button>
               )}
             </div>
@@ -80,7 +82,7 @@ export function CurrencyBalanceCard({
             {/* Minimum withdrawal info */}
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <AlertCircle className="h-3 w-3 shrink-0" />
-              <span>Saque mínimo: {formatCurrency(minimumWithdrawal, currency)}</span>
+              <span>{t("financial.withdrawal.minAmount")} {formatCurrency(minimumWithdrawal, currency)}</span>
             </div>
           </div>
 
@@ -91,10 +93,10 @@ export function CurrencyBalanceCard({
                 <AlertCircle className="h-4 w-4 text-yellow-600 mt-0.5 shrink-0" />
                 <div className="text-sm">
                   <p className="font-medium text-yellow-800 dark:text-yellow-200">
-                    Verificação necessária para saques
+                    {t("financial.verification.pendingTitle")}
                   </p>
                   <Link to="/identidade" className="text-yellow-700 dark:text-yellow-300 underline">
-                    Verificar agora
+                    {t("financial.verification.verifyNow")}
                   </Link>
                 </div>
               </div>
@@ -112,7 +114,7 @@ export function CurrencyBalanceCard({
                 <Shield className="h-5 w-5 text-orange-600" />
                 <div>
                   <p className="text-sm font-medium text-orange-800 dark:text-orange-200">
-                    Valor Retido
+                    {t("financial.balance.retained")}
                   </p>
                   <p className="text-lg font-bold text-orange-600">
                     {formatCurrency(retainedBalance, currency)}
@@ -120,7 +122,7 @@ export function CurrencyBalanceCard({
                 </div>
               </div>
               <Badge variant="outline" className="bg-orange-100 text-orange-700 border-orange-300">
-                Em análise
+                {t("financial.status.inReview")}
               </Badge>
             </div>
           </CardContent>
