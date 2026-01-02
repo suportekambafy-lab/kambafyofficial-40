@@ -266,3 +266,6 @@ verify_jwt = false
 
 [functions.check-sislog-payments]
 verify_jwt = false
+
+[functions.translate-batch]
+verify_jwt = false

@@ -1,10 +1,29 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { pricingTranslations } from '@/translations/pricing';
 
-type Language = 'pt' | 'en' | 'es';
+export type Language = 'pt' | 'en' | 'es';
+
+// Merge all translation modules
+const mergeTranslations = (): Record<Language, Record<string, string>> => {
+  const base: Record<Language, Record<string, string>> = {
+    pt: {},
+    en: {},
+    es: {}
+  };
+  
+  // Merge pricing translations
+  Object.entries(pricingTranslations).forEach(([lang, translations]) => {
+    base[lang as Language] = { ...base[lang as Language], ...translations };
+  });
+  
+  return base;
+};
+
+const EXTERNAL_TRANSLATIONS = mergeTranslations();
 
 // Traduções estáticas completas
-const TRANSLATIONS: Record<Language, Record<string, string>> = {
+const BASE_TRANSLATIONS: Record<Language, Record<string, string>> = {
   pt: {
     // Menu/Sidebar
     'menu.dashboard': 'Dashboard',
@@ -1080,7 +1099,12 @@ export function TranslationProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const t = (key: string): string => {
-    return TRANSLATIONS[language]?.[key] || TRANSLATIONS.pt[key] || key;
+    // First check external translations, then base translations
+    return EXTERNAL_TRANSLATIONS[language]?.[key] || 
+           BASE_TRANSLATIONS[language]?.[key] || 
+           EXTERNAL_TRANSLATIONS.pt[key] || 
+           BASE_TRANSLATIONS.pt[key] || 
+           key;
   };
 
   return (
@@ -1098,7 +1122,7 @@ export function useTranslation() {
     return {
       language,
       setLanguage: (lang: Language) => localStorage.setItem('detectedLanguage', lang),
-      t: (key: string) => TRANSLATIONS[language]?.[key] || TRANSLATIONS.pt[key] || key,
+      t: (key: string) => EXTERNAL_TRANSLATIONS[language]?.[key] || BASE_TRANSLATIONS[language]?.[key] || EXTERNAL_TRANSLATIONS.pt[key] || BASE_TRANSLATIONS.pt[key] || key,
       changeLanguage: (lang: Language) => localStorage.setItem('detectedLanguage', lang),
       currentLanguage: language,
       isTranslationReady: true
