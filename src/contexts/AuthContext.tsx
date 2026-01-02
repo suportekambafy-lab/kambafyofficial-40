@@ -212,17 +212,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(session);
         setUser(session.user);
         
-        // Verificar se é uma nova conta criada via Google OAuth
+        // Verificar se é uma nova conta criada via Google OAuth (não via email/senha)
         // Ignorar verificação se for admin (tem is_admin no metadata)
         if (event === 'SIGNED_IN' && session?.user) {
           const isAdmin = session.user.user_metadata?.is_admin === true;
+          const provider = session.user.app_metadata?.provider;
+          const isGoogleProvider = provider === 'google';
           
-          if (!isAdmin) {
+          if (!isAdmin && isGoogleProvider) {
             const userCreatedAt = new Date(session.user.created_at);
             const now = new Date();
             const secondsSinceCreation = (now.getTime() - userCreatedAt.getTime()) / 1000;
             
-            // Se a conta foi criada há menos de 10 segundos, é um novo registro via Google
+            // Se a conta foi criada há menos de 10 segundos via Google, é um novo registro
             if (secondsSinceCreation < 10) {
               console.log('❌ Nova conta detectada via Google OAuth - bloqueando');
               toast({
@@ -237,7 +239,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               setLoading(false);
               return;
             }
-          } else {
+          } else if (isAdmin) {
             console.log('✅ Login de admin detectado - ignorando verificação de Google OAuth');
           }
         }
