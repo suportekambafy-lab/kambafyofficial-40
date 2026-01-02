@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { Plus, Trash2, Edit, Package, DollarSign, Image as ImageIcon, Percent, Save, X, GripVertical } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { usePreferredCurrency } from '@/hooks/usePreferredCurrency';
 
 interface MemberAreaOffer {
   id: string;
@@ -42,32 +43,15 @@ interface MemberAreaOffersManagerProps {
 }
 
 export function MemberAreaOffersManager({ memberAreaId, userId }: MemberAreaOffersManagerProps) {
+  const { preferredCurrency } = usePreferredCurrency();
   const [offers, setOffers] = useState<MemberAreaOffer[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingOffer, setEditingOffer] = useState<MemberAreaOffer | null>(null);
-  const [userBaseCurrency, setUserBaseCurrency] = useState("KZ");
   
-  // Load user's preferred currency
-  useEffect(() => {
-    const loadUserCurrency = async () => {
-      if (!userId) return;
-      try {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('preferred_currency')
-          .eq('user_id', userId)
-          .single();
-        if (profile?.preferred_currency) {
-          setUserBaseCurrency(profile.preferred_currency);
-        }
-      } catch (error) {
-        console.error('Error loading user currency:', error);
-      }
-    };
-    loadUserCurrency();
-  }, [userId]);
+  // Usar preferredCurrency do hook, sem fallback para KZ
+  const userBaseCurrency = preferredCurrency || '';
   const [formData, setFormData] = useState({
     product_id: '',
     title: '',

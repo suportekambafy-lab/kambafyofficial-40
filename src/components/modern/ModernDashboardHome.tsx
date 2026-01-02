@@ -45,6 +45,7 @@ export function ModernDashboardHome() {
   const [timeFilter, setTimeFilter] = useState('ultimos-30-dias');
   const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>(undefined);
   const [selectedProduct, setSelectedProduct] = useState('todos');
+  // Iniciar vazio - será preenchido pelo preferredCurrency quando disponível
   const [selectedCurrency, setSelectedCurrency] = useState('');
   const [allOrders, setAllOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,21 +55,37 @@ export function ModernDashboardHome() {
   });
 
   const lastPreferredCurrencyRef = useRef<string | null>(null);
+  const userManuallyChangedCurrency = useRef(false);
 
   // Set default currency from user's preferred currency
-  // If the user changes their preference, update the filter only if the user didn't manually override it.
+  // Only auto-update if user hasn't manually changed the filter
   useEffect(() => {
-    if (!preferredCurrency) return;
+    if (!preferredCurrency || currencyLoading) return;
 
+    // Se o usuário já mudou manualmente, não sobrescrever
+    if (userManuallyChangedCurrency.current) return;
+
+    // Se não há moeda selecionada, usar a preferida
+    if (!selectedCurrency) {
+      setSelectedCurrency(preferredCurrency);
+      lastPreferredCurrencyRef.current = preferredCurrency;
+      return;
+    }
+
+    // Se a moeda selecionada é a antiga preferida, atualizar para nova
     const lastPreferred = lastPreferredCurrencyRef.current;
-    const shouldAutoUpdate = !selectedCurrency || (lastPreferred && selectedCurrency === lastPreferred);
-
-    if (shouldAutoUpdate) {
+    if (lastPreferred && selectedCurrency === lastPreferred && preferredCurrency !== lastPreferred) {
       setSelectedCurrency(preferredCurrency);
     }
 
     lastPreferredCurrencyRef.current = preferredCurrency;
-  }, [preferredCurrency, selectedCurrency]);
+  }, [preferredCurrency, currencyLoading, selectedCurrency]);
+
+  // Handler para mudança manual de moeda pelo usuário
+  const handleCurrencyChange = (currency: string) => {
+    userManuallyChangedCurrency.current = true;
+    setSelectedCurrency(currency);
+  };
 
   // Load all orders (own sales + affiliate commissions + module payments)
   const loadAllOrders = useCallback(async () => {
@@ -530,7 +547,8 @@ export function ModernDashboardHome() {
             </label>
             <CurrencyFilter
               value={selectedCurrency}
-              onValueChange={setSelectedCurrency}
+              onValueChange={handleCurrencyChange}
+              loading={currencyLoading}
             />
           </div>
         </div>

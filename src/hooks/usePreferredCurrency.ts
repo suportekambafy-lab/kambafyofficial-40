@@ -1,7 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatWithMaxTwoDecimals } from '@/utils/priceFormatting';
+import {
+  getCachedPreferredCurrency,
+  setCachedPreferredCurrency,
+  resolvePreferredCurrency,
+  SUPPORTED_CURRENCIES,
+} from '@/utils/accountCurrency';
 
 export interface CurrencyConfig {
   code: string;
@@ -23,8 +29,54 @@ const CURRENCY_CONFIGS: Record<string, CurrencyConfig> = {
 
 export const usePreferredCurrency = () => {
   const { user } = useAuth();
-  const [preferredCurrency, setPreferredCurrency] = useState<string>('KZ');
+  
+  // Iniciar com valor do cache (se existir) para evitar "flash"
+  const [preferredCurrency, setPreferredCurrency] = useState<string>(() => {
+    if (user?.id) {
+      return getCachedPreferredCurrency(user.id) || '';
+    }
+    return '';
+  });
   const [loading, setLoading] = useState(true);
+
+  const loadPreferredCurrency = useCallback(async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // Primeiro, tentar resolver do cache imediatamente
+      const cached = getCachedPreferredCurrency(user.id);
+      if (cached) {
+        setPreferredCurrency(cached);
+      }
+
+      // Buscar do Supabase para garantir sincronização
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('preferred_currency, country')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (!error && data) {
+        const resolved = resolvePreferredCurrency({
+          userId: user.id,
+          supabaseCurrency: (data as any).preferred_currency,
+          supabaseCountry: (data as any).country,
+        });
+
+        if (resolved) {
+          setPreferredCurrency(resolved);
+          setCachedPreferredCurrency(user.id, resolved);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading preferred currency:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
 
   useEffect(() => {
     if (user) {
@@ -42,8 +94,10 @@ export const usePreferredCurrency = () => {
             filter: `user_id=eq.${user.id}`
           },
           (payload: any) => {
-            if (payload.new?.preferred_currency) {
-              setPreferredCurrency(payload.new.preferred_currency);
+            const newCurrency = payload.new?.preferred_currency;
+            if (newCurrency && SUPPORTED_CURRENCIES.includes(newCurrency)) {
+              setPreferredCurrency(newCurrency);
+              setCachedPreferredCurrency(user.id, newCurrency);
             }
           }
         )
@@ -52,28 +106,12 @@ export const usePreferredCurrency = () => {
       return () => {
         supabase.removeChannel(channel);
       };
-    }
-  }, [user]);
-
-  const loadPreferredCurrency = async () => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('preferred_currency')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (!error && data) {
-        setPreferredCurrency((data as any).preferred_currency || 'KZ');
-      }
-    } catch (error) {
-      console.error('Error loading preferred currency:', error);
-    } finally {
+    } else {
+      // Sem usuário, limpar estado
+      setPreferredCurrency('');
       setLoading(false);
     }
-  };
+  }, [user, loadPreferredCurrency]);
 
   const getCurrencyConfig = (code?: string): CurrencyConfig => {
     const currencyCode = code || preferredCurrency;
