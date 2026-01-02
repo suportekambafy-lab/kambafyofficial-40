@@ -623,7 +623,7 @@ const InteractiveHero: React.FC = () => {
                         whileTap={{ scale: 0.97 }}
                         transition={{ type: "spring", stiffness: 400, damping: 15 }}
                     >
-                        Começar Agora
+                        {t('nav.startNow')}
                     </motion.button>
 
                     <motion.button
@@ -645,12 +645,12 @@ const InteractiveHero: React.FC = () => {
                         className="md:hidden absolute top-full left-0 right-0 bg-[#111111]/95 backdrop-blur-sm shadow-lg py-4 border-t border-gray-800/50"
                     >
                         <div className="flex flex-col items-center space-y-4 px-6">
-                            <a href="#recursos" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-medium text-gray-300 hover:text-white transition-colors">Recursos</a>
-                            <a href="#como-funciona" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-medium text-gray-300 hover:text-white transition-colors">Como Funciona</a>
-                            <a href="#precos" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-medium text-gray-300 hover:text-white transition-colors">Preços</a>
-                            <a href="#sobre" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-medium text-gray-300 hover:text-white transition-colors">Sobre</a>
+                            <a href="#recursos" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-medium text-gray-300 hover:text-white transition-colors">{t('nav.features')}</a>
+                            <a href="#como-funciona" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-medium text-gray-300 hover:text-white transition-colors">{t('nav.howItWorks')}</a>
+                            <a href="#precos" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-medium text-gray-300 hover:text-white transition-colors">{t('nav.pricing')}</a>
+                            <a href="#sobre" onClick={() => setIsMobileMenuOpen(false)} className="text-sm font-medium text-gray-300 hover:text-white transition-colors">{t('nav.about')}</a>
                             <hr className="w-full border-t border-gray-700/50 my-2"/>
-                            <button onClick={() => handleAuthNavigation('login')} className="text-sm font-medium text-gray-300 hover:text-white transition-colors">Entrar</button>
+                            <button onClick={() => handleAuthNavigation('login')} className="text-sm font-medium text-gray-300 hover:text-white transition-colors">{t('nav.login')}</button>
                         </div>
                     </motion.div>
                 )}
@@ -774,10 +774,10 @@ const InteractiveHero: React.FC = () => {
               <div className="mx-auto max-w-7xl">
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
                       {[
-                          { number: "1000+", label: "Criadores Ativos" },
-                          { number: "15k+", label: "Alunos Satisfeitos" },
-                          { number: "500+", label: "Cursos Disponíveis" },
-                          { number: "98%", label: "Satisfação dos Usuários" }
+                          { number: "1000+", label: t('stats.creators') },
+                          { number: "15k+", label: t('stats.students') },
+                          { number: "500+", label: t('stats.courses') },
+                          { number: "98%", label: t('stats.satisfaction') }
                       ].map((stat, index) => (
                           <div key={index}>
                               <div className="text-4xl font-bold text-[#81e76a] mb-2">{stat.number}</div>
@@ -793,11 +793,11 @@ const InteractiveHero: React.FC = () => {
               <div className="mx-auto max-w-7xl">
                   <div className="text-center mb-16">
                       <h2 className="text-3xl lg:text-5xl font-bold text-white mb-4">
-                          Como{' '}
-                          <span className="text-[#81e76a]">Funciona</span>
+                          {t('howItWorks.title')}{' '}
+                          <span className="text-[#81e76a]">{t('howItWorks.titleHighlight')}</span>
                       </h2>
                       <p className="text-lg text-gray-400">
-                          Comece a vender seus produtos digitais em 3 passos simples
+                          {t('howItWorks.subtitle')}
                       </p>
                   </div>
 
@@ -805,18 +805,18 @@ const InteractiveHero: React.FC = () => {
                       {[
                           { 
                               number: "01", 
-                              title: "Crie sua Conta", 
-                              description: "Cadastre-se gratuitamente e configure seu perfil de criador em minutos. Sem burocracias, sem complicações." 
+                              title: t('howItWorks.step1.title'), 
+                              description: t('howItWorks.step1.description')
                           },
                           { 
                               number: "02", 
-                              title: "Configure seu Produto", 
-                              description: "Adicione seus cursos, e-books ou produtos digitais. Personalize seu checkout e defina seus preços." 
+                              title: t('howItWorks.step2.title'), 
+                              description: t('howItWorks.step2.description')
                           },
                           { 
                               number: "03", 
-                              title: "Comece a Vender", 
-                              description: "Compartilhe seu link e comece a receber pagamentos. Receba em até 3 dias úteis após cada venda." 
+                              title: t('howItWorks.step3.title'), 
+                              description: t('howItWorks.step3.description')
                           }
                       ].map((step, index) => (
                           <div key={index} className="relative">
@@ -841,19 +841,19 @@ const InteractiveHero: React.FC = () => {
               <div className="mx-auto max-w-7xl">
                   <div className="text-center mb-16">
                       <h2 className="text-3xl lg:text-5xl font-bold text-white mb-4">
-                          O que Dizem Nossos{' '}
-                          <span className="text-[#81e76a]">Criadores</span>
+                          {t('testimonials.title')}{' '}
+                          <span className="text-[#81e76a]">{t('testimonials.titleHighlight')}</span>
                       </h2>
                       <p className="text-lg text-gray-400">
-                          Histórias reais de pessoas que transformaram suas vidas com a Kambafy
+                          {t('testimonials.subtitle')}
                       </p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                       {[
-                          { name: "Victor Muabi", role: "@victormuabi", content: "Esta é a plataforma que faltava no mercado, fácil de usar, converte muito bem, aumentou minha conversão em lançamentos.", image: victorAvatar },
-                          { name: "Carlos Santos", role: "@carlostech", content: "Este serviço transformou minha forma de trabalhar. Design limpo, recursos poderosos e excelente suporte.", image: "https://randomuser.me/api/portraits/men/64.jpg" },
-                          { name: "Ricardo Lima", role: "@ricardocria", content: "Já testei muitas plataformas, mas esta se destaca. Intuitiva, confiável e genuinamente útil para produtividade.", image: "https://randomuser.me/api/portraits/men/32.jpg" }
+                          { name: "Victor Muabi", role: "@victormuabi", content: t('testimonials.1.content'), image: victorAvatar },
+                          { name: "Carlos Santos", role: "@carlostech", content: t('testimonials.2.content'), image: "https://randomuser.me/api/portraits/men/64.jpg" },
+                          { name: "Ricardo Lima", role: "@ricardocria", content: t('testimonials.3.content'), image: "https://randomuser.me/api/portraits/men/32.jpg" }
                       ].map((testimonial, index) => (
                           <div key={index} className="bg-[#1a1a1a] border border-gray-700/50 rounded-lg p-6">
                               <div className="flex items-center mb-4">
@@ -878,35 +878,35 @@ const InteractiveHero: React.FC = () => {
               <div className="mx-auto max-w-7xl">
                   <div className="text-center mb-16">
                       <h2 className="text-3xl lg:text-5xl font-bold text-white mb-4">
-                          Preços{' '}
-                          <span className="text-[#81e76a]">Transparentes</span>
+                          {t('pricing.title')}{' '}
+                          <span className="text-[#81e76a]">{t('pricing.titleHighlight')}</span>
                       </h2>
                       <p className="text-lg text-gray-400">
-                          Sem mensalidades, sem custos fixos. Pague apenas quando vender.
+                          {t('pricing.subtitle')}
                       </p>
                   </div>
 
                   <div className="max-w-3xl mx-auto">
                       <div className="bg-[#1a1a1a] border border-gray-700/50 rounded-2xl p-8 md:p-12 hover:border-[#81e76a]/50 transition-all duration-300">
                           <div className="text-center mb-8">
-                              <h3 className="text-2xl font-bold text-white mb-4">Plano Comissão</h3>
+                              <h3 className="text-2xl font-bold text-white mb-4">{t('pricing.planName')}</h3>
                               <div className="flex items-baseline justify-center gap-2 mb-4">
                                   <span className="text-4xl md:text-5xl font-bold text-[#81e76a]">8,99% - 9,99%</span>
-                                  <span className="text-gray-400">por venda</span>
+                                  <span className="text-gray-400">{t('pricing.rate')}</span>
                               </div>
-                              <p className="text-gray-400">Angola 8,99% • Internacional 9,99%</p>
+                              <p className="text-gray-400">{t('pricing.rateInfo')}</p>
                           </div>
 
                           <div className="space-y-4 mb-8">
                               {[
-                                  "Sem mensalidade ou taxa de adesão",
-                                  "Checkout personalizado e profissional",
-                                  "Sistema completo de afiliados",
-                                  "Order Bump para aumentar vendas",
-                                  "Integração com Facebook Pixel",
-                                  "Área de membros ilimitada",
-                                  "Pagamento em até 3 dias úteis",
-                                  "Suporte prioritário"
+                                  t('pricing.feature1'),
+                                  t('pricing.feature2'),
+                                  t('pricing.feature3'),
+                                  t('pricing.feature4'),
+                                  t('pricing.feature5'),
+                                  t('pricing.feature6'),
+                                  t('pricing.feature7'),
+                                  t('pricing.feature8')
                               ].map((feature, index) => (
                                   <div key={index} className="flex items-center gap-3">
                                       <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#81e76a]/20 flex items-center justify-center">
@@ -922,7 +922,7 @@ const InteractiveHero: React.FC = () => {
                               className="w-full bg-[#81e76a] hover:bg-[#81e76a]/90 text-[#111111] text-lg font-semibold"
                               onClick={() => handleAuthNavigation('signup')}
                           >
-                              Começar Agora Grátis
+                              {t('pricing.cta')}
                               <ArrowRight className="ml-2 w-5 h-5" />
                           </Button>
                       </div>
@@ -936,19 +936,17 @@ const InteractiveHero: React.FC = () => {
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
                       <div>
                           <h2 className="text-3xl lg:text-5xl font-bold text-white mb-6">
-                              Sobre a{' '}
-                              <span className="text-[#81e76a]">Kambafy</span>
+                              {t('about.title')}{' '}
+                              <span className="text-[#81e76a]">{t('about.titleHighlight')}</span>
                           </h2>
                           <p className="text-lg text-gray-400 mb-6">
-                              Somos uma startup angolana dedicada a democratizar o acesso ao conhecimento e 
-                              empoderar criadores de conteúdo em toda Angola e países lusófonos.
+                              {t('about.description1')}
                           </p>
                           <p className="text-lg text-gray-400 mb-8">
-                              Nossa missão é criar uma ponte entre quem tem conhecimento e quem quer aprender, 
-                              proporcionando oportunidades de crescimento pessoal e profissional para todos.
+                              {t('about.description2')}
                           </p>
                           <div className="space-y-4">
-                              {["Plataforma 100% nacional", "Pagamentos em multimoedas"].map((item, index) => (
+                              {[t('about.feature1'), t('about.feature2')].map((item, index) => (
                                   <div key={index} className="flex items-center space-x-3">
                                       <div className="w-2 h-2 bg-[#81e76a] rounded-full"></div>
                                       <span className="text-gray-300">{item}</span>
@@ -969,35 +967,20 @@ const InteractiveHero: React.FC = () => {
               <div className="mx-auto max-w-4xl">
                   <div className="text-center mb-16">
                       <h2 className="text-3xl lg:text-5xl font-bold text-white mb-4">
-                          Perguntas{' '}
-                          <span className="text-[#81e76a]">Frequentes</span>
+                          {t('faq.title')}{' '}
+                          <span className="text-[#81e76a]">{t('faq.titleHighlight')}</span>
                       </h2>
                       <p className="text-lg text-gray-400">
-                          Tire suas dúvidas sobre a plataforma
+                          {t('faq.subtitle')}
                       </p>
                   </div>
                   <div className="space-y-4">
                       {[
-                          {
-                              question: "Como começar a vender na Kambafy?",
-                              answer: "Para começar, crie sua conta gratuita, configure seu perfil de criador e publique seu primeiro produto. Nossa equipe está disponível para ajudar em cada passo."
-                          },
-                          {
-                              question: "Como funciona a comissão da plataforma?",
-                              answer: "Trabalhamos com um modelo justo: cobramos apenas 8,99% de comissão para vendas em Angola e 9,99% para vendas internacionais (Moçambique, Portugal, cartões). Sem mensalidades, sem custos fixos."
-                          },
-                          {
-                              question: "Posso vender diferentes tipos de produtos?",
-                              answer: "Sim! Você pode vender cursos online, e-books, mentorias, templates, consultorias e muito mais. A plataforma é flexível para diversos tipos de infoprodutos."
-                          },
-                          {
-                              question: "Como recebo meus pagamentos?",
-                              answer: "Os pagamentos são processados automaticamente e transferidos para sua conta bancária em até 3 dias úteis. Suportamos múltiplas moedas e métodos de pagamento."
-                          },
-                          {
-                              question: "Preciso de conhecimentos técnicos?",
-                              answer: "Não! Nossa plataforma foi desenvolvida para ser intuitiva e fácil de usar. Qualquer pessoa pode criar e vender seus produtos digitais sem precisar de conhecimentos técnicos."
-                          }
+                          { question: t('faq.1.question'), answer: t('faq.1.answer') },
+                          { question: t('faq.2.question'), answer: t('faq.2.answer') },
+                          { question: t('faq.3.question'), answer: t('faq.3.answer') },
+                          { question: t('faq.4.question'), answer: t('faq.4.answer') },
+                          { question: t('faq.5.question'), answer: t('faq.5.answer') }
                       ].map((faq, index) => (
                           <div key={index} className="bg-[#1a1a1a] border border-gray-700/50 rounded-lg overflow-hidden">
                               <button 
@@ -1023,11 +1006,11 @@ const InteractiveHero: React.FC = () => {
                   </div>
                   <div className="mt-8 text-center">
                       <p className="text-gray-400 mb-4">
-                          Não encontrou a resposta que procurava?
+                          {t('faq.notFound')}
                       </p>
                       <Button variant="outline" className="border-[#81e76a] text-[#81e76a] hover:bg-[#81e76a]/10" asChild>
                           <SubdomainLink to="/ajuda">
-                              Ir para Central de Ajuda
+                              {t('faq.helpCenter')}
                           </SubdomainLink>
                       </Button>
                   </div>
@@ -1038,11 +1021,11 @@ const InteractiveHero: React.FC = () => {
           <section className="py-24 px-6 relative z-10">
               <div className="mx-auto max-w-4xl text-center">
                   <h2 className="text-3xl lg:text-5xl font-bold text-white mb-6">
-                      Pronto para{' '}
-                      <span className="text-[#81e76a]">Começar?</span>
+                      {t('cta.title')}{' '}
+                      <span className="text-[#81e76a]">{t('cta.titleHighlight')}</span>
                   </h2>
                   <p className="text-lg text-gray-400 mb-8">
-                      Cadastre-se gratuitamente e comece a monetizar seu conhecimento hoje mesmo
+                      {t('cta.subtitle')}
                   </p>
                   <div className="flex flex-col sm:flex-row gap-4 justify-center">
                       <Button 
@@ -1050,11 +1033,11 @@ const InteractiveHero: React.FC = () => {
                           className="bg-[#81e76a] hover:bg-[#81e76a]/90 text-[#111111] px-8 text-lg"
                           onClick={() => handleAuthNavigation('signup')}
                       >
-                          Criar Conta Grátis
+                          {t('cta.button')}
                           <ArrowRight className="ml-2 w-5 h-5" />
                       </Button>
                       <Button size="lg" variant="outline" className="border-[#81e76a] text-[#81e76a] hover:bg-[#81e76a]/10 px-8 text-lg" onClick={() => navigate('/contato')}>
-                          Falar com Especialista
+                          {t('cta.secondary')}
                       </Button>
                   </div>
               </div>
@@ -1066,36 +1049,36 @@ const InteractiveHero: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
                       <div>
                           <img src={kambafy_icon} alt="Kambafy" className="h-12 w-auto mb-4" />
-                          <p className="text-gray-500 text-sm">A maior plataforma Lusófona de infoprodutos</p>
+                          <p className="text-gray-500 text-sm">{t('footer.tagline')}</p>
                       </div>
                       <div>
-                          <h4 className="font-semibold text-white mb-4">Plataforma</h4>
+                          <h4 className="font-semibold text-white mb-4">{t('footer.platform')}</h4>
                           <ul className="space-y-2 text-sm">
-                              <li><SubdomainLink to="/como-funciona" className="text-gray-500 hover:text-white transition-colors">Como Funciona</SubdomainLink></li>
-                              <li><SubdomainLink to="/precos" className="text-gray-500 hover:text-white transition-colors">Preços</SubdomainLink></li>
-                              <li><SubdomainLink to="/recursos" className="text-gray-500 hover:text-white transition-colors">Recursos</SubdomainLink></li>
+                              <li><SubdomainLink to="/como-funciona" className="text-gray-500 hover:text-white transition-colors">{t('footer.howItWorks')}</SubdomainLink></li>
+                              <li><SubdomainLink to="/precos" className="text-gray-500 hover:text-white transition-colors">{t('footer.pricing')}</SubdomainLink></li>
+                              <li><SubdomainLink to="/recursos" className="text-gray-500 hover:text-white transition-colors">{t('footer.features')}</SubdomainLink></li>
                           </ul>
                       </div>
                       <div>
-                          <h4 className="font-semibold text-white mb-4">Suporte</h4>
+                          <h4 className="font-semibold text-white mb-4">{t('footer.support')}</h4>
                           <ul className="space-y-2 text-sm">
-                              <li><SubdomainLink to="/ajuda" className="text-gray-500 hover:text-white transition-colors">Central de Ajuda</SubdomainLink></li>
-                              <li><SubdomainLink to="/contato" className="text-gray-500 hover:text-white transition-colors">Contacto</SubdomainLink></li>
-                              <li><SubdomainLink to="/denuncie" className="text-gray-500 hover:text-white transition-colors">Denuncie</SubdomainLink></li>
-                              <li><SubdomainLink to="/status" className="text-gray-500 hover:text-white transition-colors">Status</SubdomainLink></li>
+                              <li><SubdomainLink to="/ajuda" className="text-gray-500 hover:text-white transition-colors">{t('footer.helpCenter')}</SubdomainLink></li>
+                              <li><SubdomainLink to="/contato" className="text-gray-500 hover:text-white transition-colors">{t('footer.contact')}</SubdomainLink></li>
+                              <li><SubdomainLink to="/denuncie" className="text-gray-500 hover:text-white transition-colors">{t('footer.report')}</SubdomainLink></li>
+                              <li><SubdomainLink to="/status" className="text-gray-500 hover:text-white transition-colors">{t('footer.status')}</SubdomainLink></li>
                           </ul>
                       </div>
                       <div>
-                          <h4 className="font-semibold text-white mb-4">Legal</h4>
+                          <h4 className="font-semibold text-white mb-4">{t('footer.legal')}</h4>
                           <ul className="space-y-2 text-sm">
-                              <li><SubdomainLink to="/privacidade" className="text-gray-500 hover:text-white transition-colors">Privacidade</SubdomainLink></li>
-                              <li><SubdomainLink to="/termos" className="text-gray-500 hover:text-white transition-colors">Termos</SubdomainLink></li>
-                              <li><SubdomainLink to="/cookies" className="text-gray-500 hover:text-white transition-colors">Cookies</SubdomainLink></li>
+                              <li><SubdomainLink to="/privacidade" className="text-gray-500 hover:text-white transition-colors">{t('footer.privacy')}</SubdomainLink></li>
+                              <li><SubdomainLink to="/termos" className="text-gray-500 hover:text-white transition-colors">{t('footer.terms')}</SubdomainLink></li>
+                              <li><SubdomainLink to="/cookies" className="text-gray-500 hover:text-white transition-colors">{t('footer.cookies')}</SubdomainLink></li>
                           </ul>
                       </div>
                   </div>
                   <div className="border-t border-gray-800 pt-8 text-center">
-                      <p className="text-gray-500 text-sm">© 2025 Kambafy. Todos os direitos reservados. Feito com ❤️ em Angola.</p>
+                      <p className="text-gray-500 text-sm">{t('footer.copyright')}</p>
                   </div>
               </div>
           </footer>
