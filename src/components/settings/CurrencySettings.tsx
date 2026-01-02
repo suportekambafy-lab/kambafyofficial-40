@@ -79,15 +79,28 @@ export const CurrencySettings: React.FC = () => {
 
     setSaving(true);
     try {
-      const { error } = await supabase
+      // Use upsert + select so we can detect when nothing was actually saved (e.g., RLS/no row)
+      const { data, error } = await supabase
         .from('profiles')
-        .update({
-          country,
-          preferred_currency: preferredCurrency
-        })
-        .eq('user_id', user.id);
+        .upsert(
+          {
+            user_id: user.id,
+            country,
+            preferred_currency: preferredCurrency,
+          },
+          {
+            onConflict: 'user_id',
+            ignoreDuplicates: false,
+          }
+        )
+        .select('country, preferred_currency')
+        .single();
 
       if (error) throw error;
+      if (!data) throw new Error('Não foi possível salvar as configurações.');
+
+      setCountry((data as any).country || country);
+      setPreferredCurrency((data as any).preferred_currency || preferredCurrency);
 
       toast({
         title: "Configurações salvas",

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -53,11 +53,21 @@ export function ModernDashboardHome() {
     sales: true,
   });
 
+  const lastPreferredCurrencyRef = useRef<string | null>(null);
+
   // Set default currency from user's preferred currency
+  // If the user changes their preference, update the filter only if the user didn't manually override it.
   useEffect(() => {
-    if (preferredCurrency && !selectedCurrency) {
+    if (!preferredCurrency) return;
+
+    const lastPreferred = lastPreferredCurrencyRef.current;
+    const shouldAutoUpdate = !selectedCurrency || (lastPreferred && selectedCurrency === lastPreferred);
+
+    if (shouldAutoUpdate) {
       setSelectedCurrency(preferredCurrency);
     }
+
+    lastPreferredCurrencyRef.current = preferredCurrency;
   }, [preferredCurrency, selectedCurrency]);
 
   // Load all orders (own sales + affiliate commissions + module payments)
