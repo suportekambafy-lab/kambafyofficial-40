@@ -172,17 +172,17 @@ export function ModernSidebar({
   const progressPercent = Math.min((dashboardData.totalRevenue / nextGoal) * 100, 100);
 
   // Importante: estas metas são um "score" de gamificação (valores fixos do sistema).
-  // Aqui apenas exibimos a *sigla* da moeda preferida, sem conversão cambial.
-  const convertFromKZ = (valueKZ: number) => valueKZ;
+  // Regra solicitada: 1.000.000 KZ => 1.000 EUR (ou seja, EUR = KZ / 1000). Outras moedas mantêm o valor.
+  const convertFromKZ = (valueKZ: number) => (displayCurrency === 'EUR' ? valueKZ / 1000 : valueKZ);
 
   const formatCurrency = (value: number) => {
-    if (value >= 1000000) {
-      return `${(value / 1000000).toFixed(1)}M`;
-    } else if (value >= 1000) {
-      return `${Math.round(value / 1000)}K`;
-    } else {
-      return `${Math.round(value)}`;
-    }
+    const formatInt = (n: number) => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+    if (displayCurrency === 'EUR') return formatInt(value);
+
+    if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
+    if (value >= 1000) return `${Math.round(value / 1000)}K`;
+    return `${Math.round(value)}`;
   };
 
   const handleItemClick = () => {
