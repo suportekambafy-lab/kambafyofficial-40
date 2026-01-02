@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useGeoLocation } from '@/hooks/useGeoLocation';
 import { useAffiliateTracking } from '@/hooks/useAffiliateTracking';
 import { useKambaPayBalance } from '@/hooks/useKambaPayBalance';
+import { COUNTRY_TO_CURRENCY } from '@/utils/accountCurrency';
 
 import { getPaymentMethodsByCountry } from '@/utils/paymentMethods';
 
@@ -84,19 +85,29 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
 
   const { fetchBalanceByEmail } = useKambaPayBalance();
 
+  // Função para obter moeda base do vendedor (derivada do país)
+  const getSellerBaseCurrency = useCallback(() => {
+    const sellerCountry = product?.profiles?.country;
+    if (sellerCountry && COUNTRY_TO_CURRENCY[sellerCountry]) {
+      console.log('💱 useOptimizedCheckout: moeda do vendedor:', COUNTRY_TO_CURRENCY[sellerCountry], 'país:', sellerCountry);
+      return COUNTRY_TO_CURRENCY[sellerCountry];
+    }
+    return 'KZ'; // Fallback
+  }, [product?.profiles?.country]);
+
   // Wrapper para formatPrice que passa a moeda base do produto
   const formatPriceWithProductCurrency = useCallback((priceValue: number, targetCountry?: any, customPrices?: Record<string, string>) => {
-    const sourceCurrency = product?.currency || 'KZ';
+    const sourceCurrency = getSellerBaseCurrency();
     const country = targetCountry || userCountry;
     return formatPrice(priceValue, country, customPrices, sourceCurrency);
-  }, [formatPrice, userCountry, product?.currency]);
+  }, [formatPrice, userCountry, getSellerBaseCurrency]);
 
   // Wrapper para convertPrice que passa a moeda base do produto
   const convertPriceWithProductCurrency = useCallback((priceValue: number, targetCountry?: any, customPrices?: Record<string, string>) => {
-    const sourceCurrency = product?.currency || 'KZ';
+    const sourceCurrency = getSellerBaseCurrency();
     const country = targetCountry || userCountry;
     return convertPrice(priceValue, country, customPrices, sourceCurrency);
-  }, [convertPrice, userCountry, product?.currency]);
+  }, [convertPrice, userCountry, getSellerBaseCurrency]);
 
   const totalAmountForDetection = useMemo(() => {
     if (!product) return 0;
