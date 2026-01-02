@@ -15,6 +15,7 @@ import { TranslationProvider } from "./contexts/TranslationContext";
 import { ThemeProvider } from "./hooks/useTheme";
 import { SubdomainGuard } from "./components/SubdomainGuard";
 import { OptimizedRoutes } from "./components/OptimizedRoutes";
+import { LanguageRouter } from "./components/LanguageRouter";
 import { EnhancedErrorBoundary } from "./components/ui/enhanced-error-boundary";
 import { Suspense, lazy } from "react";
 import AdminProtectedRoute from "./components/AdminProtectedRoute";
@@ -189,9 +190,39 @@ const App = () => {
                        <Route path="/obrigado" element={<OptimizedRoutes.ThankYou />} />
                        <Route path="/renovar/:token" element={<OptimizedRoutes.RenewalPage />} />
                        <Route path="/como-funciona" element={<OptimizedRoutes.HowItWorks />} />
-                      <Route path="/precos" element={<OptimizedRoutes.Pricing />} />
-                      <Route path="/recursos" element={<OptimizedRoutes.Features />} />
-                       <Route path="/ajuda" element={<OptimizedRoutes.HelpCenter />} />
+                       <Route path="/precos" element={<OptimizedRoutes.Pricing />} />
+                       <Route path="/recursos" element={<OptimizedRoutes.Features />} />
+                        <Route path="/ajuda" element={<OptimizedRoutes.HelpCenter />} />
+                        
+                        {/* Rotas com prefixo de idioma - Inglês */}
+                        <Route path="/en" element={<LanguageRouter><OptimizedRoutes.Index /></LanguageRouter>} />
+                        <Route path="/en/pricing" element={<LanguageRouter><OptimizedRoutes.Pricing /></LanguageRouter>} />
+                        <Route path="/en/features" element={<LanguageRouter><OptimizedRoutes.Features /></LanguageRouter>} />
+                        <Route path="/en/how-it-works" element={<LanguageRouter><OptimizedRoutes.HowItWorks /></LanguageRouter>} />
+                        <Route path="/en/help" element={<LanguageRouter><OptimizedRoutes.HelpCenter /></LanguageRouter>} />
+                        <Route path="/en/privacy" element={<LanguageRouter><OptimizedRoutes.Privacy /></LanguageRouter>} />
+                        <Route path="/en/terms" element={<LanguageRouter><OptimizedRoutes.Terms /></LanguageRouter>} />
+                        <Route path="/en/contact" element={<LanguageRouter><OptimizedRoutes.Contact /></LanguageRouter>} />
+                        
+                        {/* Rotas com prefixo de idioma - Espanhol */}
+                        <Route path="/es" element={<LanguageRouter><OptimizedRoutes.Index /></LanguageRouter>} />
+                        <Route path="/es/precios" element={<LanguageRouter><OptimizedRoutes.Pricing /></LanguageRouter>} />
+                        <Route path="/es/caracteristicas" element={<LanguageRouter><OptimizedRoutes.Features /></LanguageRouter>} />
+                        <Route path="/es/como-funciona" element={<LanguageRouter><OptimizedRoutes.HowItWorks /></LanguageRouter>} />
+                        <Route path="/es/ayuda" element={<LanguageRouter><OptimizedRoutes.HelpCenter /></LanguageRouter>} />
+                        <Route path="/es/privacidad" element={<LanguageRouter><OptimizedRoutes.Privacy /></LanguageRouter>} />
+                        <Route path="/es/terminos" element={<LanguageRouter><OptimizedRoutes.Terms /></LanguageRouter>} />
+                        <Route path="/es/contacto" element={<LanguageRouter><OptimizedRoutes.Contact /></LanguageRouter>} />
+                        
+                        {/* Rotas com prefixo de idioma - Português (explícito) */}
+                        <Route path="/pt" element={<LanguageRouter><OptimizedRoutes.Index /></LanguageRouter>} />
+                        <Route path="/pt/precos" element={<LanguageRouter><OptimizedRoutes.Pricing /></LanguageRouter>} />
+                        <Route path="/pt/recursos" element={<LanguageRouter><OptimizedRoutes.Features /></LanguageRouter>} />
+                        <Route path="/pt/como-funciona" element={<LanguageRouter><OptimizedRoutes.HowItWorks /></LanguageRouter>} />
+                        <Route path="/pt/ajuda" element={<LanguageRouter><OptimizedRoutes.HelpCenter /></LanguageRouter>} />
+                        <Route path="/pt/privacidade" element={<LanguageRouter><OptimizedRoutes.Privacy /></LanguageRouter>} />
+                        <Route path="/pt/termos" element={<LanguageRouter><OptimizedRoutes.Terms /></LanguageRouter>} />
+                        <Route path="/pt/contato" element={<LanguageRouter><OptimizedRoutes.Contact /></LanguageRouter>} />
                         <Route path="/comunidade" element={<OptimizedRoutes.SellerCommunity />} />
                         <Route path="/contato" element={<OptimizedRoutes.Contact />} />
                        <Route path="/denuncie" element={<OptimizedRoutes.Report />} />
