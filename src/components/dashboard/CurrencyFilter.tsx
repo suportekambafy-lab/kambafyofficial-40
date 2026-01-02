@@ -9,6 +9,7 @@ import {
 interface CurrencyFilterProps {
   value: string;
   onValueChange: (currency: string) => void;
+  loading?: boolean;
 }
 
 const CURRENCIES = [
@@ -20,14 +21,15 @@ const CURRENCIES = [
   { code: 'BRL', label: 'BRL (Brasil)' },
 ];
 
-export function CurrencyFilter({ value, onValueChange }: CurrencyFilterProps) {
-  const selectedCurrency = CURRENCIES.find(c => c.code === value) || CURRENCIES[0];
+export function CurrencyFilter({ value, onValueChange, loading }: CurrencyFilterProps) {
+  // NÃO forçar CURRENCIES[0] como fallback - isso causava o "flash KZ"
+  const selectedCurrency = CURRENCIES.find(c => c.code === value);
 
   return (
-    <Select value={value} onValueChange={onValueChange}>
+    <Select value={value || ''} onValueChange={onValueChange} disabled={loading}>
       <SelectTrigger className="w-full h-9 sm:h-10 rounded-lg text-xs sm:text-sm bg-card text-card-foreground border-border">
-        <SelectValue placeholder="Moeda" className="text-card-foreground">
-          {selectedCurrency.code}
+        <SelectValue placeholder={loading ? "Carregando..." : "Moeda"} className="text-card-foreground">
+          {selectedCurrency?.code || ''}
         </SelectValue>
       </SelectTrigger>
       <SelectContent>

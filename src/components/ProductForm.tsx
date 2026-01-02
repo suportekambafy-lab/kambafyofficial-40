@@ -16,6 +16,7 @@ import PaymentMethodsSelector from "./PaymentMethodsSelector";
 import CountryPriceConfig from "./CountryPriceConfig";
 import { getAllPaymentMethods, PaymentMethod } from "@/utils/paymentMethods";
 import { ImageUploader } from "./ImageUploader";
+import { usePreferredCurrency } from "@/hooks/usePreferredCurrency";
 
 interface ProductFormProps {
   editingProduct?: any;
@@ -34,11 +35,14 @@ interface MemberArea {
 export default function ProductForm({ editingProduct, selectedType = "", onSave, onCancel, open }: ProductFormProps) {
   const { toast } = useToast();
   const { user } = useAuth();
+  const { preferredCurrency, loading: currencyLoading } = usePreferredCurrency();
   const [saving, setSaving] = useState(false);
   const [memberAreas, setMemberAreas] = useState<MemberArea[]>([]);
   const [loadingMemberAreas, setLoadingMemberAreas] = useState(false);
   const [showEbookUploader, setShowEbookUploader] = useState(false);
-  const [userBaseCurrency, setUserBaseCurrency] = useState("KZ");
+
+  // Usar preferredCurrency do hook, sem fallback para KZ
+  const userBaseCurrency = preferredCurrency || '';
 
   const [formData, setFormData] = useState({
     name: "",
@@ -65,26 +69,6 @@ export default function ProductForm({ editingProduct, selectedType = "", onSave,
   });
 
   const [newTag, setNewTag] = useState("");
-
-  // Load user's preferred currency
-  useEffect(() => {
-    const loadUserCurrency = async () => {
-      if (!user) return;
-      try {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('preferred_currency')
-          .eq('user_id', user.id)
-          .single();
-        if (profile?.preferred_currency) {
-          setUserBaseCurrency(profile.preferred_currency);
-        }
-      } catch (error) {
-        console.error('Error loading user currency:', error);
-      }
-    };
-    loadUserCurrency();
-  }, [user]);
 
   useEffect(() => {
     const loadMemberAreas = async () => {
