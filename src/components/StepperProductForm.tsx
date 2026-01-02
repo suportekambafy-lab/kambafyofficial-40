@@ -123,8 +123,29 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
   const [saving, setSaving] = useState(false);
   const [memberAreas, setMemberAreas] = useState<any[]>([]);
   const [newTag, setNewTag] = useState("");
+  const [userBaseCurrency, setUserBaseCurrency] = useState("KZ");
   
   const STEPS = getSteps(selectedType || "");
+
+  // Load user's preferred currency
+  useEffect(() => {
+    const loadUserCurrency = async () => {
+      if (!user) return;
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('preferred_currency')
+          .eq('user_id', user.id)
+          .single();
+        if (profile?.preferred_currency) {
+          setUserBaseCurrency(profile.preferred_currency);
+        }
+      } catch (error) {
+        console.error('Error loading user currency:', error);
+      }
+    };
+    loadUserCurrency();
+  }, [user]);
 
   // Extrair o subtipo de assinatura (course ou software)
   const getSubscriptionType = (type: string): 'course' | 'software' | undefined => {
@@ -691,6 +712,7 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
 
               <CountryPriceConfig
                 basePrice={formData.price}
+                baseCurrency={userBaseCurrency}
                 customPrices={formData.customPrices}
                 onCustomPricesChange={(prices) => setFormData({ ...formData, customPrices: prices })}
               />
