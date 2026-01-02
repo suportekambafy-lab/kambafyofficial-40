@@ -31,6 +31,7 @@ import { BookOpen, DollarSign, Users, Shield, Star, Play, ArrowRight } from 'luc
 import { useNavigate } from 'react-router-dom';
 import { SubdomainLink } from "@/components/SubdomainLink";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useLandingTranslation } from "@/hooks/useLandingTranslation";
 import { TopSellersRanking } from "@/components/TopSellersRanking";
 import kambafy_icon from "@/assets/kambafy-icon-gray.png";
 import teamImage from "@/assets/team-collaboration.jpg";
@@ -321,6 +322,7 @@ interface Dot {
 
 const InteractiveHero: React.FC = () => {
    const navigate = useNavigate();
+   const { t, getRotatingWords } = useLandingTranslation();
    const canvasRef = useRef<HTMLCanvasElement>(null);
    const animationFrameId = useRef<number | null>(null);
    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
@@ -604,15 +606,15 @@ const InteractiveHero: React.FC = () => {
                 </div>
 
                 <div className="hidden md:flex items-center justify-center flex-grow space-x-6 lg:space-x-8 px-4">
-                    <NavLink href="#recursos">Recursos</NavLink>
-                    <NavLink href="#como-funciona">Como Funciona</NavLink>
-                    <NavLink href="#precos">Preços</NavLink>
-                    <NavLink href="#sobre">Sobre</NavLink>
+                    <NavLink href="#recursos">{t('nav.features')}</NavLink>
+                    <NavLink href="#como-funciona">{t('nav.howItWorks')}</NavLink>
+                    <NavLink href="#precos">{t('nav.pricing')}</NavLink>
+                    <NavLink href="#sobre">{t('nav.about')}</NavLink>
                 </div>
 
                 <div className="flex items-center flex-shrink-0 space-x-2 lg:space-x-4">
                     <LanguageSwitcher variant="ghost" className="text-gray-300 hover:text-white" />
-                    <button onClick={() => handleAuthNavigation('login')} className="hidden md:inline-block text-sm font-medium text-gray-300 hover:text-white transition-colors duration-200">Entrar</button>
+                    <button onClick={() => handleAuthNavigation('login')} className="hidden md:inline-block text-sm font-medium text-gray-300 hover:text-white transition-colors duration-200">{t('nav.login')}</button>
 
                     <motion.button
                         onClick={() => handleAuthNavigation('signup')}
@@ -658,25 +660,15 @@ const InteractiveHero: React.FC = () => {
         {/* Hero Section */}
         <main className="relative z-10">
           <section className="flex flex-col items-center justify-center text-center px-4 pt-32 pb-16">
-            <motion.div
-                variants={bannerVariants}
-                initial="hidden"
-                animate="visible"
-                className="mb-6"
-            >
-                <ShinyText text="Plataforma #1 para Criadores Digitais" className="bg-[#1a1a1a] border border-gray-700 text-[#81e76a] px-4 py-1 rounded-full text-xs sm:text-sm font-medium cursor-pointer hover:border-[#81e76a]/50 transition-colors" />
+            <motion.div variants={bannerVariants} initial="hidden" animate="visible" className="mb-6">
+                <ShinyText text={t('hero.badge')} className="bg-[#1a1a1a] border border-gray-700 text-[#81e76a] px-4 py-1 rounded-full text-xs sm:text-sm font-medium cursor-pointer hover:border-[#81e76a]/50 transition-colors" />
             </motion.div>
 
-            <motion.h1
-                variants={headlineVariants}
-                initial="hidden"
-                animate="visible"
-                className="text-4xl sm:text-5xl lg:text-[64px] font-bold text-white leading-tight max-w-4xl mb-4"
-            >
-                Venda seus produtos<br />
+            <motion.h1 variants={headlineVariants} initial="hidden" animate="visible" className="text-4xl sm:text-5xl lg:text-[64px] font-bold text-white leading-tight max-w-4xl mb-4">
+                {t('hero.title')}<br />
                 <span className="inline-block h-[1.2em] overflow-hidden align-bottom">
                     <RotatingText
-                        texts={['digitais', 'criativos', 'exclusivos', 'incríveis', 'únicos']}
+                        texts={getRotatingWords()}
                         mainClassName="text-[#81e76a] mx-1"
                         staggerFrom={"last"}
                         initial={{ y: "-100%", opacity: 0 }}
@@ -692,21 +684,11 @@ const InteractiveHero: React.FC = () => {
                 </span>
             </motion.h1>
 
-            <motion.p
-                variants={subHeadlineVariants}
-                initial="hidden"
-                animate="visible"
-                className="text-base sm:text-lg lg:text-xl text-gray-400 max-w-2xl mx-auto mb-8"
-            >
-                Crie, gerencie e venda seus cursos, e-books e produtos digitais em uma única plataforma. Tudo que você precisa para construir seu negócio online.
+            <motion.p variants={subHeadlineVariants} initial="hidden" animate="visible" className="text-base sm:text-lg lg:text-xl text-gray-400 max-w-2xl mx-auto mb-8">
+                {t('hero.subtitle')}
             </motion.p>
 
-            <motion.div
-                variants={formVariants}
-                initial="hidden"
-                animate="visible"
-                className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-md mx-auto mb-3"
-            >
+            <motion.div variants={formVariants} initial="hidden" animate="visible" className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-md mx-auto mb-3">
                 <motion.button
                     onClick={() => handleAuthNavigation('signup')}
                     className="w-full sm:w-auto bg-[#81e76a] text-[#111111] px-8 py-3 rounded-md text-base font-semibold hover:bg-opacity-90 transition-colors duration-200 shadow-lg hover:shadow-xl flex-shrink-0"
@@ -714,7 +696,7 @@ const InteractiveHero: React.FC = () => {
                     whileTap={{ scale: 0.97 }}
                     transition={{ type: "spring", stiffness: 400, damping: 15 }}
                 >
-                    Começar a Vender
+                    {t('hero.cta.primary')}
                 </motion.button>
                 <motion.button
                     className="w-full sm:w-auto bg-transparent border border-[#81e76a] text-[#81e76a] px-8 py-3 rounded-md text-base font-semibold hover:bg-[#81e76a]/10 transition-colors duration-200 flex items-center justify-center gap-2"
@@ -722,17 +704,12 @@ const InteractiveHero: React.FC = () => {
                     whileTap={{ scale: 0.97 }}
                 >
                     <Play className="w-4 h-4" />
-                    Ver Como Funciona
+                    {t('hero.cta.secondary')}
                 </motion.button>
             </motion.div>
 
-            <motion.p
-                variants={trialTextVariants}
-                initial="hidden"
-                animate="visible"
-                className="text-xs text-gray-500 mb-6"
-            >
-                Sem custos fixos • Sem mensalidades
+            <motion.p variants={trialTextVariants} initial="hidden" animate="visible" className="text-xs text-gray-500 mb-6">
+                {t('hero.noCosts')}
             </motion.p>
 
             <motion.div
@@ -758,11 +735,11 @@ const InteractiveHero: React.FC = () => {
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-16">
                       <div className="text-center lg:text-left">
                           <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4">
-                              Tudo que Você Precisa para{' '}
-                              <span className="text-[#81e76a]">Ter Sucesso</span>
+                              {t('features.title')}{' '}
+                              <span className="text-[#81e76a]">{t('features.titleHighlight')}</span>
                           </h2>
                           <p className="text-lg text-gray-400">
-                              Ferramentas poderosas e simples para transformar seu conhecimento em um negócio próspero
+                              {t('features.subtitle')}
                           </p>
                       </div>
                       <div className="relative">
@@ -777,10 +754,10 @@ const InteractiveHero: React.FC = () => {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                       {[
-                          { icon: <BookOpen className="w-8 h-8" />, title: "Order Bump", description: "Aumente suas vendas com ofertas complementares no momento da compra." },
-                          { icon: <DollarSign className="w-8 h-8" />, title: "Checkout Personalizado", description: "Customize completamente sua página de checkout para maximizar conversões." },
-                          { icon: <Users className="w-8 h-8" />, title: "Pixel", description: "Integre Facebook Pixel e outras ferramentas de tracking para otimizar campanhas." },
-                          { icon: <Shield className="w-8 h-8" />, title: "Afiliação", description: "Sistema completo de afiliados para expandir suas vendas através de parceiros." }
+                          { icon: <BookOpen className="w-8 h-8" />, title: t('features.orderBump.title'), description: t('features.orderBump.description') },
+                          { icon: <DollarSign className="w-8 h-8" />, title: t('features.checkout.title'), description: t('features.checkout.description') },
+                          { icon: <Users className="w-8 h-8" />, title: t('features.pixel.title'), description: t('features.pixel.description') },
+                          { icon: <Shield className="w-8 h-8" />, title: t('features.affiliate.title'), description: t('features.affiliate.description') }
                       ].map((feature, index) => (
                           <div key={index} className="bg-[#1a1a1a] border border-gray-700/50 rounded-lg p-6 hover:border-[#81e76a]/50 transition-all duration-300">
                               <div className="text-[#81e76a] mb-4">{feature.icon}</div>
