@@ -40,21 +40,32 @@ export const KambaLevelsModal: React.FC<KambaLevelsModalProps> = ({
     }
   };
 
-  const formatCurrency = (value: number) => {
-    const parts = value.toFixed(2).split('.');
+  const scaleForDisplay = (valueKZ: number) => (displayCurrency === 'EUR' ? valueKZ / 1000 : valueKZ);
+  const formatInt = (n: number) => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+  const formatCurrency = (valueKZ: number) => {
+    const scaled = scaleForDisplay(valueKZ);
+
+    if (displayCurrency === 'EUR') {
+      return `${formatInt(scaled)} ${displayCurrency}`;
+    }
+
+    const parts = scaled.toFixed(2).split('.');
     const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
     const decimalPart = parts[1];
     return `${integerPart},${decimalPart} ${displayCurrency}`;
   };
 
-  const formatCurrencyShort = (value: number) => {
-    if (value >= 1000000) {
-      return `${(value / 1000000).toFixed(1)}M ${displayCurrency}`;
-    } else if (value >= 1000) {
-      return `${Math.round(value / 1000)}K ${displayCurrency}`;
-    } else {
-      return `${Math.round(value)} ${displayCurrency}`;
+  const formatCurrencyShort = (valueKZ: number) => {
+    const scaled = scaleForDisplay(valueKZ);
+
+    if (displayCurrency === 'EUR') {
+      return `${formatInt(scaled)} ${displayCurrency}`;
     }
+
+    if (scaled >= 1000000) return `${(scaled / 1000000).toFixed(1)}M ${displayCurrency}`;
+    if (scaled >= 1000) return `${Math.round(scaled / 1000)}K ${displayCurrency}`;
+    return `${Math.round(scaled)} ${displayCurrency}`;
   };
 
   const isAchieved = (levelThreshold: number) => {

@@ -9,11 +9,13 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Trophy, Crown, Target, Eye, EyeOff, Rocket } from 'lucide-react';
 import { usePreferredCurrency } from '@/hooks/usePreferredCurrency';
+
 export function ModernKambaAchievements() {
   const {
     user
   } = useAuth();
-  const { formatInPreferredCurrency, convertFromKZ, currencyConfig } = usePreferredCurrency();
+  const { preferredCurrency, currencyConfig } = usePreferredCurrency();
+  const displayCurrency = preferredCurrency || currencyConfig?.code || 'KZ';
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [showModal, setShowModal] = useState(false);
   const [showRevenue, setShowRevenue] = useState(false);
@@ -71,19 +73,24 @@ export function ModernKambaAchievements() {
       console.error('Error loading total revenue:', error);
     }
   };
-  const formatCurrency = (value: number) => {
-    return formatInPreferredCurrency(value);
+  const scaleForDisplay = (valueKZ: number) => (displayCurrency === 'EUR' ? valueKZ / 1000 : valueKZ);
+  const formatInt = (n: number) => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+  const formatCurrency = (valueKZ: number) => {
+    const scaled = scaleForDisplay(valueKZ);
+    return `${formatInt(scaled)} ${displayCurrency}`;
   };
-  const formatCurrencyShort = (value: number) => {
-    const converted = convertFromKZ(value);
-    const symbol = currencyConfig.code === 'KZ' ? 'Kz' : currencyConfig.symbol;
-    if (converted >= 1000000) {
-      return `${symbol}${(converted / 1000000).toFixed(1)}M`;
-    } else if (converted >= 1000) {
-      return `${symbol}${Math.round(converted / 1000)}K`;
-    } else {
-      return `${symbol}${Math.round(converted)}`;
+
+  const formatCurrencyShort = (valueKZ: number) => {
+    const scaled = scaleForDisplay(valueKZ);
+
+    if (displayCurrency === 'EUR') {
+      return `${formatInt(scaled)} ${displayCurrency}`;
     }
+
+    if (scaled >= 1000000) return `${(scaled / 1000000).toFixed(1)}M ${displayCurrency}`;
+    if (scaled >= 1000) return `${Math.round(scaled / 1000)}K ${displayCurrency}`;
+    return `${Math.round(scaled)} ${displayCurrency}`;
   };
   return <>
       <Card className="bg-card shadow-sm border border-border/50 w-full overflow-hidden">
