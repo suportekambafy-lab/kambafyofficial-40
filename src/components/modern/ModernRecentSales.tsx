@@ -323,21 +323,28 @@ export function ModernRecentSales() {
       amount = amount * 0.8;
     }
     
+    // Função para formatar com pontos de milhar e vírgula decimal
+    const formatWithThousands = (value: number): string => {
+      const [intPart, decPart] = value.toFixed(2).split('.');
+      const formattedInt = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+      return `${formattedInt},${decPart}`;
+    };
+    
     // Formatar baseado na moeda real da venda
     let formattedPrice: string;
     if (currency === 'EUR') {
-      formattedPrice = `€${amount.toFixed(2).replace('.', ',')}`;
+      formattedPrice = `€${formatWithThousands(amount)}`;
     } else if (currency === 'USD') {
-      formattedPrice = `$${amount.toFixed(2)}`;
+      formattedPrice = `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     } else if (currency === 'GBP') {
-      formattedPrice = `£${amount.toFixed(2)}`;
+      formattedPrice = `£${amount.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     } else if (currency === 'MZN') {
-      formattedPrice = `${amount.toFixed(2).replace('.', ',')} MZN`;
+      formattedPrice = `${formatWithThousands(amount)} MZN`;
     } else if (currency === 'BRL') {
-      formattedPrice = `R$${amount.toFixed(2).replace('.', ',')}`;
+      formattedPrice = `R$${formatWithThousands(amount)}`;
     } else {
-      // KZ - usar formatação padrão
-      formattedPrice = `${amount.toFixed(2).replace('.', ',')} KZ`;
+      // KZ - usar formatação com pontos de milhar
+      formattedPrice = `${formatWithThousands(amount)} KZ`;
     }
     
     return {
