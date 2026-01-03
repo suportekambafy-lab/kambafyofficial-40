@@ -4481,6 +4481,10 @@ export type Database = {
           seller_commission: number
         }[]
       }
+      calculate_seller_earning: {
+        Args: { p_amount: number; p_currency: string }
+        Returns: number
+      }
       check_balance_health: { Args: never; Returns: Json }
       check_customer_access: {
         Args: { p_customer_email: string; p_product_id: string }
