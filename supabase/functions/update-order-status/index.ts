@@ -418,6 +418,47 @@ serve(async (req) => {
           }
         }
 
+        // 📊 ENVIAR CONVERSÃO PARA O FACEBOOK PIXEL
+        try {
+          console.log('📊 Sending Facebook Conversion event...');
+          
+          const eventId = `transfer_${orderData.order_id}_${Date.now()}`;
+          const nameParts = (orderData.customer_name || '').trim().split(' ');
+          const firstName = nameParts[0] || '';
+          const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+          
+          const fbConversionPayload = {
+            productId: orderData.product_id,
+            userId: product?.user_id,
+            eventId: eventId,
+            eventName: 'Purchase',
+            value: parseFloat(orderData.amount) || 0,
+            currency: orderData.currency || 'KZ',
+            orderId: orderData.order_id,
+            customer: {
+              email: orderData.customer_email,
+              phone: orderData.customer_phone || '',
+              firstName: firstName,
+              lastName: lastName
+            },
+            eventSourceUrl: `https://kambafy.com/checkout/${orderData.product_id}`
+          };
+          
+          console.log('📊 FB Conversion payload:', JSON.stringify(fbConversionPayload));
+          
+          const { data: fbResult, error: fbError } = await supabase.functions.invoke('send-facebook-conversion', {
+            body: fbConversionPayload
+          });
+          
+          if (fbError) {
+            console.error('❌ Error sending Facebook conversion:', fbError);
+          } else {
+            console.log('✅ Facebook conversion sent successfully:', fbResult);
+          }
+        } catch (fbConversionError) {
+          console.error('❌ Error in Facebook conversion process:', fbConversionError);
+        }
+
         // 📊 ENVIAR CONVERSÃO PARA UTMIFY
         try {
           console.log('📊 Verificando UTMify para o produto...');
