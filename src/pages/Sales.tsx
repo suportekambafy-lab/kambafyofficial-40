@@ -394,16 +394,31 @@ export default function Sales() {
     }
     actualCurrency = actualCurrency === 'AOA' ? 'KZ' : actualCurrency;
 
-    // ✅ Valor correto na moeda exibida:
-    const normalizedOrig = (sale.original_currency || '') === 'AOA' ? 'KZ' : (sale.original_currency || '');
-    const shouldUseOriginal = sale.original_amount != null && normalizedOrig === actualCurrency;
+    // ✅ Se seller_commission existir, é o valor líquido correto (não aplicar taxa de novo)
+    const sellerCommissionRaw = sale.seller_commission;
+    const sellerCommissionValue =
+      sellerCommissionRaw !== null &&
+      sellerCommissionRaw !== undefined &&
+      !Number.isNaN(parseFloat(sellerCommissionRaw.toString()))
+        ? parseFloat(sellerCommissionRaw.toString())
+        : null;
 
-    const raw = shouldUseOriginal ? sale.original_amount : sale.amount;
-    let displayAmount = typeof raw === 'number' ? raw : parseFloat((raw as any) || '0');
+    let displayAmount: number;
 
-    // ✅ Aplicar taxa de comissão (8.99% Angola, 9.99% Internacional)
-    const commissionRate = actualCurrency === 'KZ' ? 0.0899 : 0.0999;
-    displayAmount = displayAmount * (1 - commissionRate);
+    if (sellerCommissionValue != null && sellerCommissionValue > 0) {
+      displayAmount = sellerCommissionValue;
+    } else {
+      // ✅ Valor correto na moeda exibida:
+      const normalizedOrig = (sale.original_currency || '') === 'AOA' ? 'KZ' : (sale.original_currency || '');
+      const shouldUseOriginal = sale.original_amount != null && normalizedOrig === actualCurrency;
+
+      const raw = shouldUseOriginal ? sale.original_amount : sale.amount;
+      displayAmount = typeof raw === 'number' ? raw : parseFloat((raw as any) || '0');
+
+      // ✅ Aplicar taxa de comissão (8.99% Angola, 9.99% Internacional)
+      const commissionRate = actualCurrency === 'KZ' ? 0.0899 : 0.0999;
+      displayAmount = displayAmount * (1 - commissionRate);
+    }
 
     return (
       <div className="text-right">
