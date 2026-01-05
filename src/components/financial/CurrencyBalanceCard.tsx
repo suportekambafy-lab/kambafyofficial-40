@@ -67,27 +67,27 @@ export function CurrencyBalanceCard({
             : 'bg-gradient-to-br from-primary via-primary to-primary/80'
         }`}>
           
-          {/* Card Content */}
           <div className="relative h-full p-5 sm:p-6 flex flex-col justify-between text-white z-10">
             {/* Top Row: Chip and Logo */}
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3">
-                {/* Chip */}
-                <div className="w-11 h-8 sm:w-14 sm:h-10 rounded-lg bg-gradient-to-br from-yellow-300 via-yellow-400 to-yellow-500 flex items-center justify-center shadow-lg">
-                  <div className="w-7 h-5 sm:w-9 sm:h-6 rounded bg-gradient-to-br from-yellow-200 to-yellow-400 border border-yellow-600/20" />
+            <div>
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  {/* Chip */}
+                  <div className="w-11 h-8 sm:w-14 sm:h-10 rounded-lg bg-gradient-to-br from-yellow-300 via-yellow-400 to-yellow-500 flex items-center justify-center shadow-lg">
+                    <div className="w-7 h-5 sm:w-9 sm:h-6 rounded bg-gradient-to-br from-yellow-200 to-yellow-400 border border-yellow-600/20" />
+                  </div>
+                  {/* Contactless */}
+                  <Wifi className="w-6 h-6 rotate-90 opacity-70" />
                 </div>
-                {/* Contactless */}
-                <Wifi className="w-6 h-6 rotate-90 opacity-70" />
-              </div>
-              {/* Brand Logo */}
-              <div className="text-right">
+                {/* Brand Logo */}
                 <img 
                   src={kambafyLogo} 
                   alt="Kambafy" 
-                  className="h-7 sm:h-9 w-auto ml-auto drop-shadow-md"
+                  className="h-7 sm:h-9 w-auto drop-shadow-md"
                 />
-                <p className="text-xs sm:text-sm opacity-70 mt-1 font-medium">{config.name}</p>
               </div>
+              {/* Currency Name - Below logo, aligned right */}
+              <p className="text-xs sm:text-sm opacity-70 font-medium text-right mt-1">{config.name}</p>
             </div>
 
             {/* Balance Section */}
