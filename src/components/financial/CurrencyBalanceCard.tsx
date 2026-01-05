@@ -79,7 +79,7 @@ export function CurrencyBalanceCard({
                 <img 
                   src={kambafyLogo} 
                   alt="Kambafy" 
-                  className="h-6 sm:h-8 w-auto ml-auto"
+                  className="h-8 sm:h-10 w-auto ml-auto"
                 />
                 <p className="text-[10px] sm:text-xs opacity-60 mt-1">{config.name}</p>
               </div>
