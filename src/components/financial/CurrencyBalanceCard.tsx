@@ -64,17 +64,17 @@ export function CurrencyBalanceCard({
           <img 
             src={shapeGreenDark} 
             alt="" 
-            className="absolute -left-20 top-1/2 -translate-y-1/2 w-48 h-auto opacity-30 pointer-events-none"
+            className="absolute -left-8 bottom-0 w-72 h-auto opacity-40 pointer-events-none rotate-12"
           />
           <img 
             src={shapeYellow} 
             alt="" 
-            className="absolute -right-16 -top-8 w-44 h-auto opacity-40 pointer-events-none"
+            className="absolute right-0 -top-4 w-64 h-auto opacity-50 pointer-events-none -rotate-6"
           />
           <img 
             src={shapeGreenLight} 
             alt="" 
-            className="absolute -right-10 -bottom-6 w-36 h-auto opacity-25 pointer-events-none"
+            className="absolute -right-4 bottom-4 w-56 h-auto opacity-35 pointer-events-none rotate-3"
           />
           
           {/* Card Content */}
