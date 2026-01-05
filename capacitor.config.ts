@@ -5,6 +5,14 @@ const config: CapacitorConfig = {
   appName: 'Kambafy',
   webDir: 'dist',
   bundledWebRuntime: false,
+  ios: {
+    backgroundColor: '#ffffff',
+    contentInset: 'automatic',
+    scrollEnabled: true
+  },
+  android: {
+    backgroundColor: '#ffffff'
+  },
   plugins: {
     SplashScreen: {
       launchShowDuration: 2000,
