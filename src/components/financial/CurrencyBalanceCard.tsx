@@ -57,71 +57,71 @@ export function CurrencyBalanceCard({
   return (
     <div className="space-y-4">
       {/* Debit Card Style Balance */}
-      <div className="relative w-full aspect-[1.6/1] max-w-md mx-auto">
+      <div className="relative w-full aspect-[1.7/1] max-w-md mx-auto">
         {/* Card Background with Gradient */}
-        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-primary/70 shadow-2xl overflow-hidden">
-          {/* Decorative shapes */}
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary via-primary to-primary/80 shadow-2xl overflow-hidden">
+          {/* Decorative shapes - positioned in corners */}
           <img 
             src={shapeGreenDark} 
             alt="" 
-            className="absolute -left-8 bottom-0 w-72 h-auto opacity-40 pointer-events-none rotate-12"
+            className="absolute -left-16 -bottom-8 w-52 h-auto opacity-25 pointer-events-none"
           />
           <img 
             src={shapeYellow} 
             alt="" 
-            className="absolute right-0 -top-4 w-64 h-auto opacity-50 pointer-events-none -rotate-6"
+            className="absolute -right-12 -top-6 w-48 h-auto opacity-30 pointer-events-none"
           />
           <img 
             src={shapeGreenLight} 
             alt="" 
-            className="absolute -right-4 bottom-4 w-56 h-auto opacity-35 pointer-events-none rotate-3"
+            className="absolute right-8 -bottom-4 w-40 h-auto opacity-20 pointer-events-none"
           />
           
           {/* Card Content */}
-          <div className="relative h-full p-5 sm:p-6 flex flex-col justify-between text-white">
-            {/* Top Row: Logo and Chip */}
+          <div className="relative h-full p-5 sm:p-6 flex flex-col justify-between text-white z-10">
+            {/* Top Row: Chip and Logo */}
             <div className="flex items-start justify-between">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 {/* Chip */}
-                <div className="w-10 h-7 sm:w-12 sm:h-8 rounded-md bg-gradient-to-br from-yellow-300 via-yellow-400 to-yellow-500 flex items-center justify-center shadow-inner">
-                  <div className="w-6 h-4 sm:w-7 sm:h-5 rounded-sm bg-gradient-to-br from-yellow-200 to-yellow-400 border border-yellow-600/30" />
+                <div className="w-11 h-8 sm:w-14 sm:h-10 rounded-lg bg-gradient-to-br from-yellow-300 via-yellow-400 to-yellow-500 flex items-center justify-center shadow-lg">
+                  <div className="w-7 h-5 sm:w-9 sm:h-6 rounded bg-gradient-to-br from-yellow-200 to-yellow-400 border border-yellow-600/20" />
                 </div>
                 {/* Contactless */}
-                <Wifi className="w-5 h-5 sm:w-6 sm:h-6 rotate-90 opacity-80" />
+                <Wifi className="w-6 h-6 rotate-90 opacity-70" />
               </div>
               {/* Brand Logo */}
               <div className="text-right">
                 <img 
                   src={kambafyLogo} 
                   alt="Kambafy" 
-                  className="h-8 sm:h-10 w-auto ml-auto"
+                  className="h-7 sm:h-9 w-auto ml-auto drop-shadow-md"
                 />
-                <p className="text-[10px] sm:text-xs opacity-60 mt-1">{config.name}</p>
+                <p className="text-xs sm:text-sm opacity-70 mt-1 font-medium">{config.name}</p>
               </div>
             </div>
 
             {/* Balance Section */}
-            <div className="flex-1 flex flex-col justify-center">
-              <p className="text-xs sm:text-sm opacity-70 mb-1">
+            <div className="flex-1 flex flex-col justify-center py-2">
+              <p className="text-xs sm:text-sm opacity-80 mb-1 font-medium">
                 {t("financial.balance.available")}
               </p>
-              <div className="flex items-center gap-2">
-                <span className="text-2xl sm:text-3xl font-bold tracking-tight">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl sm:text-4xl font-bold tracking-tight drop-shadow-sm">
                   {showBalance ? formatCurrency(availableBalance, currency) : '••••••••'}
                 </span>
                 <button
                   onClick={() => setShowBalance(!showBalance)}
-                  className="p-1.5 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+                  className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors backdrop-blur-sm"
                 >
-                  {showBalance ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                  {showBalance ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
                 </button>
               </div>
             </div>
 
             {/* Bottom Row: Card Number */}
-            <div className="space-y-2">
-              <p className="text-xs opacity-60">Número do Cartão</p>
-              <p className="font-mono text-sm sm:text-base tracking-widest opacity-90">
+            <div>
+              <p className="text-[11px] sm:text-xs opacity-60 mb-1">Número do Cartão</p>
+              <p className="font-mono text-base sm:text-lg tracking-[0.2em] font-medium">
                 {cardNumber}
               </p>
             </div>
