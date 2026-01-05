@@ -86,8 +86,8 @@ export function CurrencyBalanceCard({
                   className="h-7 sm:h-9 w-auto drop-shadow-md"
                 />
               </div>
-              {/* Currency Name - Below logo, aligned right */}
-              <p className="text-xs sm:text-sm opacity-70 font-medium text-right mt-1">{config.name}</p>
+              {/* Currency Name - Below logo, aligned with logo end */}
+              <p className="text-xs sm:text-sm opacity-70 font-medium text-right -mt-1">{config.name}</p>
             </div>
 
             {/* Balance Section */}
