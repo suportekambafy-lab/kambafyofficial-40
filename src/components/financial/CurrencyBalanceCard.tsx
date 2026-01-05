@@ -8,6 +8,9 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAuth } from "@/contexts/AuthContext";
 import kambafyLogo from "@/assets/kambafy-logo-white.png";
+import shapeGreenLight from "@/assets/card-shape-green-light.png";
+import shapeYellow from "@/assets/card-shape-yellow.png";
+import shapeGreenDark from "@/assets/card-shape-green-dark.png";
 interface CurrencyBalanceCardProps {
   currency: string;
   balance: number;
@@ -57,10 +60,22 @@ export function CurrencyBalanceCard({
       <div className="relative w-full aspect-[1.6/1] max-w-md mx-auto">
         {/* Card Background with Gradient */}
         <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-primary/70 shadow-2xl overflow-hidden">
-          {/* Decorative circles */}
-          <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-white/10" />
-          <div className="absolute -right-5 top-20 w-24 h-24 rounded-full bg-white/5" />
-          <div className="absolute left-10 -bottom-10 w-32 h-32 rounded-full bg-black/10" />
+          {/* Decorative shapes */}
+          <img 
+            src={shapeGreenDark} 
+            alt="" 
+            className="absolute -left-20 top-1/2 -translate-y-1/2 w-48 h-auto opacity-30 pointer-events-none"
+          />
+          <img 
+            src={shapeYellow} 
+            alt="" 
+            className="absolute -right-16 -top-8 w-44 h-auto opacity-40 pointer-events-none"
+          />
+          <img 
+            src={shapeGreenLight} 
+            alt="" 
+            className="absolute -right-10 -bottom-6 w-36 h-auto opacity-25 pointer-events-none"
+          />
           
           {/* Card Content */}
           <div className="relative h-full p-5 sm:p-6 flex flex-col justify-between text-white">
