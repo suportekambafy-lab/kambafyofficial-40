@@ -59,11 +59,11 @@ export function CurrencyTabs({
           <span>{t("common.table.currency")}:</span>
         </div>
         <Select value={selectedCurrency} onValueChange={onCurrencyChange}>
-          <SelectTrigger className="w-[180px] bg-background">
+          <SelectTrigger className="w-[180px] bg-background text-foreground">
             <SelectValue>
               <div className="flex items-center gap-2">
-                <span className="font-medium">{config.name}</span>
-                <span className="text-muted-foreground">({selectedCurrency})</span>
+                <span className="font-medium text-foreground">{config.name}</span>
+                <span className="text-foreground/70">({selectedCurrency})</span>
               </div>
             </SelectValue>
           </SelectTrigger>
