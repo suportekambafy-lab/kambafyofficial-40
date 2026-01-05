@@ -1,11 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { PiggyBank, Shield, Eye, EyeOff, AlertCircle, ArrowDownCircle } from "lucide-react";
+import { PiggyBank, Shield, Eye, EyeOff, AlertCircle, Wifi } from "lucide-react";
 import { useState } from "react";
 import { CURRENCY_CONFIG } from "@/hooks/useCurrencyBalances";
 import { Link } from "react-router-dom";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface CurrencyBalanceCardProps {
   currency: string;
@@ -16,6 +17,15 @@ interface CurrencyBalanceCardProps {
   onWithdraw: () => void;
   canWithdraw: boolean;
   isVerified: boolean;
+}
+
+// Formata o ID do usuário como número de cartão (4 grupos de 4 caracteres)
+function formatCardNumber(userId: string): string {
+  // Remove hífens e pega os primeiros 16 caracteres
+  const cleanId = userId.replace(/-/g, '').substring(0, 16).toUpperCase();
+  // Divide em grupos de 4
+  const groups = cleanId.match(/.{1,4}/g) || [];
+  return groups.join(' ');
 }
 
 export function CurrencyBalanceCard({
@@ -29,6 +39,7 @@ export function CurrencyBalanceCard({
   isVerified
 }: CurrencyBalanceCardProps) {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [showBalance, setShowBalance] = useState(true);
   const config = CURRENCY_CONFIG[currency] || CURRENCY_CONFIG['KZ'];
   
@@ -37,77 +48,109 @@ export function CurrencyBalanceCard({
 
   const canWithdrawNow = canWithdraw && availableBalance >= minimumWithdrawal;
   const showWithdrawButton = canWithdraw || availableBalance > 0;
+  
+  const cardNumber = user?.id ? formatCardNumber(user.id) : '•••• •••• •••• ••••';
 
   return (
     <div className="space-y-4">
-      {/* Main Balance Card */}
-      <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-        <CardContent className="p-4 sm:p-6">
-          <div className="flex flex-col gap-4">
-            {/* Header with label */}
-            <div className="flex items-center gap-2">
-              <p className="text-sm font-medium text-muted-foreground">
-                {t("financial.balance.available")} {config.name}
-              </p>
+      {/* Debit Card Style Balance */}
+      <div className="relative w-full aspect-[1.6/1] max-w-md mx-auto">
+        {/* Card Background with Gradient */}
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-primary/70 shadow-2xl overflow-hidden">
+          {/* Decorative circles */}
+          <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-white/10" />
+          <div className="absolute -right-5 top-20 w-24 h-24 rounded-full bg-white/5" />
+          <div className="absolute left-10 -bottom-10 w-32 h-32 rounded-full bg-black/10" />
+          
+          {/* Card Content */}
+          <div className="relative h-full p-5 sm:p-6 flex flex-col justify-between text-white">
+            {/* Top Row: Logo and Chip */}
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-2">
+                {/* Chip */}
+                <div className="w-10 h-7 sm:w-12 sm:h-8 rounded-md bg-gradient-to-br from-yellow-300 via-yellow-400 to-yellow-500 flex items-center justify-center shadow-inner">
+                  <div className="w-6 h-4 sm:w-7 sm:h-5 rounded-sm bg-gradient-to-br from-yellow-200 to-yellow-400 border border-yellow-600/30" />
+                </div>
+                {/* Contactless */}
+                <Wifi className="w-5 h-5 sm:w-6 sm:h-6 rotate-90 opacity-80" />
+              </div>
+              {/* Brand */}
+              <div className="text-right">
+                <span className="text-lg sm:text-xl font-bold tracking-wider opacity-90">KAMBAFY</span>
+                <p className="text-[10px] sm:text-xs opacity-60">{config.name}</p>
+              </div>
             </div>
-            
-            {/* Balance and button row */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <h2 className="text-2xl sm:text-3xl font-bold text-primary break-all">
-                  {showBalance ? formatCurrency(availableBalance, currency) : '••••••'}
-                </h2>
-                <Button
-                  variant="ghost"
-                  size="icon"
+
+            {/* Balance Section */}
+            <div className="flex-1 flex flex-col justify-center">
+              <p className="text-xs sm:text-sm opacity-70 mb-1">
+                {t("financial.balance.available")}
+              </p>
+              <div className="flex items-center gap-2">
+                <span className="text-2xl sm:text-3xl font-bold tracking-tight">
+                  {showBalance ? formatCurrency(availableBalance, currency) : '••••••••'}
+                </span>
+                <button
                   onClick={() => setShowBalance(!showBalance)}
-                  className="h-8 w-8 shrink-0"
+                  className="p-1.5 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
                 >
                   {showBalance ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                </Button>
+                </button>
               </div>
-
-              {showWithdrawButton && (
-                <Button 
-                  onClick={onWithdraw} 
-                  className="w-full sm:w-auto shrink-0"
-                  disabled={!canWithdrawNow}
-                >
-                  <PiggyBank className="h-4 w-4 mr-2" />
-                  {t("financial.withdrawal.requestWithdrawal")}
-                </Button>
-              )}
             </div>
 
-            {/* Minimum withdrawal info */}
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <AlertCircle className="h-3 w-3 shrink-0" />
-              <span>{t("financial.withdrawal.minAmount")} {formatCurrency(minimumWithdrawal, currency)}</span>
+            {/* Bottom Row: Card Number */}
+            <div className="space-y-2">
+              <p className="text-xs opacity-60">Número do Cartão</p>
+              <p className="font-mono text-sm sm:text-base tracking-widest opacity-90">
+                {cardNumber}
+              </p>
             </div>
           </div>
+        </div>
+      </div>
 
-          {/* Verification warning */}
-          {!isVerified && balance > 0 && (
-            <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-              <div className="flex items-start gap-2">
-                <AlertCircle className="h-4 w-4 text-yellow-600 mt-0.5 shrink-0" />
-                <div className="text-sm">
-                  <p className="font-medium text-yellow-800 dark:text-yellow-200">
-                    {t("financial.verification.pendingTitle")}
-                  </p>
-                  <Link to="/identidade" className="text-yellow-700 dark:text-yellow-300 underline">
-                    {t("financial.verification.verifyNow")}
-                  </Link>
-                </div>
+      {/* Withdraw Button and Info */}
+      <div className="flex flex-col items-center gap-3 max-w-md mx-auto">
+        {/* Minimum withdrawal info */}
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <AlertCircle className="h-3 w-3 shrink-0" />
+          <span>{t("financial.withdrawal.minAmount")} {formatCurrency(minimumWithdrawal, currency)}</span>
+        </div>
+
+        {showWithdrawButton && (
+          <Button 
+            onClick={onWithdraw} 
+            className="w-full"
+            size="lg"
+            disabled={!canWithdrawNow}
+          >
+            <PiggyBank className="h-4 w-4 mr-2" />
+            {t("financial.withdrawal.requestWithdrawal")}
+          </Button>
+        )}
+
+        {/* Verification warning */}
+        {!isVerified && balance > 0 && (
+          <div className="w-full p-3 bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="h-4 w-4 text-yellow-600 mt-0.5 shrink-0" />
+              <div className="text-sm">
+                <p className="font-medium text-yellow-800 dark:text-yellow-200">
+                  {t("financial.verification.pendingTitle")}
+                </p>
+                <Link to="/identidade" className="text-yellow-700 dark:text-yellow-300 underline">
+                  {t("financial.verification.verifyNow")}
+                </Link>
               </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+        )}
+      </div>
 
       {/* Retained Balance Card (if any) */}
       {retainedBalance > 0 && (
-        <Card className="border-orange-500/30 bg-orange-50/50 dark:bg-orange-950/20">
+        <Card className="border-orange-500/30 bg-orange-50/50 dark:bg-orange-950/20 max-w-md mx-auto">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
