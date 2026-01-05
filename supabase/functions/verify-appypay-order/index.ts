@@ -454,6 +454,38 @@ const handler = async (req: Request): Promise<Response> => {
           console.error('[VERIFY-APPYPAY-ORDER] ❌ Error sending Facebook conversion:', fbError);
           // Não falhar a operação principal por erro no Facebook
         }
+
+        // 📊 ENVIAR CONVERSÃO PARA UTMIFY
+        try {
+          console.log('[VERIFY-APPYPAY-ORDER] 📊 Sending UTMify conversion...');
+          
+          const utmifyPayload = {
+            productId: order.product_id,
+            orderId: order.order_id,
+            amount: parseFloat(order.amount) || 0,
+            currency: order.currency || 'KZ',
+            customerEmail: order.customer_email,
+            customerName: order.customer_name,
+            customerPhone: order.customer_phone || '',
+            customerCountry: order.customer_country || 'AO',
+            paymentMethod: 'reference',
+            utmParams: order.utm_params || {}
+          };
+          
+          console.log('[VERIFY-APPYPAY-ORDER] UTMify payload:', JSON.stringify(utmifyPayload));
+          
+          const { data: utmifyResult, error: utmifyError } = await supabase.functions.invoke('send-utmify-conversion', {
+            body: utmifyPayload
+          });
+          
+          if (utmifyError) {
+            console.error('[VERIFY-APPYPAY-ORDER] ❌ Error sending UTMify conversion:', utmifyError);
+          } else {
+            console.log('[VERIFY-APPYPAY-ORDER] ✅ UTMify conversion sent successfully:', utmifyResult);
+          }
+        } catch (utmifyError) {
+          console.error('[VERIFY-APPYPAY-ORDER] ❌ Error in UTMify conversion process:', utmifyError);
+        }
       }
 
       return new Response(JSON.stringify({
