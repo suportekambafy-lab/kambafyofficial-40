@@ -87,7 +87,7 @@ export function CurrencyBalanceCard({
                 />
               </div>
               {/* Currency Name - Below logo, aligned with logo end */}
-              <p className="text-xs sm:text-sm opacity-70 font-medium text-right -mt-1">{config.name}</p>
+              <p className="text-xs sm:text-sm opacity-70 font-medium text-right mr-1 -mt-1">{config.name}</p>
             </div>
 
             {/* Balance Section */}
