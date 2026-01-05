@@ -37,9 +37,9 @@ export async function configureStatusBar(isDarkMode: boolean = false) {
       style: isDarkMode ? Style.Dark : Style.Light
     });
 
-    // Configurar cor de fundo baseado no tema
+    // Configurar cor de fundo baseado no tema (cores exatas do design system)
     await StatusBar.setBackgroundColor({
-      color: isDarkMode ? '#1a1d26' : '#ffffff'
+      color: isDarkMode ? '#141720' : '#ffffff'
     });
 
     // Sobrepor conteúdo web
@@ -50,8 +50,9 @@ export async function configureStatusBar(isDarkMode: boolean = false) {
 }
 
 // Atualiza a meta tag theme-color para sincronizar o WebView com o tema
+// Cores exatas do design system: Light = #ffffff, Dark = #141720
 export function updateThemeColor(isDarkMode: boolean) {
-  const themeColor = isDarkMode ? '#1a1d26' : '#ffffff';
+  const themeColor = isDarkMode ? '#141720' : '#ffffff';
   
   // Atualizar meta theme-color
   let metaThemeColor = document.querySelector('meta[name="theme-color"]');
