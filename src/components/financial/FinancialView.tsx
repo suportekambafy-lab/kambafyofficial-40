@@ -45,6 +45,7 @@ export function FinancialView() {
     formatCurrency,
     getTotalBalanceInKZ,
     getTotalWithdrawn,
+    getTotalRevenue,
   } = useCurrencyBalances();
 
   // Check for pending 2FA
@@ -266,6 +267,7 @@ export function FinancialView() {
           onCurrencyChange={setSelectedCurrency}
           formatCurrency={formatCurrency}
           getTotalWithdrawn={getTotalWithdrawn}
+          getTotalRevenue={getTotalRevenue}
           onWithdraw={handleWithdraw}
           canWithdraw={canWithdraw}
           isVerified={isVerified}
