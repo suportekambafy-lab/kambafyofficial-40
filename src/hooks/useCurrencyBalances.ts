@@ -42,6 +42,7 @@ export function useCurrencyBalances() {
   const [balances, setBalances] = useState<CurrencyBalance[]>([]);
   const [transactions, setTransactions] = useState<CurrencyTransaction[]>([]);
   const [totalWithdrawn, setTotalWithdrawn] = useState<Record<string, number>>({});
+  const [totalRevenue, setTotalRevenue] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [selectedCurrency, setSelectedCurrency] = useState<string>('');
   const [preferredCurrencyLoaded, setPreferredCurrencyLoaded] = useState(false);
@@ -103,6 +104,22 @@ export function useCurrencyBalances() {
           withdrawnByCurrency[currency] = (withdrawnByCurrency[currency] || 0) + Number(w.amount);
         });
         setTotalWithdrawn(withdrawnByCurrency);
+      }
+
+      // Fetch total revenue per currency (sum of credit transactions)
+      const { data: revenueData } = await supabase
+        .from('balance_transactions')
+        .select('amount, currency')
+        .eq('user_id', user.id)
+        .eq('type', 'credit');
+
+      if (revenueData) {
+        const revenueByCurrency: Record<string, number> = {};
+        revenueData.forEach(r => {
+          const currency = r.currency || 'KZ';
+          revenueByCurrency[currency] = (revenueByCurrency[currency] || 0) + Number(r.amount);
+        });
+        setTotalRevenue(revenueByCurrency);
       }
 
       // If no multi-currency balances, try to get legacy balance
@@ -239,10 +256,15 @@ export function useCurrencyBalances() {
     return totalWithdrawn[currency] || 0;
   };
 
+  const getTotalRevenue = (currency: string): number => {
+    return totalRevenue[currency] || 0;
+  };
+
   return {
     balances,
     transactions,
     totalWithdrawn,
+    totalRevenue,
     loading,
     selectedCurrency,
     setSelectedCurrency,
@@ -252,6 +274,7 @@ export function useCurrencyBalances() {
     getAvailableCurrencies,
     getTotalBalanceInKZ,
     getTotalWithdrawn,
+    getTotalRevenue,
     CURRENCY_CONFIG
   };
 }

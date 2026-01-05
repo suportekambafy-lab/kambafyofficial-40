@@ -13,6 +13,7 @@ interface CurrencyBalanceCardProps {
   balance: number;
   retainedBalance: number;
   totalWithdrawn: number;
+  totalRevenue?: number;
   formatCurrency: (amount: number, currency: string) => string;
   onWithdraw: () => void;
   canWithdraw: boolean;
@@ -33,6 +34,7 @@ export function CurrencyBalanceCard({
   balance,
   retainedBalance,
   totalWithdrawn,
+  totalRevenue = 0,
   formatCurrency,
   onWithdraw,
   canWithdraw,
@@ -51,8 +53,8 @@ export function CurrencyBalanceCard({
   
   const cardNumber = user?.id ? formatCardNumber(user.id) : '•••• •••• •••• ••••';
   
-  // Black card for balances >= 10 million
-  const isBlackCard = availableBalance >= 10000000;
+  // Black card for total revenue >= 10 million
+  const isBlackCard = totalRevenue >= 10000000;
 
   return (
     <div className="space-y-4">
