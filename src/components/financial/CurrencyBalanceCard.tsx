@@ -8,9 +8,6 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAuth } from "@/contexts/AuthContext";
 import kambafyLogo from "@/assets/kambafy-logo-white.png";
-import shapeGreenLight from "@/assets/card-shape-green-light.png";
-import shapeYellow from "@/assets/card-shape-yellow.png";
-import shapeGreenDark from "@/assets/card-shape-green-dark.png";
 interface CurrencyBalanceCardProps {
   currency: string;
   balance: number;
@@ -60,22 +57,6 @@ export function CurrencyBalanceCard({
       <div className="relative w-full aspect-[1.7/1] max-w-md mx-auto">
         {/* Card Background with Gradient */}
         <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary via-primary to-primary/80 shadow-2xl overflow-hidden">
-          {/* Decorative shapes - positioned in corners */}
-          <img 
-            src={shapeGreenDark} 
-            alt="" 
-            className="absolute -left-16 -bottom-8 w-52 h-auto opacity-25 pointer-events-none"
-          />
-          <img 
-            src={shapeYellow} 
-            alt="" 
-            className="absolute -right-28 -top-4 w-56 h-auto opacity-35 pointer-events-none"
-          />
-          <img 
-            src={shapeGreenLight} 
-            alt="" 
-            className="absolute right-8 -bottom-4 w-40 h-auto opacity-20 pointer-events-none"
-          />
           
           {/* Card Content */}
           <div className="relative h-full p-5 sm:p-6 flex flex-col justify-between text-white z-10">
