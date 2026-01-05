@@ -683,7 +683,8 @@ serve(async (req) => {
         const exchangeRates: Record<string, number> = {
           'EUR': 1100, // 1 EUR = ~1100 KZ (atualizado)
           'MZN': 14.3, // 1 MZN = ~14.3 KZ
-          'USD': 825   // 1 USD = ~825 KZ
+          'USD': 825,  // 1 USD = ~825 KZ
+          'GBP': 1250  // 1 GBP = ~1250 KZ
         };
         
         let sellerCommissionInKZ: number;
