@@ -69,7 +69,7 @@ export function CurrencyBalanceCard({
           <img 
             src={shapeYellow} 
             alt="" 
-            className="absolute -right-20 -top-6 w-48 h-auto opacity-30 pointer-events-none"
+            className="absolute -right-28 -top-4 w-56 h-auto opacity-35 pointer-events-none"
           />
           <img 
             src={shapeGreenLight} 
