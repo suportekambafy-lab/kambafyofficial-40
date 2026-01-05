@@ -50,13 +50,20 @@ export function CurrencyBalanceCard({
   const showWithdrawButton = canWithdraw || availableBalance > 0;
   
   const cardNumber = user?.id ? formatCardNumber(user.id) : '•••• •••• •••• ••••';
+  
+  // Black card for balances >= 10 million
+  const isBlackCard = availableBalance >= 10000000;
 
   return (
     <div className="space-y-4">
       {/* Debit Card Style Balance */}
       <div className="relative w-full aspect-[1.7/1] max-w-md mx-auto">
         {/* Card Background with Gradient */}
-        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary via-primary to-primary/80 shadow-2xl overflow-hidden">
+        <div className={`absolute inset-0 rounded-2xl shadow-2xl overflow-hidden ${
+          isBlackCard 
+            ? 'bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900' 
+            : 'bg-gradient-to-br from-primary via-primary to-primary/80'
+        }`}>
           
           {/* Card Content */}
           <div className="relative h-full p-5 sm:p-6 flex flex-col justify-between text-white z-10">
