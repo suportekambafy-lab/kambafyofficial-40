@@ -7,7 +7,7 @@ import { CURRENCY_CONFIG } from "@/hooks/useCurrencyBalances";
 import { Link } from "react-router-dom";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAuth } from "@/contexts/AuthContext";
-
+import kambafyLogo from "@/assets/kambafy-logo-white.png";
 interface CurrencyBalanceCardProps {
   currency: string;
   balance: number;
@@ -74,10 +74,14 @@ export function CurrencyBalanceCard({
                 {/* Contactless */}
                 <Wifi className="w-5 h-5 sm:w-6 sm:h-6 rotate-90 opacity-80" />
               </div>
-              {/* Brand */}
+              {/* Brand Logo */}
               <div className="text-right">
-                <span className="text-lg sm:text-xl font-bold tracking-wider opacity-90">KAMBAFY</span>
-                <p className="text-[10px] sm:text-xs opacity-60">{config.name}</p>
+                <img 
+                  src={kambafyLogo} 
+                  alt="Kambafy" 
+                  className="h-6 sm:h-8 w-auto ml-auto"
+                />
+                <p className="text-[10px] sm:text-xs opacity-60 mt-1">{config.name}</p>
               </div>
             </div>
 
