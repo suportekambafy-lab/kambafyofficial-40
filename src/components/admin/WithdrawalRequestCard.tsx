@@ -18,6 +18,7 @@ interface WithdrawalWithProfile {
   id: string;
   user_id: string;
   amount: number;
+  currency?: string;
   status: string;
   created_at: string;
   admin_notes: string | null;
@@ -151,7 +152,7 @@ export function WithdrawalRequestCard({
             </div>
             <div>
               <CardTitle className="text-xl text-gray-900">
-                {formatWithMaxTwoDecimals(Number(request.amount))} KZ
+                {formatWithMaxTwoDecimals(Number(request.amount))} {request.currency || 'KZ'}
               </CardTitle>
               <div className="flex items-center gap-4 mt-1 text-sm text-gray-600">
                 <div className="flex items-center gap-1">

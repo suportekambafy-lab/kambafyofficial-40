@@ -4757,6 +4757,7 @@ export type Database = {
           admin_processed_by_name: string
           amount: number
           created_at: string
+          currency: string
           id: string
           status: string
           updated_at: string
