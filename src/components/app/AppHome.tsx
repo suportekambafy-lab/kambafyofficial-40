@@ -33,7 +33,7 @@ import { UnifiedMembersAuthProvider, useUnifiedMembersAuth } from '@/components/
 import { AppCourses } from '@/components/app/AppCourses';
 import { AppCourseViewer } from '@/components/app/AppCourseViewer';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
-import { configureStatusBar } from '@/utils/nativeService';
+import { configureStatusBar, updateThemeColor } from '@/utils/nativeService';
 import { ModernSalesChart } from '@/components/modern/ModernSalesChart';
 import { useSalesCache } from '@/hooks/useSalesCache';
 import { Capacitor } from '@capacitor/core';
@@ -167,12 +167,17 @@ export function AppHome() {
   const monthlyGoal = nextLevel?.threshold || 1000000; // Meta dinâmica baseada no próximo nível
   const goalProgress = kambaProgress;
 
-  // Apply dark mode class to HTML element for drawer portals
+  // Apply dark mode class to HTML element and sync WebView background
   useEffect(() => {
     const root = window.document.documentElement;
     root.classList.remove('light', 'dark');
     root.classList.add(isDark ? 'dark' : 'light');
-    console.log('🎨 AppHome: Aplicando tema ao HTML', isDark ? 'dark' : 'light');
+    
+    // Sincronizar cor de fundo do WebView com o tema
+    configureStatusBar(isDark);
+    updateThemeColor(isDark);
+    
+    console.log('🎨 AppHome: Aplicando tema ao HTML e WebView', isDark ? 'dark' : 'light');
   }, [isDark]);
   const handlePushToggle = async (enabled: boolean) => {
     console.log('🔔 [handlePushToggle] Called with enabled:', enabled);
