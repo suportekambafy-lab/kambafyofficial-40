@@ -63,7 +63,7 @@ export function CurrencyTabs({
             <SelectValue>
               <div className="flex items-center gap-2">
                 <span className="font-medium text-foreground">{config.name}</span>
-                <span className="text-foreground/70">({selectedCurrency})</span>
+                <span className="text-foreground/70">({selectedCurrency === 'MZN' ? 'MT' : selectedCurrency})</span>
               </div>
             </SelectValue>
           </SelectTrigger>
@@ -79,7 +79,7 @@ export function CurrencyTabs({
                 >
                   <div className="flex items-center gap-2 w-full">
                     <span className="font-medium">{currencyConfig.name}</span>
-                    <span className="text-muted-foreground">({currency})</span>
+                    <span className="text-muted-foreground">({currency === 'MZN' ? 'MT' : currency})</span>
                     {balance.balance > 0 && (
                       <span className="ml-auto text-xs text-primary font-medium">
                         {formatCurrency(balance.balance, currency)}
