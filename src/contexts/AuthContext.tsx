@@ -36,26 +36,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [verified2FA, setVerified2FA] = useState(false);
   const [pending2FAEmail, setPending2FAEmail] = useState<string | null>(null);
 
-  // Função para validar se um usuário é válido
+  // Função para validar se um usuário é válido (menos restritiva para evitar logouts)
   const isValidUser = (user: User | null): boolean => {
     if (!user) return false;
     
-    // Verificar se o email existe e é válido
-    if (!user.email || 
-        user.email.includes('usurário') || 
-        user.email.includes('usuário') ||
-        user.email.includes('usuario') ||
-        user.email === 'usuario' ||
-        user.email.trim() === '' ||
-        user.email === 'user@example.com') {
-      console.log('❌ Email inválido detectado:', user.email);
-      return false;
-    }
-    
-    // Verificar se o ID do usuário é um UUID válido
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    if (!user.id || !uuidRegex.test(user.id)) {
-      console.log('❌ ID de usuário inválido:', user.id);
+    // Apenas verificar se tem ID válido - o email pode ser null em alguns providers
+    if (!user.id) {
+      console.log('❌ ID de usuário ausente');
       return false;
     }
     
@@ -66,14 +53,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isValidSession = (session: Session | null): boolean => {
     if (!session) return false;
     
-    // Verificar se a sessão não expirou
-    const now = Math.floor(Date.now() / 1000);
-    if (session.expires_at && session.expires_at < now) {
-      console.log('❌ Sessão expirada');
-      return false;
-    }
-    
-    // Verificar se o access_token existe
+    // NÃO verificar expiração aqui - o Supabase SDK faz refresh automático
+    // Verificar apenas se o access_token existe
     if (!session.access_token) {
       console.log('❌ Token de acesso ausente');
       return false;
@@ -145,18 +126,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setSession(currentSession);
             setUser(currentSession.user);
           }
-        } else if (currentSession) {
-          console.log('❌ Sessão inválida detectada na inicialização - fazendo logout');
-          try {
-            await supabase.auth.signOut();
-          } catch (error) {
-            console.error('Erro ao fazer logout:', error);
-          }
-          if (mounted) {
-            clearAuth();
-          }
-        } else {
+        } else if (!currentSession) {
           console.log('ℹ️ Nenhuma sessão encontrada na inicialização');
+        } else {
+          // Sessão existe mas não passou na validação - NÃO forçar logout
+          // Deixar o Supabase SDK tentar fazer refresh
+          console.log('⚠️ Sessão pode precisar de refresh, aguardando SDK...');
+          if (mounted) {
+            setSession(currentSession);
+            setUser(currentSession.user);
+          }
         }
         
         if (mounted) {
@@ -188,27 +167,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return;
         }
         
-        if (event === 'SIGNED_OUT' || !session) {
+        if (event === 'SIGNED_OUT') {
           console.log('👋 Usuário desconectado');
           clearAuth();
           setLoading(false);
           return;
         }
-        
-        // Validar nova sessão
-        if (!isValidSession(session) || !isValidUser(session.user)) {
-          console.log('❌ Nova sessão inválida detectada no listener - fazendo logout');
-          setTimeout(() => {
-            supabase.auth.signOut().catch((error) => {
-              console.error('Erro ao fazer logout:', error);
-            });
-          }, 0);
-          clearAuth();
+
+        // Se não há sessão após um evento que não é SIGNED_OUT, apenas ignorar
+        if (!session) {
+          console.log('ℹ️ Evento sem sessão:', event);
           setLoading(false);
           return;
         }
         
-        console.log('✅ Sessão válida no listener');
+        // Aceitar a sessão mesmo se a validação falhar (deixar SDK fazer refresh)
+        console.log('✅ Sessão recebida no listener:', event);
         setSession(session);
         setUser(session.user);
         
