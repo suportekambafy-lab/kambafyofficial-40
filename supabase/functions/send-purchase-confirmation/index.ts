@@ -396,19 +396,14 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    // For completed payments, continue with the full flow but also optimize with background tasks
+    // For completed payments, process email synchronously to ensure delivery
     console.log('=== PROCESSING COMPLETED PAYMENT ===');
     
-    // Send immediate response and process email in background (fire and forget)
-    (async () => {
-      try {
-        console.log('Background task: Processing completed payment email');
-        
-        // Create Supabase client
-        const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
-        const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-        const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-        const supabase = createClient(supabaseUrl, supabaseKey);
+    let emailSentSuccess = false;
+    let emailSendError: any = null;
+    
+    try {
+      console.log('Processing completed payment email...');
 
         console.log('=== FETCHING SELLER AND PRODUCT DATA ===');
         
@@ -1157,19 +1152,23 @@ const handler = async (req: Request): Promise<Response> => {
           }
         }
 
-      } catch (error) {
-        console.error('Background task error:', error);
-      }
-    })();
+      emailSentSuccess = true;
+      console.log('✅ All emails processed successfully');
 
-    // Return immediate response for completed payments
+    } catch (error: any) {
+      console.error('Error processing completed payment email:', error);
+      emailSendError = error;
+    }
+
+    // Return response after email processing is complete
     return new Response(JSON.stringify({
-      success: true,
-      message: 'Purchase confirmation email will be sent',
-      emailSent: true,
-      paymentStatus: 'completed'
+      success: emailSentSuccess,
+      message: emailSentSuccess ? 'Purchase confirmation email sent successfully' : 'Error sending email',
+      emailSent: emailSentSuccess,
+      paymentStatus: 'completed',
+      error: emailSendError?.message
     }), {
-      status: 200,
+      status: emailSentSuccess ? 200 : 500,
       headers: {
         "Content-Type": "application/json",
         ...corsHeaders,
