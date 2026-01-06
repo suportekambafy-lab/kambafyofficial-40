@@ -10,11 +10,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Award, Plus, Edit, Eye, Download, Trash2, Copy, Settings, FileText, Search } from 'lucide-react';
+import { Award, Plus, Edit, Eye, Download, Trash2, Copy, Settings, FileText, Search, Upload, X, Image as ImageIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useCloudflareUpload } from '@/hooks/useCloudflareUpload';
+import kambafyLogo from '@/assets/kambafy-logo-gray.svg';
 
 interface CertificateTemplate {
   id: string;
@@ -56,18 +58,21 @@ interface CertificateManagerProps {
   memberAreaId: string;
 }
 
+// Template padrão Kambafy - design profissional com cores da marca
 const defaultTemplate: Partial<CertificateTemplate> = {
-  name: 'Certificado Padrão',
-  background_color: '#ffffff',
+  name: 'Certificado Kambafy',
+  background_color: '#f8fafc',
   title_text: 'CERTIFICADO DE CONCLUSÃO',
   body_text: 'Certificamos que {student_name} concluiu com êxito o curso {course_name} com carga horária de {hours} horas.',
+  footer_text: 'Certificado emitido pela plataforma Kambafy',
   show_date: true,
   show_hours: true,
   show_quiz_score: false,
   font_family: 'Inter',
-  primary_color: '#000000',
-  secondary_color: '#666666',
+  primary_color: '#1a1a2e',
+  secondary_color: '#64748b',
   is_active: true,
+  logo_url: kambafyLogo,
 };
 
 export function CertificateManager({ memberAreaId }: CertificateManagerProps) {
@@ -78,6 +83,21 @@ export function CertificateManager({ memberAreaId }: CertificateManagerProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [previewTemplate, setPreviewTemplate] = useState<CertificateTemplate | null>(null);
+  const { uploadFile, uploading } = useCloudflareUpload();
+
+  // Helper para upload de imagem
+  const handleImageUpload = async (file: File, field: 'logo_url' | 'background_image_url' | 'signature_url') => {
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('A imagem deve ter menos de 10MB');
+      return;
+    }
+    
+    const url = await uploadFile(file);
+    if (url && editingTemplate) {
+      setEditingTemplate({ ...editingTemplate, [field]: url });
+      toast.success('Imagem enviada com sucesso!');
+    }
+  };
 
   useEffect(() => {
     fetchData();
@@ -272,23 +292,160 @@ export function CertificateManager({ memberAreaId }: CertificateManagerProps) {
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>URL do Logo</Label>
-                      <Input
-                        value={editingTemplate.logo_url || ''}
-                        onChange={(e) => setEditingTemplate({ ...editingTemplate, logo_url: e.target.value })}
-                        placeholder="https://..."
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>URL Imagem de Fundo</Label>
-                      <Input
-                        value={editingTemplate.background_image_url || ''}
-                        onChange={(e) => setEditingTemplate({ ...editingTemplate, background_image_url: e.target.value })}
-                        placeholder="https://..."
-                      />
-                    </div>
+                  {/* Upload de Logo */}
+                  <div className="space-y-2">
+                    <Label>Logo do Certificado</Label>
+                    {editingTemplate.logo_url ? (
+                      <div className="flex items-center gap-4">
+                        <div className="relative w-32 h-20 bg-muted rounded-lg overflow-hidden border">
+                          <img
+                            src={editingTemplate.logo_url}
+                            alt="Logo"
+                            className="w-full h-full object-contain p-2"
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setEditingTemplate({ ...editingTemplate, logo_url: null })}
+                        >
+                          <X className="h-4 w-4 mr-1" />
+                          Remover
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="relative">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleImageUpload(file, 'logo_url');
+                          }}
+                          disabled={uploading}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                        />
+                        <div className="flex items-center justify-center gap-2 p-6 border-2 border-dashed rounded-lg bg-background hover:bg-muted/30 transition-colors cursor-pointer">
+                          {uploading ? (
+                            <div className="flex items-center gap-2">
+                              <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                              <span className="text-sm text-muted-foreground">Enviando...</span>
+                            </div>
+                          ) : (
+                            <>
+                              <Upload className="h-5 w-5 text-muted-foreground" />
+                              <span className="text-sm text-muted-foreground">Clique para fazer upload do logo</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    <p className="text-xs text-muted-foreground">Recomendado: PNG transparente, 400x100px</p>
+                  </div>
+
+                  {/* Upload de Imagem de Fundo */}
+                  <div className="space-y-2">
+                    <Label>Imagem de Fundo (opcional)</Label>
+                    {editingTemplate.background_image_url ? (
+                      <div className="flex items-center gap-4">
+                        <div className="relative w-48 h-32 bg-muted rounded-lg overflow-hidden border">
+                          <img
+                            src={editingTemplate.background_image_url}
+                            alt="Fundo"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setEditingTemplate({ ...editingTemplate, background_image_url: null })}
+                        >
+                          <X className="h-4 w-4 mr-1" />
+                          Remover
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="relative">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleImageUpload(file, 'background_image_url');
+                          }}
+                          disabled={uploading}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                        />
+                        <div className="flex items-center justify-center gap-2 p-6 border-2 border-dashed rounded-lg bg-background hover:bg-muted/30 transition-colors cursor-pointer">
+                          {uploading ? (
+                            <div className="flex items-center gap-2">
+                              <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                              <span className="text-sm text-muted-foreground">Enviando...</span>
+                            </div>
+                          ) : (
+                            <>
+                              <ImageIcon className="h-5 w-5 text-muted-foreground" />
+                              <span className="text-sm text-muted-foreground">Clique para upload da imagem de fundo</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    <p className="text-xs text-muted-foreground">Recomendado: 1920x1080px ou proporção A4 horizontal</p>
+                  </div>
+
+                  {/* Upload de Assinatura */}
+                  <div className="space-y-2">
+                    <Label>Imagem da Assinatura (opcional)</Label>
+                    {editingTemplate.signature_url ? (
+                      <div className="flex items-center gap-4">
+                        <div className="relative w-40 h-16 bg-white rounded-lg overflow-hidden border">
+                          <img
+                            src={editingTemplate.signature_url}
+                            alt="Assinatura"
+                            className="w-full h-full object-contain p-1"
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setEditingTemplate({ ...editingTemplate, signature_url: null })}
+                        >
+                          <X className="h-4 w-4 mr-1" />
+                          Remover
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="relative">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleImageUpload(file, 'signature_url');
+                          }}
+                          disabled={uploading}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                        />
+                        <div className="flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg bg-background hover:bg-muted/30 transition-colors cursor-pointer">
+                          {uploading ? (
+                            <div className="flex items-center gap-2">
+                              <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                              <span className="text-sm text-muted-foreground">Enviando...</span>
+                            </div>
+                          ) : (
+                            <>
+                              <Upload className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-sm text-muted-foreground">Upload da assinatura</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    <p className="text-xs text-muted-foreground">Recomendado: PNG transparente com a assinatura</p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -510,11 +667,20 @@ export function CertificateManager({ memberAreaId }: CertificateManagerProps) {
                     Data de Conclusão: {format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
                   </p>
                 )}
-                {previewTemplate.signature_name && (
+                {(previewTemplate.signature_url || previewTemplate.signature_name) && (
                   <div className="mt-8 border-t pt-4" style={{ borderColor: previewTemplate.secondary_color }}>
-                    <p className="font-semibold" style={{ color: previewTemplate.primary_color }}>
-                      {previewTemplate.signature_name}
-                    </p>
+                    {previewTemplate.signature_url && (
+                      <img
+                        src={previewTemplate.signature_url}
+                        alt="Assinatura"
+                        className="h-12 mx-auto mb-2 object-contain"
+                      />
+                    )}
+                    {previewTemplate.signature_name && (
+                      <p className="font-semibold" style={{ color: previewTemplate.primary_color }}>
+                        {previewTemplate.signature_name}
+                      </p>
+                    )}
                     {previewTemplate.signature_title && (
                       <p className="text-sm" style={{ color: previewTemplate.secondary_color }}>
                         {previewTemplate.signature_title}
