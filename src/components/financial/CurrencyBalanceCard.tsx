@@ -144,99 +144,86 @@ export function CurrencyBalanceCard({
           </div>
         </div>
       ) : (
-        /* Simple Card View Mode */
-        <Card className="max-w-md mx-auto border-2 shadow-lg">
+        /* Simple/Original Card View Mode */
+        <Card className="bg-muted/30 border-0 shadow-sm">
           <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                  isBlackCard 
-                    ? 'bg-zinc-900 text-white' 
-                    : 'bg-primary text-primary-foreground'
-                }`}>
-                  <PiggyBank className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">{config.name}</p>
-                  <p className="text-xs text-muted-foreground/70">{currency === 'MZN' ? 'MT' : currency}</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowBalance(!showBalance)}
-                className="p-2 rounded-full bg-muted hover:bg-muted/80 transition-colors"
-              >
-                {showBalance ? <Eye className="h-4 w-4 text-muted-foreground" /> : <EyeOff className="h-4 w-4 text-muted-foreground" />}
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">
-                  {t("financial.balance.available")}
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <p className="text-sm text-muted-foreground mb-2">
+                  Saldo Disponível em {config.name}
                 </p>
-                <p className={`text-3xl font-bold ${
-                  isBlackCard ? 'text-zinc-900 dark:text-zinc-100' : 'text-primary'
-                }`}>
-                  {showBalance ? formatCurrency(availableBalance, currency) : '••••••••'}
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-                <div>
-                  <p className="text-xs text-muted-foreground">Saldo Total</p>
-                  <p className="text-sm font-semibold">
-                    {showBalance ? formatCurrency(balance, currency) : '••••'}
-                  </p>
+                <div className="flex items-center gap-3">
+                  <span className="text-3xl sm:text-4xl font-bold text-primary">
+                    {showBalance ? formatCurrency(availableBalance, currency) : '••••••••'}
+                  </span>
+                  <button
+                    onClick={() => setShowBalance(!showBalance)}
+                    className="p-1.5 rounded-full hover:bg-muted transition-colors"
+                  >
+                    {showBalance ? <Eye className="h-5 w-5 text-muted-foreground" /> : <EyeOff className="h-5 w-5 text-muted-foreground" />}
+                  </button>
                 </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Total Sacado</p>
-                  <p className="text-sm font-semibold text-emerald-600">
-                    {showBalance ? formatCurrency(totalWithdrawn, currency) : '••••'}
-                  </p>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground mt-2">
+                  <AlertCircle className="h-3 w-3 shrink-0" />
+                  <span>{t("financial.withdrawal.minAmount")} {formatCurrency(minimumWithdrawal, currency)}</span>
                 </div>
               </div>
+              
+              {showWithdrawButton && (
+                <Button 
+                  onClick={onWithdraw} 
+                  size="lg"
+                  disabled={!canWithdrawNow}
+                  className="ml-4"
+                >
+                  <PiggyBank className="h-4 w-4 mr-2" />
+                  {t("financial.withdrawal.requestWithdrawal")}
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Withdraw Button and Info */}
-      <div className="flex flex-col items-center gap-3 max-w-md mx-auto">
-        {/* Minimum withdrawal info */}
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <AlertCircle className="h-3 w-3 shrink-0" />
-          <span>{t("financial.withdrawal.minAmount")} {formatCurrency(minimumWithdrawal, currency)}</span>
+      {/* Withdraw Button and Info - Only show in Card mode */}
+      {viewMode === 'card' && (
+        <div className="flex flex-col items-center gap-3 max-w-md mx-auto">
+          {/* Minimum withdrawal info */}
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <AlertCircle className="h-3 w-3 shrink-0" />
+            <span>{t("financial.withdrawal.minAmount")} {formatCurrency(minimumWithdrawal, currency)}</span>
+          </div>
+
+          {showWithdrawButton && (
+            <Button 
+              onClick={onWithdraw} 
+              className="w-full"
+              size="lg"
+              disabled={!canWithdrawNow}
+            >
+              <PiggyBank className="h-4 w-4 mr-2" />
+              {t("financial.withdrawal.requestWithdrawal")}
+            </Button>
+          )}
         </div>
+      )}
 
-        {showWithdrawButton && (
-          <Button 
-            onClick={onWithdraw} 
-            className="w-full"
-            size="lg"
-            disabled={!canWithdrawNow}
-          >
-            <PiggyBank className="h-4 w-4 mr-2" />
-            {t("financial.withdrawal.requestWithdrawal")}
-          </Button>
-        )}
-
-        {/* Verification warning */}
-        {!isVerified && balance > 0 && (
-          <div className="w-full p-3 bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-            <div className="flex items-start gap-2">
-              <AlertCircle className="h-4 w-4 text-yellow-600 mt-0.5 shrink-0" />
-              <div className="text-sm">
-                <p className="font-medium text-yellow-800 dark:text-yellow-200">
-                  {t("financial.verification.pendingTitle")}
-                </p>
-                <Link to="/identidade" className="text-yellow-700 dark:text-yellow-300 underline">
-                  {t("financial.verification.verifyNow")}
-                </Link>
-              </div>
+      {/* Verification warning */}
+      {!isVerified && balance > 0 && (
+        <div className="w-full p-3 bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800 rounded-lg max-w-md mx-auto">
+          <div className="flex items-start gap-2">
+            <AlertCircle className="h-4 w-4 text-yellow-600 mt-0.5 shrink-0" />
+            <div className="text-sm">
+              <p className="font-medium text-yellow-800 dark:text-yellow-200">
+                {t("financial.verification.pendingTitle")}
+              </p>
+              <Link to="/identidade" className="text-yellow-700 dark:text-yellow-300 underline">
+                {t("financial.verification.verifyNow")}
+              </Link>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Retained Balance Card (if any) */}
       {retainedBalance > 0 && (
