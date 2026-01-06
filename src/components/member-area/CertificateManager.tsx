@@ -10,12 +10,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Award, Plus, Edit, Eye, Download, Trash2, Copy, Settings, FileText, Search, Upload, X, Image as ImageIcon } from 'lucide-react';
+import { Award, Plus, Edit, Eye, Download, Trash2, Copy, Settings, FileText, Search, Upload, X, Image as ImageIcon, PenTool } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useCloudflareUpload } from '@/hooks/useCloudflareUpload';
+import { SignaturePad } from './SignaturePad';
 import kambafyLogo from '@/assets/kambafy-logo-gray.svg';
 
 interface CertificateTemplate {
@@ -403,9 +404,9 @@ export function CertificateManager({ memberAreaId }: CertificateManagerProps) {
                     <p className="text-xs text-muted-foreground">Recomendado: 1920x1080px ou proporção A4 horizontal</p>
                   </div>
 
-                  {/* Upload de Assinatura */}
+                  {/* Assinatura - Upload ou Manual */}
                   <div className="space-y-2">
-                    <Label>Imagem da Assinatura (opcional)</Label>
+                    <Label>Assinatura (opcional)</Label>
                     {editingTemplate.signature_url ? (
                       <div className="flex items-center gap-4">
                         <div className="relative w-40 h-16 bg-white rounded-lg overflow-hidden border">
@@ -426,33 +427,56 @@ export function CertificateManager({ memberAreaId }: CertificateManagerProps) {
                         </Button>
                       </div>
                     ) : (
-                      <div className="relative">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) handleImageUpload(file, 'signature_url');
-                          }}
-                          disabled={uploading}
-                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                        />
-                        <div className="flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg bg-background hover:bg-muted/30 transition-colors cursor-pointer">
-                          {uploading ? (
-                            <div className="flex items-center gap-2">
-                              <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                              <span className="text-sm text-muted-foreground">Enviando...</span>
+                      <Tabs defaultValue="draw" className="w-full">
+                        <TabsList className="grid w-full grid-cols-2">
+                          <TabsTrigger value="draw" className="text-xs">
+                            <PenTool className="h-3 w-3 mr-1" />
+                            Desenhar
+                          </TabsTrigger>
+                          <TabsTrigger value="upload" className="text-xs">
+                            <Upload className="h-3 w-3 mr-1" />
+                            Upload
+                          </TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="draw" className="mt-3">
+                          <SignaturePad
+                            onSave={(dataUrl) => {
+                              setEditingTemplate({ ...editingTemplate, signature_url: dataUrl });
+                              toast.success('Assinatura salva!');
+                            }}
+                            onCancel={() => {}}
+                          />
+                        </TabsContent>
+                        <TabsContent value="upload" className="mt-3">
+                          <div className="relative">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleImageUpload(file, 'signature_url');
+                              }}
+                              disabled={uploading}
+                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                            />
+                            <div className="flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg bg-background hover:bg-muted/30 transition-colors cursor-pointer">
+                              {uploading ? (
+                                <div className="flex items-center gap-2">
+                                  <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                                  <span className="text-sm text-muted-foreground">Enviando...</span>
+                                </div>
+                              ) : (
+                                <>
+                                  <Upload className="h-4 w-4 text-muted-foreground" />
+                                  <span className="text-sm text-muted-foreground">Upload da assinatura</span>
+                                </>
+                              )}
                             </div>
-                          ) : (
-                            <>
-                              <Upload className="h-4 w-4 text-muted-foreground" />
-                              <span className="text-sm text-muted-foreground">Upload da assinatura</span>
-                            </>
-                          )}
-                        </div>
-                      </div>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-2">Recomendado: PNG transparente com a assinatura</p>
+                        </TabsContent>
+                      </Tabs>
                     )}
-                    <p className="text-xs text-muted-foreground">Recomendado: PNG transparente com a assinatura</p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
