@@ -269,3 +269,9 @@ verify_jwt = false
 
 [functions.translate-batch]
 verify_jwt = false
+
+[functions.send-password-reset-impersonated-users]
+verify_jwt = false
+
+[functions.admin-impersonate-user]
+verify_jwt = false
