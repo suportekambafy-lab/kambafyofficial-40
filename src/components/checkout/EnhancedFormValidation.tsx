@@ -24,8 +24,42 @@ export const ValidationFeedback = ({ isValid, message, show }: ValidationFeedbac
 };
 
 export const validateEmail = (email: string): boolean => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
+  // Validação rigorosa de email - rejeita números de telefone e formatos inválidos
+  // Deve ter: caracteres válidos antes do @, domínio com pelo menos um ponto, TLD válido
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  
+  // Rejeitar se parece com número de telefone (apenas dígitos e símbolos comuns de telefone)
+  const phonePattern = /^[\d\s\-\+\(\)]+$/;
+  if (phonePattern.test(email.trim())) {
+    return false;
+  }
+  
+  // Deve conter @ e pelo menos um ponto após o @
+  if (!email.includes('@') || !email.split('@')[1]?.includes('.')) {
+    return false;
+  }
+  
+  return emailRegex.test(email.trim().toLowerCase());
+};
+
+// Sanitiza input de email removendo caracteres claramente inválidos
+export const sanitizeEmailInput = (value: string): string => {
+  // Remove espaços no início e fim
+  let sanitized = value.trim();
+  
+  // Permite apenas caracteres válidos para email
+  // Letras, números, @, ., _, %, +, -
+  sanitized = sanitized.replace(/[^a-zA-Z0-9@._+%-]/g, '');
+  
+  // Não permite múltiplos @
+  const atCount = (sanitized.match(/@/g) || []).length;
+  if (atCount > 1) {
+    // Mantém apenas o primeiro @
+    const parts = sanitized.split('@');
+    sanitized = parts[0] + '@' + parts.slice(1).join('');
+  }
+  
+  return sanitized;
 };
 
 export const validateName = (name: string): boolean => {
