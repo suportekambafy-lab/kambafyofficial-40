@@ -4,11 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Play, RotateCcw, SkipForward, ChevronDown, ChevronUp, Clock, CheckCircle2, FileText, Link as LinkIcon, Info, PanelRightClose, PanelRightOpen, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Play, RotateCcw, SkipForward, ChevronDown, ChevronUp, Clock, CheckCircle2, FileText, Link as LinkIcon, Info, PanelRightClose, PanelRightOpen, MessageCircle, HelpCircle } from 'lucide-react';
 import { Lesson, Module } from '@/types/memberArea';
 import VideoPlayer from '@/components/ui/video-player';
 import { LessonReleaseTimer } from '@/components/ui/lesson-release-timer';
 import { LessonComments } from '@/components/members/LessonComments';
+import LessonQuiz from '@/components/members/LessonQuiz';
 import { cn } from '@/lib/utils';
 
 interface NetflixLessonViewerProps {
@@ -391,6 +392,10 @@ export function NetflixLessonViewer({
                       </Badge>
                     </TabsTrigger>
                   )}
+                  <TabsTrigger value="quiz" className="data-[state=active]:bg-netflix-green data-[state=active]:text-black text-white/70 gap-2">
+                    <HelpCircle className="w-4 h-4" />
+                    Quiz
+                  </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="about" className="mt-4">
@@ -454,6 +459,15 @@ export function NetflixLessonViewer({
                     </div>
                   </TabsContent>
                 )}
+
+                <TabsContent value="quiz" className="mt-4">
+                  <LessonQuiz
+                    lessonId={lesson.id}
+                    memberAreaId={memberArea.id}
+                    studentEmail={studentEmail || ''}
+                    studentName={studentName}
+                  />
+                </TabsContent>
               </Tabs>
 
               {/* Module Lessons List - Mobile Only */}

@@ -1949,6 +1949,151 @@ export type Database = {
           },
         ]
       }
+      member_area_quiz_responses: {
+        Row: {
+          attempt_number: number | null
+          completed_at: string | null
+          created_at: string
+          id: string
+          member_area_id: string
+          passed: boolean | null
+          quiz_id: string
+          responses: Json
+          score: number
+          started_at: string
+          student_email: string
+          student_name: string | null
+          time_spent_seconds: number | null
+          total_questions: number
+        }
+        Insert: {
+          attempt_number?: number | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          member_area_id: string
+          passed?: boolean | null
+          quiz_id: string
+          responses?: Json
+          score?: number
+          started_at?: string
+          student_email: string
+          student_name?: string | null
+          time_spent_seconds?: number | null
+          total_questions?: number
+        }
+        Update: {
+          attempt_number?: number | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          member_area_id?: string
+          passed?: boolean | null
+          quiz_id?: string
+          responses?: Json
+          score?: number
+          started_at?: string
+          student_email?: string
+          student_name?: string | null
+          time_spent_seconds?: number | null
+          total_questions?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_area_quiz_responses_member_area_id_fkey"
+            columns: ["member_area_id"]
+            isOneToOne: false
+            referencedRelation: "member_areas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_area_quiz_responses_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "member_area_quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      member_area_quizzes: {
+        Row: {
+          allow_retake: boolean | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          lesson_id: string | null
+          max_attempts: number | null
+          member_area_id: string
+          module_id: string | null
+          passing_score: number | null
+          questions: Json
+          show_correct_answers: boolean | null
+          time_limit_minutes: number | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          allow_retake?: boolean | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          lesson_id?: string | null
+          max_attempts?: number | null
+          member_area_id: string
+          module_id?: string | null
+          passing_score?: number | null
+          questions?: Json
+          show_correct_answers?: boolean | null
+          time_limit_minutes?: number | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          allow_retake?: boolean | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          lesson_id?: string | null
+          max_attempts?: number | null
+          member_area_id?: string
+          module_id?: string | null
+          passing_score?: number | null
+          questions?: Json
+          show_correct_answers?: boolean | null
+          time_limit_minutes?: number | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_area_quizzes_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_area_quizzes_member_area_id_fkey"
+            columns: ["member_area_id"]
+            isOneToOne: false
+            referencedRelation: "member_areas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_area_quizzes_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       member_area_sessions: {
         Row: {
           created_at: string
