@@ -716,7 +716,7 @@ export function CertificateManager({ memberAreaId }: CertificateManagerProps) {
                       </div>
                       
                       {editingTemplate.footer_text && (
-                        <p className="absolute bottom-2 text-[6px]" style={{ color: editingTemplate.secondary_color || '#64748b' }}>
+                        <p className="absolute bottom-6 text-[6px]" style={{ color: editingTemplate.secondary_color || '#64748b' }}>
                           {editingTemplate.footer_text}
                         </p>
                       )}
