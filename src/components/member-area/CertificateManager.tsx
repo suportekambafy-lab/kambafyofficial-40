@@ -83,6 +83,7 @@ export function CertificateManager({ memberAreaId }: CertificateManagerProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [previewTemplate, setPreviewTemplate] = useState<CertificateTemplate | null>(null);
+  const [memberAreaLogo, setMemberAreaLogo] = useState<string | null>(null);
   const { uploadFile, uploading } = useCloudflareUpload();
 
   // Helper para upload de imagem
@@ -106,7 +107,7 @@ export function CertificateManager({ memberAreaId }: CertificateManagerProps) {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [templatesRes, certificatesRes] = await Promise.all([
+      const [templatesRes, certificatesRes, memberAreaRes] = await Promise.all([
         supabase
           .from('certificate_templates')
           .select('*')
@@ -117,11 +118,17 @@ export function CertificateManager({ memberAreaId }: CertificateManagerProps) {
           .select('*')
           .eq('member_area_id', memberAreaId)
           .order('issued_at', { ascending: false })
-          .range(0, 99)
+          .range(0, 99),
+        supabase
+          .from('member_areas')
+          .select('logo_url')
+          .eq('id', memberAreaId)
+          .single()
       ]);
 
       if (templatesRes.data) setTemplates(templatesRes.data);
       if (certificatesRes.data) setCertificates(certificatesRes.data);
+      if (memberAreaRes.data?.logo_url) setMemberAreaLogo(memberAreaRes.data.logo_url);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Erro ao carregar dados');
@@ -247,7 +254,7 @@ export function CertificateManager({ memberAreaId }: CertificateManagerProps) {
           <h3 className="text-lg font-medium">Templates de Certificado</h3>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button onClick={() => setEditingTemplate(defaultTemplate)}>
+              <Button onClick={() => setEditingTemplate({ ...defaultTemplate, logo_url: memberAreaLogo || defaultTemplate.logo_url })}>
                 <Plus className="h-4 w-4 mr-2" />
                 Novo Template
               </Button>
