@@ -550,70 +550,142 @@ export function CertificateManager({ memberAreaId }: CertificateManagerProps) {
                   <div className="space-y-2">
                     <Label>Pré-visualização</Label>
                     <div
-                      className="aspect-[1.414/1] w-full rounded-lg border p-4 flex flex-col items-center justify-center text-center relative overflow-hidden"
+                      className="aspect-[1.414/1] w-full rounded-lg border-2 flex flex-col items-center justify-center text-center relative overflow-hidden"
                       style={{
                         backgroundColor: editingTemplate.background_color || '#f8fafc',
                         backgroundImage: editingTemplate.background_image_url
                           ? `url(${editingTemplate.background_image_url})`
-                          : undefined,
+                          : `linear-gradient(135deg, ${editingTemplate.background_color || '#f8fafc'} 0%, ${editingTemplate.background_color || '#f8fafc'}ee 100%)`,
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
                         fontFamily: editingTemplate.font_family || 'Inter',
                       }}
                     >
-                      {editingTemplate.logo_url && (
-                        <img
-                          src={editingTemplate.logo_url}
-                          alt="Logo"
-                          className="h-8 mb-2 object-contain"
-                        />
-                      )}
-                      <h1
-                        className="text-lg font-bold mb-2"
-                        style={{ color: editingTemplate.primary_color || '#1a1a2e' }}
-                      >
-                        {editingTemplate.title_text || 'CERTIFICADO DE CONCLUSÃO'}
-                      </h1>
-                      <p
-                        className="text-xs max-w-[90%] mb-2"
-                        style={{ color: editingTemplate.secondary_color || '#64748b' }}
-                      >
-                        {(editingTemplate.body_text || 'Certificamos que {student_name} concluiu com êxito o curso {course_name}...')
-                          .replace('{student_name}', 'Nome do Aluno')
-                          .replace('{course_name}', 'Nome do Curso')
-                          .replace('{hours}', '40')
-                          .replace('{date}', format(new Date(), 'dd/MM/yyyy'))
-                          .replace('{quiz_score}', '95%')
-                          .substring(0, 120)}...
-                      </p>
-                      {editingTemplate.show_date && (
-                        <p className="text-[10px] mb-2" style={{ color: editingTemplate.secondary_color || '#64748b' }}>
-                          Data de Conclusão: {format(new Date(), "dd/MM/yyyy")}
-                        </p>
-                      )}
-                      {(editingTemplate.signature_url || editingTemplate.signature_name) && (
-                        <div className="mt-2 border-t pt-2 w-full" style={{ borderColor: `${editingTemplate.secondary_color || '#64748b'}40` }}>
-                          {editingTemplate.signature_url && (
-                            <img
-                              src={editingTemplate.signature_url}
-                              alt="Assinatura"
-                              className="h-6 mx-auto mb-1 object-contain"
-                            />
-                          )}
-                          {editingTemplate.signature_name && (
-                            <p className="text-[10px] font-semibold" style={{ color: editingTemplate.primary_color || '#1a1a2e' }}>
-                              {editingTemplate.signature_name}
-                            </p>
-                          )}
-                          {editingTemplate.signature_title && (
-                            <p className="text-[8px]" style={{ color: editingTemplate.secondary_color || '#64748b' }}>
-                              {editingTemplate.signature_title}
-                            </p>
-                          )}
+                      {/* Moldura decorativa externa */}
+                      <div 
+                        className="absolute inset-2 border-2 rounded pointer-events-none"
+                        style={{ borderColor: `${editingTemplate.primary_color || '#1a1a2e'}30` }}
+                      />
+                      <div 
+                        className="absolute inset-3 border rounded pointer-events-none"
+                        style={{ borderColor: `${editingTemplate.primary_color || '#1a1a2e'}20` }}
+                      />
+                      
+                      {/* Cantos decorativos */}
+                      <svg className="absolute top-4 left-4 w-6 h-6" viewBox="0 0 24 24" fill="none">
+                        <path d="M2 12V2h10M2 2l10 10" stroke={editingTemplate.primary_color || '#1a1a2e'} strokeWidth="1" strokeOpacity="0.3"/>
+                      </svg>
+                      <svg className="absolute top-4 right-4 w-6 h-6" viewBox="0 0 24 24" fill="none">
+                        <path d="M22 12V2H12M22 2L12 12" stroke={editingTemplate.primary_color || '#1a1a2e'} strokeWidth="1" strokeOpacity="0.3"/>
+                      </svg>
+                      <svg className="absolute bottom-4 left-4 w-6 h-6" viewBox="0 0 24 24" fill="none">
+                        <path d="M2 12v10h10M2 22l10-10" stroke={editingTemplate.primary_color || '#1a1a2e'} strokeWidth="1" strokeOpacity="0.3"/>
+                      </svg>
+                      <svg className="absolute bottom-4 right-4 w-6 h-6" viewBox="0 0 24 24" fill="none">
+                        <path d="M22 12v10H12M22 22L12 12" stroke={editingTemplate.primary_color || '#1a1a2e'} strokeWidth="1" strokeOpacity="0.3"/>
+                      </svg>
+
+                      {/* Ornamento superior */}
+                      <div className="absolute top-6 left-1/2 -translate-x-1/2">
+                        <svg width="60" height="12" viewBox="0 0 60 12" fill="none">
+                          <path d="M0 6h20M40 6h20M25 6a5 5 0 1010 0 5 5 0 10-10 0" stroke={editingTemplate.primary_color || '#1a1a2e'} strokeWidth="1" strokeOpacity="0.4"/>
+                          <circle cx="30" cy="6" r="2" fill={editingTemplate.primary_color || '#1a1a2e'} fillOpacity="0.3"/>
+                        </svg>
+                      </div>
+
+                      <div className="relative z-10 flex flex-col items-center px-6 py-4">
+                        {/* Ícone de troféu/medalha */}
+                        <div 
+                          className="w-10 h-10 rounded-full flex items-center justify-center mb-2"
+                          style={{ 
+                            background: `linear-gradient(135deg, ${editingTemplate.primary_color || '#1a1a2e'}20, ${editingTemplate.primary_color || '#1a1a2e'}10)`,
+                            border: `1px solid ${editingTemplate.primary_color || '#1a1a2e'}30`
+                          }}
+                        >
+                          <Award className="w-5 h-5" style={{ color: editingTemplate.primary_color || '#1a1a2e' }} />
                         </div>
-                      )}
+
+                        {editingTemplate.logo_url && (
+                          <img
+                            src={editingTemplate.logo_url}
+                            alt="Logo"
+                            className="h-6 mb-2 object-contain"
+                          />
+                        )}
+                        
+                        {/* Linha decorativa acima do título */}
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className="w-8 h-px" style={{ backgroundColor: `${editingTemplate.primary_color || '#1a1a2e'}40` }} />
+                          <div className="w-1.5 h-1.5 rotate-45" style={{ backgroundColor: `${editingTemplate.primary_color || '#1a1a2e'}40` }} />
+                          <div className="w-8 h-px" style={{ backgroundColor: `${editingTemplate.primary_color || '#1a1a2e'}40` }} />
+                        </div>
+
+                        <h1
+                          className="text-sm font-bold tracking-wider mb-1"
+                          style={{ color: editingTemplate.primary_color || '#1a1a2e' }}
+                        >
+                          {editingTemplate.title_text || 'CERTIFICADO DE CONCLUSÃO'}
+                        </h1>
+                        
+                        {/* Linha decorativa abaixo do título */}
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-12 h-px" style={{ backgroundColor: `${editingTemplate.primary_color || '#1a1a2e'}30` }} />
+                          <div className="w-1 h-1 rounded-full" style={{ backgroundColor: `${editingTemplate.primary_color || '#1a1a2e'}50` }} />
+                          <div className="w-12 h-px" style={{ backgroundColor: `${editingTemplate.primary_color || '#1a1a2e'}30` }} />
+                        </div>
+
+                        <p
+                          className="text-[9px] max-w-[85%] mb-2 leading-relaxed"
+                          style={{ color: editingTemplate.secondary_color || '#64748b' }}
+                        >
+                          {(editingTemplate.body_text || 'Certificamos que {student_name} concluiu com êxito o curso {course_name}...')
+                            .replace('{student_name}', 'Nome do Aluno')
+                            .replace('{course_name}', 'Nome do Curso')
+                            .replace('{hours}', '40')
+                            .replace('{date}', format(new Date(), 'dd/MM/yyyy'))
+                            .replace('{quiz_score}', '95%')
+                            .substring(0, 100)}...
+                        </p>
+                        
+                        {editingTemplate.show_date && (
+                          <p className="text-[8px] mb-2" style={{ color: editingTemplate.secondary_color || '#64748b' }}>
+                            Data de Conclusão: {format(new Date(), "dd/MM/yyyy")}
+                          </p>
+                        )}
+                        
+                        {(editingTemplate.signature_url || editingTemplate.signature_name) && (
+                          <div className="mt-1 pt-2 w-32">
+                            {editingTemplate.signature_url && (
+                              <img
+                                src={editingTemplate.signature_url}
+                                alt="Assinatura"
+                                className="h-4 mx-auto mb-1 object-contain"
+                              />
+                            )}
+                            <div className="w-full h-px mb-1" style={{ backgroundColor: `${editingTemplate.primary_color || '#1a1a2e'}50` }} />
+                            {editingTemplate.signature_name && (
+                              <p className="text-[8px] font-semibold" style={{ color: editingTemplate.primary_color || '#1a1a2e' }}>
+                                {editingTemplate.signature_name}
+                              </p>
+                            )}
+                            {editingTemplate.signature_title && (
+                              <p className="text-[7px]" style={{ color: editingTemplate.secondary_color || '#64748b' }}>
+                                {editingTemplate.signature_title}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Ornamento inferior */}
+                      <div className="absolute bottom-6 left-1/2 -translate-x-1/2">
+                        <svg width="40" height="8" viewBox="0 0 40 8" fill="none">
+                          <path d="M0 4h15M25 4h15M17 4a3 3 0 106 0 3 3 0 10-6 0" stroke={editingTemplate.primary_color || '#1a1a2e'} strokeWidth="0.5" strokeOpacity="0.3"/>
+                        </svg>
+                      </div>
+                      
                       {editingTemplate.footer_text && (
-                        <p className="absolute bottom-2 text-[8px]" style={{ color: editingTemplate.secondary_color || '#64748b' }}>
+                        <p className="absolute bottom-2 text-[6px]" style={{ color: editingTemplate.secondary_color || '#64748b' }}>
                           {editingTemplate.footer_text}
                         </p>
                       )}
@@ -702,65 +774,142 @@ export function CertificateManager({ memberAreaId }: CertificateManagerProps) {
             </DialogHeader>
             {previewTemplate && (
               <div
-                className="aspect-[1.414/1] w-full rounded-lg border p-8 flex flex-col items-center justify-center text-center"
+                className="aspect-[1.414/1] w-full rounded-lg border-2 flex flex-col items-center justify-center text-center relative overflow-hidden"
                 style={{
                   backgroundColor: previewTemplate.background_color,
                   backgroundImage: previewTemplate.background_image_url
                     ? `url(${previewTemplate.background_image_url})`
-                    : undefined,
+                    : `linear-gradient(135deg, ${previewTemplate.background_color} 0%, ${previewTemplate.background_color}ee 100%)`,
                   backgroundSize: 'cover',
                   fontFamily: previewTemplate.font_family,
                 }}
               >
-                {previewTemplate.logo_url && (
-                  <img
-                    src={previewTemplate.logo_url}
-                    alt="Logo"
-                    className="h-16 mb-4 object-contain"
-                  />
-                )}
-                <h1
-                  className="text-3xl font-bold mb-6"
-                  style={{ color: previewTemplate.primary_color }}
-                >
-                  {previewTemplate.title_text}
-                </h1>
-                <p
-                  className="text-lg max-w-2xl mb-8"
-                  style={{ color: previewTemplate.secondary_color }}
-                >
-                  {previewTemplate.body_text
-                    .replace('{student_name}', 'Nome do Aluno')
-                    .replace('{course_name}', 'Nome do Curso')
-                    .replace('{hours}', '40')
-                    .replace('{date}', format(new Date(), 'dd/MM/yyyy'))
-                    .replace('{quiz_score}', '95%')}
-                </p>
-                {previewTemplate.show_date && (
-                  <p className="text-sm mb-4" style={{ color: previewTemplate.secondary_color }}>
-                    Data de Conclusão: {format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-                  </p>
-                )}
-                {(previewTemplate.signature_url || previewTemplate.signature_name) && (
-                  <div className="mt-8 border-t pt-4" style={{ borderColor: previewTemplate.secondary_color }}>
-                    {previewTemplate.signature_url && (
-                      <img
-                        src={previewTemplate.signature_url}
-                        alt="Assinatura"
-                        className="h-12 mx-auto mb-2 object-contain"
-                      />
-                    )}
-                    {previewTemplate.signature_name && (
-                      <p className="font-semibold" style={{ color: previewTemplate.primary_color }}>
-                        {previewTemplate.signature_name}
-                      </p>
-                    )}
-                    {previewTemplate.signature_title && (
-                      <p className="text-sm" style={{ color: previewTemplate.secondary_color }}>
-                        {previewTemplate.signature_title}
-                      </p>
-                    )}
+                {/* Moldura decorativa externa */}
+                <div 
+                  className="absolute inset-4 border-2 rounded pointer-events-none"
+                  style={{ borderColor: `${previewTemplate.primary_color}30` }}
+                />
+                <div 
+                  className="absolute inset-6 border rounded pointer-events-none"
+                  style={{ borderColor: `${previewTemplate.primary_color}20` }}
+                />
+                
+                {/* Cantos decorativos */}
+                <svg className="absolute top-8 left-8 w-12 h-12" viewBox="0 0 24 24" fill="none">
+                  <path d="M2 12V2h10M2 2l10 10" stroke={previewTemplate.primary_color} strokeWidth="1.5" strokeOpacity="0.3"/>
+                </svg>
+                <svg className="absolute top-8 right-8 w-12 h-12" viewBox="0 0 24 24" fill="none">
+                  <path d="M22 12V2H12M22 2L12 12" stroke={previewTemplate.primary_color} strokeWidth="1.5" strokeOpacity="0.3"/>
+                </svg>
+                <svg className="absolute bottom-8 left-8 w-12 h-12" viewBox="0 0 24 24" fill="none">
+                  <path d="M2 12v10h10M2 22l10-10" stroke={previewTemplate.primary_color} strokeWidth="1.5" strokeOpacity="0.3"/>
+                </svg>
+                <svg className="absolute bottom-8 right-8 w-12 h-12" viewBox="0 0 24 24" fill="none">
+                  <path d="M22 12v10H12M22 22L12 12" stroke={previewTemplate.primary_color} strokeWidth="1.5" strokeOpacity="0.3"/>
+                </svg>
+
+                {/* Ornamento superior */}
+                <div className="absolute top-12 left-1/2 -translate-x-1/2">
+                  <svg width="120" height="20" viewBox="0 0 120 20" fill="none">
+                    <path d="M0 10h40M80 10h40M50 10a10 10 0 1020 0 10 10 0 10-20 0" stroke={previewTemplate.primary_color} strokeWidth="1" strokeOpacity="0.4"/>
+                    <circle cx="60" cy="10" r="4" fill={previewTemplate.primary_color} fillOpacity="0.3"/>
+                  </svg>
+                </div>
+
+                <div className="relative z-10 flex flex-col items-center px-12 py-8">
+                  {/* Ícone de troféu/medalha */}
+                  <div 
+                    className="w-20 h-20 rounded-full flex items-center justify-center mb-4"
+                    style={{ 
+                      background: `linear-gradient(135deg, ${previewTemplate.primary_color}20, ${previewTemplate.primary_color}10)`,
+                      border: `2px solid ${previewTemplate.primary_color}30`
+                    }}
+                  >
+                    <Award className="w-10 h-10" style={{ color: previewTemplate.primary_color }} />
                   </div>
+
+                  {previewTemplate.logo_url && (
+                    <img
+                      src={previewTemplate.logo_url}
+                      alt="Logo"
+                      className="h-12 mb-4 object-contain"
+                    />
+                  )}
+                  
+                  {/* Linha decorativa acima do título */}
+                  <div className="flex items-center gap-4 mb-2">
+                    <div className="w-16 h-px" style={{ backgroundColor: `${previewTemplate.primary_color}40` }} />
+                    <div className="w-3 h-3 rotate-45" style={{ backgroundColor: `${previewTemplate.primary_color}40` }} />
+                    <div className="w-16 h-px" style={{ backgroundColor: `${previewTemplate.primary_color}40` }} />
+                  </div>
+
+                  <h1
+                    className="text-3xl font-bold tracking-wider mb-2"
+                    style={{ color: previewTemplate.primary_color }}
+                  >
+                    {previewTemplate.title_text}
+                  </h1>
+                  
+                  {/* Linha decorativa abaixo do título */}
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-24 h-px" style={{ backgroundColor: `${previewTemplate.primary_color}30` }} />
+                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: `${previewTemplate.primary_color}50` }} />
+                    <div className="w-24 h-px" style={{ backgroundColor: `${previewTemplate.primary_color}30` }} />
+                  </div>
+
+                  <p
+                    className="text-lg max-w-2xl mb-6 leading-relaxed"
+                    style={{ color: previewTemplate.secondary_color }}
+                  >
+                    {previewTemplate.body_text
+                      .replace('{student_name}', 'Nome do Aluno')
+                      .replace('{course_name}', 'Nome do Curso')
+                      .replace('{hours}', '40')
+                      .replace('{date}', format(new Date(), 'dd/MM/yyyy'))
+                      .replace('{quiz_score}', '95%')}
+                  </p>
+                  
+                  {previewTemplate.show_date && (
+                    <p className="text-sm mb-6" style={{ color: previewTemplate.secondary_color }}>
+                      Data de Conclusão: {format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                    </p>
+                  )}
+                  
+                  {(previewTemplate.signature_url || previewTemplate.signature_name) && (
+                    <div className="mt-4 pt-4 w-48">
+                      {previewTemplate.signature_url && (
+                        <img
+                          src={previewTemplate.signature_url}
+                          alt="Assinatura"
+                          className="h-10 mx-auto mb-2 object-contain"
+                        />
+                      )}
+                      <div className="w-full h-px mb-2" style={{ backgroundColor: `${previewTemplate.primary_color}50` }} />
+                      {previewTemplate.signature_name && (
+                        <p className="font-semibold" style={{ color: previewTemplate.primary_color }}>
+                          {previewTemplate.signature_name}
+                        </p>
+                      )}
+                      {previewTemplate.signature_title && (
+                        <p className="text-sm" style={{ color: previewTemplate.secondary_color }}>
+                          {previewTemplate.signature_title}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Ornamento inferior */}
+                <div className="absolute bottom-12 left-1/2 -translate-x-1/2">
+                  <svg width="80" height="16" viewBox="0 0 80 16" fill="none">
+                    <path d="M0 8h30M50 8h30M34 8a6 6 0 1012 0 6 6 0 10-12 0" stroke={previewTemplate.primary_color} strokeWidth="1" strokeOpacity="0.3"/>
+                  </svg>
+                </div>
+                
+                {previewTemplate.footer_text && (
+                  <p className="absolute bottom-4 text-xs" style={{ color: previewTemplate.secondary_color }}>
+                    {previewTemplate.footer_text}
+                  </p>
                 )}
               </div>
             )}
