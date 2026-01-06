@@ -598,11 +598,11 @@ export function CertificateManager({ memberAreaId }: CertificateManagerProps) {
                         <div 
                           className="w-10 h-10 rounded-full flex items-center justify-center mb-2"
                           style={{ 
-                            background: `linear-gradient(135deg, ${editingTemplate.primary_color || '#1a1a2e'}20, ${editingTemplate.primary_color || '#1a1a2e'}10)`,
-                            border: `1px solid ${editingTemplate.primary_color || '#1a1a2e'}30`
+                            background: 'linear-gradient(135deg, #22c55e, #16a34a)',
+                            border: '1px solid #15803d'
                           }}
                         >
-                          <Award className="w-5 h-5" style={{ color: editingTemplate.primary_color || '#1a1a2e' }} />
+                          <Award className="w-5 h-5 text-white" />
                         </div>
 
                         {editingTemplate.logo_url && (
