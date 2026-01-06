@@ -702,11 +702,13 @@ const OptimizedCheckout = () => {
                           className={fieldTouched.email && !isEmailValid ? 'border-red-500' : fieldTouched.email && isEmailValid ? 'border-green-500' : ''}
                           required
                         />
-                        <ValidationFeedback 
-                          isValid={isEmailValid}
-                          message={isEmailValid ? tc('checkout.validation.emailValid') : tc('checkout.validation.emailInvalid')}
-                          show={fieldTouched.email}
-                        />
+                        {fieldTouched.email && !isEmailValid && (
+                          <ValidationFeedback 
+                            isValid={false}
+                            message={tc('checkout.validation.emailInvalid')}
+                            show={true}
+                          />
+                        )}
                       </div>
 
                       <div>

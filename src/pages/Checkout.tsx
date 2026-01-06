@@ -2598,10 +2598,10 @@ const Checkout = () => {
                     formData.email && validateEmail(formData.email) ? 'border-green-500' : ''
                   }`} 
                 />
-                {formData.email && (
+                {formData.email && !validateEmail(formData.email) && (
                   <ValidationFeedback 
-                    isValid={validateEmail(formData.email)}
-                    message={validateEmail(formData.email) ? tc('checkout.validation.emailValid') : tc('checkout.validation.emailInvalid')}
+                    isValid={false}
+                    message={tc('checkout.validation.emailInvalid')}
                     show={true}
                   />
                 )}
