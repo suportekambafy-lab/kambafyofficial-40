@@ -29,9 +29,8 @@ export function SignaturePad({ onSave, onCancel }: SignaturePadProps) {
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
-    // White background
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Clear canvas (transparent background)
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
   }, []);
 
   const getCoordinates = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
@@ -87,8 +86,7 @@ export function SignaturePad({ onSave, onCancel }: SignaturePadProps) {
     const ctx = canvas?.getContext('2d');
     if (!ctx || !canvas) return;
 
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     setHasDrawn(false);
   };
 
