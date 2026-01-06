@@ -546,6 +546,80 @@ export function CertificateManager({ memberAreaId }: CertificateManagerProps) {
                     </div>
                   </div>
 
+                  {/* Preview inline do certificado */}
+                  <div className="space-y-2">
+                    <Label>Pré-visualização</Label>
+                    <div
+                      className="aspect-[1.414/1] w-full rounded-lg border p-4 flex flex-col items-center justify-center text-center relative overflow-hidden"
+                      style={{
+                        backgroundColor: editingTemplate.background_color || '#f8fafc',
+                        backgroundImage: editingTemplate.background_image_url
+                          ? `url(${editingTemplate.background_image_url})`
+                          : undefined,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        fontFamily: editingTemplate.font_family || 'Inter',
+                      }}
+                    >
+                      {editingTemplate.logo_url && (
+                        <img
+                          src={editingTemplate.logo_url}
+                          alt="Logo"
+                          className="h-8 mb-2 object-contain"
+                        />
+                      )}
+                      <h1
+                        className="text-lg font-bold mb-2"
+                        style={{ color: editingTemplate.primary_color || '#1a1a2e' }}
+                      >
+                        {editingTemplate.title_text || 'CERTIFICADO DE CONCLUSÃO'}
+                      </h1>
+                      <p
+                        className="text-xs max-w-[90%] mb-2"
+                        style={{ color: editingTemplate.secondary_color || '#64748b' }}
+                      >
+                        {(editingTemplate.body_text || 'Certificamos que {student_name} concluiu com êxito o curso {course_name}...')
+                          .replace('{student_name}', 'Nome do Aluno')
+                          .replace('{course_name}', 'Nome do Curso')
+                          .replace('{hours}', '40')
+                          .replace('{date}', format(new Date(), 'dd/MM/yyyy'))
+                          .replace('{quiz_score}', '95%')
+                          .substring(0, 120)}...
+                      </p>
+                      {editingTemplate.show_date && (
+                        <p className="text-[10px] mb-2" style={{ color: editingTemplate.secondary_color || '#64748b' }}>
+                          Data de Conclusão: {format(new Date(), "dd/MM/yyyy")}
+                        </p>
+                      )}
+                      {(editingTemplate.signature_url || editingTemplate.signature_name) && (
+                        <div className="mt-2 border-t pt-2 w-full" style={{ borderColor: `${editingTemplate.secondary_color || '#64748b'}40` }}>
+                          {editingTemplate.signature_url && (
+                            <img
+                              src={editingTemplate.signature_url}
+                              alt="Assinatura"
+                              className="h-6 mx-auto mb-1 object-contain"
+                            />
+                          )}
+                          {editingTemplate.signature_name && (
+                            <p className="text-[10px] font-semibold" style={{ color: editingTemplate.primary_color || '#1a1a2e' }}>
+                              {editingTemplate.signature_name}
+                            </p>
+                          )}
+                          {editingTemplate.signature_title && (
+                            <p className="text-[8px]" style={{ color: editingTemplate.secondary_color || '#64748b' }}>
+                              {editingTemplate.signature_title}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                      {editingTemplate.footer_text && (
+                        <p className="absolute bottom-2 text-[8px]" style={{ color: editingTemplate.secondary_color || '#64748b' }}>
+                          {editingTemplate.footer_text}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
                   <div className="flex justify-end gap-2">
                     <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                       Cancelar
