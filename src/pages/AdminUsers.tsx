@@ -316,8 +316,13 @@ export default function AdminUsers() {
         throw error;
       }
 
-      if (!data?.success || !data?.temporaryPassword) {
-        throw new Error('Dados de impersonation inválidos');
+      if (!data?.success) {
+        throw new Error(data?.error || 'Dados de impersonation inválidos');
+      }
+
+      // Nova abordagem: usar magic link token em vez de senha temporária
+      if (!data?.magicLinkToken) {
+        throw new Error('Token de acesso não recebido');
       }
 
       await completeImpersonation(data, user);
@@ -335,7 +340,7 @@ export default function AdminUsers() {
   };
 
   const completeImpersonation = async (data: any, user: UserProfile) => {
-    console.log('✅ Senha temporária recebida, fazendo login...');
+    console.log('✅ Magic link token recebido, fazendo login...');
 
     try {
       // ✅ Backup da sessão Supabase do admin para restaurar após sair do impersonation
@@ -355,20 +360,23 @@ export default function AdminUsers() {
         localStorage.setItem('admin_supabase_session_backup', JSON.stringify(backup));
       }
 
-      // ⚠️ NÃO fazer signOut do admin aqui.
-      // Em alguns cenários isso revoga/invalidada o refresh token e impede restaurar depois.
-      // O signIn abaixo já substituirá a sessão atual no storage.
-
-      // Fazer login com a senha temporária
-      const { error: loginError } = await supabase.auth.signInWithPassword({
-        email: user.email,
-        password: data.temporaryPassword
+      // Usar verifyOtp com o token do magic link para criar sessão
+      // Isso NÃO altera a senha do usuário!
+      const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
+        email: user.email!,
+        token: data.magicLinkToken,
+        type: 'magiclink'
       });
 
-      if (loginError) {
-        console.error('❌ Erro ao fazer login durante impersonation:', loginError);
-        throw new Error('Falha ao entrar como usuário: ' + loginError.message);
+      if (verifyError) {
+        console.error('❌ Erro ao verificar magic link:', verifyError);
+        throw new Error('Falha ao entrar como usuário: ' + verifyError.message);
       }
+
+      console.log('✅ Login via magic link bem-sucedido:', { 
+        hasSession: !!verifyData.session,
+        userId: verifyData.user?.id 
+      });
 
       // Salvar dados de impersonation no localStorage
       const impersonationData = {

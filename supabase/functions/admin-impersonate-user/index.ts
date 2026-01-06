@@ -126,21 +126,35 @@ Deno.serve(async (req) => {
 
     console.log(`✅ Usuário encontrado: ${targetUser.user.email}`)
 
-    // 3. Criar uma senha temporária única para impersonation
-    const temporaryPassword = `IMPERSONATE_${Date.now()}_${Math.random().toString(36).substring(7)}`
+    // ========== NOVA ABORDAGEM: Gerar link mágico em vez de alterar senha ==========
+    // Isso NÃO altera a senha do usuário, apenas gera um token de acesso temporário
     
-    // Atualizar a senha do usuário temporariamente
-    const { data: updateData, error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
-      targetUserId,
-      { password: temporaryPassword }
-    )
+    const siteUrl = Deno.env.get('SITE_URL') || 'https://app.kambafy.com'
+    
+    const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+      type: 'magiclink',
+      email: targetUser.user.email!,
+      options: {
+        redirectTo: `${siteUrl}/vendedor`
+      }
+    })
 
-    if (updateError) {
-      console.error('❌ Erro ao criar senha temporária:', updateError)
-      throw new Error('Erro ao criar sessão de impersonation')
+    if (linkError || !linkData) {
+      console.error('❌ Erro ao gerar magic link:', linkError)
+      throw new Error('Erro ao criar sessão de impersonation: ' + (linkError?.message || 'Link não gerado'))
     }
 
-    console.log(`✅ Sessão de impersonation criada com sucesso`)
+    console.log('✅ Magic link gerado com sucesso')
+
+    // Extrair o token do link gerado
+    // O link tem formato: https://...supabase.co/auth/v1/verify?token=XXX&type=magiclink&redirect_to=...
+    const actionLink = linkData.properties?.action_link
+    const hashedToken = linkData.properties?.hashed_token
+    
+    console.log('📧 Link de ação gerado:', { 
+      hasActionLink: !!actionLink, 
+      hasHashedToken: !!hashedToken 
+    })
 
     // 3.5 Criar registro de sessão de impersonation
     const expiresAt = new Date(Date.now() + IMPERSONATION_DURATION_MINUTES * 60 * 1000)
@@ -177,18 +191,21 @@ Deno.serve(async (req) => {
         target_id: targetUserId,
         details: {
           target_email: targetUser.user.email,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          method: 'magic_link' // Registrar que usamos magic link
         }
       })
     } catch (logError) {
       console.error('⚠️ Erro ao registrar log:', logError)
     }
 
-    // 5. Retornar dados necessários para o frontend fazer login
+    // 5. Retornar dados necessários para o frontend fazer login via magic link
     return new Response(
       JSON.stringify({
         success: true,
-        temporaryPassword: temporaryPassword,
+        // Nova abordagem: enviar token do magic link
+        magicLinkToken: hashedToken,
+        actionLink: actionLink,
         targetUser: {
           id: targetUser.user.id,
           email: targetUser.user.email,
