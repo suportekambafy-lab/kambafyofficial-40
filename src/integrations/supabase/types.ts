@@ -534,6 +534,164 @@ export type Database = {
           },
         ]
       }
+      certificate_templates: {
+        Row: {
+          background_color: string | null
+          background_image_url: string | null
+          body_text: string | null
+          created_at: string
+          custom_fields: Json | null
+          font_family: string | null
+          footer_text: string | null
+          id: string
+          is_active: boolean | null
+          logo_url: string | null
+          member_area_id: string
+          name: string
+          primary_color: string | null
+          secondary_color: string | null
+          show_date: boolean | null
+          show_hours: boolean | null
+          show_quiz_score: boolean | null
+          signature_name: string | null
+          signature_title: string | null
+          signature_url: string | null
+          title_text: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          background_color?: string | null
+          background_image_url?: string | null
+          body_text?: string | null
+          created_at?: string
+          custom_fields?: Json | null
+          font_family?: string | null
+          footer_text?: string | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          member_area_id: string
+          name?: string
+          primary_color?: string | null
+          secondary_color?: string | null
+          show_date?: boolean | null
+          show_hours?: boolean | null
+          show_quiz_score?: boolean | null
+          signature_name?: string | null
+          signature_title?: string | null
+          signature_url?: string | null
+          title_text?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          background_color?: string | null
+          background_image_url?: string | null
+          body_text?: string | null
+          created_at?: string
+          custom_fields?: Json | null
+          font_family?: string | null
+          footer_text?: string | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          member_area_id?: string
+          name?: string
+          primary_color?: string | null
+          secondary_color?: string | null
+          show_date?: boolean | null
+          show_hours?: boolean | null
+          show_quiz_score?: boolean | null
+          signature_name?: string | null
+          signature_title?: string | null
+          signature_url?: string | null
+          title_text?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "certificate_templates_member_area_id_fkey"
+            columns: ["member_area_id"]
+            isOneToOne: false
+            referencedRelation: "member_areas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      certificates: {
+        Row: {
+          certificate_number: string
+          completion_date: string
+          course_name: string
+          created_at: string
+          custom_data: Json | null
+          downloaded_at: string | null
+          id: string
+          issued_at: string
+          member_area_id: string
+          quiz_average_score: number | null
+          status: string
+          student_email: string
+          student_name: string
+          template_id: string | null
+          total_hours: number | null
+          viewed_at: string | null
+        }
+        Insert: {
+          certificate_number: string
+          completion_date?: string
+          course_name: string
+          created_at?: string
+          custom_data?: Json | null
+          downloaded_at?: string | null
+          id?: string
+          issued_at?: string
+          member_area_id: string
+          quiz_average_score?: number | null
+          status?: string
+          student_email: string
+          student_name: string
+          template_id?: string | null
+          total_hours?: number | null
+          viewed_at?: string | null
+        }
+        Update: {
+          certificate_number?: string
+          completion_date?: string
+          course_name?: string
+          created_at?: string
+          custom_data?: Json | null
+          downloaded_at?: string | null
+          id?: string
+          issued_at?: string
+          member_area_id?: string
+          quiz_average_score?: number | null
+          status?: string
+          student_email?: string
+          student_name?: string
+          template_id?: string | null
+          total_hours?: number | null
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "certificates_member_area_id_fkey"
+            columns: ["member_area_id"]
+            isOneToOne: false
+            referencedRelation: "member_areas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "certificates_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "certificate_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_conversations: {
         Row: {
           agent_name: string | null

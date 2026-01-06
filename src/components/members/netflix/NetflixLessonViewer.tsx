@@ -166,11 +166,64 @@ export function NetflixLessonViewer({
       setAutoplayCountdown(10);
     }
   };
-  const handleVideoEnd = () => {
+  const handleVideoEnd = async () => {
     setVideoEnded(true);
     setAutoplayCountdown(10);
     setIsReplayMode(false);
     setShouldRestart(false);
+    
+    // Check if course is 100% complete and issue certificate
+    await checkAndIssueCertificate();
+  };
+
+  const checkAndIssueCertificate = async () => {
+    if (!studentEmail || !studentName || !memberArea?.id) return;
+    
+    try {
+      // Get total published lessons
+      const publishedLessons = lessons.filter(l => l.status === 'published');
+      if (publishedLessons.length === 0) return;
+      
+      // Calculate completion considering current lesson as completed
+      const completedLessons = publishedLessons.filter(l => 
+        l.id === lesson.id || lessonProgress[l.id]?.completed
+      );
+      
+      const completionPercentage = (completedLessons.length / publishedLessons.length) * 100;
+      
+      // Only issue certificate at 100% completion
+      if (completionPercentage >= 100) {
+        // Check if certificate already exists
+        const { data: existingCert } = await supabase
+          .from('certificates')
+          .select('id')
+          .eq('member_area_id', memberArea.id)
+          .eq('student_email', studentEmail)
+          .single();
+        
+        if (existingCert) {
+          console.log('Certificate already exists for this student');
+          return;
+        }
+        
+        // Issue certificate via edge function
+        const { data, error } = await supabase.functions.invoke('issue-certificate', {
+          body: {
+            memberAreaId: memberArea.id,
+            studentEmail,
+            studentName
+          }
+        });
+        
+        if (error) {
+          console.error('Error issuing certificate:', error);
+        } else if (data?.success) {
+          console.log('Certificate issued successfully:', data.certificate?.certificate_number);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking certificate:', error);
+    }
   };
   const handleReplay = () => {
     setVideoEnded(false);
