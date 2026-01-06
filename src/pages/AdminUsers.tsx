@@ -360,11 +360,10 @@ export default function AdminUsers() {
         localStorage.setItem('admin_supabase_session_backup', JSON.stringify(backup));
       }
 
-      // Usar verifyOtp com o token do magic link para criar sessão
+      // Usar verifyOtp com o token_hash do magic link para criar sessão
       // Isso NÃO altera a senha do usuário!
       const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
-        email: user.email!,
-        token: data.magicLinkToken,
+        token_hash: data.magicLinkToken,
         type: 'magiclink'
       });
 
