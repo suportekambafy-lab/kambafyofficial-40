@@ -39,12 +39,8 @@ export function useAuthGuard() {
         return;
       }
       
-      // Verificações adicionais de segurança
-      if (!user.email || user.email.includes('usurário') || user.email.includes('usuário')) {
-        console.log('🚨 useAuthGuard: Usuário com dados inválidos detectado, redirecionando');
-        navigate('/auth', { replace: true });
-        return;
-      }
+      // Removido: Verificações agressivas de email que causavam logout indevido
+      // O AuthContext já valida a sessão de forma adequada
     }
   }, [loading, user, session, navigate, currentSubdomain]);
 
