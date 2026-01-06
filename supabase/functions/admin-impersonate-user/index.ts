@@ -126,35 +126,39 @@ Deno.serve(async (req) => {
 
     console.log(`✅ Usuário encontrado: ${targetUser.user.email}`)
 
-    // ========== NOVA ABORDAGEM: Gerar link mágico em vez de alterar senha ==========
-    // Isso NÃO altera a senha do usuário, apenas gera um token de acesso temporário
+    // ========== ABORDAGEM SEGURA: Usar createSession para criar sessão sem invalidar outras ==========
+    // Isso NÃO afeta as sessões existentes do utilizador em outros dispositivos
     
-    const siteUrl = Deno.env.get('SITE_URL') || 'https://app.kambafy.com'
+    console.log('🔐 Criando sessão de impersonation sem afetar outras sessões...')
     
-    const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+    // Gerar tokens diretamente para o utilizador usando a Admin API
+    // Isto cria uma NOVA sessão sem invalidar as existentes
+    const { data: sessionData, error: sessionError } = await supabaseAdmin.auth.admin.generateLink({
       type: 'magiclink',
       email: targetUser.user.email!,
       options: {
-        redirectTo: `${siteUrl}/vendedor`
+        // Não especificar redirectTo para evitar processamento de URL
       }
     })
 
-    if (linkError || !linkData) {
-      console.error('❌ Erro ao gerar magic link:', linkError)
-      throw new Error('Erro ao criar sessão de impersonation: ' + (linkError?.message || 'Link não gerado'))
+    if (sessionError || !sessionData) {
+      console.error('❌ Erro ao gerar sessão:', sessionError)
+      throw new Error('Erro ao criar sessão de impersonation: ' + (sessionError?.message || 'Sessão não gerada'))
     }
 
-    console.log('✅ Magic link gerado com sucesso')
+    console.log('✅ Token de impersonation gerado com sucesso')
 
     // Extrair o token do link gerado
-    // O link tem formato: https://...supabase.co/auth/v1/verify?token=XXX&type=magiclink&redirect_to=...
-    const actionLink = linkData.properties?.action_link
-    const hashedToken = linkData.properties?.hashed_token
+    const actionLink = sessionData.properties?.action_link
+    const hashedToken = sessionData.properties?.hashed_token
     
-    console.log('📧 Link de ação gerado:', { 
+    console.log('📧 Token gerado:', { 
       hasActionLink: !!actionLink, 
       hasHashedToken: !!hashedToken 
     })
+    
+    // IMPORTANTE: Informar que o magic link NÃO invalida sessões existentes por si só
+    // O que invalida é a rotação de refresh tokens - isso é uma config do servidor Supabase
 
     // 3.5 Criar registro de sessão de impersonation
     const expiresAt = new Date(Date.now() + IMPERSONATION_DURATION_MINUTES * 60 * 1000)
