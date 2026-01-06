@@ -5,15 +5,21 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
-import { Play, RotateCcw, SkipForward } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Play, RotateCcw, SkipForward, HelpCircle } from 'lucide-react';
 import { Lesson } from '@/types/memberArea';
 import { LessonContentTabs } from './LessonContentTabs';
 import { LessonReleaseTimer } from '@/components/ui/lesson-release-timer';
 import VideoPlayer from '@/components/ui/video-player';
+import LessonQuiz from '@/components/members/LessonQuiz';
+import { supabase } from '@/integrations/supabase/client';
 interface ModernLessonViewerProps {
   lesson: Lesson;
   lessons: Lesson[];
   lessonProgress?: Record<string, any>;
+  memberAreaId: string;
+  studentEmail?: string;
+  studentName?: string;
   onNavigateLesson: (lessonId: string) => void;
   onClose: () => void;
   onUpdateProgress?: (lessonId: string, currentTime: number, duration: number) => void;
@@ -22,6 +28,9 @@ export function ModernLessonViewer({
   lesson,
   lessons = [],
   lessonProgress = {},
+  memberAreaId,
+  studentEmail,
+  studentName,
   onNavigateLesson,
   onClose,
   onUpdateProgress
@@ -43,6 +52,9 @@ export function ModernLessonViewer({
   const [videoKey, setVideoKey] = useState(0);
   const [shouldRestart, setShouldRestart] = useState(false);
   const [isReplayMode, setIsReplayMode] = useState(false);
+  const [hasQuiz, setHasQuiz] = useState(false);
+  const [quizCompleted, setQuizCompleted] = useState(false);
+  const [showQuizOverlay, setShowQuizOverlay] = useState(false);
   const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Obter progresso da aula atual (com verificação segura)
@@ -109,13 +121,54 @@ export function ModernLessonViewer({
 
   const hlsUrl = getHlsUrl();
 
+  // Check if lesson has a quiz
+  useEffect(() => {
+    const checkQuiz = async () => {
+      if (!lesson?.id || !memberAreaId) return;
+      
+      try {
+        const { data: quizData } = await supabase
+          .from('member_area_quizzes')
+          .select('id')
+          .eq('member_area_id', memberAreaId)
+          .eq('lesson_id', lesson.id)
+          .eq('is_active', true)
+          .maybeSingle();
+
+        setHasQuiz(!!quizData);
+
+        // Check if quiz already completed
+        if (quizData && studentEmail) {
+          const { data: responseData } = await supabase
+            .from('member_area_quiz_responses')
+            .select('id')
+            .eq('quiz_id', quizData.id)
+            .eq('student_email', studentEmail.toLowerCase())
+            .limit(1);
+
+          setQuizCompleted(responseData && responseData.length > 0);
+        }
+      } catch (error) {
+        console.error('Error checking quiz:', error);
+      }
+    };
+
+    checkQuiz();
+  }, [lesson?.id, memberAreaId, studentEmail]);
+
   // Gerenciar countdown quando vídeo termina
   useEffect(() => {
-    if (videoEnded && nextLesson && autoplayCountdown > 0) {
+    // If has quiz and not completed, show quiz
+    if (videoEnded && hasQuiz && !quizCompleted) {
+      setShowQuizOverlay(true);
+      return;
+    }
+
+    if (videoEnded && nextLesson && autoplayCountdown > 0 && (!hasQuiz || quizCompleted)) {
       countdownTimerRef.current = setTimeout(() => {
         setAutoplayCountdown(prev => prev - 1);
       }, 1000);
-    } else if (videoEnded && nextLesson && autoplayCountdown === 0) {
+    } else if (videoEnded && nextLesson && autoplayCountdown === 0 && (!hasQuiz || quizCompleted)) {
       onNavigateLesson(nextLesson.id);
     }
 
@@ -124,7 +177,7 @@ export function ModernLessonViewer({
         clearTimeout(countdownTimerRef.current);
       }
     };
-  }, [videoEnded, autoplayCountdown, nextLesson]);
+  }, [videoEnded, autoplayCountdown, nextLesson, hasQuiz, quizCompleted]);
 
   // Reset estados quando mudar de aula
   useEffect(() => {
@@ -132,10 +185,21 @@ export function ModernLessonViewer({
     setAutoplayCountdown(10);
     setShouldRestart(false);
     setIsReplayMode(false);
+    setShowQuizOverlay(false);
+    setQuizCompleted(false);
+    setHasQuiz(false);
     if (countdownTimerRef.current) {
       clearTimeout(countdownTimerRef.current);
     }
   }, [lesson?.id]);
+
+  const handleQuizComplete = (passed: boolean, score: number) => {
+    setQuizCompleted(true);
+    setShowQuizOverlay(false);
+    if (nextLesson) {
+      setAutoplayCountdown(10);
+    }
+  };
 
   const handleVideoEnd = () => {
     console.log('🎬 Video ended for:', lesson?.title);
@@ -203,71 +267,117 @@ export function ModernLessonViewer({
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="absolute inset-0 bg-black/95 flex items-center justify-center z-50 overflow-y-auto"
+                    className="absolute inset-0 bg-black/95 z-50 overflow-hidden"
                   >
-                    <div className="w-full max-w-md sm:max-w-xl text-center space-y-4 sm:space-y-6 p-4 sm:p-8 my-auto">
-                      {/* Próxima aula (se existir) */}
-                      {nextLesson && (
-                        <motion.div
-                          initial={{ y: 20, opacity: 0 }}
-                          animate={{ y: 0, opacity: 1 }}
-                          transition={{ delay: 0.1 }}
-                          className="bg-white/5 border border-white/10 rounded-lg p-4 sm:p-6 space-y-3"
-                        >
-                          <p className="text-xs sm:text-sm text-gray-400">Próxima aula</p>
-                          <h4 className="text-base sm:text-lg font-semibold text-white line-clamp-2">
-                            {nextLesson.title}
-                          </h4>
-                          <div className="flex items-center justify-center gap-2 text-sm text-gray-400">
-                            <span>Iniciando em</span>
-                            <span className="text-2xl font-bold text-primary">
-                              {autoplayCountdown}s
-                            </span>
-                          </div>
-                        </motion.div>
-                      )}
-
-                      {/* Botões de ação */}
-                      <motion.div
-                        initial={{ y: 20, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={{ delay: 0.2 }}
-                        className="flex flex-row gap-2 sm:gap-3 justify-center"
-                      >
-                        <Button
-                          onClick={handleReplay}
-                          variant="outline"
-                          className="gap-2 flex-1 h-11"
-                        >
-                          <RotateCcw className="h-4 w-4" />
-                          Repetir
-                        </Button>
-                        
-                        {nextLesson && (
-                          <Button
-                            onClick={handleNextLesson}
-                            className="gap-2 flex-1 h-11"
+                    {/* Show Quiz if has quiz and not completed */}
+                    {showQuizOverlay && hasQuiz && !quizCompleted ? (
+                      <ScrollArea className="h-full w-full">
+                        <div className="w-full max-w-2xl mx-auto p-4 md:p-8">
+                          <motion.div
+                            initial={{ y: 20, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            className="text-center mb-6"
                           >
-                            <SkipForward className="h-4 w-4" />
-                            Próxima
-                          </Button>
-                        )}
-                      </motion.div>
-
-                      {/* Barra de progresso do countdown */}
-                      {nextLesson && (
-                        <motion.div
-                          initial={{ scaleX: 0 }}
-                          animate={{ scaleX: 1 }}
-                          transition={{ delay: 0.3 }}
-                        >
-                          <Progress 
-                            value={(10 - autoplayCountdown) * 10} 
-                            className="h-1"
+                            <HelpCircle className="h-12 w-12 text-primary mx-auto mb-3" />
+                            <h3 className="text-xl font-bold text-white">
+                              Complete o Quiz para continuar
+                            </h3>
+                            <p className="text-white/60 text-sm mt-2">
+                              Responda ao quiz desta aula para desbloquear a próxima
+                            </p>
+                          </motion.div>
+                          
+                          <LessonQuiz
+                            lessonId={lesson.id}
+                            memberAreaId={memberAreaId}
+                            studentEmail={studentEmail || ''}
+                            studentName={studentName}
+                            onComplete={handleQuizComplete}
                           />
-                        </motion.div>
-                      )}
-                    </div>
+
+                          {/* Skip button (optional - quiz is informative) */}
+                          <div className="mt-6 text-center">
+                            <Button
+                              variant="ghost"
+                              onClick={() => {
+                                setQuizCompleted(true);
+                                setShowQuizOverlay(false);
+                              }}
+                              className="text-white/40 hover:text-white/60"
+                            >
+                              Pular Quiz
+                            </Button>
+                          </div>
+                        </div>
+                      </ScrollArea>
+                    ) : (
+                      /* Show Next Lesson Countdown */
+                      <div className="h-full flex items-center justify-center">
+                        <div className="w-full max-w-md sm:max-w-xl text-center space-y-4 sm:space-y-6 p-4 sm:p-8 my-auto">
+                          {/* Próxima aula (se existir) */}
+                          {nextLesson && (
+                            <motion.div
+                              initial={{ y: 20, opacity: 0 }}
+                              animate={{ y: 0, opacity: 1 }}
+                              transition={{ delay: 0.1 }}
+                              className="bg-white/5 border border-white/10 rounded-lg p-4 sm:p-6 space-y-3"
+                            >
+                              <p className="text-xs sm:text-sm text-gray-400">Próxima aula</p>
+                              <h4 className="text-base sm:text-lg font-semibold text-white line-clamp-2">
+                                {nextLesson.title}
+                              </h4>
+                              <div className="flex items-center justify-center gap-2 text-sm text-gray-400">
+                                <span>Iniciando em</span>
+                                <span className="text-2xl font-bold text-primary">
+                                  {autoplayCountdown}s
+                                </span>
+                              </div>
+                            </motion.div>
+                          )}
+
+                          {/* Botões de ação */}
+                          <motion.div
+                            initial={{ y: 20, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            transition={{ delay: 0.2 }}
+                            className="flex flex-row gap-2 sm:gap-3 justify-center"
+                          >
+                            <Button
+                              onClick={handleReplay}
+                              variant="outline"
+                              className="gap-2 flex-1 h-11"
+                            >
+                              <RotateCcw className="h-4 w-4" />
+                              Repetir
+                            </Button>
+                            
+                            {nextLesson && (
+                              <Button
+                                onClick={handleNextLesson}
+                                className="gap-2 flex-1 h-11"
+                              >
+                                <SkipForward className="h-4 w-4" />
+                                Próxima
+                              </Button>
+                            )}
+                          </motion.div>
+
+                          {/* Barra de progresso do countdown */}
+                          {nextLesson && (
+                            <motion.div
+                              initial={{ scaleX: 0 }}
+                              animate={{ scaleX: 1 }}
+                              transition={{ delay: 0.3 }}
+                            >
+                              <Progress 
+                                value={(10 - autoplayCountdown) * 10} 
+                                className="h-1"
+                              />
+                            </motion.div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
