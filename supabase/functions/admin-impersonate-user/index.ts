@@ -165,7 +165,7 @@ Deno.serve(async (req) => {
     const ipAddress = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown'
     const userAgent = req.headers.get('user-agent') || 'unknown'
 
-    const { data: impersonationSession, error: sessionError } = await supabaseAdmin
+    const { data: impersonationSession, error: impersonationError } = await supabaseAdmin
       .from('admin_impersonation_sessions')
       .insert({
         admin_email: adminEmail,
@@ -180,8 +180,8 @@ Deno.serve(async (req) => {
       .select()
       .single()
 
-    if (sessionError) {
-      console.error('⚠️ Erro ao criar sessão de impersonation:', sessionError)
+    if (impersonationError) {
+      console.error('⚠️ Erro ao criar sessão de impersonation:', impersonationError)
     }
 
     console.log(`✅ Sessão de impersonation registrada: ${impersonationSession?.id}`)
