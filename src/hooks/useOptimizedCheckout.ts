@@ -359,11 +359,16 @@ export const useOptimizedCheckout = ({ productId }: UseOptimizedCheckoutProps) =
     }
   }, [productId]);
 
-  // Função otimizada para atualizar form data
+  // Função otimizada para atualizar form data com sanitização de email
   const handleInputChange = useCallback((field: string, value: string) => {
+    // Sanitizar email para rejeitar números de telefone
+    const sanitizedValue = field === 'email' 
+      ? value.toLowerCase().replace(/\s/g, '') // Remove espaços e converte para lowercase
+      : value;
+    
     setFormData(prev => ({
       ...prev,
-      [field]: value
+      [field]: sanitizedValue
     }));
   }, []);
 

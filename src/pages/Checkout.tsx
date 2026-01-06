@@ -36,6 +36,7 @@ import { RefundPolicyModal } from "@/components/checkout/RefundPolicyModal";
 import { countTotalSales } from "@/utils/orderUtils";
 import { CollapsibleCouponSection } from "@/components/checkout/CollapsibleCouponSection";
 import { LiveChatWidget } from "@/components/apps/live-chat/LiveChatWidget";
+import { ValidationFeedback, validateEmail, validateName } from "@/components/checkout/EnhancedFormValidation";
 
 // Importar componentes otimizados
 import { OptimizedCustomBanner, OptimizedCountdownTimer, OptimizedFakeReviews, OptimizedSocialProof, OptimizedSpotsCounter, OptimizedOrderBump, OptimizedStripeCardPayment } from '@/components/checkout/OptimizedCheckoutComponents';
@@ -881,9 +882,14 @@ const Checkout = () => {
   }, [product?.id]);
 
   const handleInputChange = (field: string, value: string) => {
+    // Sanitizar email para rejeitar números de telefone
+    const sanitizedValue = field === 'email' 
+      ? value.toLowerCase().replace(/\s/g, '') // Remove espaços e converte para lowercase
+      : value;
+    
     setFormData(prev => ({
       ...prev,
-      [field]: value
+      [field]: sanitizedValue
     }));
   };
   const handlePhoneCountryChange = (countryCode: string) => {
@@ -2581,7 +2587,24 @@ const Checkout = () => {
                 <Label htmlFor="email" className="text-gray-700 font-medium">
                   {tc('checkout.email')}
                 </Label>
-                <Input id="email" type="email" placeholder={tc('checkout.email.placeholder')} value={formData.email} onChange={e => handleInputChange("email", e.target.value)} className="h-12 border-gray-300 focus:border-green-500" />
+                <Input 
+                  id="email" 
+                  type="email" 
+                  placeholder={tc('checkout.email.placeholder')} 
+                  value={formData.email} 
+                  onChange={e => handleInputChange("email", e.target.value)} 
+                  className={`h-12 border-gray-300 focus:border-green-500 ${
+                    formData.email && !validateEmail(formData.email) ? 'border-red-500' : 
+                    formData.email && validateEmail(formData.email) ? 'border-green-500' : ''
+                  }`} 
+                />
+                {formData.email && (
+                  <ValidationFeedback 
+                    isValid={validateEmail(formData.email)}
+                    message={validateEmail(formData.email) ? tc('checkout.validation.emailValid') : tc('checkout.validation.emailInvalid')}
+                    show={true}
+                  />
+                )}
               </div>
 
               <div className="space-y-2">
