@@ -67,6 +67,7 @@ interface StudentProgressPanelProps {
 }
 
 export default function StudentProgressPanel({ memberAreaId }: StudentProgressPanelProps) {
+  const [totalStudentCount, setTotalStudentCount] = useState(0);
   const [students, setStudents] = useState<Student[]>([]);
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [modules, setModules] = useState<Module[]>([]);
@@ -83,13 +84,21 @@ export default function StudentProgressPanel({ memberAreaId }: StudentProgressPa
       
       setLoading(true);
       try {
-        // Fetch students
+        // Fetch total student count (bypasses 1000 row limit)
+        const { count: totalStudentCount } = await supabase
+          .from('member_area_students')
+          .select('*', { count: 'exact', head: true })
+          .eq('member_area_id', memberAreaId)
+          .neq('student_email', 'validar@kambafy.com');
+
+        // Fetch students with pagination (up to 10000)
         const { data: studentsData } = await supabase
           .from('member_area_students')
           .select('*')
           .eq('member_area_id', memberAreaId)
           .neq('student_email', 'validar@kambafy.com')
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false })
+          .range(0, 9999);
 
         // Fetch lessons
         const { data: lessonsData } = await supabase
@@ -119,6 +128,7 @@ export default function StudentProgressPanel({ memberAreaId }: StudentProgressPa
           .select('*')
           .eq('member_area_id', memberAreaId);
 
+        setTotalStudentCount(totalStudentCount || 0);
         setStudents(studentsData || []);
         setLessons(lessonsData || []);
         setModules(modulesData || []);
@@ -183,7 +193,7 @@ export default function StudentProgressPanel({ memberAreaId }: StudentProgressPa
 
   // Overall stats
   const stats = useMemo(() => {
-    const totalStudents = students.length;
+    const totalStudents = totalStudentCount;
     const avgProgress = studentProgressData.length > 0
       ? Math.round(studentProgressData.reduce((acc, s) => acc + s.progressPercentage, 0) / studentProgressData.length)
       : 0;
@@ -196,7 +206,7 @@ export default function StudentProgressPanel({ memberAreaId }: StudentProgressPa
     }).length;
 
     return { totalStudents, avgProgress, completedCount, activeCount };
-  }, [students, studentProgressData]);
+  }, [totalStudentCount, studentProgressData]);
 
   const openStudentDetail = (student: typeof studentProgressData[0]) => {
     const normalizedEmail = student.student_email.toLowerCase().trim();
