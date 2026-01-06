@@ -69,6 +69,7 @@ const MarketplacePage = createLazyWithRetry(() => import('@/pages/MarketplacePag
 const SellerCommunity = createLazyWithRetry(() => import('@/pages/SellerCommunity'), "SellerCommunity");
 const NewMemberAreaLanding = createLazyWithRetry(() => import('@/pages/NewMemberAreaLanding'), "NewMemberAreaLanding");
 const Verify2FA = createLazyWithRetry(() => import('@/pages/Verify2FA'), "Verify2FA");
+const CertificateView = createLazyWithRetry(() => import('@/pages/CertificateView'), "CertificateView");
 
 
 // Nova estrutura moderna de área de membros
@@ -241,4 +242,7 @@ export const OptimizedRoutes = {
   
   // Renewal page
   RenewalPage: withLazyLoading(RenewalPage, 'settings'),
+  
+  // Certificate page
+  CertificateView: withLazyLoading(CertificateView, 'settings'),
 };

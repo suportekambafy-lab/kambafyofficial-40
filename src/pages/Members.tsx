@@ -21,6 +21,7 @@ import CohortsManager from "@/components/members/CohortsManager";
 import { MemberAreaSettings } from '@/components/MemberAreaSettings';
 import StudentProgressPanel from "@/components/member-area/StudentProgressPanel";
 import QuizManager from "@/components/member-area/QuizManager";
+import { CertificateManager } from "@/components/member-area/CertificateManager";
 import MemberAreaPreview from "@/components/MemberAreaPreview";
 import { ImageUploader } from "@/components/ImageUploader";
 import { HeroVideoUploader } from "@/components/HeroVideoUploader";
@@ -1102,7 +1103,7 @@ export default function Members() {
         </div>
 
         <Tabs defaultValue="conteudo" className="w-full max-w-full overflow-hidden">
-          <TabsList className="grid w-full grid-cols-4 md:grid-cols-8 h-auto gap-1">
+          <TabsList className="grid w-full grid-cols-5 md:grid-cols-9 h-auto gap-1">
             <TabsTrigger value="conteudo" className="text-xs md:text-sm py-2">Conteúdo</TabsTrigger>
             <TabsTrigger value="ofertas" className="text-xs md:text-sm py-2">Ofertas</TabsTrigger>
             <TabsTrigger value="turmas" className="text-xs md:text-sm py-2">Turmas</TabsTrigger>
@@ -1110,6 +1111,7 @@ export default function Members() {
             <TabsTrigger value="alunos" className="text-xs md:text-sm py-2">Alunos</TabsTrigger>
             <TabsTrigger value="progresso" className="text-xs md:text-sm py-2">Progresso</TabsTrigger>
             <TabsTrigger value="quizzes" className="text-xs md:text-sm py-2">Quizzes</TabsTrigger>
+            <TabsTrigger value="certificados" className="text-xs md:text-sm py-2">Certificados</TabsTrigger>
             <TabsTrigger value="configuracoes" className="text-xs md:text-sm py-2">Config</TabsTrigger>
           </TabsList>
           
@@ -1425,6 +1427,10 @@ export default function Members() {
 
           <TabsContent value="quizzes" className="space-y-6 max-w-full">
             <QuizManager memberAreaId={selectedArea.id} />
+          </TabsContent>
+
+          <TabsContent value="certificados" className="space-y-6 max-w-full">
+            <CertificateManager memberAreaId={selectedArea.id} />
           </TabsContent>
 
           <TabsContent value="configuracoes">

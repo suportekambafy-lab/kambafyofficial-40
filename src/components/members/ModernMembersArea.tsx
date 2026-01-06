@@ -17,6 +17,7 @@ import { ContinueWatching } from './ContinueWatching';
 import { MemberAreaSlideMenu } from '../MemberAreaSlideMenu';
 import { LessonComments } from './LessonComments';
 import { MemberAreaOffers } from './MemberAreaOffers';
+import { StudentCertificate } from './StudentCertificate';
 import { ModulePaymentModal } from './ModulePaymentModal';
 import { ModernErrorBoundary } from '@/components/modern/ModernErrorBoundary';
 import { MemberNotificationBell } from './MemberNotificationBell';
@@ -890,6 +891,17 @@ export default function ModernMembersArea({ memberAreaId: propMemberAreaId, isEm
           onLessonSelect={handleLessonClick}
           onLogout={handleLogout}
         />
+        
+        {/* Certificado do Aluno */}
+        {memberAreaId && user?.email && (
+          <div className="bg-[hsl(30_20%_12%)] px-4 md:px-8 py-4">
+            <StudentCertificate 
+              memberAreaId={memberAreaId} 
+              studentEmail={user.email}
+              courseName={currentMemberArea?.name || 'Curso'}
+            />
+          </div>
+        )}
         
         {/* Ofertas na Área de Membros */}
         {memberAreaId && (

@@ -301,6 +301,9 @@ const App = () => {
                        <Route path="/cloudflare-storage-test" element={<OptimizedRoutes.CloudflareStorageTest />} />
                        <Route path="/test-facebook" element={<TestFacebookIntegration />} />
                        
+                       {/* Certificate Verification */}
+                       <Route path="/certificado/:certificateNumber" element={<OptimizedRoutes.CertificateView />} />
+                        
                       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                       <Route path="*" element={<OptimizedRoutes.NotFound />} />
                     </Routes>
