@@ -3,9 +3,10 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Checkbox } from '@/components/ui/checkbox';
-import { MessageCircle, Send, Clock, Trash2, CheckSquare, Square, BadgeCheck } from 'lucide-react';
+import { MessageCircle, Send, Clock, Trash2, CheckSquare, Square, Pencil, X, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+
 interface Comment {
   id: string;
   comment: string;
@@ -16,13 +17,16 @@ interface Comment {
   replies?: Comment[];
   avatar_url?: string | null;
   is_owner?: boolean;
+  is_own_comment?: boolean; // Se o comentário é do usuário atual
 }
+
 interface LessonCommentsProps {
   lessonId: string;
   studentEmail?: string;
   studentName?: string;
   memberAreaId?: string;
 }
+
 export function LessonComments({
   lessonId,
   studentEmail,
@@ -41,6 +45,9 @@ export function LessonComments({
   const [commentsEnabled, setCommentsEnabled] = useState(true);
   const [selectedComments, setSelectedComments] = useState<Set<string>>(new Set());
   const [isDeletingMultiple, setIsDeletingMultiple] = useState(false);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editText, setEditText] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
   const loadComments = async () => {
     try {
       setIsLoading(true);
@@ -92,15 +99,18 @@ export function LessonComments({
       const topLevelComments: Comment[] = [];
       const commentMap: Record<string, Comment> = {};
 
-      // Primeiro, criar o mapa de comentários com avatares e verificar se é dono
+      // Primeiro, criar o mapa de comentários com avatares e verificar se é dono/próprio
+      const currentStudentEmail = studentEmail?.toLowerCase().trim();
       data?.forEach(comment => {
         const email = comment.user_email?.toLowerCase().trim();
         const isOwnerComment = email && ownerEmailLocal && email === ownerEmailLocal;
+        const isOwnComment = email && currentStudentEmail && email === currentStudentEmail;
         commentMap[comment.id] = {
           ...comment,
           replies: [],
           avatar_url: email ? avatarMap[email] || null : null,
-          is_owner: isOwnerComment
+          is_owner: isOwnerComment,
+          is_own_comment: isOwnComment
         };
       });
 
@@ -273,6 +283,47 @@ export function LessonComments({
       setIsDeletingMultiple(false);
     }
   };
+
+  const handleEditComment = async (commentId: string) => {
+    if (!editText.trim()) {
+      toast.error('O comentário não pode estar vazio');
+      return;
+    }
+
+    setIsEditing(true);
+    try {
+      const { error } = await supabase
+        .from('lesson_comments')
+        .update({ comment: editText.trim(), updated_at: new Date().toISOString() })
+        .eq('id', commentId);
+
+      if (error) {
+        console.error('Erro ao editar comentário:', error);
+        toast.error('Erro ao editar comentário');
+        return;
+      }
+
+      await loadComments();
+      setEditingCommentId(null);
+      setEditText('');
+      toast.success('Comentário editado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao editar comentário:', error);
+      toast.error('Erro ao editar comentário');
+    } finally {
+      setIsEditing(false);
+    }
+  };
+
+  const startEditing = (comment: Comment) => {
+    setEditingCommentId(comment.id);
+    setEditText(comment.comment);
+  };
+
+  const cancelEditing = () => {
+    setEditingCommentId(null);
+    setEditText('');
+  };
   const toggleCommentSelection = (commentId: string) => {
     const newSelected = new Set(selectedComments);
     if (newSelected.has(commentId)) {
@@ -345,23 +396,90 @@ export function LessonComments({
             <span className="truncate">{formatDate(comment.created_at)}</span>
           </p>
           
-          <p className="text-sm sm:text-base text-white/80 leading-relaxed break-words overflow-wrap-anywhere whitespace-pre-wrap">{comment.comment}</p>
+          {/* Modo de edição ou texto do comentário */}
+          {editingCommentId === comment.id ? (
+            <div className="space-y-2">
+              <Textarea 
+                value={editText} 
+                onChange={e => setEditText(e.target.value)} 
+                rows={3} 
+                className="border-white/10 text-white placeholder-white/40 resize-none bg-white/5 text-sm w-full rounded-xl" 
+              />
+              <div className="flex gap-2 justify-end">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={cancelEditing}
+                  disabled={isEditing}
+                  className="text-xs text-white/60 hover:text-white h-7 px-2"
+                >
+                  <X className="h-3 w-3 mr-1" />
+                  Cancelar
+                </Button>
+                <Button 
+                  size="sm" 
+                  onClick={() => handleEditComment(comment.id)}
+                  disabled={!editText.trim() || isEditing}
+                  className="bg-netflix-green hover:bg-netflix-green/90 text-black font-bold text-xs h-7 px-2"
+                >
+                  {isEditing ? (
+                    <>
+                      <div className="w-3 h-3 border-2 border-black border-t-transparent rounded-full animate-spin mr-1" />
+                      Salvando...
+                    </>
+                  ) : (
+                    <>
+                      <Check className="h-3 w-3 mr-1" />
+                      Salvar
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm sm:text-base text-white/80 leading-relaxed break-words overflow-wrap-anywhere whitespace-pre-wrap">{comment.comment}</p>
+          )}
           
-          <div className="flex gap-2 mt-2">
-            {!isReply && <Button variant="ghost" size="sm" onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)} className="text-xs text-netflix-green hover:text-netflix-green/80 h-7 px-2">
-                {replyingTo === comment.id ? 'Cancelar' : 'Responder'}
-              </Button>}
-            
-            {isAreaOwner && <Button variant="ghost" size="sm" onClick={() => handleDeleteComment(comment.id)} disabled={deletingCommentId === comment.id} className="text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 h-7 px-2">
-                {deletingCommentId === comment.id ? <>
-                    <div className="w-3 h-3 border-2 border-red-400 border-t-transparent rounded-full animate-spin mr-1" />
-                    Apagando...
-                  </> : <>
-                    <Trash2 className="h-3 w-3 mr-1" />
-                    Apagar
-                  </>}
-              </Button>}
-          </div>
+          {/* Botões de ação (só mostra se não estiver editando) */}
+          {editingCommentId !== comment.id && (
+            <div className="flex flex-wrap gap-2 mt-2">
+              {!isReply && <Button variant="ghost" size="sm" onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)} className="text-xs text-netflix-green hover:text-netflix-green/80 h-7 px-2">
+                  {replyingTo === comment.id ? 'Cancelar' : 'Responder'}
+                </Button>}
+              
+              {/* Botão de editar - aparece para o autor do comentário */}
+              {comment.is_own_comment && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => startEditing(comment)}
+                  className="text-xs text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 h-7 px-2"
+                >
+                  <Pencil className="h-3 w-3 mr-1" />
+                  Editar
+                </Button>
+              )}
+              
+              {/* Botão de apagar - aparece para o dono da área OU para o autor do comentário */}
+              {(isAreaOwner || comment.is_own_comment) && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => handleDeleteComment(comment.id)} 
+                  disabled={deletingCommentId === comment.id} 
+                  className="text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 h-7 px-2"
+                >
+                  {deletingCommentId === comment.id ? <>
+                      <div className="w-3 h-3 border-2 border-red-400 border-t-transparent rounded-full animate-spin mr-1" />
+                      Apagando...
+                    </> : <>
+                      <Trash2 className="h-3 w-3 mr-1" />
+                      Apagar
+                    </>}
+                </Button>
+              )}
+            </div>
+          )}
           
           {replyingTo === comment.id && <div className="mt-3 space-y-2">
               <Textarea placeholder="Digite sua resposta..." value={replyText} onChange={e => setReplyText(e.target.value)} rows={2} className="border-white/10 text-white placeholder-white/40 resize-none bg-white/5 text-sm w-full rounded-xl" />
