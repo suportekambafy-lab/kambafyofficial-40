@@ -258,6 +258,13 @@ export default function ModernMembersArea({ memberAreaId: propMemberAreaId, isEm
       }
     }
 
+    // ✅ Se está embutido no app (isEmbeddedInApp), permitir acesso direto
+    // O usuário já está autenticado no app principal
+    if (isEmbeddedInApp) {
+      console.log('✅ ModernMembersArea: Acesso via app embutido - permitido');
+      return;
+    }
+
     // ✅ 2FA OBRIGATÓRIO para QUALQUER acesso à área (aluno e dono), mesmo com sessão Supabase.
     // Se não houver 2FA válido nas últimas 24h para esta área, redirecionar ao login.
     if (!authLoading && memberAreaId) {
@@ -282,7 +289,7 @@ export default function ModernMembersArea({ memberAreaId: propMemberAreaId, isEm
     }
 
     // Caso não esteja autenticado, redirecionar para login (fluxo padrão)
-    if (!authLoading && !isAuthenticated && !isAdminAccess && !isEmbeddedInApp) {
+    if (!authLoading && !isAuthenticated && !isAdminAccess) {
       console.log('🔄 ModernMembersArea: Navegando para login - não autenticado', {
         authLoading,
         isAuthenticated,
