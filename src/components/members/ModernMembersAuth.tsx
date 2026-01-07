@@ -54,19 +54,25 @@ export function ModernMembersAuthProvider({ children, memberAreaId }: ModernMemb
     console.log('🔍 ModernAuth: Configurando listener de auth...');
     console.log('🔍 ModernAuth: URL atual:', window.location.href);
     console.log('🔍 ModernAuth: Query string:', window.location.search);
+    console.log('🔍 ModernAuth: memberAreaId via prop:', memberAreaId);
     
     // Verificar query params para acesso verificado
     const urlParams = new URLSearchParams(window.location.search);
     const verified = urlParams.get('verified') === 'true';
     const email = urlParams.get('email');
 
+    // Usar memberAreaId da prop se disponível, senão extrair da URL
     const pathParts = window.location.pathname.split('/').filter(Boolean);
     const memberAreaIdFromPath = pathParts[pathParts.length - 1] || '';
+    const effectiveMemberAreaId = memberAreaId || memberAreaIdFromPath;
 
-    const hasValid2FA = (normalizedEmail: string) => {
+    // Detectar se está embutido no app (URL contém /APP ou /app)
+    const isEmbeddedInApp = window.location.pathname.toLowerCase().includes('/app');
+
+    const hasValid2FA = (normalizedEmail: string, areaId: string) => {
       try {
-        if (!memberAreaIdFromPath) return false;
-        const key = `member_area_2fa_${memberAreaIdFromPath}_${normalizedEmail}`;
+        if (!areaId) return false;
+        const key = `member_area_2fa_${areaId}_${normalizedEmail}`;
         const raw = localStorage.getItem(key);
         if (!raw) return false;
         const parsed = JSON.parse(raw);
@@ -78,17 +84,32 @@ export function ModernMembersAuthProvider({ children, memberAreaId }: ModernMemb
       }
     };
 
-    console.log('🔍 ModernAuth: Params detectados:', { verified, email, allParams: Object.fromEntries(urlParams.entries()) });
+    console.log('🔍 ModernAuth: Params detectados:', { verified, email, effectiveMemberAreaId, isEmbeddedInApp, allParams: Object.fromEntries(urlParams.entries()) });
+
+    // ✅ Se está embutido no app, usar sessão Supabase diretamente sem verificação 2FA
+    if (isEmbeddedInApp && memberAreaId) {
+      console.log('✅ ModernAuth: Acesso via app embutido - ignorando verificação 2FA');
+      // Verificar sessão Supabase existente
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) {
+          console.log('✅ ModernAuth: Sessão Supabase encontrada no app embutido');
+          setSession(session);
+          setUser(session?.user ?? null);
+        }
+        setIsLoading(false);
+      });
+      return;
+    }
 
     if (verified && email) {
       // Normalizar email para lowercase
       const normalizedEmail = decodeURIComponent(email).toLowerCase().trim();
 
       // ✅ 2FA obrigatório: bloquear acesso direto via URL sem verificação recente
-      if (!hasValid2FA(normalizedEmail)) {
+      if (!hasValid2FA(normalizedEmail, effectiveMemberAreaId)) {
         console.log('❌ ModernAuth: Acesso bloqueado - 2FA obrigatório não verificado');
         localStorage.removeItem('memberAreaSession');
-        window.location.replace(`/login/${memberAreaIdFromPath}?email=${encodeURIComponent(normalizedEmail)}`);
+        window.location.replace(`/login/${effectiveMemberAreaId}?email=${encodeURIComponent(normalizedEmail)}`);
         return;
       }
 
@@ -143,18 +164,16 @@ export function ModernMembersAuthProvider({ children, memberAreaId }: ModernMemb
       try {
         const { user: savedUser, session: savedSessionData, timestamp } = JSON.parse(savedSession);
 
-        const pathParts = window.location.pathname.split('/').filter(Boolean);
-        const memberAreaIdFromPath = pathParts[pathParts.length - 1] || '';
         const normalizedEmail = (savedUser?.email || '').toLowerCase().trim();
 
-        const key = `member_area_2fa_${memberAreaIdFromPath}_${normalizedEmail}`;
+        const key = `member_area_2fa_${effectiveMemberAreaId}_${normalizedEmail}`;
         const raw2fa = localStorage.getItem(key);
         const parsed2fa = raw2fa ? JSON.parse(raw2fa) : null;
         const verifiedAt = typeof parsed2fa?.verifiedAt === 'number' ? parsed2fa.verifiedAt : 0;
-        const hasValid2FA = memberAreaIdFromPath && normalizedEmail && (Date.now() - verifiedAt < 24 * 60 * 60 * 1000);
+        const has2FAValid = effectiveMemberAreaId && normalizedEmail && (Date.now() - verifiedAt < 24 * 60 * 60 * 1000);
 
         // Verificar se a sessão não expirou (24h) E se existe 2FA válido para ESTA área
-        if (hasValid2FA && Date.now() - timestamp < 86400000) {
+        if (has2FAValid && Date.now() - timestamp < 86400000) {
           console.log('✅ ModernAuth: Sessão recuperada do localStorage');
           setUser(savedUser);
           setSession(savedSessionData);
@@ -215,7 +234,7 @@ export function ModernMembersAuthProvider({ children, memberAreaId }: ModernMemb
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [memberAreaId]);
 
   // Se memberAreaId for fornecido via prop, carregar automaticamente
   useEffect(() => {
