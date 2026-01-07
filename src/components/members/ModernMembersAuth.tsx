@@ -59,14 +59,41 @@ export function ModernMembersAuthProvider({ children, memberAreaId }: ModernMemb
     const urlParams = new URLSearchParams(window.location.search);
     const verified = urlParams.get('verified') === 'true';
     const email = urlParams.get('email');
-    
+
+    const pathParts = window.location.pathname.split('/').filter(Boolean);
+    const memberAreaIdFromPath = pathParts[pathParts.length - 1] || '';
+
+    const hasValid2FA = (normalizedEmail: string) => {
+      try {
+        if (!memberAreaIdFromPath) return false;
+        const key = `member_area_2fa_${memberAreaIdFromPath}_${normalizedEmail}`;
+        const raw = localStorage.getItem(key);
+        if (!raw) return false;
+        const parsed = JSON.parse(raw);
+        const verifiedAt = typeof parsed?.verifiedAt === 'number' ? parsed.verifiedAt : 0;
+        // válido por 24h
+        return Date.now() - verifiedAt < 24 * 60 * 60 * 1000;
+      } catch {
+        return false;
+      }
+    };
+
     console.log('🔍 ModernAuth: Params detectados:', { verified, email, allParams: Object.fromEntries(urlParams.entries()) });
-    
+
     if (verified && email) {
       // Normalizar email para lowercase
       const normalizedEmail = decodeURIComponent(email).toLowerCase().trim();
+
+      // ✅ 2FA obrigatório: bloquear acesso direto via URL sem verificação recente
+      if (!hasValid2FA(normalizedEmail)) {
+        console.log('❌ ModernAuth: Acesso bloqueado - 2FA obrigatório não verificado');
+        localStorage.removeItem('memberAreaSession');
+        window.location.replace(`/login/${memberAreaIdFromPath}?email=${encodeURIComponent(normalizedEmail)}`);
+        return;
+      }
+
       console.log('🔑 ModernAuth: Acesso verificado detectado via URL:', normalizedEmail);
-      
+
       // Criar sessão virtual persistente
       const virtualUser = {
         id: crypto.randomUUID(),
@@ -81,7 +108,7 @@ export function ModernMembersAuthProvider({ children, memberAreaId }: ModernMemb
         role: 'authenticated',
         updated_at: new Date().toISOString(),
       } as unknown as User;
-      
+
       const virtualSession = {
         user: virtualUser,
         access_token: crypto.randomUUID(),
@@ -90,7 +117,7 @@ export function ModernMembersAuthProvider({ children, memberAreaId }: ModernMemb
         expires_at: Math.floor(Date.now() / 1000) + 86400,
         token_type: 'bearer'
       } as Session;
-      
+
       // Salvar no localStorage para persistência
       const sessionData = {
         user: virtualUser,
@@ -98,41 +125,51 @@ export function ModernMembersAuthProvider({ children, memberAreaId }: ModernMemb
         timestamp: Date.now()
       };
       localStorage.setItem('memberAreaSession', JSON.stringify(sessionData));
-      
+
       setUser(virtualUser);
       setSession(virtualSession);
       setIsLoading(false);
-      
+
       console.log('✅ ModernAuth: Sessão virtual criada e persistida:', {
         email: normalizedEmail,
         sessionSaved: !!localStorage.getItem('memberAreaSession')
       });
       return;
     }
-    
+
     // Tentar recuperar sessão do localStorage
     const savedSession = localStorage.getItem('memberAreaSession');
     if (savedSession) {
       try {
         const { user: savedUser, session: savedSessionData, timestamp } = JSON.parse(savedSession);
-        
-        // Verificar se a sessão não expirou (24h)
-        if (Date.now() - timestamp < 86400000) {
+
+        const pathParts = window.location.pathname.split('/').filter(Boolean);
+        const memberAreaIdFromPath = pathParts[pathParts.length - 1] || '';
+        const normalizedEmail = (savedUser?.email || '').toLowerCase().trim();
+
+        const key = `member_area_2fa_${memberAreaIdFromPath}_${normalizedEmail}`;
+        const raw2fa = localStorage.getItem(key);
+        const parsed2fa = raw2fa ? JSON.parse(raw2fa) : null;
+        const verifiedAt = typeof parsed2fa?.verifiedAt === 'number' ? parsed2fa.verifiedAt : 0;
+        const hasValid2FA = memberAreaIdFromPath && normalizedEmail && (Date.now() - verifiedAt < 24 * 60 * 60 * 1000);
+
+        // Verificar se a sessão não expirou (24h) E se existe 2FA válido para ESTA área
+        if (hasValid2FA && Date.now() - timestamp < 86400000) {
           console.log('✅ ModernAuth: Sessão recuperada do localStorage');
           setUser(savedUser);
           setSession(savedSessionData);
           setIsLoading(false);
           return;
-        } else {
-          console.log('⏰ ModernAuth: Sessão expirada, removendo');
-          localStorage.removeItem('memberAreaSession');
         }
+
+        console.log('⏰ ModernAuth: Sessão/2FA expirado ou ausente, removendo');
+        localStorage.removeItem('memberAreaSession');
       } catch (error) {
         console.error('❌ ModernAuth: Erro ao recuperar sessão:', error);
         localStorage.removeItem('memberAreaSession');
       }
     }
-    
+
     // Configurar listener de mudanças de autenticação Supabase
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {

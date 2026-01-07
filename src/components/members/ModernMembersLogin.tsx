@@ -154,13 +154,10 @@ export default function ModernMembersLogin() {
         });
         return;
       }
-      if (isDeviceTrusted(normalizedEmail)) {
-        completeLogin(normalizedEmail, false);
-      } else {
-        setPendingEmail(normalizedEmail);
-        setIs2FAForOwner(false);
-        setRequires2FA(true);
-      }
+      // ✅ 2FA obrigatório SEMPRE (não confiar em dispositivo)
+      setPendingEmail(normalizedEmail);
+      setIs2FAForOwner(false);
+      setRequires2FA(true);
     } catch (error: any) {
       toast({
         title: "❌ Erro na verificação",
@@ -261,8 +258,15 @@ export default function ModernMembersLogin() {
                   context="member_area_login" 
                   onVerificationSuccess={() => {
                     setRequires2FA(false);
+                    try {
+                      const normalized = pendingEmail.toLowerCase().trim();
+                      const key = `member_area_2fa_${memberAreaId}_${normalized}`;
+                      localStorage.setItem(key, JSON.stringify({ verifiedAt: Date.now() }));
+                    } catch {
+                      // ignore
+                    }
                     completeLogin(pendingEmail, true);
-                  }} 
+                  }}
                   onBack={() => {
                     setRequires2FA(false);
                     setPendingEmail('');
