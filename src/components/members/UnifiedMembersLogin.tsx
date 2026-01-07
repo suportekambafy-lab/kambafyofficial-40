@@ -3,15 +3,18 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Mail, Loader2 } from 'lucide-react';
+import { Mail, Loader2, Shield } from 'lucide-react';
 import { useUnifiedMembersAuth } from './UnifiedMembersAuth';
+import TwoFactorVerification from '@/components/TwoFactorVerification';
 
 export default function UnifiedMembersLogin() {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login, memberAreas } = useUnifiedMembersAuth();
+  const [requires2FA, setRequires2FA] = useState(false);
+  const [verifiedEmail, setVerifiedEmail] = useState('');
+  const { login } = useUnifiedMembersAuth();
   const navigate = useNavigate();
-  const { id: memberAreaId } = useParams(); // Captura ID da URL se for login de área específica
+  const { id: memberAreaId } = useParams();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,24 +26,85 @@ export default function UnifiedMembersLogin() {
     setIsLoading(true);
 
     try {
+      // Primeiro verificar se tem acesso (sem completar login)
       const success = await login(email);
       
       if (success) {
-        // Aguardar um momento para carregar a área
-        setTimeout(() => {
-          // Se veio de URL específica (/login/:id), redirecionar para essa área
-          if (memberAreaId) {
-            console.log('🎯 Navegando para área específica:', memberAreaId);
-            navigate(`/area/${memberAreaId}`);
-          } else {
-            console.error('❌ Nenhuma área específica informada no login');
-          }
-        }, 500);
+        // Se tem acesso, exigir 2FA obrigatório
+        setVerifiedEmail(email.toLowerCase().trim());
+        setRequires2FA(true);
       }
     } finally {
       setIsLoading(false);
     }
   };
+
+  const handle2FASuccess = () => {
+    // 2FA verificado, completar navegação
+    if (memberAreaId) {
+      console.log('🎯 2FA verificado, navegando para área:', memberAreaId);
+      navigate(`/area/${memberAreaId}`);
+    }
+  };
+
+  const handleBack = () => {
+    setRequires2FA(false);
+    setVerifiedEmail('');
+  };
+
+  // Tela de 2FA
+  if (requires2FA && verifiedEmail) {
+    return (
+      <div className="min-h-screen bg-[#09090b] relative overflow-hidden flex items-center justify-center p-4">
+        {/* Background */}
+        <div className="fixed inset-0 pointer-events-none">
+          <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#00A651]/8 rounded-full blur-[120px] animate-pulse" />
+          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] bg-[#00A651]/5 rounded-full blur-[120px]" />
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(0,166,81,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,166,81,0.03)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_50%,black,transparent)]" />
+        </div>
+
+        <motion.div 
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="w-full max-w-md space-y-8 relative z-10"
+        >
+          {/* Logo */}
+          <div className="text-center space-y-2">
+            <img 
+              src="/kambafy-logo-light-green.png" 
+              alt="Kambafy" 
+              className="h-16 w-auto mx-auto mb-2"
+            />
+            <p className="text-zinc-500 text-sm">Verificação de Segurança</p>
+          </div>
+
+          {/* Card de 2FA */}
+          <div className="relative group">
+            <div className="absolute -inset-0.5 bg-[#00A651]/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+            
+            <div className="relative bg-[#18181b]/80 backdrop-blur-xl border border-white/5 rounded-2xl p-8">
+              <div className="space-y-2 mb-6 text-center">
+                <div className="w-12 h-12 bg-[#00A651]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Shield className="w-6 h-6 text-[#00A651]" />
+                </div>
+                <h2 className="text-xl font-bold text-white">Verificação Obrigatória</h2>
+                <p className="text-zinc-500 text-sm">
+                  Para sua segurança, enviamos um código de verificação para seu email
+                </p>
+              </div>
+
+              <TwoFactorVerification
+                email={verifiedEmail}
+                onVerificationSuccess={handle2FASuccess}
+                onBack={handleBack}
+                context="member_area_login"
+              />
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#09090b] relative overflow-hidden flex items-center justify-center p-4">
