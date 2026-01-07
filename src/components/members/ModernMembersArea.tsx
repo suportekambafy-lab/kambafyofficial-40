@@ -215,10 +215,30 @@ export default function ModernMembersArea({ memberAreaId: propMemberAreaId, isEm
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const isVerified = urlParams.get('verified') === 'true';
-    const emailParam = urlParams.get('email');
+    const emailParamRaw = urlParams.get('email');
     const isAdminAccess = urlParams.get('admin_access') === 'true';
-    
-    // ✅ Verificar acesso de admin via localStorage
+
+    const normalizedEmailFromParam = emailParamRaw
+      ? decodeURIComponent(emailParamRaw).toLowerCase().trim()
+      : null;
+
+    const normalizedEmail = (session?.user?.email || normalizedEmailFromParam || '').toLowerCase().trim();
+
+    const hasValid2FAForArea = (emailToCheck: string) => {
+      try {
+        if (!memberAreaId) return false;
+        const key = `member_area_2fa_${memberAreaId}_${emailToCheck}`;
+        const raw = localStorage.getItem(key);
+        if (!raw) return false;
+        const parsed = JSON.parse(raw);
+        const verifiedAt = typeof parsed?.verifiedAt === 'number' ? parsed.verifiedAt : 0;
+        return Date.now() - verifiedAt < 24 * 60 * 60 * 1000;
+      } catch {
+        return false;
+      }
+    };
+
+    // ✅ Verificar acesso de admin via localStorage (não muda)
     if (isAdminAccess && memberAreaId) {
       const adminAccessKey = `admin_member_area_access_${memberAreaId}`;
       const adminAccess = localStorage.getItem(adminAccessKey);
@@ -230,40 +250,51 @@ export default function ModernMembersArea({ memberAreaId: propMemberAreaId, isEm
           const diffHours = (now.getTime() - accessedAt.getTime()) / (1000 * 60 * 60);
           if (parsed.isAdmin && diffHours < 24) {
             console.log('🔑 Acesso admin autorizado via localStorage');
-            return; // Permitir acesso sem autenticação
+            return; // Permitir acesso sem autenticação/2FA
           }
-        } catch (e) {
+        } catch {
           // Ignorar erro
         }
       }
     }
-    
-    // ✅ CRÍTICO: Se tem verified=true na URL OU está embutido no app, NUNCA redirecionar
-    // Esperar o ModernMembersAuth processar e criar a sessão virtual
-    if ((isVerified && emailParam) || isEmbeddedInApp) {
-      console.log('🔑 Acesso verificado via query params ou app embutido - aguardando criação de sessão');
-      return; // Não fazer NADA, deixar o auth processar
+
+    // ✅ 2FA OBRIGATÓRIO para QUALQUER acesso à área (aluno e dono), mesmo com sessão Supabase.
+    // Se não houver 2FA válido nas últimas 24h para esta área, redirecionar ao login.
+    if (!authLoading && memberAreaId) {
+      if (!normalizedEmail) {
+        localStorage.removeItem('memberAreaSession');
+        window.location.replace(`/login/${memberAreaId}`);
+        return;
+      }
+
+      const has2FA = hasValid2FAForArea(normalizedEmail);
+      if (!has2FA) {
+        console.log('❌ ModernMembersArea: Bloqueado - 2FA obrigatório ausente/expirado', {
+          memberAreaId,
+          email: normalizedEmail,
+          isVerified,
+          hasSession: !!session
+        });
+        localStorage.removeItem('memberAreaSession');
+        window.location.replace(`/login/${memberAreaId}?email=${encodeURIComponent(normalizedEmail)}`);
+        return;
+      }
     }
-    
-    // Só redirecionar se NÃO for acesso verificado E não estiver autenticado E não estiver embutido no app
-    if (!authLoading && !isAuthenticated && !isAdminAccess) {
-      console.log('🔄 ModernMembersArea: Navegando para login - não autenticado e sem verificação', {
+
+    // Caso não esteja autenticado, redirecionar para login (fluxo padrão)
+    if (!authLoading && !isAuthenticated && !isAdminAccess && !isEmbeddedInApp) {
+      console.log('🔄 ModernMembersArea: Navegando para login - não autenticado', {
         authLoading,
         isAuthenticated,
         isVerified,
-        emailParam,
         hasSession: !!session
       });
-      
-      // Só navegar se não estiver embutido no app
-      if (!isEmbeddedInApp) {
-        navigate(`/login/${memberAreaId}`);
-      }
+      navigate(`/login/${memberAreaId}`);
       return;
     }
-    
-    console.log('ℹ️ ModernMembersArea: Usuário autenticado, carregando área');
-  }, [authLoading, isAuthenticated, memberAreaId, isEmbeddedInApp, navigate]);
+
+    console.log('ℹ️ ModernMembersArea: Acesso liberado (2FA ok), carregando área');
+  }, [authLoading, isAuthenticated, memberAreaId, isEmbeddedInApp, navigate, session]);
 
   // Carregar conteúdo da área independente de loading - sempre mostrar o que tem
   useEffect(() => {
