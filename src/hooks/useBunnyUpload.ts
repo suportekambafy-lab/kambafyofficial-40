@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface UploadOptions {
   onProgress?: (progress: number) => void;
@@ -8,7 +8,6 @@ interface UploadOptions {
 
 export function useBunnyUpload() {
   const [uploading, setUploading] = useState(false);
-  const { toast } = useToast();
 
   const uploadFile = async (file: File, options?: UploadOptions): Promise<string | null> => {
     try {
@@ -54,11 +53,7 @@ export function useBunnyUpload() {
       return data.url;
     } catch (error: any) {
       console.error('Error uploading file:', error);
-      toast({
-        title: "Erro",
-        description: error.message || "Erro ao enviar arquivo",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Erro ao enviar arquivo");
       return null;
     } finally {
       setUploading(false);
