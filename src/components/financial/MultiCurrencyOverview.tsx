@@ -11,7 +11,19 @@ export function MultiCurrencyOverview({
   formatCurrency,
   getTotalInKZ
 }: MultiCurrencyOverviewProps) {
-  const activeCurrencies = balances.filter(b => b.balance > 0);
+  // Aggregate balances by currency to avoid duplicates
+  const aggregatedBalances = balances.reduce((acc, balance) => {
+    const existing = acc.find(b => b.currency === balance.currency);
+    if (existing) {
+      existing.balance += balance.balance;
+      existing.retained_balance += balance.retained_balance;
+    } else {
+      acc.push({ ...balance });
+    }
+    return acc;
+  }, [] as CurrencyBalance[]);
+
+  const activeCurrencies = aggregatedBalances.filter(b => b.balance > 0);
   
   if (activeCurrencies.length <= 1) return null;
 
