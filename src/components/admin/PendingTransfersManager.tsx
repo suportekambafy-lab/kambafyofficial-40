@@ -9,7 +9,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { CheckCircle, XCircle, Download, Eye, FileText, AlertTriangle, ArrowDown, Filter, Search } from 'lucide-react';
 import { Input } from "@/components/ui/input";
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -60,7 +60,6 @@ interface ConfirmationDialog {
 
 export function PendingTransfersManager() {
   const { admin } = useAdminAuth();
-  const { toast } = useToast();
   const [pendingTransfers, setPendingTransfers] = useState<PendingTransfer[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
@@ -222,11 +221,7 @@ export function PendingTransfersManager() {
       console.log(`💰 ${formattedTransfers.length} transferências pendentes carregadas`);
     } catch (error) {
       console.error('❌ Erro ao buscar transferências:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao carregar transferências pendentes",
-        variant: "destructive"
-      });
+      toast.error("Erro ao carregar transferências pendentes");
     } finally {
       if (!silentRefresh) {
         setLoading(false);
@@ -706,23 +701,13 @@ export function PendingTransfersManager() {
         }
       }
 
-      toast({
-        title: action === 'approve' ? "🎉 Transferência Aprovada com Sucesso!" : "Transferência Rejeitada",
-        description: action === 'approve' 
-          ? "Pagamento processado! Cliente recebeu acesso, vendedor foi notificado por email e o valor foi creditado."
-          : `O pagamento foi rejeitado com sucesso`,
-        variant: action === 'approve' ? "default" : "destructive"
-      });
-
-      // Mostrar toast adicional de sucesso com mais detalhes se aprovado
       if (action === 'approve') {
+        toast.success("🎉 Transferência Aprovada com Sucesso! Pagamento processado.");
         setTimeout(() => {
-          toast({
-            title: "✅ Processamento Completo",
-            description: `Pedido #${orderData.order_id} - Cliente: ${orderData.customer_name} - Produto: ${orderData.product_name}`,
-            variant: "default"
-          });
+          toast.success(`Pedido #${orderData.order_id} - Cliente: ${orderData.customer_name}`);
         }, 2000);
+      } else {
+        toast.error("Transferência rejeitada com sucesso");
       }
 
       // Remover imediatamente da lista local para melhor UX
@@ -733,11 +718,7 @@ export function PendingTransfersManager() {
       
     } catch (error) {
       console.error(`❌ Erro ao ${action === 'approve' ? 'aprovar' : 'rejeitar'} transferência:`, error);
-      toast({
-        title: "Erro",
-        description: `Erro ao ${action === 'approve' ? 'aprovar' : 'rejeitar'} transferência`,
-        variant: "destructive"
-      });
+      toast.error(`Erro ao ${action === 'approve' ? 'aprovar' : 'rejeitar'} transferência`);
     } finally {
       setProcessingId(null);
     }
@@ -785,11 +766,7 @@ export function PendingTransfersManager() {
       setShowProofDialog(true);
     } catch (error) {
       console.error('Erro ao visualizar comprovativo:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível visualizar o comprovativo",
-        variant: "destructive"
-      });
+      toast.error("Não foi possível visualizar o comprovativo");
     }
   };
 
@@ -815,19 +792,11 @@ export function PendingTransfersManager() {
         link.click();
         document.body.removeChild(link);
       } else {
-        toast({
-          title: "Arquivo não disponível",
-          description: "Este comprovativo foi enviado antes da implementação do sistema de arquivos",
-          variant: "destructive"
-        });
+        toast.error("Este comprovativo foi enviado antes da implementação do sistema de arquivos");
       }
     } catch (error) {
       console.error('❌ Erro ao fazer download:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível fazer download do comprovativo",
-        variant: "destructive"
-      });
+      toast.error("Não foi possível fazer download do comprovativo");
     }
   };
 
@@ -860,26 +829,15 @@ export function PendingTransfersManager() {
       const failed = results.filter(r => r.status === 'rejected').length;
       
       if (successful > 0) {
-        toast({
-          title: "Pedidos rejeitados",
-          description: `${successful} pedido(s) rejeitado(s) com sucesso${failed > 0 ? ` (${failed} falhou)` : ''}`,
-        });
+        toast.success(`${successful} pedido(s) rejeitado(s) com sucesso${failed > 0 ? ` (${failed} falhou)` : ''}`);
       }
       
       if (failed > 0 && successful === 0) {
-        toast({
-          title: "Erro",
-          description: `Não foi possível rejeitar os pedidos`,
-          variant: "destructive"
-        });
+        toast.error("Não foi possível rejeitar os pedidos");
       }
     } catch (error) {
       console.error('❌ Erro ao rejeitar pedidos em lote:', error);
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao processar os pedidos",
-        variant: "destructive"
-      });
+      toast.error("Ocorreu um erro ao processar os pedidos");
     }
   };
 
@@ -899,17 +857,10 @@ export function PendingTransfersManager() {
       
       const rejectedCount = rejectResults.filter(r => r.status === 'fulfilled').length;
       
-      toast({
-        title: "Pedidos processados",
-        description: `1 pedido aprovado, ${rejectedCount} pedido(s) rejeitado(s)`,
-      });
+      toast.success(`1 pedido aprovado, ${rejectedCount} pedido(s) rejeitado(s)`);
     } catch (error) {
       console.error('❌ Erro ao processar pedidos:', error);
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao processar os pedidos",
-        variant: "destructive"
-      });
+      toast.error("Ocorreu um erro ao processar os pedidos");
     }
   };
 

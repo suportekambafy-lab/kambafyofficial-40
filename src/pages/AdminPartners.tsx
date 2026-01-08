@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { CheckCircle, XCircle, Search, Eye, Calendar, Building2, Mail } from "lucide-react";
 import {
@@ -42,7 +42,6 @@ export default function AdminPartners() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
   const [processing, setProcessing] = useState<string | null>(null);
-  const { toast } = useToast();
 
   useEffect(() => {
     fetchPartners();
@@ -58,11 +57,7 @@ export default function AdminPartners() {
       if (error) throw error;
       setPartners(data || []);
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Erro ao carregar parceiros",
-        description: error.message,
-      });
+      toast.error(error.message || "Erro ao carregar parceiros");
     } finally {
       setLoading(false);
     }
@@ -108,27 +103,15 @@ export default function AdminPartners() {
 
       if (inviteError) {
         console.error('Erro ao enviar convite:', inviteError);
-        // Não falhar completamente, o parceiro foi aprovado
-        toast({
-          title: "Parceiro aprovado!",
-          description: "API key gerada, mas houve erro ao enviar email. Verifique manualmente.",
-          variant: "default"
-        });
+        toast.success("Parceiro aprovado! API key gerada, mas houve erro ao enviar email.");
       } else {
-        toast({
-          title: "Parceiro aprovado!",
-          description: "Email enviado com link para criar senha de acesso.",
-        });
+        toast.success("Parceiro aprovado! Email enviado com link para criar senha.");
       }
 
       fetchPartners();
     } catch (error: any) {
       console.error('[AdminPartners] Erro geral:', error);
-      toast({
-        variant: "destructive",
-        title: "Erro ao aprovar parceiro",
-        description: error.message,
-      });
+      toast.error(error.message || "Erro ao aprovar parceiro");
     } finally {
       setProcessing(null);
     }
@@ -150,18 +133,11 @@ export default function AdminPartners() {
         throw inviteError;
       }
 
-      toast({
-        title: "Acesso reenviado",
-        description: `Email de acesso enviado para ${partner.contact_email}.`,
-      });
+      toast.success(`Email de acesso enviado para ${partner.contact_email}`);
 
       console.log('[AdminPartners] Resend invite result:', inviteData);
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Erro ao reenviar acesso",
-        description: error.message,
-      });
+      toast.error(error.message || "Erro ao reenviar acesso");
     } finally {
       setProcessing(null);
     }
@@ -177,18 +153,11 @@ export default function AdminPartners() {
 
       if (error) throw error;
 
-      toast({
-        title: "Parceiro rejeitado",
-        description: "Status atualizado com sucesso.",
-      });
+      toast.success("Parceiro rejeitado com sucesso");
 
       fetchPartners();
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Erro ao rejeitar parceiro",
-        description: error.message,
-      });
+      toast.error(error.message || "Erro ao rejeitar parceiro");
     } finally {
       setProcessing(null);
     }

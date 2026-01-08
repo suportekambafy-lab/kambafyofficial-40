@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Plus, MoreHorizontal, Edit, Trash2, Eye, EyeOff, GripVertical, BookOpen, Users } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { ImageUploader } from "@/components/ImageUploader";
@@ -38,7 +38,6 @@ interface ModulesManagerProps {
 
 export default function ModulesManager({ memberAreaId }: ModulesManagerProps) {
   const { user } = useAuth();
-  const { toast } = useToast();
   const [modules, setModules] = useState<Module[]>([]);
   const [cohorts, setCohorts] = useState<Cohort[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -111,11 +110,7 @@ export default function ModulesManager({ memberAreaId }: ModulesManagerProps) {
       setModules(modulesWithCounts);
     } catch (error) {
       console.error('Error loading modules:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar os módulos",
-        variant: "destructive"
-      });
+      toast.error("Não foi possível carregar os módulos");
     } finally {
       setLoading(false);
     }
@@ -145,10 +140,7 @@ export default function ModulesManager({ memberAreaId }: ModulesManagerProps) {
         
         if (error) throw error;
         
-        toast({
-          title: "Sucesso",
-          description: "Módulo atualizado com sucesso"
-        });
+        toast.success("Módulo atualizado com sucesso");
       } else {
         const { error } = await supabase
           .from('modules')
@@ -156,10 +148,7 @@ export default function ModulesManager({ memberAreaId }: ModulesManagerProps) {
         
         if (error) throw error;
         
-        toast({
-          title: "Sucesso",
-          description: "Módulo criado com sucesso"
-        });
+        toast.success("Módulo criado com sucesso");
       }
 
       resetForm();
@@ -167,11 +156,7 @@ export default function ModulesManager({ memberAreaId }: ModulesManagerProps) {
       await loadModules();
     } catch (error) {
       console.error('Error saving module:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível salvar o módulo",
-        variant: "destructive"
-      });
+      toast.error("Não foi possível salvar o módulo");
     }
   };
 
@@ -199,18 +184,11 @@ export default function ModulesManager({ memberAreaId }: ModulesManagerProps) {
 
       if (error) throw error;
 
-      toast({
-        title: "Sucesso",
-        description: "Módulo removido com sucesso"
-      });
+      toast.success("Módulo removido com sucesso");
       await loadModules();
     } catch (error) {
       console.error('Error deleting module:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível remover o módulo",
-        variant: "destructive"
-      });
+      toast.error("Não foi possível remover o módulo");
     }
   };
 
@@ -225,19 +203,12 @@ export default function ModulesManager({ memberAreaId }: ModulesManagerProps) {
 
       if (error) throw error;
 
-      toast({
-        title: "Sucesso",
-        description: `Módulo ${newStatus === 'published' ? 'publicado' : 'ocultado'} com sucesso`
-      });
+      toast.success(`Módulo ${newStatus === 'published' ? 'publicado' : 'ocultado'} com sucesso`);
       
       await loadModules();
     } catch (error) {
       console.error('Error toggling visibility:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível alterar a visibilidade do módulo",
-        variant: "destructive"
-      });
+      toast.error("Não foi possível alterar a visibilidade do módulo");
     }
   };
 
@@ -265,19 +236,12 @@ export default function ModulesManager({ memberAreaId }: ModulesManagerProps) {
           .eq('id', update.id);
       }
       
-      toast({
-        title: "Sucesso",
-        description: "Ordem dos módulos atualizada com sucesso"
-      });
+      toast.success("Ordem dos módulos atualizada com sucesso");
       
       await loadModules();
     } catch (error) {
       console.error('Error reordering modules:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível reordenar os módulos",
-        variant: "destructive"
-      });
+      toast.error("Não foi possível reordenar os módulos");
     }
   };
 
