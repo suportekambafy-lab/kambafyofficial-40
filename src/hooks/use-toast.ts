@@ -25,11 +25,15 @@ function toast({ title, description, variant, ...props }: Toast) {
 }
 
 function useToast() {
-  return {
-    toast,
+  // Memoize to ensure consistent hook count across renders
+  const toastFn = React.useCallback(toast, [])
+  const dismissFn = React.useCallback((toastId?: string) => sonnerToast.dismiss(toastId), [])
+  
+  return React.useMemo(() => ({
+    toast: toastFn,
     toasts: [] as ToasterToast[],
-    dismiss: (toastId?: string) => sonnerToast.dismiss(toastId),
-  }
+    dismiss: dismissFn,
+  }), [toastFn, dismissFn])
 }
 
 export { useToast, toast }
