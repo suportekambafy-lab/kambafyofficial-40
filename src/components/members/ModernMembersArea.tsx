@@ -965,6 +965,7 @@ export default function ModernMembersArea({ memberAreaId: propMemberAreaId, isEm
   return (
     <div className="min-h-screen" style={{ background: 'hsl(30 20% 12%)' }}>
       <NetflixLessonViewer
+        key={selectedLesson.id}
         lesson={selectedLesson}
         lessons={lessons || []}
         modules={modules || []}
