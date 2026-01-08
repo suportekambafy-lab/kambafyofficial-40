@@ -129,11 +129,19 @@ export function LessonComments({
       setIsLoading(false);
     }
   };
+  // Limpar comentários e recarregar quando mudar de aula
   useEffect(() => {
     if (lessonId) {
+      // Reset comments immediately when lesson changes to avoid showing stale data
+      setComments([]);
+      setSelectedComments(new Set());
+      setReplyingTo(null);
+      setReplyText('');
+      setEditingCommentId(null);
+      setEditText('');
       loadComments();
     }
-  }, [lessonId]);
+  }, [lessonId, memberAreaId, studentEmail]);
 
   // Verificar se o usuário atual é o dono da área de membros e se comentários estão habilitados
   useEffect(() => {
