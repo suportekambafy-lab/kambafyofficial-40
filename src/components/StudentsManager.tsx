@@ -220,7 +220,7 @@ export default function StudentsManager({ memberAreaId, memberAreaName, external
           member_area_id: memberAreaId,
           student_name: formData.name,
           student_email: formData.email,
-          cohort_id: formData.cohortId
+          cohort_id: formData.cohortId || null
         });
 
       if (error) {
