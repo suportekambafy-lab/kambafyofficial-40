@@ -213,7 +213,20 @@ export default function StudentsManager({ memberAreaId, memberAreaName, external
         }
       }
 
-      // 3. Adicionar estudante à área de membros
+      // 3. Verificar se o estudante já existe nesta área de membros
+      const { data: existingStudent } = await supabase
+        .from('member_area_students')
+        .select('id')
+        .eq('member_area_id', memberAreaId)
+        .eq('student_email', formData.email)
+        .maybeSingle();
+
+      if (existingStudent) {
+        toast.error("Este aluno já está cadastrado nesta área de membros");
+        return;
+      }
+
+      // 4. Adicionar estudante à área de membros
       const { error } = await supabase
         .from('member_area_students')
         .insert({
