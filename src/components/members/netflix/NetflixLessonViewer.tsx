@@ -649,6 +649,7 @@ export function NetflixLessonViewer({
               {/* Comments Section */}
               <div className="mb-8">
                 <LessonComments
+                  key={`comments-${lesson.id}`}
                   lessonId={lesson.id}
                   studentEmail={studentEmail}
                   studentName={studentName}
