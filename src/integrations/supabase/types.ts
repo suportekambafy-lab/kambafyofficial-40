@@ -4080,6 +4080,141 @@ export type Database = {
         }
         Relationships: []
       }
+      shopify_orders: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string | null
+          customer_email: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          id: string
+          kambafy_payment_id: string | null
+          metadata: Json | null
+          paid_at: string | null
+          payment_method: string | null
+          shop_domain: string
+          shopify_checkout_token: string | null
+          shopify_order_id: string
+          shopify_order_number: string | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          kambafy_payment_id?: string | null
+          metadata?: Json | null
+          paid_at?: string | null
+          payment_method?: string | null
+          shop_domain: string
+          shopify_checkout_token?: string | null
+          shopify_order_id: string
+          shopify_order_number?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          kambafy_payment_id?: string | null
+          metadata?: Json | null
+          paid_at?: string | null
+          payment_method?: string | null
+          shop_domain?: string
+          shopify_checkout_token?: string | null
+          shopify_order_id?: string
+          shopify_order_number?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shopify_orders_kambafy_payment_id_fkey"
+            columns: ["kambafy_payment_id"]
+            isOneToOne: false
+            referencedRelation: "external_payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shopify_orders_kambafy_payment_id_fkey"
+            columns: ["kambafy_payment_id"]
+            isOneToOne: false
+            referencedRelation: "webhook_status"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shopify_orders_shop_domain_fkey"
+            columns: ["shop_domain"]
+            isOneToOne: false
+            referencedRelation: "shopify_stores"
+            referencedColumns: ["shop_domain"]
+          },
+        ]
+      }
+      shopify_stores: {
+        Row: {
+          access_token: string | null
+          created_at: string
+          id: string
+          installed_at: string | null
+          is_active: boolean | null
+          kambafy_api_key: string | null
+          kambafy_partner_id: string | null
+          scope: string | null
+          settings: Json | null
+          shop_domain: string
+          uninstalled_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_token?: string | null
+          created_at?: string
+          id?: string
+          installed_at?: string | null
+          is_active?: boolean | null
+          kambafy_api_key?: string | null
+          kambafy_partner_id?: string | null
+          scope?: string | null
+          settings?: Json | null
+          shop_domain: string
+          uninstalled_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string | null
+          created_at?: string
+          id?: string
+          installed_at?: string | null
+          is_active?: boolean | null
+          kambafy_api_key?: string | null
+          kambafy_partner_id?: string | null
+          scope?: string | null
+          settings?: Json | null
+          shop_domain?: string
+          uninstalled_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shopify_stores_kambafy_partner_id_fkey"
+            columns: ["kambafy_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscription_events: {
         Row: {
           amount: number | null
