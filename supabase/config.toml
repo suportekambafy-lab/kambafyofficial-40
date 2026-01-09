@@ -1,5 +1,8 @@
 project_id = "hcbkqygdtzpxvctfdqbd"
 
+[functions.shopify-app]
+verify_jwt = false
+
 [functions.update-user-email]
 verify_jwt = false
 
