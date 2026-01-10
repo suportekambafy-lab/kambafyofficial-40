@@ -69,11 +69,12 @@ export default function Products() {
         return [];
       }
       
-      // Buscar produtos próprios incluindo novos campos
+      // Buscar produtos próprios incluindo novos campos (excluindo arquivados)
       const { data: ownProducts, error: ownError } = await supabase
         .from('products')
         .select('*, user_id')
         .eq('user_id', user.id)
+        .neq('status', 'Arquivado')
         .order('created_at', { ascending: false });
 
       if (ownError) throw ownError;
