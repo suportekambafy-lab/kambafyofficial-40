@@ -831,15 +831,15 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
 
         {formData.allowAffiliates && (
           <div className="space-y-2">
-            <Label htmlFor="commission">Comissão (%)</Label>
+            <Label htmlFor="commission">Comissão para Afiliados (%)</Label>
             <Input
               id="commission"
               value={formData.commission}
               onChange={(e) => handleInputChange("commission", e.target.value)}
-              placeholder="10%"
+              placeholder="Ex: 50%"
             />
             <p className="text-sm text-muted-foreground">
-              Percentual que será pago aos afiliados por cada venda
+              Percentual que será pago aos afiliados por cada venda (de 1% até 100%)
             </p>
           </div>
         )}
