@@ -11,14 +11,15 @@ export function MultiCurrencyOverview({
   formatCurrency,
   getTotalInKZ
 }: MultiCurrencyOverviewProps) {
-  // Aggregate balances by currency to avoid duplicates
+  // Aggregate balances by currency to avoid duplicates (normalize currency to uppercase)
   const aggregatedBalances = balances.reduce((acc, balance) => {
-    const existing = acc.find(b => b.currency === balance.currency);
+    const normalizedCurrency = balance.currency?.toUpperCase()?.trim() || 'KZ';
+    const existing = acc.find(b => (b.currency?.toUpperCase()?.trim() || 'KZ') === normalizedCurrency);
     if (existing) {
       existing.balance += balance.balance;
       existing.retained_balance += balance.retained_balance;
     } else {
-      acc.push({ ...balance });
+      acc.push({ ...balance, currency: normalizedCurrency });
     }
     return acc;
   }, [] as CurrencyBalance[]);
