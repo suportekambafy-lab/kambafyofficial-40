@@ -13,14 +13,24 @@ export function MultiCurrencyOverview({
 }: MultiCurrencyOverviewProps) {
   // Aggregate balances by currency to avoid duplicates (normalize currency to uppercase)
   const aggregatedBalances = balances.reduce((acc, balance) => {
-    const normalizedCurrency = balance.currency?.toUpperCase()?.trim() || 'KZ';
-    const existing = acc.find(b => (b.currency?.toUpperCase()?.trim() || 'KZ') === normalizedCurrency);
+    let normalizedCurrency = balance.currency?.toUpperCase()?.trim() || 'KZ';
+
+    // Treat common aliases as the same currency to prevent duplicate "Kwanza" rows
+    if (normalizedCurrency === 'AOA' || normalizedCurrency === 'AKZ') normalizedCurrency = 'KZ';
+
+    const existing = acc.find(
+      b => ((b.currency?.toUpperCase()?.trim() || 'KZ') === normalizedCurrency) ||
+        ((b.currency?.toUpperCase()?.trim() || 'KZ') === 'AOA' && normalizedCurrency === 'KZ') ||
+        ((b.currency?.toUpperCase()?.trim() || 'KZ') === 'AKZ' && normalizedCurrency === 'KZ')
+    );
+
     if (existing) {
       existing.balance += balance.balance;
       existing.retained_balance += balance.retained_balance;
     } else {
       acc.push({ ...balance, currency: normalizedCurrency });
     }
+
     return acc;
   }, [] as CurrencyBalance[]);
 
