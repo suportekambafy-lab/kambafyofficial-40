@@ -95,6 +95,41 @@ const VideoPlayer = ({
   // Detect if video is from Cloudflare Stream
   const isCloudflareStream = embedUrl?.includes('cloudflarestream.com') || hlsUrl?.includes('cloudflarestream.com');
 
+  // Detect if video is from YouTube
+  const isYouTubeVideo = src?.includes('youtube.com') || src?.includes('youtu.be') || embedUrl?.includes('youtube.com') || embedUrl?.includes('youtu.be');
+
+  // Helper function to extract YouTube video ID
+  const getYouTubeVideoId = (url: string): string | null => {
+    if (!url) return null;
+    
+    // Handle youtu.be format
+    const shortMatch = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+    if (shortMatch) return shortMatch[1];
+    
+    // Handle youtube.com/watch?v= format
+    const watchMatch = url.match(/youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/);
+    if (watchMatch) return watchMatch[1];
+    
+    // Handle youtube.com/embed/ format
+    const embedMatch = url.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/);
+    if (embedMatch) return embedMatch[1];
+    
+    // Handle youtube.com/v/ format
+    const vMatch = url.match(/youtube\.com\/v\/([a-zA-Z0-9_-]{11})/);
+    if (vMatch) return vMatch[1];
+    
+    return null;
+  };
+
+  // Get YouTube embed URL
+  const youtubeEmbedUrl = isYouTubeVideo ? (() => {
+    const videoId = getYouTubeVideoId(src || embedUrl || '');
+    if (videoId) {
+      return `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&autoplay=${autoPlay ? '1' : '0'}&start=${Math.floor(startTime)}`;
+    }
+    return null;
+  })() : null;
+
   // Fallback system state
   const [currentSource, setCurrentSource] = useState<VideoSource | null>(null);
   const [failedSources, setFailedSources] = useState<Set<VideoSource>>(new Set());
@@ -107,6 +142,12 @@ const VideoPlayer = ({
   // Determine initial source priority
   useEffect(() => {
     if (!currentSource && !failedSources.size) {
+      // If YouTube, always use iframe with embed URL
+      if (isYouTubeVideo && youtubeEmbedUrl) {
+        console.log('🎬 Detectado vídeo do YouTube - usando iframe');
+        setCurrentSource('iframe');
+        return;
+      }
       // If Vimeo, always use iframe
       if (isVimeoVideo && embedUrl) {
         console.log('🎬 Detectado vídeo do Vimeo - usando iframe');
@@ -144,7 +185,7 @@ const VideoPlayer = ({
         return;
       }
     }
-  }, [hlsUrl, embedUrl, src, currentSource, failedSources.size, isVimeoVideo, isCloudflareStream]);
+  }, [hlsUrl, embedUrl, src, currentSource, failedSources.size, isVimeoVideo, isCloudflareStream, isYouTubeVideo, youtubeEmbedUrl]);
 
   // Handle source failure and automatic fallback
   const handleSourceFailure = (source: VideoSource, error?: string) => {
@@ -870,12 +911,17 @@ const VideoPlayer = ({
   }
 
   // Iframe Player
-  if (currentSource === 'iframe' && embedUrl) {
-    // Processar URL para remover branding do Vimeo e adicionar parâmetros ao Cloudflare
+  if (currentSource === 'iframe' && (embedUrl || youtubeEmbedUrl)) {
+    // Processar URL para remover branding do Vimeo, adicionar parâmetros ao Cloudflare ou usar YouTube
     const processedEmbedUrl = (() => {
+      // YouTube - usar o embed URL gerado
+      if (isYouTubeVideo && youtubeEmbedUrl) {
+        console.log('🎬 Usando YouTube embed:', youtubeEmbedUrl);
+        return youtubeEmbedUrl;
+      }
       if (isVimeoVideo) {
         try {
-          const url = new URL(embedUrl);
+          const url = new URL(embedUrl!);
           // Adicionar parâmetros para remover branding
           url.searchParams.set('title', '0');
           url.searchParams.set('byline', '0');
@@ -888,7 +934,7 @@ const VideoPlayer = ({
           return url.toString();
         } catch (e) {
           console.warn('Erro ao processar URL do Vimeo:', e);
-          return embedUrl;
+          return embedUrl!;
         }
       }
       if (isCloudflareStream) {
@@ -901,9 +947,9 @@ const VideoPlayer = ({
           setIsLoading(true);
           setErrorMessage(null);
         }
-        return embedUrl;
+        return embedUrl!;
       }
-      return embedUrl;
+      return embedUrl!;
     })();
     return <motion.div className="relative w-full h-full overflow-hidden bg-black" initial={{
       opacity: 0,

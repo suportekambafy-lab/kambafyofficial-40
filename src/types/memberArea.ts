@@ -18,6 +18,7 @@ export interface Lesson {
   title: string;
   description: string;
   video_url?: string;
+  youtube_url?: string; // YouTube URL for embedded playback
   hls_url?: string; // HLS URL for native playback
   bunny_video_id?: string;
   bunny_embed_url?: string;

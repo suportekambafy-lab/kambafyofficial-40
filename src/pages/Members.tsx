@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Plus, Video, FileText, Users, MoreHorizontal, Edit, Trash2, Eye, Clock, BookOpen, Upload, Minimize2, Search, ChevronDown, ArrowLeft, ExternalLink, EyeOff, GripVertical, Mail, Save, Image, Type, Settings, CalendarIcon, AlertTriangle, Timer, MessageCircle } from "lucide-react";
+import { Plus, Video, FileText, Users, MoreHorizontal, Edit, Trash2, Eye, Clock, BookOpen, Upload, Minimize2, Search, ChevronDown, ArrowLeft, ExternalLink, EyeOff, GripVertical, Mail, Save, Image, Type, Settings, CalendarIcon, AlertTriangle, Timer, MessageCircle, Youtube, Link } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -112,12 +112,13 @@ export default function Members() {
     custom_button_text: '',
     custom_button_url: ''
   });
-  const [formData, setFormData] = useState({
+const [formData, setFormData] = useState({
     title: '',
     description: '',
     video_url: '',
     bunny_embed_url: '',
     hls_url: '',
+    youtube_url: '',
     duration: 0,
     // Duração em segundos
     status: 'draft' as 'draft' | 'published' | 'archived',
@@ -128,6 +129,7 @@ export default function Members() {
     scheduled_at: null as Date | null,
     cover_image_url: ''
   });
+  const [videoSourceType, setVideoSourceType] = useState<'upload' | 'youtube'>('upload');
   const [moduleFormData, setModuleFormData] = useState({
     title: '',
     description: '',
@@ -735,12 +737,18 @@ export default function Members() {
     const processedLinks = lesson.complementary_links ? typeof lesson.complementary_links === 'string' ? JSON.parse(lesson.complementary_links) : lesson.complementary_links : [];
     const processedMaterials = lesson.lesson_materials ? typeof lesson.lesson_materials === 'string' ? JSON.parse(lesson.lesson_materials) : lesson.lesson_materials : [];
     setEditingLesson(lesson);
+// Detectar se é um link do YouTube
+    const youtubeUrl = (lesson as any).youtube_url || '';
+    const isYoutube = youtubeUrl || (lesson.video_url && (lesson.video_url.includes('youtube.com') || lesson.video_url.includes('youtu.be')));
+    setVideoSourceType(isYoutube ? 'youtube' : 'upload');
+    
     setFormData({
       title: lesson.title,
       description: lesson.description || '',
       video_url: lesson.video_url || '',
       bunny_embed_url: (lesson as any).bunny_embed_url || '',
       hls_url: (lesson as any).hls_url || '',
+      youtube_url: youtubeUrl || (isYoutube ? lesson.video_url : '') || '',
       duration: lesson.duration || 0,
       status: lesson.status,
       module_id: lesson.module_id || '',
@@ -874,12 +882,13 @@ export default function Members() {
   };
   const resetForm = () => {
     console.log('Resetting form');
-    setFormData({
+setFormData({
       title: '',
       description: '',
       video_url: '',
       bunny_embed_url: '',
       hls_url: '',
+      youtube_url: '',
       duration: 0,
       status: 'draft',
       module_id: 'none',
@@ -890,6 +899,7 @@ export default function Members() {
       scheduled_at: null,
       cover_image_url: ''
     });
+    setVideoSourceType('upload');
     setEditingLesson(null);
     setSelectedModuleForLesson('');
     console.log('Form reset complete');
@@ -1001,12 +1011,13 @@ export default function Members() {
     }
 
     // Resetar primeiro para evitar valores vazios problemáticos
-    setFormData({
+setFormData({
       title: '',
       description: '',
       video_url: '',
       bunny_embed_url: '',
       hls_url: '',
+      youtube_url: '',
       duration: 0,
       status: 'draft',
       module_id: moduleId || 'none',
@@ -2061,18 +2072,72 @@ export default function Members() {
                   <Input value={getModuleTitle(editingLesson.module_id)} disabled className="bg-gray-100" />
                 </div>}
               
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label>Vídeo da Aula</Label>
+                
+                {/* Seletor de tipo de fonte */}
                 <div className="flex gap-2">
-                  <Button type="button" variant="outline" onClick={() => setVideoUploaderOpen(true)} className="flex-1">
+                  <Button 
+                    type="button" 
+                    variant={videoSourceType === 'upload' ? 'default' : 'outline'} 
+                    onClick={() => setVideoSourceType('upload')} 
+                    className="flex-1"
+                    size="sm"
+                  >
                     <Upload className="h-4 w-4 mr-2" />
-                    {formData.video_url ? 'Alterar Vídeo' : 'Enviar Vídeo'}
+                    Upload
                   </Button>
-                  {formData.video_url && <Button type="button" variant="ghost" onClick={() => window.open(formData.video_url, '_blank')}>
-                      <Video className="h-4 w-4" />
-                    </Button>}
+                  <Button 
+                    type="button" 
+                    variant={videoSourceType === 'youtube' ? 'default' : 'outline'} 
+                    onClick={() => setVideoSourceType('youtube')} 
+                    className="flex-1"
+                    size="sm"
+                  >
+                    <Youtube className="h-4 w-4 mr-2" />
+                    YouTube
+                  </Button>
                 </div>
-                {formData.video_url && <p className="text-sm text-gray-500">Vídeo anexado ✓</p>}
+
+                {/* Opção de Upload */}
+                {videoSourceType === 'upload' && (
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <Button type="button" variant="outline" onClick={() => setVideoUploaderOpen(true)} className="flex-1">
+                        <Upload className="h-4 w-4 mr-2" />
+                        {formData.video_url && !formData.youtube_url ? 'Alterar Vídeo' : 'Enviar Vídeo'}
+                      </Button>
+                      {formData.video_url && !formData.youtube_url && (
+                        <Button type="button" variant="ghost" onClick={() => window.open(formData.video_url, '_blank')}>
+                          <Video className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                    {formData.video_url && !formData.youtube_url && <p className="text-sm text-green-600">✓ Vídeo anexado</p>}
+                  </div>
+                )}
+
+                {/* Opção de YouTube */}
+                {videoSourceType === 'youtube' && (
+                  <div className="space-y-2">
+                    <Input
+                      placeholder="Cole o link do YouTube (ex: https://youtube.com/watch?v=...)"
+                      value={formData.youtube_url}
+                      onChange={(e) => {
+                        const url = e.target.value;
+                        setFormData(prev => ({
+                          ...prev,
+                          youtube_url: url,
+                          video_url: url // Usar o mesmo campo para compatibilidade
+                        }));
+                      }}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Suporta links do YouTube (youtube.com/watch?v=..., youtu.be/...)
+                    </p>
+                    {formData.youtube_url && <p className="text-sm text-green-600">✓ Link do YouTube adicionado</p>}
+                  </div>
+                )}
               </div>
               
               <div className="space-y-2">
