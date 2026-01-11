@@ -121,11 +121,26 @@ const VideoPlayer = ({
     return null;
   };
 
-  // Get YouTube embed URL
+  // Get YouTube embed URL with enhanced privacy and minimal branding
   const youtubeEmbedUrl = isYouTubeVideo ? (() => {
     const videoId = getYouTubeVideoId(src || embedUrl || '');
     if (videoId) {
-      return `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&autoplay=${autoPlay ? '1' : '0'}&start=${Math.floor(startTime)}`;
+      // Parâmetros para ocultar controles e branding do YouTube
+      const params = new URLSearchParams({
+        rel: '0',           // Não mostrar vídeos relacionados
+        modestbranding: '1', // Branding mínimo do YouTube
+        showinfo: '0',       // Ocultar título e uploader
+        controls: '1',       // Mostrar controles básicos
+        disablekb: '0',      // Permitir controles por teclado
+        fs: '1',             // Permitir fullscreen
+        iv_load_policy: '3', // Ocultar anotações
+        cc_load_policy: '0', // Não carregar legendas automaticamente
+        playsinline: '1',    // Reproduzir inline em mobile
+        autoplay: autoPlay ? '1' : '0',
+        start: Math.floor(startTime).toString()
+      });
+      // Usar youtube-nocookie.com para maior privacidade
+      return `https://www.youtube-nocookie.com/embed/${videoId}?${params.toString()}`;
     }
     return null;
   })() : null;

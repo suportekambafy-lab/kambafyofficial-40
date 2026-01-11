@@ -2125,15 +2125,31 @@ setFormData({
                       value={formData.youtube_url}
                       onChange={(e) => {
                         const url = e.target.value;
+                        // Extrair ID do YouTube para gerar thumbnail
+                        const getYouTubeId = (ytUrl: string): string | null => {
+                          const shortMatch = ytUrl.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+                          if (shortMatch) return shortMatch[1];
+                          const watchMatch = ytUrl.match(/youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/);
+                          if (watchMatch) return watchMatch[1];
+                          const embedMatch = ytUrl.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/);
+                          if (embedMatch) return embedMatch[1];
+                          return null;
+                        };
+                        
+                        const videoId = getYouTubeId(url);
+                        const thumbnailUrl = videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : '';
+                        
                         setFormData(prev => ({
                           ...prev,
                           youtube_url: url,
-                          video_url: url // Usar o mesmo campo para compatibilidade
+                          video_url: url, // Usar o mesmo campo para compatibilidade
+                          // Auto-preencher capa se estiver vazia
+                          cover_image_url: prev.cover_image_url || thumbnailUrl
                         }));
                       }}
                     />
                     <p className="text-xs text-muted-foreground">
-                      Suporta links do YouTube (youtube.com/watch?v=..., youtu.be/...)
+                      Suporta links do YouTube (youtube.com/watch?v=..., youtu.be/...) • A capa será preenchida automaticamente
                     </p>
                     {formData.youtube_url && <p className="text-sm text-green-600">✓ Link do YouTube adicionado</p>}
                   </div>
