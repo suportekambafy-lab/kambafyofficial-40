@@ -195,27 +195,49 @@ export const MozambiquePaymentForm = ({
 
       if (response.error) {
         console.error('❌ SISLOG error:', response.error);
-        
-        // Check if it's a network/timeout error
-        const errorMessage = response.error.message || "";
-        const isNetworkError = errorMessage.includes('Network') || 
-                               errorMessage.includes('timeout') || 
-                               errorMessage.includes('connection') ||
-                               errorMessage.includes('non-2xx');
-        
-        if (isNetworkError) {
-          toast({
-            title: "Erro de conexão",
-            message: "A conexão foi perdida. Por favor, verifique se a referência foi gerada e tente novamente.",
-            variant: "error"
-          });
-        } else {
-          toast({
-            title: "Erro ao gerar referência",
-            message: response.error.message || "Tente novamente mais tarde",
-            variant: "error"
-          });
+
+        // If the Edge Function returned a non-2xx status, Supabase throws a FunctionsHttpError
+        // and we can read the real error message from the response body.
+        let serverMessage: string | undefined;
+
+        try {
+          const contentType = response.response?.headers
+            ?.get('Content-Type')
+            ?.split(';')[0]
+            .trim();
+
+          if (response.response && contentType === 'application/json') {
+            const body = await response.response.json();
+            serverMessage =
+              body?.sislogError?.errorMessage ||
+              body?.error ||
+              body?.message;
+          } else if (response.response) {
+            const text = await response.response.text();
+            serverMessage = text?.trim() ? text : undefined;
+          }
+        } catch (parseErr) {
+          // ignore parsing errors and fall back to generic error message
+          console.log('⚠️ Could not parse Edge Function error body:', parseErr);
         }
+
+        const errorName = (response.error as any)?.name;
+        const fallbackMessage = response.error.message || "Tente novamente mais tarde";
+        const messageToShow = serverMessage || fallbackMessage;
+
+        // Only treat true fetch failures as "connection lost".
+        const isConnectionError =
+          errorName === 'FunctionsFetchError' ||
+          fallbackMessage.toLowerCase().includes('failed to send a request');
+
+        toast({
+          title: isConnectionError ? 'Erro de conexão' : 'Erro ao gerar referência',
+          message: isConnectionError
+            ? 'Falha de conexão ao contactar o servidor. Tente novamente.'
+            : messageToShow,
+          variant: 'error',
+        });
+
         setIsProcessing(false);
         return;
       }
