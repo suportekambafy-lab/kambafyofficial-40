@@ -156,53 +156,116 @@ serve(async (req) => {
     // - cel: opcional, para enviar PUSH ao cliente
     // - callback: alguns ambientes SISLOG enviam notificação via GET (query params)
     //   e podem esperar nomes diferentes para a URL de callback.
-    const sislogPayload = {
-      username: SISLOG_USERNAME,
-      transactionId: transactionId,
-      value: amountInCentavos.toString(), // String conforme documentação
-      cel: phoneForSislog, // Phone with country code
+    const valueCandidates: Array<{ label: string; value: string }> = [
+      // Formato 1 (atual): centavos inteiro (ex: "5000" = 50.00)
+      { label: 'centavos', value: amountInCentavos.toString() },
 
-      // Enviar múltiplos nomes para maximizar compatibilidade com SISLOG
-      urlCallback: callbackUrl,
-      urlcallback: callbackUrl,
-      urlCallBack: callbackUrl,
-      callbackUrl: callbackUrl,
-      callback: callbackUrl,
-    };
+      // Formato 2: valor com 2 casas decimais (ex: "50.00")
+      // Alguns ambientes/gateways esperam este formato e rejeitam o inteiro.
+      { label: 'meticais_2dp', value: Number(amount).toFixed(2) },
 
-    console.log('📤 SISLOG payload:', sislogPayload);
+      // Formato 3: valor inteiro em meticais (ex: "50")
+      { label: 'meticais_int', value: Math.round(Number(amount)).toString() },
+    ];
 
-    // Headers conforme documentação: apikey (lowercase)
-    const sislogResponse = await fetch(sislogEndpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': SISLOG_API_KEY
-      },
-      body: JSON.stringify(sislogPayload)
-    });
+    let sislogResponse: Response | null = null;
+    let sislogData: any = null;
+    let lastErrorMessage = 'Failed to create payment reference';
+    let usedValueLabel: string | null = null;
 
-    const sislogData = await sislogResponse.json();
-    console.log('📥 SISLOG response:', sislogData);
+    for (const candidate of valueCandidates) {
+      usedValueLabel = candidate.label;
 
-    // Check for errors - SISLOG returns "Invalid" status or entity "00000" on failure
-    if (!sislogResponse.ok || sislogData.status === 'Invalid' || sislogData.entity === '00000') {
-      console.error('❌ SISLOG error:', sislogData);
-      
-      // Get error message from SISLOG response
-      let errorMessage = 'Failed to create payment reference';
-      if (sislogData.errorMessage) {
-        errorMessage = sislogData.errorMessage;
-      } else if (sislogData.errormessage) {
-        errorMessage = sislogData.errormessage;
-      } else if (sislogData.message) {
-        errorMessage = sislogData.message;
+      // Payload conforme documentação SISLOG:
+      // - username: obrigatório
+      // - transactionId: máx 22 chars, único
+      // - value: dependendo do ambiente pode variar (centavos, 2dp ou inteiro)
+      // - cel: opcional, para enviar PUSH ao cliente
+      // - callback/urlCallback: URL para notificação
+      const sislogPayload = {
+        username: SISLOG_USERNAME,
+        transactionId: transactionId,
+        value: candidate.value,
+        cel: phoneForSislog,
+
+        // Enviar múltiplos nomes para maximizar compatibilidade com SISLOG
+        urlCallback: callbackUrl,
+        urlcallback: callbackUrl,
+        urlCallBack: callbackUrl,
+        callbackUrl: callbackUrl,
+        callback: callbackUrl,
+      };
+
+      console.log(`📤 SISLOG payload (${candidate.label}):`, sislogPayload);
+
+      // Headers conforme documentação: apikey (lowercase)
+      sislogResponse = await fetch(sislogEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: SISLOG_API_KEY,
+        },
+        body: JSON.stringify(sislogPayload),
+      });
+
+      try {
+        sislogData = await sislogResponse.json();
+      } catch (_err) {
+        const text = await sislogResponse.text().catch(() => '');
+        sislogData = { raw: text };
       }
-      
+
+      console.log(`📥 SISLOG response (${candidate.label}):`, sislogData);
+
+      const isInvalid =
+        !sislogResponse.ok ||
+        sislogData?.status === 'Invalid' ||
+        sislogData?.entity === '00000';
+
+      if (!isInvalid) {
+        break;
+      }
+
+      // Get error message from SISLOG response
+      if (sislogData?.errorMessage) {
+        lastErrorMessage = sislogData.errorMessage;
+      } else if (sislogData?.errormessage) {
+        lastErrorMessage = sislogData.errormessage;
+      } else if (sislogData?.message) {
+        lastErrorMessage = sislogData.message;
+      } else if (sislogData?.raw) {
+        lastErrorMessage = String(sislogData.raw);
+      }
+
+      // Só vale a pena tentar formatos alternativos quando o erro sugere formato/valor mínimo.
+      const canRetry = String(lastErrorMessage)
+        .toLowerCase()
+        .includes('below allowed value');
+
+      if (!canRetry) {
+        break;
+      }
+    }
+
+    // Check final result
+    if (
+      !sislogResponse ||
+      !sislogData ||
+      !sislogResponse.ok ||
+      sislogData?.status === 'Invalid' ||
+      sislogData?.entity === '00000'
+    ) {
+      console.error('❌ SISLOG error:', sislogData);
+
       return new Response(
-        JSON.stringify({ 
-          error: errorMessage,
-          sislogError: sislogData
+        JSON.stringify({
+          error: lastErrorMessage,
+          attemptedFormats: valueCandidates.map((v) => ({
+            label: v.label,
+            value: v.value,
+          })),
+          usedValueFormat: usedValueLabel,
+          sislogError: sislogData,
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
