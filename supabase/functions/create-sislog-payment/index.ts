@@ -156,115 +156,65 @@ serve(async (req) => {
     // - cel: opcional, para enviar PUSH ao cliente
     // - callback: alguns ambientes SISLOG enviam notificação via GET (query params)
     //   e podem esperar nomes diferentes para a URL de callback.
-    const valueCandidates: Array<{ label: string; value: string }> = [
-      // Formato 1 (atual): centavos inteiro (ex: "5000" = 50.00)
-      { label: 'centavos', value: amountInCentavos.toString() },
+    // Payload conforme documentação SISLOG:
+    // - username: obrigatório
+    // - transactionId: máx 22 chars, único
+    // - value: string com valor em centavos (ex: "5000" = 50,00 MZN)
+    // - cel: opcional, para enviar PUSH ao cliente
+    // - callback: URL para notificação
+    const sislogPayload = {
+      username: SISLOG_USERNAME,
+      transactionId: transactionId,
+      value: amountInCentavos.toString(), // Centavos: 5000 = 50.00 MZN
+      cel: phoneForSislog,
 
-      // Formato 2: valor com 2 casas decimais (ex: "50.00")
-      // Alguns ambientes/gateways esperam este formato e rejeitam o inteiro.
-      { label: 'meticais_2dp', value: Number(amount).toFixed(2) },
+      // Enviar múltiplos nomes para maximizar compatibilidade com SISLOG
+      urlCallback: callbackUrl,
+      urlcallback: callbackUrl,
+      urlCallBack: callbackUrl,
+      callbackUrl: callbackUrl,
+      callback: callbackUrl,
+    };
 
-      // Formato 3: valor inteiro em meticais (ex: "50")
-      { label: 'meticais_int', value: Math.round(Number(amount)).toString() },
-    ];
+    console.log('📤 SISLOG payload:', sislogPayload);
+    console.log('💰 Valor enviado:', amountInCentavos, 'centavos =', amount, 'MZN');
 
-    let sislogResponse: Response | null = null;
-    let sislogData: any = null;
-    let lastErrorMessage = 'Failed to create payment reference';
-    let usedValueLabel: string | null = null;
+    // Headers conforme documentação: apikey (lowercase)
+    const sislogResponse = await fetch(sislogEndpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: SISLOG_API_KEY,
+      },
+      body: JSON.stringify(sislogPayload),
+    });
 
-    for (const candidate of valueCandidates) {
-      usedValueLabel = candidate.label;
+    const sislogData = await sislogResponse.json();
+    console.log('📥 SISLOG response:', sislogData);
 
-      // Payload conforme documentação SISLOG:
-      // - username: obrigatório
-      // - transactionId: máx 22 chars, único
-      // - value: dependendo do ambiente pode variar (centavos, 2dp ou inteiro)
-      // - cel: opcional, para enviar PUSH ao cliente
-      // - callback/urlCallback: URL para notificação
-      const sislogPayload = {
-        username: SISLOG_USERNAME,
-        transactionId: transactionId,
-        value: candidate.value,
-        cel: phoneForSislog,
-
-        // Enviar múltiplos nomes para maximizar compatibilidade com SISLOG
-        urlCallback: callbackUrl,
-        urlcallback: callbackUrl,
-        urlCallBack: callbackUrl,
-        callbackUrl: callbackUrl,
-        callback: callbackUrl,
-      };
-
-      console.log(`📤 SISLOG payload (${candidate.label}):`, sislogPayload);
-
-      // Headers conforme documentação: apikey (lowercase)
-      sislogResponse = await fetch(sislogEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          apikey: SISLOG_API_KEY,
-        },
-        body: JSON.stringify(sislogPayload),
-      });
-
-      try {
-        sislogData = await sislogResponse.json();
-      } catch (_err) {
-        const text = await sislogResponse.text().catch(() => '');
-        sislogData = { raw: text };
-      }
-
-      console.log(`📥 SISLOG response (${candidate.label}):`, sislogData);
-
-      const isInvalid =
-        !sislogResponse.ok ||
-        sislogData?.status === 'Invalid' ||
-        sislogData?.entity === '00000';
-
-      if (!isInvalid) {
-        break;
-      }
+    // Check for errors - SISLOG returns "Invalid" status or entity "00000" on failure
+    if (!sislogResponse.ok || sislogData.status === 'Invalid' || sislogData.entity === '00000') {
+      console.error('❌ SISLOG error:', sislogData);
 
       // Get error message from SISLOG response
-      if (sislogData?.errorMessage) {
-        lastErrorMessage = sislogData.errorMessage;
-      } else if (sislogData?.errormessage) {
-        lastErrorMessage = sislogData.errormessage;
-      } else if (sislogData?.message) {
-        lastErrorMessage = sislogData.message;
-      } else if (sislogData?.raw) {
-        lastErrorMessage = String(sislogData.raw);
+      let errorMessage = 'Failed to create payment reference';
+      if (sislogData.errorMessage) {
+        errorMessage = sislogData.errorMessage;
+      } else if (sislogData.errormessage) {
+        errorMessage = sislogData.errormessage;
+      } else if (sislogData.message) {
+        errorMessage = sislogData.message;
       }
 
-      // Só vale a pena tentar formatos alternativos quando o erro sugere formato/valor mínimo.
-      const canRetry = String(lastErrorMessage)
-        .toLowerCase()
-        .includes('below allowed value');
-
-      if (!canRetry) {
-        break;
+      // Add helpful context for minimum value error
+      if (errorMessage.toLowerCase().includes('below allowed value')) {
+        errorMessage = `Valor mínimo não atingido. O valor ${amount} MZN (${amountInCentavos} centavos) está abaixo do mínimo permitido pela SISLOG. Contacte o suporte SISLOG para saber o valor mínimo.`;
       }
-    }
-
-    // Check final result
-    if (
-      !sislogResponse ||
-      !sislogData ||
-      !sislogResponse.ok ||
-      sislogData?.status === 'Invalid' ||
-      sislogData?.entity === '00000'
-    ) {
-      console.error('❌ SISLOG error:', sislogData);
 
       return new Response(
         JSON.stringify({
-          error: lastErrorMessage,
-          attemptedFormats: valueCandidates.map((v) => ({
-            label: v.label,
-            value: v.value,
-          })),
-          usedValueFormat: usedValueLabel,
+          error: errorMessage,
+          amountSent: { centavos: amountInCentavos, mzn: amount },
           sislogError: sislogData,
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
