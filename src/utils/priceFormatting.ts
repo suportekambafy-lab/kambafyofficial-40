@@ -51,7 +51,7 @@ export const formatPrice = (
         case 'CLP':
           return `$${Math.round(customPrice).toLocaleString('es-CL')} CLP`;
         case 'MZN':
-          return `${formatWithMaxTwoDecimals(customPrice)} MZN`;
+          return `${formatWithMaxTwoDecimals(customPrice)} MT`;
         case 'ARS':
           const hasDecimalsCustom = customPrice % 1 !== 0;
           return hasDecimalsCustom 
@@ -89,7 +89,7 @@ export const formatPrice = (
     case 'CLP':
       return `$${Math.round(convertedPrice).toLocaleString('es-CL')} CLP`;
     case 'MZN':
-      return `${formatWithMaxTwoDecimals(convertedPrice)} MZN`;
+      return `${formatWithMaxTwoDecimals(convertedPrice)} MT`;
     case 'ARS':
       const hasDecimalsConverted = convertedPrice % 1 !== 0;
       return hasDecimalsConverted 
@@ -132,7 +132,7 @@ export const formatPriceForSeller = (
     case 'BRL':
       return `R$${formatted}`;
     case 'MZN':
-      return `${formatted} MZN`;
+      return `${formatted} MT`;
     case 'KZ':
       return `${formatted} KZ`;
     default:

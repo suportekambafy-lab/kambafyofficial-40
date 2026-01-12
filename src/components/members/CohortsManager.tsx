@@ -335,7 +335,7 @@ export default function CohortsManager({ memberAreaId, memberAreaName }: Cohorts
                         <SelectItem value="KZ">KZ</SelectItem>
                         <SelectItem value="USD">USD</SelectItem>
                         <SelectItem value="EUR">EUR</SelectItem>
-                        <SelectItem value="MZN">MZN</SelectItem>
+                        <SelectItem value="MZN">MT</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

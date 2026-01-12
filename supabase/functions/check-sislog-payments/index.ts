@@ -6,7 +6,7 @@ const corsHeaders = {
 };
 
 // Format price helper
-function formatPrice(amount: number, currency: string = 'MZN'): string {
+function formatPrice(amount: number, currency: string = 'MT'): string {
   return `${parseFloat(amount.toString()).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`;
 }
 
@@ -256,7 +256,7 @@ Deno.serve(async (req) => {
                 body: {
                   external_id: sellerProfile.email,
                   title: 'Kambafy - Venda aprovada',
-                  message: `Sua comissão: ${formatPrice(parseFloat(sellerAmount), 'MZN')}`,
+                  message: `Sua comissão: ${formatPrice(parseFloat(sellerAmount), 'MT')}`,
                   data: {
                     type: 'sale',
                     order_id: order.order_id,

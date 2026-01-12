@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 // Format price helper
-function formatPrice(amount: number, currency: string = 'MZN'): string {
+function formatPrice(amount: number, currency: string = 'MT'): string {
   return `${parseFloat(amount.toString()).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`;
 }
 
@@ -176,7 +176,7 @@ serve(async (req) => {
         console.log('✅ Balance will be credited by database trigger for order:', order.order_id);
 
         // Send OneSignal notification to seller
-        const formattedPrice = formatPrice(sellerCommission, 'MZN');
+        const formattedPrice = formatPrice(sellerCommission, 'MT');
         
         await supabaseAdmin.functions.invoke('send-onesignal-notification', {
           body: {

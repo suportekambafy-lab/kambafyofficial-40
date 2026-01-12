@@ -21,7 +21,7 @@ export interface CurrencyConfig {
 const CURRENCY_CONFIGS: Record<string, CurrencyConfig> = {
   'KZ': { code: 'KZ', symbol: 'KZ', name: 'Kwanza', flag: '🇦🇴', fromKZRate: 1 },
   'EUR': { code: 'EUR', symbol: '€', name: 'Euro', flag: '🇪🇺', fromKZRate: 1 / 1053 },
-  'MZN': { code: 'MZN', symbol: 'MZN', name: 'Metical', flag: '🇲🇿', fromKZRate: 1 / 14.3 },
+  'MZN': { code: 'MZN', symbol: 'MT', name: 'Metical', flag: '🇲🇿', fromKZRate: 1 / 14.3 },
   'GBP': { code: 'GBP', symbol: '£', name: 'Libra', flag: '🇬🇧', fromKZRate: 1 / 1250 },
   'BRL': { code: 'BRL', symbol: 'R$', name: 'Real', flag: '🇧🇷', fromKZRate: 1 / 180 },
   'USD': { code: 'USD', symbol: '$', name: 'Dólar', flag: '🇺🇸', fromKZRate: 1 / 950 },
@@ -142,7 +142,7 @@ export const usePreferredCurrency = () => {
       case 'BRL':
         return `R$${formatted}`;
       case 'MZN':
-        return `${formatted} MZN`;
+        return `${formatted} MT`;
       case 'KZ':
       default:
         return `${formatted} KZ`;

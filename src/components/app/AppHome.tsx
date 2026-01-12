@@ -47,7 +47,7 @@ import { usePreferredCurrency } from '@/hooks/usePreferredCurrency';
 const CURRENCIES = [
   { value: 'KZ', label: 'KZ' },
   { value: 'EUR', label: 'EUR' },
-  { value: 'MZN', label: 'MZN' },
+  { value: 'MZN', label: 'MT' },
   { value: 'USD', label: 'USD' },
   { value: 'GBP', label: 'GBP' },
   { value: 'BRL', label: 'BRL' },

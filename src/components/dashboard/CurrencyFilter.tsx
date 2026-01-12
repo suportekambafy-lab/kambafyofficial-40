@@ -14,7 +14,7 @@ interface CurrencyFilterProps {
 
 const CURRENCIES = [
   { code: 'KZ', label: 'KZ (Angola)' },
-  { code: 'MZN', label: 'MZN (Moçambique)' },
+  { code: 'MZN', label: 'MT (Moçambique)' },
   { code: 'EUR', label: 'EUR (Europa)' },
   { code: 'USD', label: 'USD (EUA)' },
   { code: 'GBP', label: 'GBP (Reino Unido)' },
