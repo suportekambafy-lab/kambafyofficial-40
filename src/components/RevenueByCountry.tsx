@@ -60,7 +60,7 @@ const formatCurrency = (amount: number, currency: string): string => {
     case 'USD':
       return `$${formatted}`;
     case 'MZN':
-      return `${formatted} MZN`;
+      return `${formatted} MT`;
     case 'BRL':
       return `R$${formatted}`;
     default:

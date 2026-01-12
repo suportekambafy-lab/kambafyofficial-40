@@ -808,7 +808,7 @@ const ThankYou = () => {
                         if (curr === 'EUR') return `€${amt}`;
                         if (curr === 'USD') return `$${amt}`;
                         if (curr === 'GBP') return `£${amt}`;
-                        if (curr === 'MZN') return `${amt} MZN`;
+                        if (curr === 'MZN') return `${amt} MT`;
                         if (curr === 'BRL') return `R$${amt}`;
                         return `${amt} ${curr}`;
                       }
@@ -819,7 +819,7 @@ const ThankYou = () => {
                       if (curr === 'EUR') return `€${amt}`;
                       if (curr === 'USD') return `$${amt}`;
                       if (curr === 'GBP') return `£${amt}`;
-                      if (curr === 'MZN') return `${amt} MZN`;
+                      if (curr === 'MZN') return `${amt} MT`;
                       if (curr === 'BRL') return `R$${amt}`;
                       
                       // 4. Fallback para KZ ou outra moeda

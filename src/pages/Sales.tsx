@@ -37,7 +37,7 @@ const formatCurrencyNative = (amount: number, currency: string = 'KZ'): string =
     case 'BRL':
       return `R$${formatWithMaxTwoDecimals(amount)}`;
     case 'MZN':
-      return `${formatWithMaxTwoDecimals(amount)} MZN`;
+      return `${formatWithMaxTwoDecimals(amount)} MT`;
     case 'KZ':
     default:
       return `${formatWithMaxTwoDecimals(amount)} KZ`;
@@ -648,7 +648,7 @@ export default function Sales() {
               <SelectItem value="EUR">Euro (EUR)</SelectItem>
               <SelectItem value="USD">Dollar (USD)</SelectItem>
               <SelectItem value="GBP">Libra (GBP)</SelectItem>
-              <SelectItem value="MZN">Metical (MZN)</SelectItem>
+              <SelectItem value="MZN">Metical (MT)</SelectItem>
               <SelectItem value="BRL">Real (BRL)</SelectItem>
             </SelectContent>
           </Select>

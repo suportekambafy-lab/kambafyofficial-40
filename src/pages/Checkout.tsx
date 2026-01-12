@@ -488,7 +488,7 @@ const Checkout = () => {
         return displayPrice;
       }
       if (userCountry?.currency === 'MZN') {
-        const displayPrice = `${formatAmount(priceInKZ)} MZN`;
+        const displayPrice = `${formatAmount(priceInKZ)} MT`;
         console.log(`🚨 getDisplayPrice - VALOR JÁ CONVERTIDO MZN: ${displayPrice}`);
         return displayPrice;
       }
@@ -527,7 +527,7 @@ const Checkout = () => {
           ? `$${customPrice.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ARS`
           : `$${Math.round(customPrice).toLocaleString('es-AR')} ARS`;
       } else if (userCountry.currency === 'MZN') {
-        displayPrice = `${formatAmount(customPrice)} MZN`;
+        displayPrice = `${formatAmount(customPrice)} MT`;
       } else {
         displayPrice = `${formatAmountLocale(customPrice)} KZ`;
       }
@@ -574,7 +574,7 @@ const Checkout = () => {
         ? `$${price.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ARS`
         : `$${Math.round(price).toLocaleString('es-AR')} ARS`;
     } else if (userCountry.currency === 'MZN') {
-      return `${price.toFixed(2)} MZN`;
+      return `${price.toFixed(2)} MT`;
     } else {
       return `${price.toLocaleString()} KZ`;
     }
