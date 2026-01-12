@@ -132,7 +132,6 @@ serve(async (req) => {
     console.log('✅ Order updated to completed');
 
     const product = order.products;
-    const amount = parseFloat(order.amount);
     const sellerCommission = order.seller_commission || amount;
 
     // Create customer access
