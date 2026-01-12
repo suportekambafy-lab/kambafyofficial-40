@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, UserPlus, Mail, Calendar, MoreHorizontal, ExternalLink } from "lucide-react";
+import { Search, UserPlus, Mail, Calendar, MoreHorizontal, ExternalLink, Download } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -560,6 +560,57 @@ export default function StudentsManager({ memberAreaId, memberAreaName, external
     student.student_email.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
+  // Função para exportar alunos em CSV
+  const handleExportStudents = () => {
+    // Filtrar alunos (sem o email de validação)
+    const studentsToExport = students.filter(s => s.student_email !== 'validar@kambafy.com');
+    
+    if (studentsToExport.length === 0) {
+      toast.error("Nenhum aluno para exportar");
+      return;
+    }
+
+    // Mapear cohort_id para nome da turma
+    const cohortMap = new Map(cohorts.map(c => [c.id, c.name]));
+
+    // Criar cabeçalho CSV
+    const headers = ['Nome', 'Email', 'Turma', 'Data de Acesso', 'Data de Cadastro'];
+    
+    // Criar linhas de dados
+    const rows = studentsToExport.map(student => {
+      const cohortName = student.cohort_id ? (cohortMap.get(student.cohort_id) || 'Sem turma') : 'Sem turma';
+      const accessDate = new Date(student.access_granted_at).toLocaleDateString('pt-BR');
+      const createdDate = new Date(student.created_at).toLocaleDateString('pt-BR');
+      
+      return [
+        `"${student.student_name.replace(/"/g, '""')}"`,
+        `"${student.student_email.replace(/"/g, '""')}"`,
+        `"${cohortName.replace(/"/g, '""')}"`,
+        accessDate,
+        createdDate
+      ].join(',');
+    });
+
+    // Combinar cabeçalho e linhas
+    const csvContent = [headers.join(','), ...rows].join('\n');
+    
+    // Criar blob e fazer download
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    const fileName = memberAreaName 
+      ? `alunos_${memberAreaName.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`
+      : `alunos_${new Date().toISOString().split('T')[0]}.csv`;
+    link.setAttribute('download', fileName);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    toast.success(`${studentsToExport.length} alunos exportados com sucesso!`);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -570,13 +621,23 @@ export default function StudentsManager({ memberAreaId, memberAreaName, external
 
   return (
     <div className="space-y-6 max-w-full overflow-x-hidden">
-      {/* Header com busca - botão movido para dropdown menu da página principal */}
+      {/* Header com busca e botão de exportar */}
       <div className="flex flex-col gap-4 max-w-full">
-        <div>
-          <h2 className="text-2xl font-bold">Estudantes</h2>
-          {memberAreaName && (
-            <p className="text-muted-foreground">Área: {memberAreaName}</p>
-          )}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-bold">Estudantes</h2>
+            {memberAreaName && (
+              <p className="text-muted-foreground">Área: {memberAreaName}</p>
+            )}
+          </div>
+          <Button 
+            variant="outline" 
+            onClick={handleExportStudents}
+            disabled={students.filter(s => s.student_email !== 'validar@kambafy.com').length === 0}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Exportar CSV
+          </Button>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent className="sm:max-w-[425px]">
