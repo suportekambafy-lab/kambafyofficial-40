@@ -8,15 +8,25 @@ export interface CountryInfo {
   exchangeRate: number;
 }
 
-// Helper para formatar número com exatamente 2 casas decimais
+// Helper para formatar número - só mostra decimais se necessário
 const formatWithMaxTwoDecimals = (value: number): string => {
   // Arredonda para 2 casas decimais
   const rounded = Math.round(value * 100) / 100;
-  // Formata manualmente com ponto como separador de milhares e vírgula decimal
-  const [intPart, decPart] = rounded.toFixed(2).split('.');
-  // Adiciona pontos como separadores de milhares
-  const formattedInt = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  return `${formattedInt},${decPart}`;
+  
+  // Verifica se tem decimais significativos
+  const hasDecimals = rounded % 1 !== 0;
+  
+  if (hasDecimals) {
+    // Formata com 2 casas decimais
+    const [intPart, decPart] = rounded.toFixed(2).split('.');
+    // Adiciona pontos como separadores de milhares
+    const formattedInt = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return `${formattedInt},${decPart}`;
+  } else {
+    // Sem decimais - só formata a parte inteira
+    const intValue = Math.round(rounded);
+    return intValue.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  }
 };
 
 export const formatPrice = (
