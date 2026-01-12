@@ -5,19 +5,47 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Format price helper
+function formatPrice(amount: number, currency: string = 'MZN'): string {
+  return `${parseFloat(amount.toString()).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`;
+}
+
+// Calculate access expiration based on product settings
+function calculateAccessExpiration(product: any): Date | null {
+  if (!product?.access_duration_type || product.access_duration_type === 'lifetime') {
+    return null;
+  }
+  
+  const now = new Date();
+  const value = product.access_duration_value || 1;
+  
+  switch (product.access_duration_type) {
+    case 'days':
+      now.setDate(now.getDate() + value);
+      break;
+    case 'months':
+      now.setMonth(now.getMonth() + value);
+      break;
+    case 'years':
+      now.setFullYear(now.getFullYear() + value);
+      break;
+    default:
+      return null;
+  }
+  
+  return now;
+}
+
 Deno.serve(async (req) => {
+  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Apenas aceitar POST
-  if (req.method !== 'POST') {
-    console.log('❌ Method not allowed:', req.method);
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), { 
-      status: 405,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
-  }
+  // Aceitar GET e POST (SISLOG pode enviar de diferentes formas)
+  let transactionId: string | null = null;
+  let entity: string | null = null;
+  let fullBody: any = {};
 
   try {
     const supabaseAdmin = createClient(
@@ -25,210 +53,296 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Parse body JSON
-    const body = await req.json();
+    // Tentar extrair parâmetros de query string (GET) ou body (POST)
+    const url = new URL(req.url);
     
-    // SISLOG pode enviar o transactionId com diferentes nomes de campo
-    // Tentar múltiplas variações para garantir compatibilidade
-    const transactionId = body.transactionId || 
-                          body.transaction_id || 
-                          body.TransactionId || 
-                          body.transactionid ||
-                          body.reference ||
-                          body.Reference ||
-                          body.id ||
-                          body.Id;
-    
-    const status = body.status || body.Status || body.result || body.Result;
+    if (req.method === 'GET') {
+      // GET: parâmetros vêm na query string
+      transactionId = url.searchParams.get('transactionId');
+      entity = url.searchParams.get('entity');
+      fullBody = Object.fromEntries(url.searchParams.entries());
+      console.log('📥 SISLOG Callback (GET):', fullBody);
+    } else if (req.method === 'POST') {
+      // POST: parâmetros vêm no body JSON
+      try {
+        fullBody = await req.json();
+      } catch {
+        // Se não for JSON, tentar form-urlencoded
+        const text = await req.text();
+        const params = new URLSearchParams(text);
+        fullBody = Object.fromEntries(params.entries());
+      }
+      
+      // SISLOG envia: { entity: "...", transactionId: "..." }
+      transactionId = fullBody.transactionId || fullBody.transaction_id || fullBody.TransactionId;
+      entity = fullBody.entity || fullBody.Entity;
+      console.log('📥 SISLOG Callback (POST):', JSON.stringify(fullBody));
+    } else {
+      console.log('❌ Method not allowed:', req.method);
+      return new Response(JSON.stringify({ error: 'Method not allowed' }), { 
+        status: 405,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
 
-    console.log('📥 SISLOG Callback received:', { 
-      transactionId, 
-      status, 
-      fullBody: JSON.stringify(body),
-      bodyKeys: Object.keys(body)
-    });
+    console.log('📋 Parsed params:', { transactionId, entity, keys: Object.keys(fullBody) });
 
-    if (!transactionId) {
-      console.error('❌ Missing transactionId in callback. Body keys:', Object.keys(body));
-      console.error('❌ Full body:', JSON.stringify(body));
-      return new Response(JSON.stringify({ 
-        error: 'Missing transactionId',
-        received_keys: Object.keys(body),
-        received_body: body
-      }), { 
+    // Validar parâmetro entity (obrigatório segundo o código do utilizador)
+    if (!entity) {
+      console.error('❌ Parâmetro entity em falta');
+      return new Response(JSON.stringify({ error: 'Parâmetro entity em falta' }), { 
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    // Buscar order pelo transactionId (guardado em appypay_transaction_id ou sislog_reference)
+    if (!transactionId) {
+      console.error('❌ Parâmetro transactionId em falta');
+      return new Response(JSON.stringify({ error: 'Parâmetro transactionId em falta' }), { 
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Buscar order na tabela 'orders' pelo transactionId
     const { data: order, error: orderError } = await supabaseAdmin
       .from('orders')
       .select('*, products(id, name, user_id, member_area_id, access_duration_type, access_duration_value)')
-      .or(`appypay_transaction_id.eq.${transactionId},sislog_reference.eq.${transactionId}`)
-      .single();
+      .eq('appypay_transaction_id', transactionId)
+      .maybeSingle();
 
-    if (orderError || !order) {
-      console.error('❌ Order not found for transactionId:', transactionId, orderError);
-      return new Response(JSON.stringify({ error: 'Order not found' }), { 
+    if (orderError) {
+      console.error('❌ Erro ao buscar order:', orderError);
+      return new Response(JSON.stringify({ error: 'Erro interno' }), { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    if (!order) {
+      console.error('❌ Order não encontrada para transactionId:', transactionId);
+      return new Response(JSON.stringify({ error: 'Order não encontrada' }), { 
         status: 404,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    console.log('📦 Found order:', order.order_id, 'current status:', order.status);
+    console.log('📦 Order encontrada:', order.order_id, 'status atual:', order.status);
 
     // Se já está completed, não processar novamente
     if (order.status === 'completed') {
-      console.log('⚠️ Order already completed, skipping:', order.order_id);
-      return new Response(JSON.stringify({ success: true, message: 'Already processed', status: 'completed' }), { 
+      console.log('⚠️ Order já está completed, ignorando:', order.order_id);
+      return new Response(JSON.stringify({ message: 'Callback recebido com sucesso' }), { 
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    // Determinar novo status baseado no status recebido ou assumir sucesso
-    const isSuccess = status === 'success' || status === 'completed' || status === 200 || status === '200' || !status;
+    // ✅ Atualizar status para 'completed' (equivalente a 'paid')
+    console.log('✅ Atualizando order para completed...');
+    
+    const amount = parseFloat(order.amount);
+    const { error: updateError } = await supabaseAdmin
+      .from('orders')
+      .update({ 
+        status: 'completed', 
+        updated_at: new Date().toISOString(),
+        payment_confirmed_at: new Date().toISOString(),
+        original_amount: amount,
+        original_currency: 'MZN'
+      })
+      .eq('id', order.id);
 
-    if (isSuccess) {
-      console.log('✅ Processing successful payment for order:', order.order_id);
+    if (updateError) {
+      console.error('❌ Erro ao atualizar order:', updateError);
+      return new Response(JSON.stringify({ error: 'Erro ao atualizar order' }), { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
 
-      // Atualizar para completed
-      const { error: updateError } = await supabaseAdmin
-        .from('orders')
-        .update({ 
-          status: 'completed', 
-          updated_at: new Date().toISOString(),
-          payment_confirmed_at: new Date().toISOString()
-        })
-        .eq('id', order.id);
+    console.log('✅ Order atualizada para completed');
 
-      if (updateError) {
-        console.error('❌ Error updating order status:', updateError);
-        throw updateError;
+    const product = order.products;
+    const sellerCommission = order.seller_commission || amount;
+
+    // Criar customer_access
+    try {
+      const accessExpiration = calculateAccessExpiration(product);
+      
+      const { error: accessError } = await supabaseAdmin
+        .from('customer_access')
+        .upsert({
+          customer_email: order.customer_email.toLowerCase().trim(),
+          customer_name: order.customer_name,
+          product_id: order.product_id,
+          order_id: order.order_id,
+          is_active: true,
+          access_expires_at: accessExpiration?.toISOString() || null,
+          access_granted_at: new Date().toISOString()
+        }, { onConflict: 'customer_email,product_id' });
+
+      if (accessError) {
+        console.error('⚠️ Erro ao criar customer_access:', accessError);
+      } else {
+        console.log('✅ Customer access criado para:', order.customer_email);
       }
+    } catch (accessErr) {
+      console.error('⚠️ Erro no customer_access:', accessErr);
+    }
 
-      // Criar customer_access
-      try {
-        const product = order.products;
-        let accessExpiration = null;
+    // Notificar vendedor via OneSignal
+    try {
+      const { data: sellerProfile } = await supabaseAdmin
+        .from('profiles')
+        .select('email, full_name, user_id')
+        .eq('user_id', product?.user_id)
+        .maybeSingle();
 
-        if (product?.access_duration_type && product?.access_duration_value) {
-          const now = new Date();
-          if (product.access_duration_type === 'days') {
-            accessExpiration = new Date(now.getTime() + product.access_duration_value * 24 * 60 * 60 * 1000);
-          } else if (product.access_duration_type === 'months') {
-            accessExpiration = new Date(now.setMonth(now.getMonth() + product.access_duration_value));
-          } else if (product.access_duration_type === 'years') {
-            accessExpiration = new Date(now.setFullYear(now.getFullYear() + product.access_duration_value));
-          }
-        }
-
-        const { error: accessError } = await supabaseAdmin
-          .from('customer_access')
-          .upsert({
-            customer_email: order.customer_email.toLowerCase().trim(),
-            customer_name: order.customer_name,
-            product_id: order.product_id,
-            order_id: order.order_id,
-            is_active: true,
-            access_expires_at: accessExpiration?.toISOString() || null
-          }, { onConflict: 'customer_email,product_id' });
-
-        if (accessError) {
-          console.error('⚠️ Error creating customer_access:', accessError);
-        } else {
-          console.log('✅ Customer access created for:', order.customer_email);
-        }
-      } catch (accessErr) {
-        console.error('⚠️ Error in customer_access creation:', accessErr);
-      }
-
-      // Creditar saldo do vendedor
-      try {
-        const sellerAmount = parseFloat(order.seller_amount || order.amount);
-        if (sellerAmount > 0 && order.user_id) {
-          const { error: balanceError } = await supabaseAdmin
-            .from('balance_transactions')
-            .insert({
-              user_id: order.user_id,
-              amount: sellerAmount,
-              type: 'sale_revenue',
-              description: `Venda do produto ${order.products?.name || 'N/A'} - ${order.order_id}`,
+      if (sellerProfile) {
+        const formattedPrice = formatPrice(sellerCommission, 'MZN');
+        
+        await supabaseAdmin.functions.invoke('send-onesignal-notification', {
+          body: {
+            external_id: sellerProfile.email,
+            title: 'Kambafy - Venda aprovada',
+            message: `Sua comissão: ${formattedPrice}`,
+            data: {
+              type: 'sale',
               order_id: order.order_id,
-              currency: order.currency || 'MZN'
-            });
+              amount: amount.toString(),
+              seller_commission: formattedPrice,
+              currency: 'MZN',
+              product_name: product?.name || 'Produto',
+              url: 'https://mobile.kambafy.com/app'
+            }
+          }
+        });
+        
+        console.log('✅ Notificação enviada ao vendedor');
+      }
+    } catch (notifyErr) {
+      console.error('⚠️ Erro ao notificar vendedor:', notifyErr);
+    }
 
-          if (balanceError) {
-            console.error('⚠️ Error crediting seller balance:', balanceError);
-          } else {
-            console.log('✅ Seller balance credited:', sellerAmount);
+    // Enviar email de confirmação
+    try {
+      await supabaseAdmin.functions.invoke('send-purchase-confirmation', {
+        body: {
+          customerName: order.customer_name,
+          customerEmail: order.customer_email,
+          customerPhone: order.customer_phone,
+          productName: product?.name || 'Produto',
+          orderId: order.order_id,
+          amount: amount.toString(),
+          currency: 'MZN',
+          productId: order.product_id,
+          sellerId: product?.user_id,
+          memberAreaId: product?.member_area_id,
+          paymentMethod: order.payment_method,
+          paymentStatus: 'completed'
+        }
+      });
+      
+      console.log('✅ Email de confirmação enviado');
+    } catch (emailErr) {
+      console.error('⚠️ Erro ao enviar email:', emailErr);
+    }
+
+    // Trigger webhooks do vendedor
+    try {
+      await supabaseAdmin.functions.invoke('trigger-webhooks', {
+        body: {
+          event: 'payment.success',
+          data: {
+            order_id: order.order_id,
+            amount: amount.toString(),
+            currency: 'MZN',
+            customer_email: order.customer_email,
+            customer_name: order.customer_name,
+            customer_phone: order.customer_phone,
+            product_id: order.product_id,
+            product_name: product?.name,
+            payment_method: order.payment_method,
+            timestamp: new Date().toISOString()
+          },
+          user_id: product?.user_id,
+          order_id: order.order_id,
+          product_id: order.product_id
+        }
+      });
+      
+      console.log('✅ Webhooks triggered');
+    } catch (webhookErr) {
+      console.error('⚠️ Erro nos webhooks:', webhookErr);
+    }
+
+    // Enviar conversão Facebook
+    try {
+      const eventId = `sislog_${order.order_id}_${Date.now()}`;
+      const nameParts = (order.customer_name || '').trim().split(' ');
+      
+      await supabaseAdmin.functions.invoke('send-facebook-conversion', {
+        body: {
+          productId: order.product_id,
+          userId: product?.user_id,
+          eventId: eventId,
+          eventName: 'Purchase',
+          value: amount,
+          currency: 'MZN',
+          orderId: order.order_id,
+          customer: {
+            email: order.customer_email,
+            phone: order.customer_phone || '',
+            firstName: nameParts[0] || '',
+            lastName: nameParts.slice(1).join(' ') || ''
+          },
+          eventSourceUrl: `https://kambafy.com/checkout/${order.product_id}`
+        }
+      });
+      
+      console.log('✅ Facebook conversion enviada');
+    } catch (fbErr) {
+      console.error('⚠️ Erro Facebook conversion:', fbErr);
+    }
+
+    // Processar order bumps
+    if (order.order_bump_data) {
+      try {
+        const bumps = Array.isArray(order.order_bump_data) ? order.order_bump_data : [order.order_bump_data];
+        
+        for (const bump of bumps) {
+          if (bump.bump_product_id) {
+            await supabaseAdmin
+              .from('customer_access')
+              .upsert({
+                customer_email: order.customer_email.toLowerCase().trim(),
+                customer_name: order.customer_name,
+                product_id: bump.bump_product_id,
+                order_id: order.order_id,
+                is_active: true,
+                access_granted_at: new Date().toISOString()
+              }, { onConflict: 'customer_email,product_id' });
+            
+            console.log('✅ Order bump access criado:', bump.bump_product_id);
           }
         }
-      } catch (balanceErr) {
-        console.error('⚠️ Error in balance credit:', balanceErr);
+      } catch (bumpErr) {
+        console.error('⚠️ Erro order bumps:', bumpErr);
       }
-
-      // Enviar email de confirmação
-      try {
-        await supabaseAdmin.functions.invoke('send-purchase-confirmation', {
-          body: { orderId: order.order_id }
-        });
-        console.log('✅ Purchase confirmation email sent');
-      } catch (emailErr) {
-        console.error('⚠️ Error sending confirmation email:', emailErr);
-      }
-
-      // Notificar vendedor
-      try {
-        await supabaseAdmin.functions.invoke('send-seller-notification-email', {
-          body: { orderId: order.order_id }
-        });
-        console.log('✅ Seller notification sent');
-      } catch (notifyErr) {
-        console.error('⚠️ Error sending seller notification:', notifyErr);
-      }
-
-      console.log('✅ Order fully processed:', order.order_id);
-      return new Response(JSON.stringify({ 
-        success: true, 
-        status: 'completed',
-        order_id: order.order_id 
-      }), { 
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-
-    } else {
-      console.log('❌ Payment failed for order:', order.order_id, 'status:', status);
-
-      // Atualizar para failed
-      const { error: updateError } = await supabaseAdmin
-        .from('orders')
-        .update({ 
-          status: 'failed', 
-          cancellation_reason: `Payment callback failed with status: ${status}`,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', order.id);
-
-      if (updateError) {
-        console.error('❌ Error updating order to failed:', updateError);
-      }
-
-      return new Response(JSON.stringify({ 
-        success: true, 
-        status: 'failed',
-        order_id: order.order_id 
-      }), { 
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
     }
+
+    console.log('✅ SISLOG callback processado com sucesso');
+
+    // Resposta igual ao Laravel: { message: 'Callback recebido com sucesso' }
+    return new Response(JSON.stringify({ message: 'Callback recebido com sucesso' }), { 
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
 
   } catch (error) {
-    console.error('❌ Error in sislog-callback:', error);
-    return new Response(JSON.stringify({ error: 'Internal server error', details: error.message }), { 
+    console.error('❌ Erro no sislog-callback:', error);
+    return new Response(JSON.stringify({ error: 'Erro interno', details: error.message }), { 
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
