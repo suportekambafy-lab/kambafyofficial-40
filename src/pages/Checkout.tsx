@@ -424,26 +424,53 @@ const Checkout = () => {
     };
     return phoneCodes[countryCode] || '+244';
   };
+  // Helper para formatar número - só mostra decimais se necessário
+  const formatAmount = (value: number): string => {
+    const rounded = Math.round(value * 100) / 100;
+    const hasDecimals = rounded % 1 !== 0;
+    
+    if (hasDecimals) {
+      return rounded.toFixed(2);
+    } else {
+      return Math.round(rounded).toString();
+    }
+  };
+
+  // Helper para formatar com separadores de milhar (pt-BR style)
+  const formatAmountLocale = (value: number): string => {
+    const rounded = Math.round(value * 100) / 100;
+    const hasDecimals = rounded % 1 !== 0;
+    
+    if (hasDecimals) {
+      return rounded.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    } else {
+      return Math.round(rounded).toLocaleString('pt-BR');
+    }
+  };
+
   const getDisplayPrice = useCallback((priceInKZ: number, isAlreadyConverted = false): string => {
     // Se já é um valor convertido (total calculado), apenas formatar
     if (isAlreadyConverted) {
       if (userCountry?.currency === 'EUR') {
-        const displayPrice = `€${priceInKZ.toFixed(2)}`;
+        const displayPrice = `€${formatAmount(priceInKZ)}`;
         console.log(`🚨 getDisplayPrice - VALOR JÁ CONVERTIDO EUR: ${displayPrice}`);
         return displayPrice;
       }
       if (userCountry?.currency === 'GBP') {
-        const displayPrice = `£${priceInKZ.toFixed(2)}`;
+        const displayPrice = `£${formatAmount(priceInKZ)}`;
         console.log(`🚨 getDisplayPrice - VALOR JÁ CONVERTIDO GBP: ${displayPrice}`);
         return displayPrice;
       }
       if (userCountry?.currency === 'USD') {
-        const displayPrice = `$${priceInKZ.toFixed(2)}`;
+        const displayPrice = `$${formatAmount(priceInKZ)}`;
         console.log(`🚨 getDisplayPrice - VALOR JÁ CONVERTIDO USD: ${displayPrice}`);
         return displayPrice;
       }
       if (userCountry?.currency === 'MXN') {
-        const displayPrice = `$${priceInKZ.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN`;
+        const hasDecimals = priceInKZ % 1 !== 0;
+        const displayPrice = hasDecimals
+          ? `$${priceInKZ.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN`
+          : `$${Math.round(priceInKZ).toLocaleString('es-MX')} MXN`;
         console.log(`🚨 getDisplayPrice - VALOR JÁ CONVERTIDO MXN: ${displayPrice}`);
         return displayPrice;
       }
@@ -461,12 +488,12 @@ const Checkout = () => {
         return displayPrice;
       }
       if (userCountry?.currency === 'MZN') {
-        const displayPrice = `${priceInKZ.toFixed(2)} MZN`;
+        const displayPrice = `${formatAmount(priceInKZ)} MZN`;
         console.log(`🚨 getDisplayPrice - VALOR JÁ CONVERTIDO MZN: ${displayPrice}`);
         return displayPrice;
       }
       // KZ ou outro
-      const displayPrice = `${parseFloat(priceInKZ.toString()).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KZ`;
+      const displayPrice = `${formatAmountLocale(priceInKZ)} KZ`;
       console.log(`🚨 getDisplayPrice - VALOR JÁ CONVERTIDO KZ: ${displayPrice}`);
       return displayPrice;
     }
@@ -474,7 +501,7 @@ const Checkout = () => {
     // Verificar se userCountry está disponível
     if (!userCountry) {
       console.log(`🚨 getDisplayPrice - GEO NOT READY: ${priceInKZ} KZ`);
-      return `${priceInKZ.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KZ`;
+      return `${formatAmountLocale(priceInKZ)} KZ`;
     }
 
     // SEMPRE usar preços personalizados se disponíveis para o país do usuário
@@ -482,13 +509,16 @@ const Checkout = () => {
       const customPrice = parseFloat(product.custom_prices[userCountry.code]);
       let displayPrice: string;
       if (userCountry.currency === 'EUR') {
-        displayPrice = `€${customPrice.toFixed(2)}`;
+        displayPrice = `€${formatAmount(customPrice)}`;
       } else if (userCountry.currency === 'GBP') {
-        displayPrice = `£${customPrice.toFixed(2)}`;
+        displayPrice = `£${formatAmount(customPrice)}`;
       } else if (userCountry.currency === 'USD') {
-        displayPrice = `$${customPrice.toFixed(2)}`;
+        displayPrice = `$${formatAmount(customPrice)}`;
       } else if (userCountry.currency === 'MXN') {
-        displayPrice = `$${customPrice.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN`;
+        const hasDecimals = customPrice % 1 !== 0;
+        displayPrice = hasDecimals
+          ? `$${customPrice.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN`
+          : `$${Math.round(customPrice).toLocaleString('es-MX')} MXN`;
       } else if (userCountry.currency === 'CLP') {
         displayPrice = `$${Math.round(customPrice).toLocaleString('es-CL')} CLP`;
       } else if (userCountry.currency === 'ARS') {
@@ -497,9 +527,9 @@ const Checkout = () => {
           ? `$${customPrice.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ARS`
           : `$${Math.round(customPrice).toLocaleString('es-AR')} ARS`;
       } else if (userCountry.currency === 'MZN') {
-        displayPrice = `${customPrice.toFixed(2)} MZN`;
+        displayPrice = `${formatAmount(customPrice)} MZN`;
       } else {
-        displayPrice = `${customPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KZ`;
+        displayPrice = `${formatAmountLocale(customPrice)} KZ`;
       }
       console.log(`🚨 getDisplayPrice - USANDO PREÇO PERSONALIZADO: ${priceInKZ} KZ -> ${displayPrice}`);
       return displayPrice;
@@ -508,7 +538,7 @@ const Checkout = () => {
     // Verificar se formatPrice está disponível antes de usar
     if (!formatPrice || !userCountry) {
       console.log(`🚨 getDisplayPrice - FORMAT NOT READY: ${priceInKZ} KZ`);
-      return `${priceInKZ.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KZ`;
+      return `${formatAmountLocale(priceInKZ)} KZ`;
     }
     try {
       const displayPrice = formatPrice(priceInKZ, userCountry, product?.custom_prices);
