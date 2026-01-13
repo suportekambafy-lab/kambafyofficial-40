@@ -288,12 +288,18 @@ const App = () => {
                            <Route path="stats" element={<AdminPermissionRoute requiredPermission="analytics"><OptimizedRoutes.AdminStats /></AdminPermissionRoute>} />
                          </Route>
                          
-                         {/* Admin MOZ Routes - Painel exclusivo para Moçambique */}
-                         <Route path="/admin/moz" element={<AdminProtectedRoute><AdminLayoutWrapperMoz /></AdminProtectedRoute>}>
-                           <Route index element={<OptimizedRoutes.AdminDashboardMoz />} />
-                           <Route path="sales" element={<OptimizedRoutes.AdminSalesMoz />} />
-                           <Route path="live" element={<OptimizedRoutes.AdminLiveViewMoz />} />
-                         </Route>
+                          {/* Admin MOZ Routes - Painel exclusivo para Moçambique */}
+                          <Route path="/admin/moz" element={<AdminProtectedRoute><AdminLayoutWrapperMoz /></AdminProtectedRoute>}>
+                            <Route index element={<OptimizedRoutes.AdminDashboardMoz />} />
+                            <Route path="sales" element={<OptimizedRoutes.AdminSalesMoz />} />
+                            <Route path="live" element={<OptimizedRoutes.AdminLiveViewMoz />} />
+                            <Route path="users" element={<OptimizedRoutes.AdminUsers />} />
+                            <Route path="products" element={<OptimizedRoutes.AdminProducts />} />
+                            <Route path="withdrawals" element={<AdminPermissionRoute requireSuperAdmin={true}><OptimizedRoutes.AdminWithdrawals /></AdminPermissionRoute>} />
+                            <Route path="identity" element={<OptimizedRoutes.AdminIdentityVerification />} />
+                            <Route path="refunds" element={<OptimizedRoutes.AdminRefunds />} />
+                            <Route path="reports" element={<OptimizedRoutes.AdminSellerReports />} />
+                          </Route>
                       
                        {/* Partner Routes */}
                        <Route path="/partners/apply" element={<OptimizedRoutes.PartnersApply />} />
