@@ -5461,6 +5461,7 @@ export type Database = {
           video_url: string
         }[]
       }
+      get_my_gamification_total_kz: { Args: never; Returns: number }
       get_onesignal_stats: {
         Args: never
         Returns: {
