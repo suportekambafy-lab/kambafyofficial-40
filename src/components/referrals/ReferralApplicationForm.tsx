@@ -5,7 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Instagram, Youtube, Facebook, Link2, Users, Send, Loader2 } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Instagram, Youtube, Facebook, Link2, Users, Send, Loader2, Clock, Zap } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -26,6 +27,7 @@ export function ReferralApplicationForm({ userId, userEmail, userName }: Referra
     other_social_url: '',
     audience_size: '',
     motivation: '',
+    preferred_reward_option: 'long_term' as 'long_term' | 'short_term',
   });
 
   const submitApplication = useMutation({
@@ -180,6 +182,78 @@ export function ReferralApplicationForm({ userId, userEmail, userName }: Referra
                 <SelectItem value="100k+">Mais de 100.000 seguidores</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Opção de Recompensa */}
+          <div className="space-y-4">
+            <div>
+              <Label className="text-base font-medium">Escolha sua opção de comissão *</Label>
+              <p className="text-sm text-muted-foreground mt-1">
+                Esta será a comissão que você receberá sobre as vendas dos seus indicados
+              </p>
+            </div>
+            
+            <RadioGroup
+              value={formData.preferred_reward_option}
+              onValueChange={(value: 'long_term' | 'short_term') => 
+                setFormData(prev => ({ ...prev, preferred_reward_option: value }))
+              }
+              className="grid gap-4 md:grid-cols-2"
+            >
+              {/* Opção A - Longo Prazo */}
+              <Label
+                htmlFor="long_term"
+                className={`flex cursor-pointer rounded-lg border-2 p-4 transition-all hover:border-primary/50 ${
+                  formData.preferred_reward_option === 'long_term' 
+                    ? 'border-primary bg-primary/5' 
+                    : 'border-border'
+                }`}
+              >
+                <RadioGroupItem value="long_term" id="long_term" className="sr-only" />
+                <div className="flex items-start gap-3 w-full">
+                  <div className="p-2 rounded-lg bg-blue-500/10">
+                    <Clock className="h-5 w-5 text-blue-500" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold">Longo Prazo</h4>
+                    <p className="text-2xl font-bold text-primary my-1">1,5%</p>
+                    <p className="text-sm text-muted-foreground">
+                      por <strong>12 meses</strong>
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Ideal para crescimento sustentável
+                    </p>
+                  </div>
+                </div>
+              </Label>
+
+              {/* Opção B - Curto Prazo */}
+              <Label
+                htmlFor="short_term"
+                className={`flex cursor-pointer rounded-lg border-2 p-4 transition-all hover:border-primary/50 ${
+                  formData.preferred_reward_option === 'short_term' 
+                    ? 'border-primary bg-primary/5' 
+                    : 'border-border'
+                }`}
+              >
+                <RadioGroupItem value="short_term" id="short_term" className="sr-only" />
+                <div className="flex items-start gap-3 w-full">
+                  <div className="p-2 rounded-lg bg-amber-500/10">
+                    <Zap className="h-5 w-5 text-amber-500" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold">Curto Prazo</h4>
+                    <p className="text-2xl font-bold text-primary my-1">2%</p>
+                    <p className="text-sm text-muted-foreground">
+                      por <strong>6 meses</strong>
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Ideal para alto volume inicial
+                    </p>
+                  </div>
+                </div>
+              </Label>
+            </RadioGroup>
           </div>
 
           {/* Motivação */}
