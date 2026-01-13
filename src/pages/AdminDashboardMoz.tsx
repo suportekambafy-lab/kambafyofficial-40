@@ -134,11 +134,21 @@ export default function AdminDashboardMoz() {
   // Format amount in Meticais
   const formatMT = (amount: number) => `${formatWithMaxTwoDecimals(amount)} MT`;
 
-  // Check if order is from Mozambique
+  // Check if order is from Mozambique (flexible matching)
   const isMozOrder = (order: any) => {
-    return order.customer_country === 'Moçambique' || 
-           order.currency === 'MZN' || 
-           ['emola', 'mpesa', 'card_mz'].includes(order.payment_method);
+    const country = (order.customer_country || '').toLowerCase();
+    const currency = (order.currency || '').toUpperCase();
+    const paymentMethod = (order.payment_method || '').toLowerCase();
+    
+    return (
+      country.includes('moçambique') ||
+      country.includes('mozambique') ||
+      country === 'mz' ||
+      currency === 'MZN' ||
+      paymentMethod === 'emola' ||
+      paymentMethod === 'mpesa' ||
+      paymentMethod === 'card_mz'
+    );
   };
 
   const loadVolumeData = useCallback(async () => {
@@ -173,6 +183,13 @@ export default function AdminDashboardMoz() {
         // Filter only MOZ orders
         const mozOrders = orders.filter(isMozOrder);
         
+        console.log('🇲🇿 MOZ Volume Data:', {
+          totalCompleted: orders.length,
+          mozCompleted: mozOrders.length,
+          dateRange: { start: startDate.toISOString(), end: endDate.toISOString() },
+          sampleOrder: mozOrders[0]
+        });
+        
         const groupedData: Record<string, { volume: number; count: number }> = {};
         
         mozOrders.forEach(order => {
@@ -190,6 +207,7 @@ export default function AdminDashboardMoz() {
           count: data.count
         }));
 
+        console.log('🇲🇿 Volume Chart Data:', chartData);
         setVolumeData(chartData);
       }
     } catch (error) {
@@ -250,15 +268,27 @@ export default function AdminDashboardMoz() {
   const loadStats = useCallback(async () => {
     try {
       // Fetch all orders and filter for MOZ
-      const { data: orders } = await supabase
+      const { data: orders, error } = await supabase
         .from('orders')
         .select('amount, status, customer_country, currency, payment_method')
         .neq('payment_method', 'member_access');
+
+      if (error) {
+        console.error('Error fetching orders:', error);
+        return;
+      }
 
       if (orders) {
         const mozOrders = orders.filter(isMozOrder);
         const completedOrders = mozOrders.filter(o => o.status === 'completed');
         const pendingOrders = mozOrders.filter(o => o.status === 'pending');
+        
+        console.log('🇲🇿 MOZ Dashboard Stats:', {
+          totalMozOrders: mozOrders.length,
+          completed: completedOrders.length,
+          pending: pendingOrders.length,
+          sampleOrder: mozOrders[0]
+        });
         
         const totalRevenue = completedOrders.reduce((sum, order) => 
           sum + (parseFloat(order.amount) || 0), 0
