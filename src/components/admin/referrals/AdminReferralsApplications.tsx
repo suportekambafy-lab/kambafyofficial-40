@@ -60,28 +60,20 @@ export function AdminReferralsApplications() {
 
   const approveApplication = useMutation({
     mutationFn: async (app: Application) => {
-      // Gerar código único
-      const { data: codeData, error: codeError } = await supabase
-        .rpc('generate_referral_code');
+      const { data, error } = await supabase
+        .rpc('approve_referral_application', {
+          application_id: app.id,
+          admin_name: 'Admin'
+        });
       
-      if (codeError) throw codeError;
-
-      const { error } = await supabase
-        .from('referral_program_applications')
-        .update({
-          status: 'approved',
-          referral_code: codeData,
-          approved_at: new Date().toISOString(),
-          approved_by: 'Admin',
-        })
-        .eq('id', app.id);
-
       if (error) throw error;
+      return data;
     },
     onSuccess: () => {
       toast.success('Candidatura aprovada com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['admin-referral-applications'] });
       queryClient.invalidateQueries({ queryKey: ['admin-referrals-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-pending-counts'] });
       setShowDetailsDialog(false);
     },
     onError: (error) => {
@@ -92,20 +84,20 @@ export function AdminReferralsApplications() {
 
   const rejectApplication = useMutation({
     mutationFn: async ({ app, reason }: { app: Application; reason: string }) => {
-      const { error } = await supabase
-        .from('referral_program_applications')
-        .update({
-          status: 'rejected',
-          rejection_reason: reason,
-        })
-        .eq('id', app.id);
+      const { data, error } = await supabase
+        .rpc('reject_referral_application', {
+          application_id: app.id,
+          reason: reason
+        });
 
       if (error) throw error;
+      return data;
     },
     onSuccess: () => {
       toast.success('Candidatura rejeitada');
       queryClient.invalidateQueries({ queryKey: ['admin-referral-applications'] });
       queryClient.invalidateQueries({ queryKey: ['admin-referrals-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-pending-counts'] });
       setShowRejectDialog(false);
       setShowDetailsDialog(false);
       setRejectionReason('');
