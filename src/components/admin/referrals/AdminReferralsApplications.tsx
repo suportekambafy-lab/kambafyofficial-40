@@ -26,11 +26,14 @@ interface Application {
   other_social_url: string | null;
   audience_size: string | null;
   motivation: string | null;
+  preferred_reward_option: string | null;
   status: string;
   rejection_reason: string | null;
   referral_code: string | null;
-  approved_at: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
   created_at: string;
+  updated_at: string;
 }
 
 export function AdminReferralsApplications() {
@@ -44,16 +47,12 @@ export function AdminReferralsApplications() {
   const { data: applications, isLoading } = useQuery({
     queryKey: ['admin-referral-applications', filter],
     queryFn: async () => {
-      let query = supabase
-        .from('referral_program_applications')
-        .select('*')
-        .order('created_at', { ascending: false });
+      // Usar RPC para bypass do RLS (admins não usam auth do Supabase)
+      const { data, error } = await supabase
+        .rpc('get_referral_applications_for_admin', {
+          status_filter: filter === 'all' ? null : filter
+        });
       
-      if (filter !== 'all') {
-        query = query.eq('status', filter);
-      }
-
-      const { data, error } = await query;
       if (error) throw error;
       return data as Application[];
     },
