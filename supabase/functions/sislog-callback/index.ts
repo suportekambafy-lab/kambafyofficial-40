@@ -147,7 +147,6 @@ Deno.serve(async (req) => {
       .update({ 
         status: 'completed', 
         updated_at: new Date().toISOString(),
-        payment_confirmed_at: new Date().toISOString(),
         original_amount: amount,
         original_currency: 'MZN'
       })
