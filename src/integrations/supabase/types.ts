@@ -5602,6 +5602,30 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_referral_applications_for_admin: {
+        Args: { status_filter?: string }
+        Returns: {
+          audience_size: string
+          created_at: string
+          facebook_url: string
+          id: string
+          instagram_url: string
+          motivation: string
+          other_social_url: string
+          preferred_reward_option: string
+          referral_code: string
+          rejection_reason: string
+          reviewed_at: string
+          reviewed_by: string
+          status: string
+          tiktok_url: string
+          updated_at: string
+          user_email: string
+          user_id: string
+          user_name: string
+          youtube_url: string
+        }[]
+      }
       get_seller_basic_info: {
         Args: { p_user_id: string }
         Returns: {
