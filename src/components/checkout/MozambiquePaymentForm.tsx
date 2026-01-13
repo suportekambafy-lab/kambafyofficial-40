@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -52,6 +52,62 @@ export const MozambiquePaymentForm = ({
   } | null>(null);
   const [copiedEntity, setCopiedEntity] = useState(false);
   const [copiedReference, setCopiedReference] = useState(false);
+  const pollingRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Polling para verificar status do pagamento
+  const checkOrderStatus = useCallback(async () => {
+    if (!referenceData?.orderId) return;
+    
+    try {
+      console.log('🇲🇿 [MZ-FORM] Verificando status:', referenceData.orderId);
+      const { data: order, error } = await supabase
+        .from('orders')
+        .select('status')
+        .eq('order_id', referenceData.orderId)
+        .single();
+      
+      if (error) {
+        console.error('❌ [MZ-FORM] Erro ao verificar status:', error);
+        return;
+      }
+      
+      console.log('📋 [MZ-FORM] Status atual:', order?.status);
+      
+      if (order?.status === 'completed') {
+        console.log('🎉 [MZ-FORM] Pagamento confirmado! Redirecionando...');
+        // Limpar polling
+        if (pollingRef.current) {
+          clearInterval(pollingRef.current);
+          pollingRef.current = null;
+        }
+        // Chamar callback de conclusão
+        onPaymentComplete?.(referenceData.orderId);
+      }
+    } catch (err) {
+      console.error('❌ [MZ-FORM] Erro no polling:', err);
+    }
+  }, [referenceData?.orderId, onPaymentComplete]);
+
+  // Iniciar polling quando referenceData existir
+  useEffect(() => {
+    if (!referenceData?.orderId) return;
+    
+    console.log('🔄 [MZ-FORM] Iniciando polling para:', referenceData.orderId);
+    
+    // Verificar imediatamente
+    checkOrderStatus();
+    
+    // Polling a cada 3 segundos
+    pollingRef.current = setInterval(checkOrderStatus, 3000);
+    
+    return () => {
+      if (pollingRef.current) {
+        console.log('🛑 [MZ-FORM] Parando polling');
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      }
+    };
+  }, [referenceData?.orderId, checkOrderStatus]);
 
   // Validate Mozambique phone number based on provider
   // M-Pesa (Vodacom): 84, 85
