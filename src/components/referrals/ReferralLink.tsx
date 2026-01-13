@@ -179,7 +179,7 @@ export function ReferralLink({ referralCode, onUpdateCode, isUpdating }: Referra
 
         {/* Instruções para usuário aprovado */}
         <div className="mt-4 p-4 bg-muted/50 rounded-lg">
-          <h4 className="font-medium mb-2">🚀 Próximos passos:</h4>
+          <h4 className="font-medium mb-2">Próximos passos:</h4>
           <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
             <li>Copie e partilhe seu link nas redes sociais</li>
             <li>Envie para amigos que queiram vender online</li>
