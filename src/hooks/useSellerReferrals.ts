@@ -43,6 +43,8 @@ export interface ReferralStats {
   totalEarnings: number;
   earningsThisMonth: number;
   earningsByCurrency: Record<string, number>;
+  linkClicks: number;
+  linkClicksThisMonth: number;
 }
 
 export interface ReferralApplication {
@@ -178,6 +180,34 @@ export function useSellerReferrals() {
     staleTime: 1000 * 60 * 2,
   });
 
+  // Buscar cliques no link
+  const { data: linkClicks } = useQuery({
+    queryKey: ['referral-link-clicks', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return { total: 0, thisMonth: 0 };
+      
+      const { data, error } = await supabase
+        .from('referral_link_clicks')
+        .select('created_at')
+        .eq('referrer_id', user.id);
+      
+      if (error) throw error;
+      
+      const now = new Date();
+      const thisMonthClicks = data?.filter(c => {
+        const date = new Date(c.created_at);
+        return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+      }).length || 0;
+      
+      return {
+        total: data?.length || 0,
+        thisMonth: thisMonthClicks,
+      };
+    },
+    enabled: !!user?.id,
+    staleTime: 1000 * 60 * 2,
+  });
+
   // Buscar quem indicou o usuário atual
   const { data: referredBy } = useQuery({
     queryKey: ['referred-by', user?.id],
@@ -223,6 +253,8 @@ export function useSellerReferrals() {
       acc[c.currency] = (acc[c.currency] || 0) + Number(c.commission_amount);
       return acc;
     }, {} as Record<string, number>) || {},
+    linkClicks: linkClicks?.total || 0,
+    linkClicksThisMonth: linkClicks?.thisMonth || 0,
   };
 
   // Mutation para escolher opção de recompensa
