@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Clock, CheckCircle, XCircle, Instagram, Youtube, Facebook, Link2 } from 'lucide-react';
+import { Clock, CheckCircle, XCircle, Instagram, Youtube, Facebook, Link2, Zap, TrendingUp } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -19,6 +19,7 @@ interface Application {
   other_social_url: string | null;
   audience_size: string | null;
   motivation: string | null;
+  preferred_reward_option: 'long_term' | 'short_term' | null;
 }
 
 interface ReferralApplicationStatusProps {
@@ -106,15 +107,50 @@ export function ReferralApplicationStatus({ application }: ReferralApplicationSt
         )}
 
         {application.status === 'approved' && (
-          <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
-            <p className="text-sm text-green-700 dark:text-green-400">
-              <CheckCircle className="h-4 w-4 inline mr-2" />
-              Sua candidatura foi aprovada! Agora você pode usar seu código de indicação.
-            </p>
-            {application.approved_at && (
-              <p className="text-xs text-green-600 dark:text-green-500 mt-1">
-                Aprovado em {format(new Date(application.approved_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+          <div className="space-y-3">
+            <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
+              <p className="text-sm text-green-700 dark:text-green-400">
+                <CheckCircle className="h-4 w-4 inline mr-2" />
+                Sua candidatura foi aprovada! Agora você pode usar seu código de indicação.
               </p>
+              {application.approved_at && (
+                <p className="text-xs text-green-600 dark:text-green-500 mt-1">
+                  Aprovado em {format(new Date(application.approved_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                </p>
+              )}
+            </div>
+            
+            {/* Plano de Comissão */}
+            {application.preferred_reward_option && (
+              <div className={`p-4 rounded-lg border-2 ${
+                application.preferred_reward_option === 'short_term' 
+                  ? 'bg-amber-500/10 border-amber-500/30' 
+                  : 'bg-blue-500/10 border-blue-500/30'
+              }`}>
+                <div className="flex items-center gap-3">
+                  {application.preferred_reward_option === 'short_term' ? (
+                    <div className="p-2 rounded-lg bg-amber-500/20">
+                      <Zap className="h-5 w-5 text-amber-500" />
+                    </div>
+                  ) : (
+                    <div className="p-2 rounded-lg bg-blue-500/20">
+                      <TrendingUp className="h-5 w-5 text-blue-500" />
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-xs text-muted-foreground">Seu Plano de Comissão</p>
+                    <p className="font-bold text-lg">
+                      {application.preferred_reward_option === 'short_term' ? '2%' : '1,5%'}
+                      <span className="text-sm font-normal text-muted-foreground ml-2">
+                        por {application.preferred_reward_option === 'short_term' ? '6 meses' : '12 meses'}
+                      </span>
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {application.preferred_reward_option === 'short_term' ? 'Curto Prazo' : 'Longo Prazo'}
+                    </p>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         )}
