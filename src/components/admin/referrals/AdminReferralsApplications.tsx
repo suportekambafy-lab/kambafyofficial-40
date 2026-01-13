@@ -323,6 +323,16 @@ export function AdminReferralsApplications() {
                   <p className="font-medium">{selectedApp.audience_size || 'Não informado'}</p>
                 </div>
                 <div>
+                  <p className="text-sm text-muted-foreground">Plano Escolhido</p>
+                  <p className="font-medium">
+                    {selectedApp.preferred_reward_option === 'short_term' 
+                      ? '2% por 6 meses' 
+                      : selectedApp.preferred_reward_option === 'long_term' 
+                        ? '1,5% por 12 meses' 
+                        : 'Não informado'}
+                  </p>
+                </div>
+                <div>
                   <p className="text-sm text-muted-foreground">Status</p>
                   {getStatusBadge(selectedApp.status)}
                 </div>
