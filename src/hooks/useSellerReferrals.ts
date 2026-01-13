@@ -189,7 +189,7 @@ export function useSellerReferrals() {
       const { data, error } = await supabase
         .from('referral_link_clicks')
         .select('created_at')
-        .eq('referral_code', referralCode);
+        .eq('referral_code', referralCode.toUpperCase());
       
       if (error) throw error;
       
@@ -205,7 +205,8 @@ export function useSellerReferrals() {
       };
     },
     enabled: !!referralCode,
-    staleTime: 1000 * 60 * 2,
+    staleTime: 1000 * 10,
+    refetchInterval: 1000 * 15,
   });
 
   // Buscar quem indicou o usuário atual
