@@ -180,16 +180,16 @@ export function useSellerReferrals() {
     staleTime: 1000 * 60 * 2,
   });
 
-  // Buscar cliques no link
+  // Buscar cliques no link (pelo código de referência)
   const { data: linkClicks } = useQuery({
-    queryKey: ['referral-link-clicks', user?.id],
+    queryKey: ['referral-link-clicks', referralCode],
     queryFn: async () => {
-      if (!user?.id) return { total: 0, thisMonth: 0 };
+      if (!referralCode) return { total: 0, thisMonth: 0 };
       
       const { data, error } = await supabase
         .from('referral_link_clicks')
         .select('created_at')
-        .eq('referrer_id', user.id);
+        .eq('referral_code', referralCode);
       
       if (error) throw error;
       
@@ -204,7 +204,7 @@ export function useSellerReferrals() {
         thisMonth: thisMonthClicks,
       };
     },
-    enabled: !!user?.id,
+    enabled: !!referralCode,
     staleTime: 1000 * 60 * 2,
   });
 
