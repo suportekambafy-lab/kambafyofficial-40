@@ -11,7 +11,6 @@ import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { Home, BarChart3, User } from 'lucide-react';
 import { getActualCurrency, getActualAmount, calculateSellerEarning } from '@/utils/currencyUtils';
 import { usePreferredCurrency } from '@/hooks/usePreferredCurrency';
-import { convertToKZ } from '@/utils/exchangeRates';
 
 interface Order {
   id: string;
@@ -48,8 +47,9 @@ export function MobileDashboard() {
   const [activeTab, setActiveTab] = useState('home');
   const [allOrders, setAllOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  // Total da Meta (gamificação) vem do banco (RPC) para evitar limite de 1000 rows
+  const [gamificationTotalKZ, setGamificationTotalKZ] = useState(0);
 
-  const lastPreferredCurrencyRef = useRef<string | null>(null);
   const userManuallyChangedCurrency = useRef(false);
 
   // Set default currency from user's preferred currency
@@ -124,6 +124,23 @@ export function MobileDashboard() {
     }
   }, [user]);
 
+  const loadGamificationTotal = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await (supabase as any).rpc('get_my_gamification_total_kz');
+      if (error) {
+        console.error('Error loading gamification total (RPC):', error);
+        return;
+      }
+
+      const total = typeof data === 'number' ? data : parseFloat(data || '0');
+      setGamificationTotalKZ(Number.isFinite(total) ? total : 0);
+    } catch (err) {
+      console.error('Error loading gamification total:', err);
+    }
+  }, [user]);
+
   // Filter orders in memory for instant response
   const filteredOrders = useMemo(() => {
     let filtered = [...allOrders];
@@ -185,31 +202,10 @@ export function MobileDashboard() {
     };
   }, [filteredOrders]);
 
-  // Calculate total sales data for progress bar (all orders, net value for gamification consistency)
-  const totalSalesData = useMemo(() => {
-    let totalRevenue = 0;
-    const totalSales = allOrders.length;
-
-    allOrders.forEach(order => {
-      const actualAmount = getActualAmount(order);
-      const actualCurrency = getActualCurrency(order);
-      
-      // Use net value (seller_commission) for gamification consistency with sidebar
-      const sellerEarning = calculateSellerEarning(actualAmount, actualCurrency);
-      
-      // Convert to KZ using centralized exchange rates
-      totalRevenue += convertToKZ(sellerEarning, actualCurrency);
-    });
-
-    return {
-      totalRevenue,
-      totalSales
-    };
-  }, [allOrders]);
-
   useEffect(() => {
     if (user) {
       loadAllOrders();
+      loadGamificationTotal();
       
       // Set up real-time subscription
       const channel = supabase
@@ -224,6 +220,7 @@ export function MobileDashboard() {
           (payload) => {
             console.log('Mobile dashboard orders update:', payload);
             loadAllOrders();
+            loadGamificationTotal();
           }
         )
         .subscribe();
@@ -232,7 +229,7 @@ export function MobileDashboard() {
         supabase.removeChannel(channel);
       };
     }
-  }, [user, loadAllOrders]);
+  }, [user, loadAllOrders, loadGamificationTotal]);
 
   const formatPrice = (amount: number, currency: string = 'KZ'): string => {
     return formatPriceForSeller(amount, currency);
@@ -244,13 +241,13 @@ export function MobileDashboard() {
   
   // Encontrar a próxima meta não alcançada
   for (let i = 0; i < kambaLevels.length; i++) {
-    if (totalSalesData.totalRevenue < kambaLevels[i]) {
+    if (gamificationTotalKZ < kambaLevels[i]) {
       goal = kambaLevels[i];
       break;
     }
   }
 
-  const progressPercentage = Math.min((totalSalesData.totalRevenue / goal) * 100, 100);
+  const progressPercentage = Math.min((gamificationTotalKZ / goal) * 100, 100);
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -268,7 +265,7 @@ export function MobileDashboard() {
           <>
             <MobileDashboardHeader 
               goal={goal}
-              totalRevenue={totalSalesData.totalRevenue}
+              totalRevenue={gamificationTotalKZ}
               progressPercentage={progressPercentage}
             />
 
