@@ -9,40 +9,34 @@ export function AdminReferralsDashboard() {
   const { data: stats, isLoading } = useQuery({
     queryKey: ['admin-referrals-stats'],
     queryFn: async () => {
-      // Buscar estatísticas de candidaturas
-      const { data: applications, error: appError } = await supabase
-        .from('referral_program_applications')
-        .select('status');
+      // Buscar estatísticas usando RPC para bypass RLS
+      const [applicationsResult, referralsResult, commissionsResult] = await Promise.all([
+        supabase.rpc('get_referral_applications_for_admin', { status_filter: null }),
+        supabase.from('seller_referrals').select('status'),
+        supabase.from('referral_commissions').select('commission_amount, status, currency')
+      ]);
       
-      if (appError) throw appError;
+      if (applicationsResult.error) throw applicationsResult.error;
+      if (referralsResult.error) throw referralsResult.error;
+      if (commissionsResult.error) throw commissionsResult.error;
 
-      // Buscar estatísticas de indicações
-      const { data: referrals, error: refError } = await supabase
-        .from('seller_referrals')
-        .select('status');
+      const applications = applicationsResult.data || [];
+      const referrals = referralsResult.data || [];
+      const commissions = commissionsResult.data || [];
+
+      const pendingApps = applications.filter(a => a.status === 'pending').length;
+      const approvedApps = applications.filter(a => a.status === 'approved').length;
+      const rejectedApps = applications.filter(a => a.status === 'rejected').length;
       
-      if (refError) throw refError;
+      const activeReferrals = referrals.filter(r => r.status === 'active').length;
+      const totalReferrals = referrals.length;
 
-      // Buscar comissões
-      const { data: commissions, error: comError } = await supabase
-        .from('referral_commissions')
-        .select('commission_amount, status, currency');
-      
-      if (comError) throw comError;
-
-      const pendingApps = applications?.filter(a => a.status === 'pending').length || 0;
-      const approvedApps = applications?.filter(a => a.status === 'approved').length || 0;
-      const rejectedApps = applications?.filter(a => a.status === 'rejected').length || 0;
-      
-      const activeReferrals = referrals?.filter(r => r.status === 'active').length || 0;
-      const totalReferrals = referrals?.length || 0;
-
-      const totalCommissions = commissions?.reduce((sum, c) => sum + Number(c.commission_amount), 0) || 0;
-      const pendingCommissions = commissions?.filter(c => c.status === 'pending')
-        .reduce((sum, c) => sum + Number(c.commission_amount), 0) || 0;
+      const totalCommissions = commissions.reduce((sum, c) => sum + Number(c.commission_amount), 0);
+      const pendingCommissions = commissions.filter(c => c.status === 'pending')
+        .reduce((sum, c) => sum + Number(c.commission_amount), 0);
 
       return {
-        totalApplications: applications?.length || 0,
+        totalApplications: applications.length,
         pendingApplications: pendingApps,
         approvedApplications: approvedApps,
         rejectedApplications: rejectedApps,
