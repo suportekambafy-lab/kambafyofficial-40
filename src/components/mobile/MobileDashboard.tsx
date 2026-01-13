@@ -50,6 +50,7 @@ export function MobileDashboard() {
   // Total da Meta (gamificação) vem do banco (RPC) para evitar limite de 1000 rows
   const [gamificationTotalKZ, setGamificationTotalKZ] = useState(0);
 
+  const lastPreferredCurrencyRef = useRef<string | null>(null);
   const userManuallyChangedCurrency = useRef(false);
 
   // Set default currency from user's preferred currency
