@@ -5605,6 +5605,8 @@ export type Database = {
       get_referral_applications_for_admin: {
         Args: { status_filter?: string }
         Returns: {
+          approved_at: string
+          approved_by: string
           audience_size: string
           created_at: string
           facebook_url: string
@@ -5615,8 +5617,6 @@ export type Database = {
           preferred_reward_option: string
           referral_code: string
           rejection_reason: string
-          reviewed_at: string
-          reviewed_by: string
           status: string
           tiktok_url: string
           updated_at: string
