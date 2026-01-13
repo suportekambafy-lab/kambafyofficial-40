@@ -8,9 +8,10 @@ import { CommissionHistory } from '@/components/referrals/CommissionHistory';
 import { ReferredByBanner } from '@/components/referrals/ReferredByBanner';
 import { ReferralApplicationForm } from '@/components/referrals/ReferralApplicationForm';
 import { ReferralApplicationStatus } from '@/components/referrals/ReferralApplicationStatus';
+import { ReferralBalance } from '@/components/referrals/ReferralBalance';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Users, History, Link2 } from 'lucide-react';
+import { Users, History, Link2, Wallet } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 
 export default function SellerReferrals() {
@@ -142,10 +143,14 @@ export default function SellerReferrals() {
 
       {/* Tabs */}
       <Tabs defaultValue="link" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-flex">
+        <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-flex">
           <TabsTrigger value="link" className="gap-2">
             <Link2 className="h-4 w-4" />
             <span className="hidden sm:inline">Meu Link</span>
+          </TabsTrigger>
+          <TabsTrigger value="balance" className="gap-2">
+            <Wallet className="h-4 w-4" />
+            <span className="hidden sm:inline">Saldo</span>
           </TabsTrigger>
           <TabsTrigger value="referrals" className="gap-2">
             <Users className="h-4 w-4" />
@@ -169,6 +174,12 @@ export default function SellerReferrals() {
               await updateReferralCode.mutateAsync(code);
             }}
             isUpdating={updateReferralCode.isPending}
+          />
+        </TabsContent>
+
+        <TabsContent value="balance">
+          <ReferralBalance
+            commissions={commissions || []}
           />
         </TabsContent>
 
