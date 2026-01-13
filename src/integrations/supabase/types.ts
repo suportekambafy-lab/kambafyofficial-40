@@ -3335,6 +3335,7 @@ export type Database = {
           onesignal_player_id: string | null
           preferred_currency: string | null
           push_notifications_enabled: boolean | null
+          referral_code: string | null
           retained_fixed_amount: number | null
           retention_reason: string | null
           retention_release_date: string | null
@@ -3362,6 +3363,7 @@ export type Database = {
           onesignal_player_id?: string | null
           preferred_currency?: string | null
           push_notifications_enabled?: boolean | null
+          referral_code?: string | null
           retained_fixed_amount?: number | null
           retention_reason?: string | null
           retention_release_date?: string | null
@@ -3389,6 +3391,7 @@ export type Database = {
           onesignal_player_id?: string | null
           preferred_currency?: string | null
           push_notifications_enabled?: boolean | null
+          referral_code?: string | null
           retained_fixed_amount?: number | null
           retention_reason?: string | null
           retention_release_date?: string | null
@@ -3624,6 +3627,54 @@ export type Database = {
           seller_user_id?: string
         }
         Relationships: []
+      }
+      referral_commissions: {
+        Row: {
+          commission_amount: number
+          created_at: string | null
+          currency: string | null
+          id: string
+          order_id: string
+          referral_id: string
+          sale_net_amount: number
+          status: string | null
+        }
+        Insert: {
+          commission_amount: number
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          order_id: string
+          referral_id: string
+          sale_net_amount: number
+          status?: string | null
+        }
+        Update: {
+          commission_amount?: number
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          order_id?: string
+          referral_id?: string
+          sale_net_amount?: number
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_commissions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_commissions_referral_id_fkey"
+            columns: ["referral_id"]
+            isOneToOne: false
+            referencedRelation: "seller_referrals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       refund_logs: {
         Row: {
@@ -4044,6 +4095,54 @@ export type Database = {
           type?: string
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      seller_referrals: {
+        Row: {
+          commission_rate: number | null
+          created_at: string | null
+          duration_months: number | null
+          expires_at: string | null
+          first_sale_at: string | null
+          fraud_check: Json | null
+          id: string
+          referral_code: string
+          referred_id: string
+          referrer_id: string
+          reward_option: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          commission_rate?: number | null
+          created_at?: string | null
+          duration_months?: number | null
+          expires_at?: string | null
+          first_sale_at?: string | null
+          fraud_check?: Json | null
+          id?: string
+          referral_code: string
+          referred_id: string
+          referrer_id: string
+          reward_option?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          commission_rate?: number | null
+          created_at?: string | null
+          duration_months?: number | null
+          expires_at?: string | null
+          first_sale_at?: string | null
+          fraud_check?: Json | null
+          id?: string
+          referral_code?: string
+          referred_id?: string
+          referrer_id?: string
+          reward_option?: string | null
+          status?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -5025,6 +5124,7 @@ export type Database = {
         }
         Returns: string
       }
+      expire_referrals: { Args: never; Returns: number }
       extend_customer_access: {
         Args: {
           p_customer_email: string
@@ -5069,6 +5169,7 @@ export type Database = {
         }[]
       }
       generate_api_key: { Args: never; Returns: string }
+      generate_referral_code: { Args: { user_name: string }; Returns: string }
       generate_renewal_token: {
         Args: { p_subscription_id: string }
         Returns: string
