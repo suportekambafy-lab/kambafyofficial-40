@@ -13,7 +13,7 @@ export interface SellerReferral {
   duration_months: number | null;
   first_sale_at: string | null;
   expires_at: string | null;
-  status: 'pending' | 'active' | 'expired' | 'cancelled';
+  status: 'pending' | 'awaiting_first_sale' | 'active' | 'expired' | 'cancelled';
   fraud_check: Record<string, any>;
   created_at: string;
   updated_at: string;
@@ -21,6 +21,7 @@ export interface SellerReferral {
     full_name: string | null;
     email: string | null;
   };
+  identity_verification_status?: string | null;
 }
 
 export interface ReferralCommission {
@@ -110,11 +111,19 @@ export function useSellerReferrals() {
         .select('user_id, full_name, email')
         .in('user_id', referredIds);
       
+      // Buscar status de verificação de identidade dos indicados
+      const { data: verifications } = await supabase
+        .from('identity_verification')
+        .select('user_id, status')
+        .in('user_id', referredIds);
+      
       const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+      const verificationMap = new Map(verifications?.map(v => [v.user_id, v.status]) || []);
       
       return data.map(referral => ({
         ...referral,
         referred_profile: profileMap.get(referral.referred_id) || null,
+        identity_verification_status: verificationMap.get(referral.referred_id) || null,
       })) as SellerReferral[];
     },
     enabled: !!user?.id,
@@ -183,7 +192,7 @@ export function useSellerReferrals() {
   const stats: ReferralStats = {
     totalReferred: referrals?.length || 0,
     activeReferred: referrals?.filter(r => r.status === 'active').length || 0,
-    pendingReferred: referrals?.filter(r => r.status === 'pending').length || 0,
+    pendingReferred: referrals?.filter(r => r.status === 'pending' || r.status === 'awaiting_first_sale').length || 0,
     expiredReferred: referrals?.filter(r => r.status === 'expired').length || 0,
     totalEarnings: commissions?.reduce((sum, c) => sum + Number(c.commission_amount), 0) || 0,
     earningsThisMonth: commissions?.filter(c => {

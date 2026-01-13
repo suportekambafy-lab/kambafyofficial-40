@@ -35,11 +35,38 @@ export function ReferralsList({ referrals, commissions, onChooseReward, isChoosi
   const [showRewardDialog, setShowRewardDialog] = useState(false);
 
   const getStatusBadge = (referral: SellerReferral) => {
+    // Se status é 'pending', verificar o motivo
+    if (referral.status === 'pending') {
+      if (!referral.identity_verification_status) {
+        return (
+          <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20">
+            Aguarda Verificação
+          </Badge>
+        );
+      }
+      if (referral.identity_verification_status === 'pendente') {
+        return (
+          <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20">
+            Verificação Pendente
+          </Badge>
+        );
+      }
+      if (referral.identity_verification_status === 'rejeitado') {
+        return (
+          <Badge className="bg-red-500/10 text-red-500 border-red-500/20">
+            Verificação Rejeitada
+          </Badge>
+        );
+      }
+    }
+    
     switch (referral.status) {
       case 'active':
         return <Badge className="bg-green-500/10 text-green-500 border-green-500/20">Ativo</Badge>;
+      case 'awaiting_first_sale':
+        return <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20">Aguarda 1ª Venda</Badge>;
       case 'pending':
-        return <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20">Aguardando</Badge>;
+        return <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20">Pendente</Badge>;
       case 'expired':
         return <Badge className="bg-gray-500/10 text-gray-500 border-gray-500/20">Expirado</Badge>;
       case 'cancelled':
@@ -50,19 +77,30 @@ export function ReferralsList({ referrals, commissions, onChooseReward, isChoosi
   };
 
   const getRewardLabel = (referral: SellerReferral) => {
+    // Só permite escolher opção se status é 'awaiting_first_sale' e ainda não escolheu
     if (!referral.reward_option) {
-      return (
-        <Button 
-          size="sm" 
-          variant="outline"
-          onClick={() => {
-            setSelectedReferral(referral);
-            setShowRewardDialog(true);
-          }}
-        >
-          Escolher Opção
-        </Button>
-      );
+      // Se ainda está pending (aguardando KYC), não mostrar botão
+      if (referral.status === 'pending') {
+        return <span className="text-xs text-muted-foreground">Aguarda verificação</span>;
+      }
+      
+      // Se está awaiting_first_sale ou active, pode escolher
+      if (referral.status === 'awaiting_first_sale' || referral.status === 'active') {
+        return (
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={() => {
+              setSelectedReferral(referral);
+              setShowRewardDialog(true);
+            }}
+          >
+            Escolher Opção
+          </Button>
+        );
+      }
+      
+      return <span className="text-xs text-muted-foreground">-</span>;
     }
     
     if (referral.reward_option === 'long_term') {
