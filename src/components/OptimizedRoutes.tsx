@@ -63,6 +63,7 @@ const CustomerArea = createLazyWithRetry(() => import('@/pages/CustomerArea'), "
 const AdminDashboardMoz = createLazyWithRetry(() => import('@/pages/AdminDashboardMoz'), "AdminDashboardMoz");
 const AdminSalesMoz = createLazyWithRetry(() => import('@/pages/AdminSalesMoz'), "AdminSalesMoz");
 const AdminLiveViewMoz = createLazyWithRetry(() => import('@/pages/AdminLiveViewMoz'), "AdminLiveViewMoz");
+const AdminRegionSelect = createLazyWithRetry(() => import('@/pages/AdminRegionSelect'), "AdminRegionSelect");
 const MeusAfiliados = createLazyWithRetry(() => import('@/pages/MeusAfiliados'), "MeusAfiliados");
 const UserIdentity = createLazyWithRetry(() => import('@/pages/UserIdentity'), "UserIdentity");
 const MyPurchases = createLazyWithRetry(() => import('@/pages/MyPurchases'), "MyPurchases");
@@ -257,4 +258,5 @@ export const OptimizedRoutes = {
   AdminDashboardMoz: withLazyLoading(AdminDashboardMoz, 'dashboard'),
   AdminSalesMoz: withLazyLoading(AdminSalesMoz, 'table'),
   AdminLiveViewMoz: withLazyLoading(AdminLiveViewMoz, 'dashboard'),
+  AdminRegionSelect: withLazyLoading(AdminRegionSelect, 'settings'),
 };
