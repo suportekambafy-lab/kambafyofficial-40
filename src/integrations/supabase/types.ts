@@ -3676,6 +3676,69 @@ export type Database = {
           },
         ]
       }
+      referral_program_applications: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          audience_size: string | null
+          created_at: string
+          facebook_url: string | null
+          id: string
+          instagram_url: string | null
+          motivation: string | null
+          other_social_url: string | null
+          referral_code: string | null
+          rejection_reason: string | null
+          status: string
+          tiktok_url: string | null
+          updated_at: string
+          user_email: string
+          user_id: string
+          user_name: string
+          youtube_url: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          audience_size?: string | null
+          created_at?: string
+          facebook_url?: string | null
+          id?: string
+          instagram_url?: string | null
+          motivation?: string | null
+          other_social_url?: string | null
+          referral_code?: string | null
+          rejection_reason?: string | null
+          status?: string
+          tiktok_url?: string | null
+          updated_at?: string
+          user_email: string
+          user_id: string
+          user_name: string
+          youtube_url?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          audience_size?: string | null
+          created_at?: string
+          facebook_url?: string | null
+          id?: string
+          instagram_url?: string | null
+          motivation?: string | null
+          other_social_url?: string | null
+          referral_code?: string | null
+          rejection_reason?: string | null
+          status?: string
+          tiktok_url?: string | null
+          updated_at?: string
+          user_email?: string
+          user_id?: string
+          user_name?: string
+          youtube_url?: string | null
+        }
+        Relationships: []
+      }
       refund_logs: {
         Row: {
           action: string
@@ -5169,7 +5232,9 @@ export type Database = {
         }[]
       }
       generate_api_key: { Args: never; Returns: string }
-      generate_referral_code: { Args: { user_name: string }; Returns: string }
+      generate_referral_code:
+        | { Args: never; Returns: string }
+        | { Args: { user_name: string }; Returns: string }
       generate_renewal_token: {
         Args: { p_subscription_id: string }
         Returns: string

@@ -5,14 +5,17 @@ import { ReferralStatsCards } from '@/components/referrals/ReferralStatsCards';
 import { ReferralsList } from '@/components/referrals/ReferralsList';
 import { CommissionHistory } from '@/components/referrals/CommissionHistory';
 import { ReferredByBanner } from '@/components/referrals/ReferredByBanner';
+import { ReferralApplicationForm } from '@/components/referrals/ReferralApplicationForm';
+import { ReferralApplicationStatus } from '@/components/referrals/ReferralApplicationStatus';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Users, History, Link2 } from 'lucide-react';
+import { Users, History, Link2, FileCheck } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 
 export default function SellerReferrals() {
   const { t } = useTranslation();
   const {
+    application,
     referralCode,
     referrals,
     commissions,
@@ -21,6 +24,9 @@ export default function SellerReferrals() {
     isLoading,
     chooseRewardOption,
     updateReferralCode,
+    userId,
+    userEmail,
+    userName,
   } = useSellerReferrals();
 
   if (isLoading) {
@@ -40,6 +46,75 @@ export default function SellerReferrals() {
     );
   }
 
+  // Se não tem candidatura, mostrar formulário
+  if (!application) {
+    return (
+      <div className="space-y-6 p-6">
+        <div>
+          <h1 className="text-2xl font-bold">Programa de Indicações</h1>
+          <p className="text-muted-foreground">
+            Candidate-se ao programa de indicações e ganhe comissões por cada vendedor que você indicar
+          </p>
+        </div>
+
+        {referredBy && (
+          <ReferredByBanner referrerName={referredBy.referrerName} />
+        )}
+
+        <ReferralApplicationForm
+          userId={userId!}
+          userEmail={userEmail!}
+          userName={userName || 'Vendedor'}
+        />
+
+        {/* Informações do programa */}
+        <div className="p-6 bg-muted/30 rounded-lg space-y-4">
+          <h3 className="font-semibold">Como funciona o programa</h3>
+          <div className="grid md:grid-cols-2 gap-6 text-sm text-muted-foreground">
+            <div>
+              <h4 className="font-medium text-foreground mb-2">✅ Benefícios</h4>
+              <ul className="space-y-1 list-disc list-inside">
+                <li>Ganhe comissões sobre vendas dos indicados</li>
+                <li>Escolha entre 1,5% por 12 meses ou 2% por 6 meses</li>
+                <li>Código de indicação personalizado</li>
+                <li>Dashboard completo para acompanhar seus ganhos</li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-medium text-foreground mb-2">📋 Requisitos</h4>
+              <ul className="space-y-1 list-disc list-inside">
+                <li>Ter pelo menos uma rede social ativa</li>
+                <li>Aprovação da equipe Kambafy</li>
+                <li>Concordar com os termos do programa</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Se candidatura pendente ou rejeitada, mostrar status
+  if (application.status !== 'approved') {
+    return (
+      <div className="space-y-6 p-6">
+        <div>
+          <h1 className="text-2xl font-bold">Programa de Indicações</h1>
+          <p className="text-muted-foreground">
+            Acompanhe o status da sua candidatura
+          </p>
+        </div>
+
+        {referredBy && (
+          <ReferredByBanner referrerName={referredBy.referrerName} />
+        )}
+
+        <ReferralApplicationStatus application={application} />
+      </div>
+    );
+  }
+
+  // Candidatura aprovada - mostrar dashboard completo
   return (
     <div className="space-y-6 p-6">
       {/* Header */}
