@@ -53,7 +53,7 @@ export default function SellerReferrals() {
         <div>
           <h1 className="text-2xl font-bold">Programa de Indicações</h1>
           <p className="text-lg text-primary font-semibold">
-            🎯 Ganhe até 2% por cada venda dos seus indicados!
+            Ganhe até 2% por cada venda dos seus indicados!
           </p>
           <p className="text-muted-foreground">
             Candidate-se ao programa e comece a ganhar comissões por cada vendedor que você indicar
