@@ -42,6 +42,21 @@ export function ReferralApplicationForm({ userId, userEmail, userName }: Referra
         });
 
       if (error) throw error;
+
+      // Enviar email de confirmação de candidatura
+      try {
+        await supabase.functions.invoke('send-referral-program-email', {
+          body: {
+            type: 'application_submitted',
+            userEmail,
+            userName,
+            rewardOption: formData.preferred_reward_option,
+          }
+        });
+      } catch (emailError) {
+        console.error('Error sending application email:', emailError);
+        // Não falhar a mutação se o email falhar
+      }
     },
     onSuccess: () => {
       toast.success('Candidatura enviada com sucesso!');

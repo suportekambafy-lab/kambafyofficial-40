@@ -281,3 +281,6 @@ verify_jwt = false
 
 [functions.process-seller-referral]
 verify_jwt = false
+
+[functions.send-referral-program-email]
+verify_jwt = false

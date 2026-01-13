@@ -67,6 +67,22 @@ export function AdminReferralsApplications() {
         });
       
       if (error) throw error;
+
+      // Enviar email de aprovação
+      try {
+        await supabase.functions.invoke('send-referral-program-email', {
+          body: {
+            type: 'application_approved',
+            userEmail: app.user_email,
+            userName: app.user_name,
+            referralCode: (data as any)?.referral_code || app.referral_code,
+            rewardOption: app.preferred_reward_option,
+          }
+        });
+      } catch (emailError) {
+        console.error('Error sending approval email:', emailError);
+      }
+
       return data;
     },
     onSuccess: () => {
@@ -91,6 +107,21 @@ export function AdminReferralsApplications() {
         });
 
       if (error) throw error;
+
+      // Enviar email de rejeição
+      try {
+        await supabase.functions.invoke('send-referral-program-email', {
+          body: {
+            type: 'application_rejected',
+            userEmail: app.user_email,
+            userName: app.user_name,
+            rejectionReason: reason,
+          }
+        });
+      } catch (emailError) {
+        console.error('Error sending rejection email:', emailError);
+      }
+
       return data;
     },
     onSuccess: () => {
