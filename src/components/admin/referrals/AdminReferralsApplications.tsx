@@ -30,8 +30,8 @@ interface Application {
   status: string;
   rejection_reason: string | null;
   referral_code: string | null;
-  reviewed_by: string | null;
-  reviewed_at: string | null;
+  approved_by: string | null;
+  approved_at: string | null;
   created_at: string;
   updated_at: string;
 }
