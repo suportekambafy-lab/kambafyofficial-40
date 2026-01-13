@@ -102,6 +102,7 @@ const menuItems = [
     href: '/admin/referrals',
     label: 'Indique e Ganhe',
     icon: Gift,
+    badgeKey: 'referrals' as const
   },
   {
     href: '/admin/apps',
@@ -130,7 +131,7 @@ export function AdminSidebar({ collapsed = false, onToggle }: AdminSidebarProps)
   const location = useLocation();
   const { counts } = useAdminPendingCounts();
 
-  const getBadgeCount = (badgeKey?: 'kyc' | 'payments' | 'withdrawals' | 'products') => {
+  const getBadgeCount = (badgeKey?: 'kyc' | 'payments' | 'withdrawals' | 'products' | 'referrals') => {
     if (!badgeKey) return 0;
     return counts[badgeKey];
   };

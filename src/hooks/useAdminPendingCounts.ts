@@ -6,6 +6,7 @@ interface PendingCounts {
   payments: number;
   withdrawals: number;
   products: number;
+  referrals: number;
 }
 
 export function useAdminPendingCounts() {
@@ -13,14 +14,15 @@ export function useAdminPendingCounts() {
     kyc: 0,
     payments: 0,
     withdrawals: 0,
-    products: 0
+    products: 0,
+    referrals: 0
   });
   const [loading, setLoading] = useState(true);
 
   const loadCounts = async () => {
     try {
       // Buscar contagens em paralelo
-      const [kycResult, paymentsResult, withdrawalsResult, productsResult] = await Promise.all([
+      const [kycResult, paymentsResult, withdrawalsResult, productsResult, referralsResult] = await Promise.all([
         // KYC pendentes (status em português: 'pendente')
         supabase
           .from('identity_verification')
@@ -44,14 +46,18 @@ export function useAdminPendingCounts() {
         supabase
           .from('products')
           .select('id', { count: 'exact', head: true })
-          .eq('status', 'Pendente')
+          .eq('status', 'Pendente'),
+
+        // Candidaturas de indicação pendentes - usar RPC para bypass RLS
+        supabase.rpc('get_referral_applications_for_admin', { status_filter: 'pending' })
       ]);
 
       setCounts({
         kyc: kycResult.count || 0,
         payments: paymentsResult.count || 0,
         withdrawals: withdrawalsResult.count || 0,
-        products: productsResult.count || 0
+        products: productsResult.count || 0,
+        referrals: referralsResult.data?.length || 0
       });
     } catch (error) {
       console.error('Error loading pending counts:', error);
@@ -83,6 +89,10 @@ export function useAdminPendingCounts() {
       supabase
         .channel('admin-products-changes')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, loadCounts)
+        .subscribe(),
+      supabase
+        .channel('admin-referrals-changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'referral_program_applications' }, loadCounts)
         .subscribe()
     ];
 
