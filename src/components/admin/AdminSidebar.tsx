@@ -20,7 +20,8 @@ import {
   RefreshCw,
   Sparkles,
   GraduationCap,
-  BarChart3
+  BarChart3,
+  Gift
 } from 'lucide-react';
 import kambabyLogo from '@/assets/kambafy-logo.png';
 import { useAdminPendingCounts } from '@/hooks/useAdminPendingCounts';
@@ -96,6 +97,11 @@ const menuItems = [
     href: '/admin/refunds',
     label: 'Reembolsos',
     icon: RefreshCw,
+  },
+  {
+    href: '/admin/referrals',
+    label: 'Indique e Ganhe',
+    icon: Gift,
   },
   {
     href: '/admin/apps',
