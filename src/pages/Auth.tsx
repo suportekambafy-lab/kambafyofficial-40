@@ -77,11 +77,32 @@ const Auth = () => {
   const navigate = useNavigate();
   const { checkLogin2FARequired, registerSuccessfulLogin } = useLogin2FA();
 
-  // Guardar código de indicação no localStorage quando presente na URL
+  // Guardar código de indicação no localStorage e rastrear clique
   useEffect(() => {
     if (referralCode) {
-      localStorage.setItem('pendingReferralCode', referralCode.toUpperCase());
-      console.log('📌 Código de indicação guardado:', referralCode);
+      const code = referralCode.toUpperCase();
+      localStorage.setItem('pendingReferralCode', code);
+      console.log('📌 Código de indicação guardado:', code);
+      
+      // Rastrear clique no link de referência
+      const trackClick = async () => {
+        try {
+          const { error } = await supabase.rpc('track_referral_click', {
+            p_referral_code: code,
+            p_user_agent: navigator.userAgent,
+          });
+          
+          if (error) {
+            console.error('Erro ao rastrear clique:', error);
+          } else {
+            console.log('📊 Clique no link de referência rastreado');
+          }
+        } catch (err) {
+          console.error('Erro ao rastrear clique:', err);
+        }
+      };
+      
+      trackClick();
     }
   }, [referralCode]);
 
