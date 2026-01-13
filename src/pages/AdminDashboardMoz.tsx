@@ -11,17 +11,22 @@ import {
   XCircle,
   MoreHorizontal,
   Loader2,
-  Filter
+  Filter,
+  CalendarIcon
 } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { SEO } from '@/components/SEO';
 import { AdminLayoutMoz } from '@/components/admin/AdminLayoutMoz';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { format, subDays, startOfMonth, startOfYear } from 'date-fns';
+import { format, subDays, startOfMonth, startOfYear, startOfDay, endOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
+import type { DateRange } from 'react-day-picker';
 
 // Metric Card Component
 interface MetricCardProps {
@@ -112,9 +117,6 @@ const STATUS_COLORS = {
   cancelled: 'hsl(280 60% 50%)'
 };
 
-// MOZ payment methods and currency filter
-const MOZ_FILTER = `customer_country.eq.Moçambique,currency.eq.MZN,payment_method.in.(emola,mpesa,card_mz)`;
-
 export default function AdminDashboardMoz() {
   const { admin } = useAdminAuth();
   const [loading, setLoading] = useState(true);
@@ -124,6 +126,12 @@ export default function AdminDashboardMoz() {
   const [volumeData, setVolumeData] = useState<{ date: string; volume: number; count: number }[]>([]);
   const [volumeLoading, setVolumeLoading] = useState(false);
   const [statusLoading, setStatusLoading] = useState(false);
+  const [statsLoading, setStatsLoading] = useState(false);
+  
+  // Global time filter
+  const [globalTimeFilter, setGlobalTimeFilter] = useState('all');
+  const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>();
+  
   const [stats, setStats] = useState({
     totalOrders: 0,
     totalRevenue: 0,
@@ -133,6 +141,59 @@ export default function AdminDashboardMoz() {
 
   // Format amount in Meticais
   const formatMT = (amount: number) => `${formatWithMaxTwoDecimals(amount)} MT`;
+
+  // Get date range based on global filter
+  const getGlobalDateRange = useCallback(() => {
+    const now = new Date();
+    let startDate: Date | null = null;
+    let endDate: Date = endOfDay(now);
+
+    switch (globalTimeFilter) {
+      case 'today':
+        startDate = startOfDay(now);
+        break;
+      case 'yesterday':
+        startDate = startOfDay(subDays(now, 1));
+        endDate = endOfDay(subDays(now, 1));
+        break;
+      case '7days':
+        startDate = startOfDay(subDays(now, 7));
+        break;
+      case '30days':
+        startDate = startOfDay(subDays(now, 30));
+        break;
+      case 'custom':
+        if (customDateRange?.from) {
+          startDate = startOfDay(customDateRange.from);
+          endDate = customDateRange.to ? endOfDay(customDateRange.to) : endOfDay(customDateRange.from);
+        }
+        break;
+      case 'all':
+      default:
+        startDate = null;
+        break;
+    }
+
+    return { startDate, endDate };
+  }, [globalTimeFilter, customDateRange]);
+
+  const getFilterLabel = () => {
+    switch (globalTimeFilter) {
+      case 'today': return 'Hoje';
+      case 'yesterday': return 'Ontem';
+      case '7days': return 'Últimos 7 dias';
+      case '30days': return 'Últimos 30 dias';
+      case 'custom': 
+        if (customDateRange?.from) {
+          const from = format(customDateRange.from, 'dd/MM', { locale: ptBR });
+          const to = customDateRange.to ? format(customDateRange.to, 'dd/MM', { locale: ptBR }) : from;
+          return `${from} - ${to}`;
+        }
+        return 'Personalizado';
+      case 'all':
+      default: return 'Todo o período';
+    }
+  };
 
   // Check if order is from Mozambique (MZN currency or MZ payment methods only)
   const isMozOrder = (order: any) => {
@@ -218,7 +279,7 @@ export default function AdminDashboardMoz() {
       // Fetch all orders and filter for MOZ
       const { data: orders } = await supabase
         .from('orders')
-        .select('status, customer_country, currency, payment_method')
+        .select('status, customer_country, currency, original_currency, payment_method')
         .gte('created_at', startDate.toISOString())
         .lte('created_at', endDate.toISOString())
         .neq('payment_method', 'member_access');
@@ -244,9 +305,15 @@ export default function AdminDashboardMoz() {
   }, [statusFilter]);
 
   const loadStats = useCallback(async () => {
+    setStatsLoading(true);
     try {
-      // Use RPC to bypass RLS for admin stats
-      const { data, error } = await supabase.rpc('get_mozambique_admin_stats');
+      const { startDate, endDate } = getGlobalDateRange();
+      
+      // Use RPC to bypass RLS for admin stats with date filter
+      const { data, error } = await supabase.rpc('get_mozambique_admin_stats', {
+        start_date: startDate?.toISOString() || null,
+        end_date: endDate?.toISOString() || null
+      });
 
       if (error) {
         console.error('Error fetching MOZ stats:', error);
@@ -268,8 +335,9 @@ export default function AdminDashboardMoz() {
       console.error('Error loading stats:', error);
     } finally {
       setLoading(false);
+      setStatsLoading(false);
     }
-  }, []);
+  }, [getGlobalDateRange]);
 
   useEffect(() => {
     if (admin) {
@@ -331,31 +399,97 @@ export default function AdminDashboardMoz() {
         noIndex 
       />
 
+      {/* Global Time Filter */}
+      <div className="flex flex-wrap items-center gap-3 mb-6">
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-[hsl(var(--admin-text-secondary))]" />
+          <span className="text-sm font-medium text-[hsl(var(--admin-text))]">Filtrar por período:</span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {[
+            { value: 'all', label: 'Todo o período' },
+            { value: 'today', label: 'Hoje' },
+            { value: 'yesterday', label: 'Ontem' },
+            { value: '7days', label: '7 dias' },
+            { value: '30days', label: '30 dias' },
+          ].map((filter) => (
+            <Button
+              key={filter.value}
+              variant={globalTimeFilter === filter.value ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setGlobalTimeFilter(filter.value)}
+              className={cn(
+                "transition-all duration-200",
+                globalTimeFilter === filter.value && "bg-emerald-600 hover:bg-emerald-700 shadow-md"
+              )}
+            >
+              {filter.label}
+            </Button>
+          ))}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={globalTimeFilter === 'custom' ? 'default' : 'outline'}
+                size="sm"
+                className={cn(
+                  "transition-all duration-200",
+                  globalTimeFilter === 'custom' && "bg-emerald-600 hover:bg-emerald-700 shadow-md"
+                )}
+              >
+                <CalendarIcon className="h-4 w-4 mr-2" />
+                {globalTimeFilter === 'custom' && customDateRange?.from 
+                  ? `${format(customDateRange.from, 'dd/MM', { locale: ptBR })}${customDateRange.to ? ` - ${format(customDateRange.to, 'dd/MM', { locale: ptBR })}` : ''}`
+                  : 'Personalizado'
+                }
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="range"
+                selected={customDateRange}
+                onSelect={(range) => {
+                  setCustomDateRange(range);
+                  if (range?.from) {
+                    setGlobalTimeFilter('custom');
+                  }
+                }}
+                numberOfMonths={2}
+                locale={ptBR}
+                className="pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+        {statsLoading && (
+          <Loader2 className="h-4 w-4 animate-spin text-emerald-500" />
+        )}
+      </div>
+
       {/* Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <MetricCard 
           title="Receita Total (MZN)"
           value={formatMT(stats.totalRevenue)}
-          subtitle="Em Moçambique"
+          subtitle={getFilterLabel()}
           variant="primary"
           icon={<DollarSign className="h-4 w-4 text-white" />}
         />
         <MetricCard 
           title="Total de Vendas"
           value={stats.totalOrders.toString()}
-          subtitle="Transações processadas"
+          subtitle={getFilterLabel()}
           icon={<ShoppingCart className="h-4 w-4 text-[hsl(var(--admin-text-secondary))]" />}
         />
         <MetricCard 
           title="Vendas Concluídas"
           value={stats.completedOrders.toString()}
-          subtitle="Pagamentos confirmados"
+          subtitle={getFilterLabel()}
           icon={<CheckCircle className="h-4 w-4 text-emerald-500" />}
         />
         <MetricCard 
           title="Vendas Pendentes"
           value={stats.pendingOrders.toString()}
-          subtitle="Aguardando confirmação"
+          subtitle={getFilterLabel()}
           icon={<Clock className="h-4 w-4 text-amber-500" />}
         />
       </div>

@@ -5461,7 +5461,9 @@ export type Database = {
           video_url: string
         }[]
       }
-      get_mozambique_admin_stats: { Args: never; Returns: Json }
+      get_mozambique_admin_stats:
+        | { Args: never; Returns: Json }
+        | { Args: { end_date?: string; start_date?: string }; Returns: Json }
       get_mozambique_volume_data: {
         Args: { days_back?: number }
         Returns: Json
