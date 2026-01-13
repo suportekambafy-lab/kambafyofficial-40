@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useKambaLevels } from '@/hooks/useKambaLevels';
@@ -9,6 +9,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Trophy, Crown, Target, Eye, EyeOff, Rocket } from 'lucide-react';
 import { usePreferredCurrency } from '@/hooks/usePreferredCurrency';
+import { convertToKZ } from '@/utils/exchangeRates';
 
 export function ModernKambaAchievements() {
   const {
@@ -26,12 +27,7 @@ export function ModernKambaAchievements() {
     achievedLevels,
     allLevels
   } = useKambaLevels(totalRevenue);
-  useEffect(() => {
-    if (user) {
-      loadTotalRevenue();
-    }
-  }, [user]);
-  const loadTotalRevenue = async () => {
+  const loadTotalRevenue = useCallback(async () => {
     if (!user) return;
     try {
       const {
@@ -53,26 +49,50 @@ export function ModernKambaAchievements() {
         return;
       }
       const total = orders?.reduce((sum, order) => {
+        // Use seller_commission (net value) for consistency
         let amount = parseFloat(order.seller_commission?.toString() || '0');
         if (amount === 0) {
           const grossAmount = parseFloat(order.amount || '0');
-          amount = grossAmount * 0.92;
+          // Apply commission: 8.99% for KZ, 9.99% for others
+          const commissionRate = order.currency === 'KZ' ? 0.0899 : 0.0999;
+          amount = grossAmount * (1 - commissionRate);
         }
-        if (order.currency && order.currency !== 'KZ') {
-          const exchangeRates: Record<string, number> = {
-            'EUR': 1053,
-            'MZN': 14.3
-          };
-          const rate = exchangeRates[order.currency.toUpperCase()] || 1;
-          amount = Math.round(amount * rate);
-        }
-        return sum + amount;
+        // Convert to KZ using centralized exchange rates
+        const currency = order.currency || 'KZ';
+        return sum + convertToKZ(amount, currency);
       }, 0) || 0;
       setTotalRevenue(total);
     } catch (error) {
       console.error('Error loading total revenue:', error);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      loadTotalRevenue();
+      
+      // Set up real-time subscription for orders
+      const channel = supabase
+        .channel('achievements-orders-realtime')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'orders'
+          },
+          (payload) => {
+            console.log('Achievements orders update:', payload);
+            loadTotalRevenue();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [user, loadTotalRevenue]);
   const scaleForDisplay = (valueKZ: number) => (displayCurrency === 'EUR' ? valueKZ / 1000 : valueKZ);
   const formatInt = (n: number) => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 

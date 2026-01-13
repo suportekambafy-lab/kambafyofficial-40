@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,6 +11,7 @@ import { formatPriceForSeller } from '@/utils/priceFormatting';
 import { Home, BarChart3, User } from 'lucide-react';
 import { getActualCurrency, getActualAmount, calculateSellerEarning } from '@/utils/currencyUtils';
 import { usePreferredCurrency } from '@/hooks/usePreferredCurrency';
+import { convertToKZ } from '@/utils/exchangeRates';
 
 interface Order {
   id: string;
@@ -185,7 +185,7 @@ export function MobileDashboard() {
     };
   }, [filteredOrders]);
 
-  // Calculate total sales data for progress bar (all orders, gross value for gamification)
+  // Calculate total sales data for progress bar (all orders, net value for gamification consistency)
   const totalSalesData = useMemo(() => {
     let totalRevenue = 0;
     const totalSales = allOrders.length;
@@ -194,20 +194,11 @@ export function MobileDashboard() {
       const actualAmount = getActualAmount(order);
       const actualCurrency = getActualCurrency(order);
       
-      // Convert to KZ for goal progress (gross value)
-      if (actualCurrency === 'KZ') {
-        totalRevenue += actualAmount;
-      } else if (actualCurrency === 'EUR') {
-        totalRevenue += actualAmount * 833;
-      } else if (actualCurrency === 'MZN') {
-        totalRevenue += actualAmount * 13;
-      } else if (actualCurrency === 'USD') {
-        totalRevenue += actualAmount * 750;
-      } else if (actualCurrency === 'GBP') {
-        totalRevenue += actualAmount * 950;
-      } else if (actualCurrency === 'BRL') {
-        totalRevenue += actualAmount * 150;
-      }
+      // Use net value (seller_commission) for gamification consistency with sidebar
+      const sellerEarning = calculateSellerEarning(actualAmount, actualCurrency);
+      
+      // Convert to KZ using centralized exchange rates
+      totalRevenue += convertToKZ(sellerEarning, actualCurrency);
     });
 
     return {
