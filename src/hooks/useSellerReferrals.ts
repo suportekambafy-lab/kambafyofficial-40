@@ -59,6 +59,7 @@ export interface ReferralApplication {
   other_social_url: string | null;
   audience_size: string | null;
   motivation: string | null;
+  preferred_reward_option: 'long_term' | 'short_term' | null;
   status: 'pending' | 'approved' | 'rejected';
   rejection_reason: string | null;
   referral_code: string | null;
