@@ -187,27 +187,27 @@ export default function SellerReferrals() {
         </TabsContent>
       </Tabs>
 
-      {/* Informações importantes */}
+      {/* Informações do programa para usuários aprovados */}
       <div className="mt-8 p-6 bg-muted/30 rounded-lg space-y-4">
-        <h3 className="font-semibold">Como funciona o sistema de indicação</h3>
+        <h3 className="font-semibold">Seu Programa de Indicações</h3>
         <div className="grid md:grid-cols-2 gap-6 text-sm text-muted-foreground">
           <div>
-            <h4 className="font-medium text-foreground mb-2">✅ Regras</h4>
+            <h4 className="font-medium text-foreground mb-2">📊 Seu Status</h4>
             <ul className="space-y-1 list-disc list-inside">
-              <li>A comissão só é ativada quando o indicado faz a primeira venda</li>
-              <li>Você escolhe entre 1,5% por 12 meses ou 2% por 6 meses</li>
-              <li>A comissão é calculada sobre o valor líquido da venda</li>
-              <li>O indicado não perde nenhuma comissão por ser indicado</li>
-              <li>O prazo começa a contar a partir da primeira venda</li>
+              <li>Status: <span className="text-green-600 font-medium">Aprovado ✓</span></li>
+              <li>Código: <span className="font-mono font-medium text-foreground">{referralCode}</span></li>
+              <li>Indicados ativos: <span className="font-medium text-foreground">{stats.activeReferred}</span></li>
+              <li>Total de indicados: <span className="font-medium text-foreground">{stats.totalReferred}</span></li>
+              <li>Total ganho: <span className="font-medium text-foreground">{Object.entries(stats.earningsByCurrency || {}).map(([currency, amount]) => `${amount.toLocaleString('pt-AO')} ${currency}`).join(', ') || '0 AOA'}</span></li>
             </ul>
           </div>
           <div>
-            <h4 className="font-medium text-foreground mb-2">❌ Limitações</h4>
+            <h4 className="font-medium text-foreground mb-2">💡 Dicas para Ganhar Mais</h4>
             <ul className="space-y-1 list-disc list-inside">
-              <li>Apenas 1 nível de indicação (sem rede em cadeia)</li>
-              <li>Não pode indicar a si mesmo ou contas duplicadas</li>
-              <li>A opção escolhida é definitiva e irreversível</li>
-              <li>Após o prazo, as comissões são encerradas automaticamente</li>
+              <li>Partilhe seu link nas redes sociais</li>
+              <li>Envie para amigos que queiram vender online</li>
+              <li>Quanto mais vendas seus indicados fizerem, mais você ganha</li>
+              <li>Acompanhe suas comissões no histórico</li>
             </ul>
           </div>
         </div>
