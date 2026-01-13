@@ -5461,6 +5461,11 @@ export type Database = {
           video_url: string
         }[]
       }
+      get_mozambique_admin_stats: { Args: never; Returns: Json }
+      get_mozambique_volume_data: {
+        Args: { days_back?: number }
+        Returns: Json
+      }
       get_my_gamification_total_kz: { Args: never; Returns: number }
       get_onesignal_stats: {
         Args: never

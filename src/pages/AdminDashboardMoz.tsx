@@ -19,7 +19,7 @@ import { SEO } from '@/components/SEO';
 import { AdminLayoutMoz } from '@/components/admin/AdminLayoutMoz';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { format, subDays, startOfMonth, startOfYear, parseISO, startOfDay, endOfDay } from 'date-fns';
+import { format, subDays, startOfMonth, startOfYear } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -154,64 +154,44 @@ export default function AdminDashboardMoz() {
   const loadVolumeData = useCallback(async () => {
     setVolumeLoading(true);
     try {
-      let startDate: Date;
-      const endDate = new Date();
-      
+      let daysBack = 7;
       switch (volumeFilter) {
         case '7days':
-          startDate = subDays(endDate, 7);
+          daysBack = 7;
           break;
         case 'month':
-          startDate = startOfMonth(endDate);
+          daysBack = 30;
           break;
         case 'year':
-          startDate = startOfYear(endDate);
+          daysBack = 365;
           break;
-        default:
-          startDate = subDays(endDate, 7);
       }
 
-      const { data: orders } = await supabase
-        .from('orders')
-        .select('created_at, amount, status, customer_country, currency, payment_method')
-        .gte('created_at', startDate.toISOString())
-        .lte('created_at', endDate.toISOString())
-        .eq('status', 'completed')
-        .neq('payment_method', 'member_access');
+      // Use RPC to bypass RLS for volume data
+      const { data, error } = await supabase.rpc('get_mozambique_volume_data', { days_back: daysBack });
 
-      if (orders) {
-        // Filter only MOZ orders
-        const mozOrders = orders.filter(isMozOrder);
-        
-        console.log('🇲🇿 MOZ Volume Data:', {
-          totalCompleted: orders.length,
-          mozCompleted: mozOrders.length,
-          dateRange: { start: startDate.toISOString(), end: endDate.toISOString() },
-          sampleOrder: mozOrders[0]
-        });
-        
-        const groupedData: Record<string, { volume: number; count: number }> = {};
-        
-        mozOrders.forEach(order => {
-          const dateKey = format(parseISO(order.created_at), volumeFilter === 'year' ? 'MMM' : 'dd/MM', { locale: ptBR });
-          if (!groupedData[dateKey]) {
-            groupedData[dateKey] = { volume: 0, count: 0 };
-          }
-          groupedData[dateKey].volume += parseFloat(order.amount) || 0;
-          groupedData[dateKey].count += 1;
-        });
+      if (error) {
+        console.error('Error fetching MOZ volume data:', error);
+        setVolumeData([]);
+        return;
+      }
 
-        const chartData = Object.entries(groupedData).map(([date, data]) => ({
-          date,
-          volume: data.volume,
-          count: data.count
+      if (data && Array.isArray(data)) {
+        console.log('🇲🇿 MOZ Volume Data (RPC):', data);
+        
+        const chartData = (data as { date: string; volume: number; count: number }[]).map((item) => ({
+          date: format(new Date(item.date), volumeFilter === 'year' ? 'MMM' : 'dd/MM', { locale: ptBR }),
+          volume: item.volume || 0,
+          count: item.count || 0
         }));
 
-        console.log('🇲🇿 Volume Chart Data:', chartData);
         setVolumeData(chartData);
+      } else {
+        setVolumeData([]);
       }
     } catch (error) {
       console.error('Error loading volume data:', error);
+      setVolumeData([]);
     } finally {
       setVolumeLoading(false);
     }
@@ -267,38 +247,23 @@ export default function AdminDashboardMoz() {
 
   const loadStats = useCallback(async () => {
     try {
-      // Fetch all orders and filter for MOZ
-      const { data: orders, error } = await supabase
-        .from('orders')
-        .select('amount, status, customer_country, currency, payment_method')
-        .neq('payment_method', 'member_access');
+      // Use RPC to bypass RLS for admin stats
+      const { data, error } = await supabase.rpc('get_mozambique_admin_stats');
 
       if (error) {
-        console.error('Error fetching orders:', error);
+        console.error('Error fetching MOZ stats:', error);
         return;
       }
 
-      if (orders) {
-        const mozOrders = orders.filter(isMozOrder);
-        const completedOrders = mozOrders.filter(o => o.status === 'completed');
-        const pendingOrders = mozOrders.filter(o => o.status === 'pending');
+      if (data) {
+        console.log('🇲🇿 MOZ Dashboard Stats (RPC):', data);
+        const statsData = data as { totalOrders: number; totalRevenue: number; completedOrders: number; pendingOrders: number };
         
-        console.log('🇲🇿 MOZ Dashboard Stats:', {
-          totalMozOrders: mozOrders.length,
-          completed: completedOrders.length,
-          pending: pendingOrders.length,
-          sampleOrder: mozOrders[0]
-        });
-        
-        const totalRevenue = completedOrders.reduce((sum, order) => 
-          sum + (parseFloat(order.amount) || 0), 0
-        );
-
         setStats({
-          totalOrders: mozOrders.length,
-          totalRevenue,
-          completedOrders: completedOrders.length,
-          pendingOrders: pendingOrders.length
+          totalOrders: statsData.totalOrders || 0,
+          totalRevenue: statsData.totalRevenue || 0,
+          completedOrders: statsData.completedOrders || 0,
+          pendingOrders: statsData.pendingOrders || 0
         });
       }
     } catch (error) {
