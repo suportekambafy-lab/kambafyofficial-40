@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, UserCheck, Clock, TrendingUp, Wallet, CalendarDays } from 'lucide-react';
+import { Users, UserCheck, Clock, TrendingUp, Wallet, CalendarDays, MousePointerClick } from 'lucide-react';
 import { ReferralStats } from '@/hooks/useSellerReferrals';
 
 interface ReferralStatsCardsProps {
@@ -28,6 +28,14 @@ export function ReferralStatsCards({ stats }: ReferralStatsCardsProps) {
 
   const cards = [
     {
+      title: 'Cliques no Link',
+      value: stats.linkClicks,
+      icon: MousePointerClick,
+      description: `${stats.linkClicksThisMonth} este mês`,
+      color: 'text-purple-500',
+      bgColor: 'bg-purple-500/10',
+    },
+    {
       title: 'Total Indicados',
       value: stats.totalReferred,
       icon: Users,
@@ -50,14 +58,6 @@ export function ReferralStatsCards({ stats }: ReferralStatsCardsProps) {
       description: 'Ainda não venderam',
       color: 'text-amber-500',
       bgColor: 'bg-amber-500/10',
-    },
-    {
-      title: 'Expirados',
-      value: stats.expiredReferred,
-      icon: CalendarDays,
-      description: 'Prazo encerrado',
-      color: 'text-gray-500',
-      bgColor: 'bg-gray-500/10',
     },
     {
       title: 'Total Ganho',

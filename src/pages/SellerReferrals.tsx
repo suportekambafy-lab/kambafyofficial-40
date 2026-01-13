@@ -2,6 +2,7 @@ import React from 'react';
 import { useSellerReferrals } from '@/hooks/useSellerReferrals';
 import { ReferralLink } from '@/components/referrals/ReferralLink';
 import { ReferralStatsCards } from '@/components/referrals/ReferralStatsCards';
+import { ReferralCommissionsChart } from '@/components/referrals/ReferralCommissionsChart';
 import { ReferralsList } from '@/components/referrals/ReferralsList';
 import { CommissionHistory } from '@/components/referrals/CommissionHistory';
 import { ReferredByBanner } from '@/components/referrals/ReferredByBanner';
@@ -9,7 +10,7 @@ import { ReferralApplicationForm } from '@/components/referrals/ReferralApplicat
 import { ReferralApplicationStatus } from '@/components/referrals/ReferralApplicationStatus';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Users, History, Link2, FileCheck } from 'lucide-react';
+import { Users, History, Link2 } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 
 export default function SellerReferrals() {
@@ -135,6 +136,9 @@ export default function SellerReferrals() {
 
       {/* Stats Cards */}
       <ReferralStatsCards stats={stats} />
+
+      {/* Gráfico de Comissões */}
+      <ReferralCommissionsChart commissions={commissions || []} />
 
       {/* Tabs */}
       <Tabs defaultValue="link" className="space-y-6">

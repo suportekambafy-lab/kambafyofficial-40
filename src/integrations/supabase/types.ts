@@ -3685,6 +3685,39 @@ export type Database = {
           },
         ]
       }
+      referral_link_clicks: {
+        Row: {
+          city: string | null
+          country: string | null
+          created_at: string
+          id: string
+          ip_address: string | null
+          referral_code: string
+          referrer_id: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          referral_code: string
+          referrer_id?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          referral_code?: string
+          referrer_id?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       referral_program_applications: {
         Row: {
           approved_at: string | null
@@ -5760,6 +5793,16 @@ export type Database = {
       }
       seller_process_refund: {
         Args: { p_action: string; p_comment?: string; p_refund_id: string }
+        Returns: Json
+      }
+      track_referral_click: {
+        Args: {
+          p_city?: string
+          p_country?: string
+          p_ip_address?: string
+          p_referral_code: string
+          p_user_agent?: string
+        }
         Returns: Json
       }
       unaccent: { Args: { "": string }; Returns: string }
