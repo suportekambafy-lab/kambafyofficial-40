@@ -211,6 +211,13 @@ export default function SellerReferrals() {
             <ul className="space-y-1 list-disc list-inside">
               <li>Status: <span className="text-green-600 font-medium">Aprovado ✓</span></li>
               <li>Código: <span className="font-mono font-medium text-foreground">{referralCode}</span></li>
+              <li>Plano: <span className="font-medium text-foreground">
+                {application?.preferred_reward_option === 'short_term' 
+                  ? '2% por 6 meses' 
+                  : application?.preferred_reward_option === 'long_term' 
+                    ? '1,5% por 12 meses' 
+                    : 'Não definido'}
+              </span></li>
               <li>Indicados ativos: <span className="font-medium text-foreground">{stats.activeReferred}</span></li>
               <li>Total de indicados: <span className="font-medium text-foreground">{stats.totalReferred}</span></li>
               <li>Total ganho: <span className="font-medium text-foreground">{Object.entries(stats.earningsByCurrency || {}).map(([currency, amount]) => `${amount.toLocaleString('pt-AO')} ${currency}`).join(', ') || '0 AOA'}</span></li>
