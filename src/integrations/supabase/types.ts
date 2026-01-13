@@ -3687,6 +3687,7 @@ export type Database = {
           instagram_url: string | null
           motivation: string | null
           other_social_url: string | null
+          preferred_reward_option: string | null
           referral_code: string | null
           rejection_reason: string | null
           status: string
@@ -3707,6 +3708,7 @@ export type Database = {
           instagram_url?: string | null
           motivation?: string | null
           other_social_url?: string | null
+          preferred_reward_option?: string | null
           referral_code?: string | null
           rejection_reason?: string | null
           status?: string
@@ -3727,6 +3729,7 @@ export type Database = {
           instagram_url?: string | null
           motivation?: string | null
           other_social_url?: string | null
+          preferred_reward_option?: string | null
           referral_code?: string | null
           rejection_reason?: string | null
           status?: string
