@@ -63,6 +63,7 @@ const SellerReports = createLazyWithRetry(() => import("./SellerReports"), "Sell
 const SellerRefunds = createLazyWithRetry(() => import("./SellerRefunds"), "SellerRefunds");
 const SellerSubscriptions = createLazyWithRetry(() => import("./SellerSubscriptions"), "SellerSubscriptions");
 const LiveView = createLazyWithRetry(() => import("./LiveView"), "LiveView");
+const SellerReferrals = createLazyWithRetry(() => import("./SellerReferrals"), "SellerReferrals");
 
 function SellerDashboardContent() {
   const location = useLocation();
@@ -127,6 +128,7 @@ function SellerDashboardContent() {
                 <Route path="/modulos-pagamentos" element={<SellerMemberModulePayments />} />
                 <Route path="/marketplace" element={<KambaExtra />} />
                 <Route path="/afiliados" element={<MeusAfiliados />} />
+                <Route path="/indicacoes" element={<SellerReferrals />} />
                 <Route path="/assinaturas" element={<SellerSubscriptions />} />
                 <Route path="/reembolsos" element={<SellerRefunds />} />
                 <Route path="/relatorios" element={<SellerReports />} />
