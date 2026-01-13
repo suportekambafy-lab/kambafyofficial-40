@@ -40,6 +40,7 @@ const Auth = () => {
   const [searchParams] = useSearchParams();
   const mode = searchParams.get('mode');
   const userTypeParam = searchParams.get('type') as 'customer' | 'seller' | null;
+  const referralCode = searchParams.get('ref'); // Capturar código de indicação
   const [currentView, setCurrentView] = useState<'login' | 'signup' | 'password-recovery' | 'reset-password' | 'signup-verification' | '2fa-verification'>('login');
   const [selectedUserType, setSelectedUserType] = useState<'customer' | 'seller' | null>(userTypeParam);
   
@@ -76,6 +77,14 @@ const Auth = () => {
   const navigate = useNavigate();
   const { checkLogin2FARequired, registerSuccessfulLogin } = useLogin2FA();
 
+  // Guardar código de indicação no localStorage quando presente na URL
+  useEffect(() => {
+    if (referralCode) {
+      localStorage.setItem('pendingReferralCode', referralCode.toUpperCase());
+      console.log('📌 Código de indicação guardado:', referralCode);
+    }
+  }, [referralCode]);
+
   useEffect(() => {
     if (mode === 'signup') {
       setCurrentView('signup');
@@ -88,7 +97,13 @@ const Auth = () => {
     if (userTypeParam && (userTypeParam === 'customer' || userTypeParam === 'seller')) {
       setSelectedUserType(userTypeParam);
     }
-  }, [mode, userTypeParam]);
+    
+    // Se veio com código de indicação, ir direto para signup como vendedor
+    if (referralCode && !userTypeParam) {
+      setSelectedUserType('seller');
+      setCurrentView('signup');
+    }
+  }, [mode, userTypeParam, referralCode]);
 
   useEffect(() => {
     // Não redirecionar se está verificando 2FA ou aguardando verificação
