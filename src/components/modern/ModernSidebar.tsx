@@ -42,6 +42,7 @@ const menuItems = [
   { key: "menu.modulePayments", href: "/vendedor/modulos-pagamentos", icon: Coins },
   { key: "menu.marketplace", href: "/vendedor/marketplace", icon: Store },
   { key: "menu.affiliates", href: "/vendedor/afiliados", icon: UserCheck },
+  { key: "menu.referrals", href: "/vendedor/indicacoes", icon: Users },
   { key: "menu.subscriptions", href: "/vendedor/assinaturas", icon: CreditCard },
   { key: "menu.refunds", href: "/vendedor/reembolsos", icon: AlertCircle },
   { key: "menu.reports", href: "/vendedor/relatorios", icon: FileText, isNew: true },
