@@ -45,48 +45,67 @@ export interface ReferralStats {
   earningsByCurrency: Record<string, number>;
 }
 
+export interface ReferralApplication {
+  id: string;
+  user_id: string;
+  user_email: string;
+  user_name: string;
+  instagram_url: string | null;
+  youtube_url: string | null;
+  tiktok_url: string | null;
+  facebook_url: string | null;
+  other_social_url: string | null;
+  audience_size: string | null;
+  motivation: string | null;
+  status: 'pending' | 'approved' | 'rejected';
+  rejection_reason: string | null;
+  referral_code: string | null;
+  approved_at: string | null;
+  created_at: string;
+}
+
 export function useSellerReferrals() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Buscar código de indicação do usuário
-  const { data: referralCode, isLoading: isLoadingCode } = useQuery({
-    queryKey: ['referral-code', user?.id],
+  // Buscar perfil do usuário
+  const { data: profile } = useQuery({
+    queryKey: ['user-profile', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('user_id', user.id)
+        .single();
+      return data;
+    },
+    enabled: !!user?.id,
+    staleTime: 1000 * 60 * 10,
+  });
+
+  // Buscar candidatura ao programa
+  const { data: application, isLoading: isLoadingApplication } = useQuery({
+    queryKey: ['referral-application', user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
       
       const { data, error } = await supabase
-        .from('profiles')
-        .select('referral_code, full_name')
+        .from('referral_program_applications')
+        .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
-      
-      // Se não tem código, gerar um
-      if (!data.referral_code) {
-        const { data: newCode, error: rpcError } = await supabase
-          .rpc('generate_referral_code', { user_name: data.full_name || 'USER' });
-        
-        if (rpcError) throw rpcError;
-        
-        // Salvar o código gerado
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({ referral_code: newCode })
-          .eq('user_id', user.id);
-        
-        if (updateError) throw updateError;
-        
-        return newCode as string;
-      }
-      
-      return data.referral_code;
+      return data as ReferralApplication | null;
     },
     enabled: !!user?.id,
-    staleTime: 1000 * 60 * 10, // 10 minutos
+    staleTime: 1000 * 60 * 5,
   });
+
+  // Código de indicação vem da candidatura aprovada
+  const referralCode = application?.status === 'approved' ? application.referral_code : null;
 
   // Buscar indicações feitas pelo usuário
   const { data: referrals, isLoading: isLoadingReferrals } = useQuery({
@@ -242,7 +261,7 @@ export function useSellerReferrals() {
     },
   });
 
-  // Mutation para atualizar código de indicação
+  // Mutation para atualizar código de indicação (na tabela de candidaturas)
   const updateReferralCode = useMutation({
     mutationFn: async (newCode: string) => {
       const code = newCode.toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -252,9 +271,10 @@ export function useSellerReferrals() {
       }
       
       const { error } = await supabase
-        .from('profiles')
+        .from('referral_program_applications')
         .update({ referral_code: code })
-        .eq('user_id', user?.id);
+        .eq('user_id', user?.id)
+        .eq('status', 'approved');
       
       if (error) {
         if (error.code === '23505') {
@@ -266,7 +286,7 @@ export function useSellerReferrals() {
       return code;
     },
     onSuccess: (code) => {
-      queryClient.invalidateQueries({ queryKey: ['referral-code'] });
+      queryClient.invalidateQueries({ queryKey: ['referral-application'] });
       toast({
         title: 'Código atualizado!',
         description: `Seu novo código é: ${code}`,
@@ -282,13 +302,17 @@ export function useSellerReferrals() {
   });
 
   return {
+    application,
     referralCode,
     referrals,
     commissions,
     stats,
     referredBy,
-    isLoading: isLoadingCode || isLoadingReferrals || isLoadingCommissions,
+    isLoading: isLoadingApplication || isLoadingReferrals || isLoadingCommissions,
     chooseRewardOption,
     updateReferralCode,
+    userId: user?.id,
+    userEmail: user?.email,
+    userName: profile?.full_name,
   };
 }
