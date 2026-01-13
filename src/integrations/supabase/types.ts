@@ -3332,10 +3332,13 @@ export type Database = {
           id: string
           is_creator: boolean | null
           language: string | null
+          last_login_ip: string | null
           onesignal_player_id: string | null
           preferred_currency: string | null
           push_notifications_enabled: boolean | null
           referral_code: string | null
+          registration_fingerprint: string | null
+          registration_ip: string | null
           retained_fixed_amount: number | null
           retention_reason: string | null
           retention_release_date: string | null
@@ -3360,10 +3363,13 @@ export type Database = {
           id?: string
           is_creator?: boolean | null
           language?: string | null
+          last_login_ip?: string | null
           onesignal_player_id?: string | null
           preferred_currency?: string | null
           push_notifications_enabled?: boolean | null
           referral_code?: string | null
+          registration_fingerprint?: string | null
+          registration_ip?: string | null
           retained_fixed_amount?: number | null
           retention_reason?: string | null
           retention_release_date?: string | null
@@ -3388,10 +3394,13 @@ export type Database = {
           id?: string
           is_creator?: boolean | null
           language?: string | null
+          last_login_ip?: string | null
           onesignal_player_id?: string | null
           preferred_currency?: string | null
           push_notifications_enabled?: boolean | null
           referral_code?: string | null
+          registration_fingerprint?: string | null
+          registration_ip?: string | null
           retained_fixed_amount?: number | null
           retention_reason?: string | null
           retention_release_date?: string | null
@@ -4172,13 +4181,17 @@ export type Database = {
           expires_at: string | null
           first_sale_at: string | null
           fraud_check: Json | null
+          fraud_flags: Json | null
           id: string
+          ip_match_detected: boolean | null
+          is_valid: boolean | null
           referral_code: string
           referred_id: string
           referrer_id: string
           reward_option: string | null
           status: string | null
           updated_at: string | null
+          validation_notes: string | null
         }
         Insert: {
           commission_rate?: number | null
@@ -4187,13 +4200,17 @@ export type Database = {
           expires_at?: string | null
           first_sale_at?: string | null
           fraud_check?: Json | null
+          fraud_flags?: Json | null
           id?: string
+          ip_match_detected?: boolean | null
+          is_valid?: boolean | null
           referral_code: string
           referred_id: string
           referrer_id: string
           reward_option?: string | null
           status?: string | null
           updated_at?: string | null
+          validation_notes?: string | null
         }
         Update: {
           commission_rate?: number | null
@@ -4202,13 +4219,17 @@ export type Database = {
           expires_at?: string | null
           first_sale_at?: string | null
           fraud_check?: Json | null
+          fraud_flags?: Json | null
           id?: string
+          ip_match_detected?: boolean | null
+          is_valid?: boolean | null
           referral_code?: string
           referred_id?: string
           referrer_id?: string
           reward_option?: string | null
           status?: string | null
           updated_at?: string | null
+          validation_notes?: string | null
         }
         Relationships: []
       }

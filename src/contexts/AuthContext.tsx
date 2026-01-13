@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/useCustomToast';
 import { BannedUserDialog } from '@/components/BannedUserDialog';
 import { linkOneSignalExternalId } from '@/utils/onesignal-external-id';
+import { captureFullTrackingData } from '@/utils/ipTracker';
 
 interface AuthContextType {
   user: User | null;
@@ -465,6 +466,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Verificar se o usuário está banido
       if (data.user) {
         await checkUserBanStatus(data.user);
+        
+        // Capturar IP de login em background
+        captureFullTrackingData(data.user.id, false).catch(err => {
+          console.error('Erro ao capturar IP de login:', err);
+        });
       }
 
       // Vincular OneSignal External ID (se for acesso via app)
