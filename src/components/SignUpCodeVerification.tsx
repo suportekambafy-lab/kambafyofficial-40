@@ -185,45 +185,71 @@ const SignUpCodeVerification = ({
 
       console.log('✅ Login realizado com sucesso após confirmação!');
       
+      const { data: authUser } = await supabase.auth.getUser();
+      
       // Salvar país no profile se existir
       const savedCountry = localStorage.getItem('signupCountry');
-      if (savedCountry) {
-        const { data: authUser } = await supabase.auth.getUser();
-        if (authUser?.user) {
-          const currencyMap: Record<string, string> = {
-            'AO': 'KZ',
-            'MZ': 'MZN',
-            'PT': 'EUR',
-            'ES': 'EUR',
-            'BR': 'BRL',
-            'GB': 'GBP',
-            'US': 'USD'
-          };
-          
-          const preferredCurrency = currencyMap[savedCountry] || 'KZ';
-          
-          // Usar upsert para garantir que o perfil seja atualizado mesmo se foi criado pelo trigger
-          const { error: updateError } = await supabase.from('profiles').upsert({
-            user_id: authUser.user.id,
+      if (savedCountry && authUser?.user) {
+        const currencyMap: Record<string, string> = {
+          'AO': 'KZ',
+          'MZ': 'MZN',
+          'PT': 'EUR',
+          'ES': 'EUR',
+          'BR': 'BRL',
+          'GB': 'GBP',
+          'US': 'USD'
+        };
+        
+        const preferredCurrency = currencyMap[savedCountry] || 'KZ';
+        
+        // Usar upsert para garantir que o perfil seja atualizado mesmo se foi criado pelo trigger
+        const { error: updateError } = await supabase.from('profiles').upsert({
+          user_id: authUser.user.id,
+          country: savedCountry,
+          preferred_currency: preferredCurrency
+        }, { 
+          onConflict: 'user_id',
+          ignoreDuplicates: false 
+        });
+        
+        if (updateError) {
+          console.error('❌ Erro ao salvar país no perfil:', updateError);
+          // Tentar update como fallback
+          await supabase.from('profiles').update({
             country: savedCountry,
             preferred_currency: preferredCurrency
-          }, { 
-            onConflict: 'user_id',
-            ignoreDuplicates: false 
+          }).eq('user_id', authUser.user.id);
+        }
+        
+        localStorage.removeItem('signupCountry');
+        console.log('✅ País salvo no perfil:', savedCountry, '- Moeda:', preferredCurrency);
+      }
+      
+      // Processar código de indicação se existir
+      const pendingReferralCode = localStorage.getItem('pendingReferralCode');
+      if (pendingReferralCode && authUser?.user) {
+        console.log('📌 Processando indicação com código:', pendingReferralCode);
+        try {
+          const { data: referralData, error: referralError } = await supabase.functions.invoke('process-seller-referral', {
+            body: {
+              referralCode: pendingReferralCode,
+              referredUserId: authUser.user.id,
+              referredEmail: authUser.user.email,
+              referredName: fullName
+            }
           });
           
-          if (updateError) {
-            console.error('❌ Erro ao salvar país no perfil:', updateError);
-            // Tentar update como fallback
-            await supabase.from('profiles').update({
-              country: savedCountry,
-              preferred_currency: preferredCurrency
-            }).eq('user_id', authUser.user.id);
+          if (referralError) {
+            console.error('❌ Erro ao processar indicação:', referralError);
+          } else if (referralData?.success) {
+            console.log('✅ Indicação processada com sucesso:', referralData);
+          } else {
+            console.log('⚠️ Indicação não processada:', referralData?.error);
           }
-          
-          localStorage.removeItem('signupCountry');
-          console.log('✅ País salvo no perfil:', savedCountry, '- Moeda:', preferredCurrency);
+        } catch (refErr) {
+          console.error('❌ Erro ao chamar função de indicação:', refErr);
         }
+        localStorage.removeItem('pendingReferralCode');
       }
       
       toast({
