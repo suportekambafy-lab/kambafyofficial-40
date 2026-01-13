@@ -5072,6 +5072,10 @@ export type Database = {
         Args: { admin_id?: string; partner_id: string }
         Returns: undefined
       }
+      approve_referral_application: {
+        Args: { admin_name?: string; application_id: string }
+        Returns: Json
+      }
       audit_balance_transactions: {
         Args: never
         Returns: {
@@ -5739,6 +5743,10 @@ export type Database = {
       recalculate_user_currency_balances: {
         Args: { p_user_id: string }
         Returns: undefined
+      }
+      reject_referral_application: {
+        Args: { application_id: string; reason: string }
+        Returns: Json
       }
       release_expired_retentions: { Args: never; Returns: Json }
       remove_duplicate_withdrawals: { Args: never; Returns: number }
