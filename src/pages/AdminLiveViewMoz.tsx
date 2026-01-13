@@ -45,20 +45,18 @@ interface SellerActivity {
   revenue: number;
 }
 
-// Check if order is from Mozambique
+// Check if order is from Mozambique (MZN currency or MZ payment methods only)
 const isMozOrder = (order: any) => {
-  const country = order.customer_country?.toLowerCase() || '';
-  const currency = order.currency?.toUpperCase() || '';
-  const paymentMethod = order.payment_method?.toLowerCase() || '';
+  const currency = (order.currency || '').toUpperCase();
+  const originalCurrency = (order.original_currency || '').toUpperCase();
+  const paymentMethod = (order.payment_method || '').toLowerCase();
   
   return (
-    country.includes('moçambique') ||
-    country.includes('mozambique') ||
-    country === 'mz' ||
-    currency === 'MZN' ||
     paymentMethod === 'emola' ||
     paymentMethod === 'mpesa' ||
-    paymentMethod === 'card_mz'
+    paymentMethod === 'card_mz' ||
+    currency === 'MZN' ||
+    originalCurrency === 'MZN'
   );
 };
 
