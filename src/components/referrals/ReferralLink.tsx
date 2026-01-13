@@ -177,14 +177,14 @@ export function ReferralLink({ referralCode, onUpdateCode, isUpdating }: Referra
           )}
         </div>
 
-        {/* Instruções */}
+        {/* Instruções para usuário aprovado */}
         <div className="mt-4 p-4 bg-muted/50 rounded-lg">
-          <h4 className="font-medium mb-2">Como funciona:</h4>
+          <h4 className="font-medium mb-2">🚀 Próximos passos:</h4>
           <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-            <li>Compartilhe seu link com pessoas interessadas em vender</li>
-            <li>Quando se registarem como vendedor, você será notificado</li>
-            <li>Escolha sua opção de recompensa (1,5% por 12 meses ou 2% por 6 meses)</li>
-            <li>Receba comissões sobre as vendas do indicado automaticamente</li>
+            <li>Copie e partilhe seu link nas redes sociais</li>
+            <li>Envie para amigos que queiram vender online</li>
+            <li>Acompanhe novos indicados na aba "Indicados"</li>
+            <li>Suas comissões aparecem automaticamente no histórico</li>
           </ul>
         </div>
       </CardContent>
