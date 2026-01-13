@@ -57,11 +57,19 @@ interface Order {
   } | null;
 }
 
-// Check if order is from Mozambique
+// Check if order is from Mozambique (MZN currency or MZ payment methods only)
 const isMozOrder = (order: any) => {
-  return order.customer_country === 'Moçambique' || 
-         order.currency === 'MZN' || 
-         ['emola', 'mpesa', 'card_mz'].includes(order.payment_method);
+  const currency = (order.currency || '').toUpperCase();
+  const originalCurrency = (order.original_currency || '').toUpperCase();
+  const paymentMethod = (order.payment_method || '').toLowerCase();
+  
+  return (
+    paymentMethod === 'emola' ||
+    paymentMethod === 'mpesa' ||
+    paymentMethod === 'card_mz' ||
+    currency === 'MZN' ||
+    originalCurrency === 'MZN'
+  );
 };
 
 // Format amount in Meticais
