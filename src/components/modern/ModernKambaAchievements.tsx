@@ -9,7 +9,6 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Trophy, Crown, Target, Eye, EyeOff, Rocket } from 'lucide-react';
 import { usePreferredCurrency } from '@/hooks/usePreferredCurrency';
-import { convertToKZ } from '@/utils/exchangeRates';
 
 export function ModernKambaAchievements() {
   const {
@@ -29,39 +28,18 @@ export function ModernKambaAchievements() {
   } = useKambaLevels(totalRevenue);
   const loadTotalRevenue = useCallback(async () => {
     if (!user) return;
+
     try {
-      const {
-        data: userProducts,
-        error: productsError
-      } = await supabase.from('products').select('id').eq('user_id', user.id);
-      if (productsError) throw productsError;
-      const userProductIds = userProducts?.map(p => p.id) || [];
-      if (userProductIds.length === 0) {
-        setTotalRevenue(0);
-        return;
-      }
-      const {
-        data: orders,
-        error
-      } = await supabase.from('orders').select('amount, seller_commission, currency').in('product_id', userProductIds).eq('status', 'completed').neq('payment_method', 'member_access');
+      // IMPORTANT: use RPC to avoid PostgREST 1000-row limit when sellers have many orders
+      const { data, error } = await (supabase as any).rpc('get_my_gamification_total_kz');
+
       if (error) {
-        console.error('Error loading orders:', error);
+        console.error('Error loading gamification total (RPC):', error);
         return;
       }
-      const total = orders?.reduce((sum, order) => {
-        // Use seller_commission (net value) for consistency
-        let amount = parseFloat(order.seller_commission?.toString() || '0');
-        if (amount === 0) {
-          const grossAmount = parseFloat(order.amount || '0');
-          // Apply commission: 8.99% for KZ, 9.99% for others
-          const commissionRate = order.currency === 'KZ' ? 0.0899 : 0.0999;
-          amount = grossAmount * (1 - commissionRate);
-        }
-        // Convert to KZ using centralized exchange rates
-        const currency = order.currency || 'KZ';
-        return sum + convertToKZ(amount, currency);
-      }, 0) || 0;
-      setTotalRevenue(total);
+
+      const total = typeof data === 'number' ? data : parseFloat(data || '0');
+      setTotalRevenue(Number.isFinite(total) ? total : 0);
     } catch (error) {
       console.error('Error loading total revenue:', error);
     }
