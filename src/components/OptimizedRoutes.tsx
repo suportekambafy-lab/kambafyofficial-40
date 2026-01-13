@@ -58,6 +58,11 @@ const Apps = createLazyWithRetry(() => import('@/pages/Apps'), "Apps");
 const ResetPassword = createLazyWithRetry(() => import('@/pages/ResetPassword'), "ResetPassword");
 const MeusAcessos = createLazyWithRetry(() => import('@/pages/MeusAcessos'), "MeusAcessos");
 const CustomerArea = createLazyWithRetry(() => import('@/pages/CustomerArea'), "CustomerArea");
+
+// Admin MOZ Pages
+const AdminDashboardMoz = createLazyWithRetry(() => import('@/pages/AdminDashboardMoz'), "AdminDashboardMoz");
+const AdminSalesMoz = createLazyWithRetry(() => import('@/pages/AdminSalesMoz'), "AdminSalesMoz");
+const AdminLiveViewMoz = createLazyWithRetry(() => import('@/pages/AdminLiveViewMoz'), "AdminLiveViewMoz");
 const MeusAfiliados = createLazyWithRetry(() => import('@/pages/MeusAfiliados'), "MeusAfiliados");
 const UserIdentity = createLazyWithRetry(() => import('@/pages/UserIdentity'), "UserIdentity");
 const MyPurchases = createLazyWithRetry(() => import('@/pages/MyPurchases'), "MyPurchases");
@@ -247,4 +252,9 @@ export const OptimizedRoutes = {
   
   // Certificate page
   CertificateView: withLazyLoading(CertificateView, 'settings'),
+  
+  // Admin MOZ pages
+  AdminDashboardMoz: withLazyLoading(AdminDashboardMoz, 'dashboard'),
+  AdminSalesMoz: withLazyLoading(AdminSalesMoz, 'table'),
+  AdminLiveViewMoz: withLazyLoading(AdminLiveViewMoz, 'dashboard'),
 };

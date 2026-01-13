@@ -25,6 +25,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useOneSignal } from "./hooks/useOneSignal";
 import { useOneSignalAutoLink } from "./hooks/useOneSignalAutoLink";
 import { AdminLayoutWrapper } from "./components/admin/AdminLayoutWrapper";
+import { AdminLayoutWrapperMoz } from "./components/admin/AdminLayoutWrapperMoz";
 
 const TestFacebookIntegration = lazy(() => import("./pages/TestFacebookIntegration"));
 
@@ -284,6 +285,13 @@ const App = () => {
                            <Route path="apps" element={<OptimizedRoutes.AdminApps />} />
                            <Route path="member-areas" element={<OptimizedRoutes.AdminMemberAreas />} />
                            <Route path="stats" element={<AdminPermissionRoute requiredPermission="analytics"><OptimizedRoutes.AdminStats /></AdminPermissionRoute>} />
+                         </Route>
+                         
+                         {/* Admin MOZ Routes - Painel exclusivo para Moçambique */}
+                         <Route path="/admin/moz" element={<AdminProtectedRoute><AdminLayoutWrapperMoz /></AdminProtectedRoute>}>
+                           <Route index element={<OptimizedRoutes.AdminDashboardMoz />} />
+                           <Route path="sales" element={<OptimizedRoutes.AdminSalesMoz />} />
+                           <Route path="live" element={<OptimizedRoutes.AdminLiveViewMoz />} />
                          </Route>
                       
                        {/* Partner Routes */}
