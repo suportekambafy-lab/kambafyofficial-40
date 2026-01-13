@@ -192,7 +192,7 @@ export default function SellerReferrals() {
         <h3 className="font-semibold">Seu Programa de Indicações</h3>
         <div className="grid md:grid-cols-2 gap-6 text-sm text-muted-foreground">
           <div>
-            <h4 className="font-medium text-foreground mb-2">📊 Seu Status</h4>
+            <h4 className="font-medium text-foreground mb-2">Seu Status</h4>
             <ul className="space-y-1 list-disc list-inside">
               <li>Status: <span className="text-green-600 font-medium">Aprovado ✓</span></li>
               <li>Código: <span className="font-mono font-medium text-foreground">{referralCode}</span></li>
