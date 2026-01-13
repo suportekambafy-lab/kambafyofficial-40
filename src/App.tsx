@@ -259,6 +259,7 @@ const App = () => {
                         
                         {/* Admin Routes - Login separado */}
                         <Route path="/admin/login" element={<OptimizedRoutes.AdminLogin />} />
+                        <Route path="/admin/select-region" element={<AdminProtectedRoute><OptimizedRoutes.AdminRegionSelect /></AdminProtectedRoute>} />
                         
                         {/* Admin Routes - Layout persistente com Outlet */}
                         <Route path="/admin" element={<AdminProtectedRoute><AdminLayoutWrapper /></AdminProtectedRoute>}>

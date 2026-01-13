@@ -42,7 +42,7 @@ export default function AdminLogin() {
   }
 
   if (admin) {
-    return <Navigate to="/admin" replace />;
+    return <Navigate to="/admin/select-region" replace />;
   }
 
   const handleLogin = async (e: React.FormEvent) => {
