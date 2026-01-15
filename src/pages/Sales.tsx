@@ -381,20 +381,10 @@ export default function Sales() {
     return `https://images.unsplash.com/${cover}`;
   };
   const formatPrice = (sale: Sale) => {
-    // ✅ Moeda real inferida pelo método de pagamento
-    const paymentMethod = sale.payment_method?.toLowerCase() || '';
-    const angolaMethods = ['express', 'multicaixa_express', 'reference', 'bank_transfer', 'transfer', 'kambapay'];
-    const mozambiqueMethods = ['mpesa', 'emola', 'card_mz'];
+    // ✅ Moeda/valor reais (evita usar seller_commission em moeda errada)
+    const actualCurrency = getActualCurrency(sale);
 
-    let actualCurrency = sale.original_currency || sale.currency || 'KZ';
-    if (angolaMethods.includes(paymentMethod)) {
-      actualCurrency = 'KZ';
-    } else if (mozambiqueMethods.includes(paymentMethod)) {
-      actualCurrency = 'MZN';
-    }
-    actualCurrency = actualCurrency === 'AOA' ? 'KZ' : actualCurrency;
-
-    // ✅ Se seller_commission existir, é o valor líquido correto (não aplicar taxa de novo)
+    // seller_commission no banco é confiável apenas para KZ (muitos pagamentos internacionais salvam com conversão)
     const sellerCommissionRaw = sale.seller_commission;
     const sellerCommissionValue =
       sellerCommissionRaw !== null &&
@@ -405,19 +395,12 @@ export default function Sales() {
 
     let displayAmount: number;
 
-    if (sellerCommissionValue != null && sellerCommissionValue > 0) {
+    if (actualCurrency === 'KZ' && sellerCommissionValue != null && sellerCommissionValue > 0) {
       displayAmount = sellerCommissionValue;
     } else {
-      // ✅ Valor correto na moeda exibida:
-      const normalizedOrig = (sale.original_currency || '') === 'AOA' ? 'KZ' : (sale.original_currency || '');
-      const shouldUseOriginal = sale.original_amount != null && normalizedOrig === actualCurrency;
-
-      const raw = shouldUseOriginal ? sale.original_amount : sale.amount;
-      displayAmount = typeof raw === 'number' ? raw : parseFloat((raw as any) || '0');
-
-      // ✅ Aplicar taxa de comissão (8.99% Angola, 9.99% Internacional)
-      const commissionRate = actualCurrency === 'KZ' ? 0.0899 : 0.0999;
-      displayAmount = displayAmount * (1 - commissionRate);
+      // Para EUR/USD/GBP/MZN/etc: calcular em cima do valor original (original_amount quando existir)
+      const gross = getActualAmount(sale);
+      displayAmount = calculateSellerEarning(gross, actualCurrency);
     }
 
     return (
@@ -853,15 +836,33 @@ export default function Sales() {
                           <div className="flex items-center gap-2">
                             {sale.sale_type === 'affiliate' ? (
                               <span className="font-bold text-base md:text-lg text-blue-600">
-                                {formatCurrencyValue(parseFloat(sale.affiliate_commission?.toString() || '0'), sale.original_currency || sale.currency)}
+                                {formatCurrencyValue(
+                                  parseFloat(sale.affiliate_commission?.toString() || '0'),
+                                  getActualCurrency(sale)
+                                )}
                               </span>
                             ) : sale.sale_type === 'recovered' ? (
                               <span className="font-bold text-base md:text-lg text-green-600">
-                                {formatCurrencyValue(parseFloat(sale.amount) * 0.8, sale.currency)}
+                                {formatCurrencyValue(getActualAmount(sale) * 0.8, getActualCurrency(sale))}
                               </span>
                             ) : sale.affiliate_code && sale.seller_commission ? (
                               <span className="font-bold text-base md:text-lg text-green-600">
-                                {formatCurrencyValue(parseFloat(sale.seller_commission?.toString() || '0'), sale.original_currency || sale.currency)}
+                                {(() => {
+                                  const c = getActualCurrency(sale);
+                                  const sellerCommissionRaw = sale.seller_commission;
+                                  const sellerCommissionValue =
+                                    sellerCommissionRaw !== null &&
+                                    sellerCommissionRaw !== undefined &&
+                                    !Number.isNaN(parseFloat(sellerCommissionRaw.toString()))
+                                      ? parseFloat(sellerCommissionRaw.toString())
+                                      : null;
+
+                                  const net = c === 'KZ' && sellerCommissionValue && sellerCommissionValue > 0
+                                    ? sellerCommissionValue
+                                    : calculateSellerEarning(getActualAmount(sale), c);
+
+                                  return formatCurrencyValue(net, c);
+                                })()}
                               </span>
                             ) : (
                               <span className="font-bold text-base md:text-lg">
