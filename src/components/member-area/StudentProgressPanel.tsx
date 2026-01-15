@@ -6,9 +6,13 @@ import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, TrendingUp, Users, BookOpen, CheckCircle, Clock, BarChart3, Eye, Calendar } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Search, TrendingUp, Users, BookOpen, CheckCircle, Clock, BarChart3, Eye, Calendar, ArrowUpDown, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+
+type SortOption = 'progress_desc' | 'progress_asc' | 'name_asc' | 'name_desc' | 'activity_recent' | 'activity_old';
+type ActivityFilter = 'all' | 'active' | 'inactive' | 'very_inactive' | 'completed' | 'not_started';
 
 interface Student {
   id: string;
@@ -108,6 +112,8 @@ export default function StudentProgressPanel({ memberAreaId }: StudentProgressPa
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStudent, setSelectedStudent] = useState<StudentDetail | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [sortBy, setSortBy] = useState<SortOption>('progress_desc');
+  const [activityFilter, setActivityFilter] = useState<ActivityFilter>('all');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -226,15 +232,72 @@ export default function StudentProgressPanel({ memberAreaId }: StudentProgressPa
     });
   }, [students, allProgress, lessons, quizResponses]);
 
-  // Filter students
+  // Filter and sort students
   const filteredStudents = useMemo(() => {
-    if (!searchTerm) return studentProgressData;
-    const term = searchTerm.toLowerCase();
-    return studentProgressData.filter(s => 
-      s.student_name.toLowerCase().includes(term) ||
-      s.student_email.toLowerCase().includes(term)
-    );
-  }, [studentProgressData, searchTerm]);
+    let result = [...studentProgressData];
+    
+    // Apply search filter
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      result = result.filter(s => 
+        s.student_name.toLowerCase().includes(term) ||
+        s.student_email.toLowerCase().includes(term)
+      );
+    }
+    
+    // Apply activity filter
+    switch (activityFilter) {
+      case 'active':
+        result = result.filter(s => s.daysSinceActivity !== null && s.daysSinceActivity <= 7);
+        break;
+      case 'inactive':
+        result = result.filter(s => s.daysSinceActivity !== null && s.daysSinceActivity > 7 && s.daysSinceActivity <= 30);
+        break;
+      case 'very_inactive':
+        result = result.filter(s => s.daysSinceActivity === null || s.daysSinceActivity > 30);
+        break;
+      case 'completed':
+        result = result.filter(s => s.progressPercentage === 100);
+        break;
+      case 'not_started':
+        result = result.filter(s => s.progressPercentage === 0);
+        break;
+    }
+    
+    // Apply sorting
+    switch (sortBy) {
+      case 'progress_desc':
+        result.sort((a, b) => b.progressPercentage - a.progressPercentage);
+        break;
+      case 'progress_asc':
+        result.sort((a, b) => a.progressPercentage - b.progressPercentage);
+        break;
+      case 'name_asc':
+        result.sort((a, b) => a.student_name.localeCompare(b.student_name));
+        break;
+      case 'name_desc':
+        result.sort((a, b) => b.student_name.localeCompare(a.student_name));
+        break;
+      case 'activity_recent':
+        result.sort((a, b) => {
+          if (!a.lastActivity && !b.lastActivity) return 0;
+          if (!a.lastActivity) return 1;
+          if (!b.lastActivity) return -1;
+          return new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime();
+        });
+        break;
+      case 'activity_old':
+        result.sort((a, b) => {
+          if (!a.lastActivity && !b.lastActivity) return 0;
+          if (!a.lastActivity) return -1;
+          if (!b.lastActivity) return 1;
+          return new Date(a.lastActivity).getTime() - new Date(b.lastActivity).getTime();
+        });
+        break;
+    }
+    
+    return result;
+  }, [studentProgressData, searchTerm, activityFilter, sortBy]);
 
   // Overall stats
   const stats = useMemo(() => {
@@ -400,15 +463,54 @@ export default function StudentProgressPanel({ memberAreaId }: StudentProgressPa
         </Card>
       </div>
 
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Buscar aluno por nome ou email..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10"
-        />
+      {/* Search, Sort and Filter */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar aluno por nome ou email..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        
+        <div className="flex gap-2">
+          <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+            <SelectTrigger className="w-[180px]">
+              <ArrowUpDown className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="Ordenar" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="progress_desc">Maior progresso</SelectItem>
+              <SelectItem value="progress_asc">Menor progresso</SelectItem>
+              <SelectItem value="name_asc">Nome (A-Z)</SelectItem>
+              <SelectItem value="name_desc">Nome (Z-A)</SelectItem>
+              <SelectItem value="activity_recent">Mais recente</SelectItem>
+              <SelectItem value="activity_old">Mais antigo</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Select value={activityFilter} onValueChange={(v) => setActivityFilter(v as ActivityFilter)}>
+            <SelectTrigger className="w-[180px]">
+              <Filter className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="Filtrar" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="active">Ativos (7 dias)</SelectItem>
+              <SelectItem value="inactive">Inativos (7-30 dias)</SelectItem>
+              <SelectItem value="very_inactive">Muito inativos (+30 dias)</SelectItem>
+              <SelectItem value="completed">Curso completo</SelectItem>
+              <SelectItem value="not_started">Não iniciado</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      
+      {/* Results count */}
+      <div className="text-sm text-muted-foreground">
+        Exibindo {filteredStudents.length} de {stats.totalStudents} alunos
       </div>
 
       {/* Students Table */}
