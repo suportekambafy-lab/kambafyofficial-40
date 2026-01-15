@@ -6,7 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, TrendingUp, Users, BookOpen, CheckCircle, Clock, BarChart3, Eye } from "lucide-react";
+import { Search, TrendingUp, Users, BookOpen, CheckCircle, Clock, BarChart3, Eye, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -66,6 +66,37 @@ interface StudentProgressPanelProps {
   memberAreaId: string;
 }
 
+// Helper function to fetch all progress records with pagination
+async function fetchAllProgressRecords(memberAreaId: string): Promise<LessonProgress[]> {
+  const allRecords: LessonProgress[] = [];
+  const batchSize = 1000;
+  let offset = 0;
+  let hasMore = true;
+
+  while (hasMore) {
+    const { data, error } = await supabase
+      .from('lesson_progress')
+      .select('*')
+      .eq('member_area_id', memberAreaId)
+      .range(offset, offset + batchSize - 1);
+    
+    if (error) {
+      console.error('Error fetching progress records:', error);
+      break;
+    }
+
+    if (data && data.length > 0) {
+      allRecords.push(...data);
+      offset += batchSize;
+      hasMore = data.length === batchSize;
+    } else {
+      hasMore = false;
+    }
+  }
+
+  return allRecords;
+}
+
 export default function StudentProgressPanel({ memberAreaId }: StudentProgressPanelProps) {
   const [totalStudentCount, setTotalStudentCount] = useState(0);
   const [students, setStudents] = useState<Student[]>([]);
@@ -116,11 +147,8 @@ export default function StudentProgressPanel({ memberAreaId }: StudentProgressPa
           .eq('status', 'published')
           .order('order_number');
 
-        // Fetch all progress for this member area
-        const { data: progressData } = await supabase
-          .from('lesson_progress')
-          .select('*')
-          .eq('member_area_id', memberAreaId);
+        // Fetch ALL progress records with pagination to bypass 1000 row limit
+        const progressData = await fetchAllProgressRecords(memberAreaId);
 
         // Fetch quiz responses
         const { data: quizData } = await supabase
@@ -128,11 +156,13 @@ export default function StudentProgressPanel({ memberAreaId }: StudentProgressPa
           .select('*')
           .eq('member_area_id', memberAreaId);
 
+        console.log(`[StudentProgress] Loaded: ${studentsData?.length || 0} students, ${lessonsData?.length || 0} lessons, ${progressData.length} progress records`);
+
         setTotalStudentCount(totalStudentCount || 0);
         setStudents(studentsData || []);
         setLessons(lessonsData || []);
         setModules(modulesData || []);
-        setAllProgress(progressData || []);
+        setAllProgress(progressData);
         setQuizResponses(quizData || []);
       } catch (error) {
         console.error('Error fetching progress data:', error);
@@ -143,6 +173,16 @@ export default function StudentProgressPanel({ memberAreaId }: StudentProgressPa
 
     fetchData();
   }, [memberAreaId]);
+
+  // Calculate days since last activity
+  const calculateDaysSince = (dateStr: string | null): number | null => {
+    if (!dateStr) return null;
+    const lastDate = new Date(dateStr);
+    const now = new Date();
+    const diffTime = now.getTime() - lastDate.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
 
   // Calculate student progress
   const studentProgressData = useMemo(() => {
@@ -157,11 +197,15 @@ export default function StudentProgressPanel({ memberAreaId }: StudentProgressPa
         ? Math.round((completedLessons / lessons.length) * 100) 
         : 0;
 
-      const lastActivity = studentProgress.length > 0
-        ? studentProgress.sort((a, b) => 
+      // Get the most recent activity
+      const sortedProgress = studentProgress.length > 0
+        ? [...studentProgress].sort((a, b) => 
             new Date(b.last_watched_at).getTime() - new Date(a.last_watched_at).getTime()
-          )[0]?.last_watched_at
-        : null;
+          )
+        : [];
+      
+      const lastActivity = sortedProgress.length > 0 ? sortedProgress[0]?.last_watched_at : null;
+      const daysSinceActivity = calculateDaysSince(lastActivity);
 
       const studentQuizzes = quizResponses.filter(q => 
         q.student_email?.toLowerCase().trim() === normalizedEmail
@@ -173,6 +217,7 @@ export default function StudentProgressPanel({ memberAreaId }: StudentProgressPa
         totalLessons: lessons.length,
         progressPercentage,
         lastActivity,
+        daysSinceActivity,
         quizzesCompleted: studentQuizzes.length,
         avgQuizScore: studentQuizzes.length > 0
           ? Math.round(studentQuizzes.reduce((acc, q) => acc + (q.score / q.total_questions * 100), 0) / studentQuizzes.length)
@@ -271,6 +316,21 @@ export default function StudentProgressPanel({ memberAreaId }: StudentProgressPa
     });
   };
 
+  const formatDaysSince = (days: number | null): string => {
+    if (days === null) return '-';
+    if (days === 0) return 'Hoje';
+    if (days === 1) return 'Ontem';
+    return `${days} dias`;
+  };
+
+  const getDaysColor = (days: number | null): string => {
+    if (days === null) return 'text-muted-foreground';
+    if (days <= 2) return 'text-green-600';
+    if (days <= 7) return 'text-yellow-600';
+    if (days <= 30) return 'text-orange-600';
+    return 'text-red-600';
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -365,9 +425,9 @@ export default function StudentProgressPanel({ memberAreaId }: StudentProgressPa
               <TableRow>
                 <TableHead>Aluno</TableHead>
                 <TableHead>Progresso</TableHead>
-                <TableHead>Aulas Concluídas</TableHead>
-                <TableHead>Quizzes</TableHead>
-                <TableHead>Última Atividade</TableHead>
+                <TableHead>Aulas</TableHead>
+                <TableHead>Última Sessão</TableHead>
+                <TableHead>Dias</TableHead>
                 <TableHead></TableHead>
               </TableRow>
             </TableHeader>
@@ -388,9 +448,9 @@ export default function StudentProgressPanel({ memberAreaId }: StudentProgressPa
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2 min-w-[150px]">
+                      <div className="flex items-center gap-2 min-w-[140px]">
                         <Progress value={student.progressPercentage} className="flex-1" />
-                        <span className="text-sm font-medium w-12">{student.progressPercentage}%</span>
+                        <span className="text-sm font-medium w-10">{student.progressPercentage}%</span>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -399,16 +459,21 @@ export default function StudentProgressPanel({ memberAreaId }: StudentProgressPa
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {student.quizzesCompleted > 0 ? (
-                        <Badge variant="outline">
-                          {student.quizzesCompleted} ({student.avgQuizScore}%)
-                        </Badge>
-                      ) : (
-                        <span className="text-muted-foreground text-sm">-</span>
-                      )}
+                      <div className="text-sm">
+                        {student.lastActivity ? (
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3 text-muted-foreground" />
+                            <span>{formatDate(student.lastActivity)}</span>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">Nunca acessou</span>
+                        )}
+                      </div>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {formatDate(student.lastActivity)}
+                    <TableCell>
+                      <span className={`text-sm font-medium ${getDaysColor(student.daysSinceActivity)}`}>
+                        {formatDaysSince(student.daysSinceActivity)}
+                      </span>
                     </TableCell>
                     <TableCell>
                       <Button 
