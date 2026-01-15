@@ -439,7 +439,7 @@ const handler = async (req: Request): Promise<Response> => {
         let memberAreaUrl = null;
         if (memberAreaId) {
           // Usar rota no domínio principal - o SubdomainGuard em produção redireciona se necessário
-          memberAreaUrl = `https://app.kambafy.com/login/${memberAreaId}`;
+          memberAreaUrl = `https://membros.kambafy.com/login/${memberAreaId}`;
         }
 
         // Create access link
@@ -980,7 +980,7 @@ const handler = async (req: Request): Promise<Response> => {
         // Send SMS for purchase confirmation if phone number is provided
         if (customerPhone) {
           // Usar app.kambafy.com para links de área de membros (SubdomainGuard redireciona em produção)
-          const smsUrl = memberAreaId ? `https://app.kambafy.com/login/${memberAreaId}` : shareLink;
+          const smsUrl = memberAreaId ? `https://membros.kambafy.com/login/${memberAreaId}` : shareLink;
           await sendSMSNotification(customerPhone, 'purchase_confirmation', {
             customerName,
             productName,
@@ -1001,7 +1001,7 @@ const handler = async (req: Request): Promise<Response> => {
               .single();
             
             if (!memberAreaError && memberArea) {
-              const mainMemberAreaUrl = `https://app.kambafy.com/login/${memberAreaId}`;
+              const mainMemberAreaUrl = `https://membros.kambafy.com/login/${memberAreaId}`;
               
               // Use the same temporary password that was created for Kambafy account
               const passwordToUse = isNewAccount && temporaryPassword ? temporaryPassword : (() => {
@@ -1109,7 +1109,7 @@ const handler = async (req: Request): Promise<Response> => {
                 .single();
               
               if (!memberAreaError && memberArea) {
-                bumpMemberAreaUrl = `https://app.kambafy.com/login/${bumpMemberAreaId}`;
+                bumpMemberAreaUrl = `https://membros.kambafy.com/login/${bumpMemberAreaId}`;
                 
                 // Generate temporary password for order bump access
                 function generateTemporaryPassword(): string {
