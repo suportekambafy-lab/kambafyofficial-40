@@ -70,14 +70,15 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
       return;
     }
     
-    // DESENVOLVIMENTO/PREVIEW: Para ambientes de desenvolvimento, NUNCA fazer redirecionamentos
+    // DESENVOLVIMENTO/PREVIEW: Para ambientes de desenvolvimento OU Lovable, NUNCA fazer redirecionamentos
+    // Isso inclui localhost, 127.0.0.1, lovable.app e lovableproject.com
     if (hostname.includes('localhost') || hostname.includes('127.0.0.1') || 
         hostname.includes('lovable.app') || hostname.includes('lovableproject.com')) {
       console.log('🔧 SubdomainGuard: PRÉ-VISUALIZAÇÃO/DEV - NENHUM redirecionamento', {
         currentSubdomain,
         currentPath,
         hostname,
-        message: '✅ TODAS as rotas funcionam diretamente - sem reloads!'
+        message: '✅ TODAS as rotas (incluindo /login/:id e /area/:id) funcionam diretamente - sem reloads!'
       });
       return;
     }

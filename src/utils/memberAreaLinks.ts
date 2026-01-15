@@ -9,30 +9,36 @@ export function useMemberAreaLinks() {
   const { getSubdomainUrl } = useSubdomain();
 
   const getMemberAreaLoginUrl = (memberAreaId: string) => {
-    // Para localhost, usar rotas locais
     const hostname = window.location.hostname;
-    if (hostname.includes('localhost') || hostname.includes('127.0.0.1')) {
+    const isLocalhost = hostname.includes('localhost') || hostname.includes('127.0.0.1');
+    const isLovablePreview = hostname.includes('lovable.app') || hostname.includes('lovableproject.com');
+    
+    // Para localhost OU preview do Lovable, usar rotas locais
+    if (isLocalhost || isLovablePreview) {
       const url = `/login/${memberAreaId}`;
       memberAreaDebugLogger.logLinkGeneration(memberAreaId, 'login', url);
       return url;
     }
     
-    // Para todos os outros ambientes, usar URLs da Kambafy
+    // Para produção kambafy.com, usar URLs do subdomínio membros
     const url = 'https://membros.kambafy.com/login/' + memberAreaId;
     memberAreaDebugLogger.logLinkGeneration(memberAreaId, 'login', url);
     return url;
   };
 
   const getMemberAreaUrl = (memberAreaId: string, path: string = '') => {
-    // Para localhost, usar rotas locais
     const hostname = window.location.hostname;
-    if (hostname.includes('localhost') || hostname.includes('127.0.0.1')) {
+    const isLocalhost = hostname.includes('localhost') || hostname.includes('127.0.0.1');
+    const isLovablePreview = hostname.includes('lovable.app') || hostname.includes('lovableproject.com');
+    
+    // Para localhost OU preview do Lovable, usar rotas locais
+    if (isLocalhost || isLovablePreview) {
       const fullPath = path ? `/area/${memberAreaId}${path}` : `/area/${memberAreaId}`;
       memberAreaDebugLogger.logLinkGeneration(memberAreaId, 'area', fullPath);
       return fullPath;
     }
     
-    // Para todos os outros ambientes, usar URLs da Kambafy
+    // Para produção kambafy.com, usar URLs do subdomínio membros
     const fullPath = path ? `/area/${memberAreaId}${path}` : `/area/${memberAreaId}`;
     const url = 'https://membros.kambafy.com' + fullPath;
     memberAreaDebugLogger.logLinkGeneration(memberAreaId, 'area', url);
@@ -41,7 +47,10 @@ export function useMemberAreaLinks() {
 
   const getMemberAreaLessonUrl = (memberAreaId: string, lessonId: string) => {
     const hostname = window.location.hostname;
-    if (hostname.includes('localhost') || hostname.includes('127.0.0.1')) {
+    const isLocalhost = hostname.includes('localhost') || hostname.includes('127.0.0.1');
+    const isLovablePreview = hostname.includes('lovable.app') || hostname.includes('lovableproject.com');
+    
+    if (isLocalhost || isLovablePreview) {
       return `/area/${memberAreaId}/lesson/${lessonId}`;
     }
     return `https://membros.kambafy.com/area/${memberAreaId}/lesson/${lessonId}`;
@@ -49,7 +58,10 @@ export function useMemberAreaLinks() {
 
   const getMemberAreaModuleUrl = (memberAreaId: string, moduleId: string) => {
     const hostname = window.location.hostname;
-    if (hostname.includes('localhost') || hostname.includes('127.0.0.1')) {
+    const isLocalhost = hostname.includes('localhost') || hostname.includes('127.0.0.1');
+    const isLovablePreview = hostname.includes('lovable.app') || hostname.includes('lovableproject.com');
+    
+    if (isLocalhost || isLovablePreview) {
       return `/area/${memberAreaId}/module/${moduleId}`;
     }
     return `https://membros.kambafy.com/area/${memberAreaId}/module/${moduleId}`;
@@ -60,11 +72,14 @@ export function useMemberAreaLinks() {
     memberAreaDebugLogger.logRedirection(window.location.href, url, 'Navegação via hook para área de membros');
     
     const hostname = window.location.hostname;
-    if (hostname.includes('localhost') || hostname.includes('127.0.0.1')) {
-      // Para localhost, usar navegação local
+    const isLocalhost = hostname.includes('localhost') || hostname.includes('127.0.0.1');
+    const isLovablePreview = hostname.includes('lovable.app') || hostname.includes('lovableproject.com');
+    
+    if (isLocalhost || isLovablePreview) {
+      // Para localhost ou preview, usar navegação local
       window.location.pathname = url;
     } else {
-      // Para todos os outros ambientes, usar URL completa da Kambafy
+      // Para produção kambafy.com, usar URL completa
       window.location.href = url;
     }
   };
@@ -74,11 +89,14 @@ export function useMemberAreaLinks() {
     memberAreaDebugLogger.logRedirection(window.location.href, url, 'Navegação via hook para login da área de membros');
     
     const hostname = window.location.hostname;
-    if (hostname.includes('localhost') || hostname.includes('127.0.0.1')) {
-      // Para localhost, usar navegação local
+    const isLocalhost = hostname.includes('localhost') || hostname.includes('127.0.0.1');
+    const isLovablePreview = hostname.includes('lovable.app') || hostname.includes('lovableproject.com');
+    
+    if (isLocalhost || isLovablePreview) {
+      // Para localhost ou preview, usar navegação local
       window.location.pathname = url;
     } else {
-      // Para todos os outros ambientes, usar URL completa da Kambafy
+      // Para produção kambafy.com, usar URL completa
       window.location.href = url;
     }
   };
@@ -97,30 +115,35 @@ export function useMemberAreaLinks() {
  * Versão não-hook para uso em contextos onde hooks não podem ser usados
  */
 export function createMemberAreaLinks() {
-  // Para produção/kambafy, sempre usar URLs da Kambafy
   const hostname = window.location.hostname;
   
-  // Detectar se devemos usar URLs de produção da Kambafy
-  const shouldUseKambafyUrls = !hostname.includes('localhost') && !hostname.includes('127.0.0.1');
+  // Detectar ambiente:
+  // - localhost/127.0.0.1: desenvolvimento local
+  // - lovable.app/lovableproject.com: preview/publicado do Lovable
+  // - kambafy.com: produção real
+  const isLocalhost = hostname.includes('localhost') || hostname.includes('127.0.0.1');
+  const isLovablePreview = hostname.includes('lovable.app') || hostname.includes('lovableproject.com');
+  const isKambafyProduction = hostname.includes('kambafy.com');
   
   console.log('🏗️ createMemberAreaLinks - Detectando ambiente:', {
     hostname,
-    shouldUseKambafyUrls,
-    message: shouldUseKambafyUrls ? 'Usando URLs da Kambafy' : 'Usando URLs locais'
+    isLocalhost,
+    isLovablePreview,
+    isKambafyProduction,
   });
   
-  // Para desenvolvimento local, usar as rotas diretas
-  if (!shouldUseKambafyUrls) {
-    console.log('🛠️ createMemberAreaLinks - DESENVOLVIMENTO detectado');
+  // Para desenvolvimento local OU preview do Lovable, usar rotas locais (sem redirecionamento externo)
+  if (isLocalhost || isLovablePreview) {
+    console.log('🛠️ createMemberAreaLinks - DESENVOLVIMENTO/PREVIEW: usando rotas locais');
     return {
       getMemberAreaLoginUrl: (memberAreaId: string) => {
         const url = `/login/${memberAreaId}`;
-        console.log('🔗 Dev - getMemberAreaLoginUrl:', { memberAreaId, url, hostname });
+        console.log('🔗 Local - getMemberAreaLoginUrl:', { memberAreaId, url, hostname });
         return url;
       },
       getMemberAreaUrl: (memberAreaId: string, path: string = '') => {
         const fullPath = path ? `/area/${memberAreaId}${path}` : `/area/${memberAreaId}`;
-        console.log('🔗 Dev - getMemberAreaUrl:', { memberAreaId, path, fullPath, hostname });
+        console.log('🔗 Local - getMemberAreaUrl:', { memberAreaId, path, fullPath, hostname });
         return fullPath;
       },
       getMemberAreaLessonUrl: (memberAreaId: string, lessonId: string) => `/area/${memberAreaId}/lesson/${lessonId}`,
@@ -128,11 +151,11 @@ export function createMemberAreaLinks() {
     };
   }
 
-  // Para todos os outros ambientes (produção, preview, etc), usar URLs da Kambafy
+  // Para produção kambafy.com, usar URLs do subdomínio membros
   const membersHostname = 'membros.kambafy.com';
   const protocol = 'https:';
   
-  console.log('🌐 createMemberAreaLinks - Usando URLs da Kambafy:', {
+  console.log('🌐 createMemberAreaLinks - PRODUÇÃO: usando URLs da Kambafy:', {
     membersHostname,
     protocol
   });
