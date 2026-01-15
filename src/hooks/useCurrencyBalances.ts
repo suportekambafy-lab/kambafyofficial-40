@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { formatWithMaxTwoDecimals } from '@/utils/priceFormatting';
+import { formatWithMaxTwoDecimals, formatInternational } from '@/utils/priceFormatting';
 
 export interface CurrencyBalance {
   id: string;
@@ -219,10 +219,11 @@ export function useCurrencyBalances() {
   const formatCurrency = (amount: number, currency: string): string => {
     const config = CURRENCY_CONFIG[currency] || CURRENCY_CONFIG['KZ'];
     const formatted = formatWithMaxTwoDecimals(amount);
+    const intlFormatted = formatInternational(amount);
     
-    if (currency === 'EUR') return `€${formatted}`;
-    if (currency === 'USD') return `$${formatted}`;
-    if (currency === 'GBP') return `£${formatted}`;
+    if (currency === 'EUR') return `€${intlFormatted}`;
+    if (currency === 'USD') return `$${intlFormatted}`;
+    if (currency === 'GBP') return `£${intlFormatted}`;
     if (currency === 'BRL') return `R$${formatted}`;
     if (currency === 'MZN') return `${formatted} MT`;
     return `${formatted} ${config.symbol}`;

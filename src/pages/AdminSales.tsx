@@ -100,15 +100,28 @@ type TabType = 'entradas' | 'repasses' | 'atividades';
 
 // Helper function to convert currency code
 const formatCurrency = (amount: number, currencyCode: string) => {
+  // Moedas internacionais usam formato internacional (ponto decimal)
+  const formatInternational = (val: number): string => {
+    const rounded = Math.round(val * 100) / 100;
+    const hasDecimals = rounded % 1 !== 0;
+    if (hasDecimals) {
+      const [intPart, decPart] = rounded.toFixed(2).split('.');
+      const formattedInt = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      return `${formattedInt}.${decPart}`;
+    } else {
+      return Math.round(rounded).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+  };
+  
   const formatted = formatWithMaxTwoDecimals(amount);
   
   switch (currencyCode) {
     case 'EUR':
-      return `€${formatted}`;
+      return `€${formatInternational(amount)}`;
     case 'USD':
-      return `$${formatted}`;
+      return `$${formatInternational(amount)}`;
     case 'GBP':
-      return `£${formatted}`;
+      return `£${formatInternational(amount)}`;
     case 'BRL':
       return `R$${formatted}`;
     case 'MZN':
