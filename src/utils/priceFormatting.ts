@@ -9,6 +9,7 @@ export interface CountryInfo {
 }
 
 // Helper para formatar número - só mostra decimais se necessário
+// Formato PT/AO (padrão): ponto para milhares, vírgula para decimais (1.234,56)
 const formatWithMaxTwoDecimals = (value: number): string => {
   // Arredonda para 2 casas decimais
   const rounded = Math.round(value * 100) / 100;
@@ -29,6 +30,28 @@ const formatWithMaxTwoDecimals = (value: number): string => {
   }
 };
 
+// Helper para formatar número em formato internacional
+// Formato EN/INT: vírgula para milhares, ponto para decimais (1,234.56)
+const formatInternational = (value: number): string => {
+  // Arredonda para 2 casas decimais
+  const rounded = Math.round(value * 100) / 100;
+  
+  // Verifica se tem decimais significativos
+  const hasDecimals = rounded % 1 !== 0;
+  
+  if (hasDecimals) {
+    // Formata com 2 casas decimais
+    const [intPart, decPart] = rounded.toFixed(2).split('.');
+    // Adiciona vírgulas como separadores de milhares
+    const formattedInt = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return `${formattedInt}.${decPart}`;
+  } else {
+    // Sem decimais - só formata a parte inteira
+    const intValue = Math.round(rounded);
+    return intValue.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+};
+
 export const formatPrice = (
   priceInKZ: number, 
   targetCountry?: CountryInfo,
@@ -41,11 +64,11 @@ export const formatPrice = (
     if (!isNaN(customPrice)) {
       switch (targetCountry.currency) {
         case 'EUR':
-          return `€${formatWithMaxTwoDecimals(customPrice)}`;
+          return `€${formatInternational(customPrice)}`;
         case 'GBP':
-          return `£${formatWithMaxTwoDecimals(customPrice)}`;
+          return `£${formatInternational(customPrice)}`;
         case 'USD':
-          return `$${formatWithMaxTwoDecimals(customPrice)}`;
+          return `$${formatInternational(customPrice)}`;
         case 'MXN':
           return `$${customPrice.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN`;
         case 'CLP':
@@ -79,11 +102,11 @@ export const formatPrice = (
   
   switch (targetCountry.currency) {
     case 'EUR':
-      return `€${formatWithMaxTwoDecimals(convertedPrice)}`;
+      return `€${formatInternational(convertedPrice)}`;
     case 'GBP':
-      return `£${formatWithMaxTwoDecimals(convertedPrice)}`;
+      return `£${formatInternational(convertedPrice)}`;
     case 'USD':
-      return `$${formatWithMaxTwoDecimals(convertedPrice)}`;
+      return `$${formatInternational(convertedPrice)}`;
     case 'MXN':
       return `$${convertedPrice.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN`;
     case 'CLP':
@@ -120,23 +143,24 @@ export const formatPriceForSeller = (
 ): string => {
   const normalizedCurrency = (currency || 'KZ') === 'AOA' ? 'KZ' : (currency || 'KZ');
   const code = normalizedCurrency.toUpperCase();
-  const formatted = formatWithMaxTwoDecimals(amount);
 
+  // Moedas internacionais usam formato internacional (ponto decimal)
+  // Moedas PT/AO usam formato local (vírgula decimal)
   switch (code) {
     case 'EUR':
-      return `€${formatted}`;
+      return `€${formatInternational(amount)}`;
     case 'GBP':
-      return `£${formatted}`;
+      return `£${formatInternational(amount)}`;
     case 'USD':
-      return `$${formatted}`;
+      return `$${formatInternational(amount)}`;
     case 'BRL':
-      return `R$${formatted}`;
+      return `R$${formatWithMaxTwoDecimals(amount)}`;
     case 'MZN':
-      return `${formatted} MT`;
+      return `${formatWithMaxTwoDecimals(amount)} MT`;
     case 'KZ':
-      return `${formatted} KZ`;
+      return `${formatWithMaxTwoDecimals(amount)} KZ`;
     default:
-      return `${formatted} ${code}`;
+      return `${formatWithMaxTwoDecimals(amount)} ${code}`;
   }
 };
 
@@ -166,5 +190,5 @@ export const getSubscriptionIntervalText = (interval: string, intervalCount: num
   return `${intervalCount} ${intervalInfo.plural}`;
 };
 
-// Exportar helper para uso em outros lugares que formatam valores diretamente
-export { formatWithMaxTwoDecimals };
+// Exportar helpers para uso em outros lugares que formatam valores diretamente
+export { formatWithMaxTwoDecimals, formatInternational };

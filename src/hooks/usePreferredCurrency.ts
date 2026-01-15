@@ -129,16 +129,29 @@ export const usePreferredCurrency = () => {
     const config = getCurrencyConfig(targetCurrency);
     const converted = convertFromKZ(amountInKZ, targetCurrency);
     
-    // Formatação com ponto nos milhares
+    // Formato internacional para EUR, GBP, USD
+    const formatIntl = (val: number): string => {
+      const rounded = Math.round(val * 100) / 100;
+      const hasDecimals = rounded % 1 !== 0;
+      if (hasDecimals) {
+        const [intPart, decPart] = rounded.toFixed(2).split('.');
+        const formattedInt = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        return `${formattedInt}.${decPart}`;
+      } else {
+        return Math.round(rounded).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      }
+    };
+    
+    // Formatação com ponto nos milhares (formato PT)
     const formatted = formatWithMaxTwoDecimals(converted);
 
     switch (config.code) {
       case 'EUR':
-        return `€${formatted}`;
+        return `€${formatIntl(converted)}`;
       case 'GBP':
-        return `£${formatted}`;
+        return `£${formatIntl(converted)}`;
       case 'USD':
-        return `$${formatted}`;
+        return `$${formatIntl(converted)}`;
       case 'BRL':
         return `R$${formatted}`;
       case 'MZN':

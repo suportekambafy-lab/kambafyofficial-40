@@ -20,7 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { OptimizedPageWrapper } from "@/components/ui/optimized-page-wrapper";
 import professionalManImage from "@/assets/professional-man.jpg";
 import { getAllPaymentMethods, getPaymentMethodName, getAngolaPaymentMethods, getCountryByPaymentMethod, getCountryFlag } from "@/utils/paymentMethods";
-import { formatWithMaxTwoDecimals } from '@/utils/priceFormatting';
+import { formatWithMaxTwoDecimals, formatInternational } from '@/utils/priceFormatting';
 import { getActualCurrency, getActualAmount, calculateSellerEarning } from '@/utils/currencyUtils';
 import { usePreferredCurrency } from '@/hooks/usePreferredCurrency';
 // ✅ Formatar valor na moeda original SEM conversão
@@ -29,11 +29,11 @@ const formatCurrencyNative = (amount: number, currency: string = 'KZ'): string =
   
   switch (normalizedCurrency) {
     case 'EUR':
-      return `€${formatWithMaxTwoDecimals(amount)}`;
+      return `€${formatInternational(amount)}`;
     case 'GBP':
-      return `£${formatWithMaxTwoDecimals(amount)}`;
+      return `£${formatInternational(amount)}`;
     case 'USD':
-      return `$${formatWithMaxTwoDecimals(amount)}`;
+      return `$${formatInternational(amount)}`;
     case 'BRL':
       return `R$${formatWithMaxTwoDecimals(amount)}`;
     case 'MZN':

@@ -52,13 +52,26 @@ const getCountryInfo = (country: string | undefined | null) => {
 const formatCurrency = (amount: number, currency: string): string => {
   const formatted = formatWithMaxTwoDecimals(amount);
   
+  // Formato internacional para EUR, GBP, USD
+  const formatIntl = (val: number): string => {
+    const rounded = Math.round(val * 100) / 100;
+    const hasDecimals = rounded % 1 !== 0;
+    if (hasDecimals) {
+      const [intPart, decPart] = rounded.toFixed(2).split('.');
+      const formattedInt = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      return `${formattedInt}.${decPart}`;
+    } else {
+      return Math.round(rounded).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+  };
+  
   switch (currency) {
     case 'EUR':
-      return `€${formatted}`;
+      return `€${formatIntl(amount)}`;
     case 'GBP':
-      return `£${formatted}`;
+      return `£${formatIntl(amount)}`;
     case 'USD':
-      return `$${formatted}`;
+      return `$${formatIntl(amount)}`;
     case 'MZN':
       return `${formatted} MT`;
     case 'BRL':
