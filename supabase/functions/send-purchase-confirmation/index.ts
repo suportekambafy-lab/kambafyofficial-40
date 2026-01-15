@@ -434,10 +434,12 @@ const handler = async (req: Request): Promise<Response> => {
         }
 
         // Get member area URL if it's a course
+        // Usar o domínio principal app.kambafy.com com rota que funciona sem subdomínio
+        // O cliente pode acessar direto ou será redirecionado pelo SubdomainGuard em produção
         let memberAreaUrl = null;
         if (memberAreaId) {
-          // Usar a rota correta para login da área de membros
-          memberAreaUrl = `https://membros.kambafy.com/login/${memberAreaId}`;
+          // Usar rota no domínio principal - o SubdomainGuard em produção redireciona se necessário
+          memberAreaUrl = `https://app.kambafy.com/login/${memberAreaId}`;
         }
 
         // Create access link
@@ -977,11 +979,12 @@ const handler = async (req: Request): Promise<Response> => {
 
         // Send SMS for purchase confirmation if phone number is provided
         if (customerPhone) {
-          const memberAreaUrl = memberAreaId ? `https://membros.kambafy.com/login/${memberAreaId}` : shareLink;
+          // Usar app.kambafy.com para links de área de membros (SubdomainGuard redireciona em produção)
+          const smsUrl = memberAreaId ? `https://app.kambafy.com/login/${memberAreaId}` : shareLink;
           await sendSMSNotification(customerPhone, 'purchase_confirmation', {
             customerName,
             productName,
-            memberAreaUrl
+            memberAreaUrl: smsUrl
           });
         }
 
@@ -998,7 +1001,7 @@ const handler = async (req: Request): Promise<Response> => {
               .single();
             
             if (!memberAreaError && memberArea) {
-              const mainMemberAreaUrl = `https://membros.kambafy.com/login/${memberAreaId}`;
+              const mainMemberAreaUrl = `https://app.kambafy.com/login/${memberAreaId}`;
               
               // Use the same temporary password that was created for Kambafy account
               const passwordToUse = isNewAccount && temporaryPassword ? temporaryPassword : (() => {
@@ -1106,7 +1109,7 @@ const handler = async (req: Request): Promise<Response> => {
                 .single();
               
               if (!memberAreaError && memberArea) {
-                bumpMemberAreaUrl = `https://membros.kambafy.com/login/${bumpMemberAreaId}`;
+                bumpMemberAreaUrl = `https://app.kambafy.com/login/${bumpMemberAreaId}`;
                 
                 // Generate temporary password for order bump access
                 function generateTemporaryPassword(): string {
