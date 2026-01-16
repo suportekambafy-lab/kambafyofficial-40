@@ -156,6 +156,8 @@ export default function AdminSalesMoz() {
           )
         `)
         .neq('payment_method', 'member_access')
+        .neq('payment_method', 'reference')
+        .neq('payment_method', 'express')
         .or('payment_method.in.(emola,mpesa,card_mz),currency.eq.MZN,original_currency.eq.MZN')
         .order('created_at', { ascending: false });
 
