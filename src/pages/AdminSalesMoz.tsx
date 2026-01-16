@@ -145,7 +145,8 @@ export default function AdminSalesMoz() {
     try {
       setLoading(true);
 
-      // Fetch orders with MOZ filter
+      // Fetch MOZ orders directly from database with proper filters
+      // Using OR filter for MZ payment methods and MZN currency
       const { data: allOrders, error } = await supabase
         .from('orders')
         .select(`
@@ -155,14 +156,14 @@ export default function AdminSalesMoz() {
           )
         `)
         .neq('payment_method', 'member_access')
+        .or('payment_method.in.(emola,mpesa,card_mz),currency.eq.MZN,original_currency.eq.MZN')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      // Filter for MOZ orders only
-      let mozOrders = (allOrders || []).filter(isMozOrder);
+      let mozOrders = allOrders || [];
 
-      // Calculate stats
+      // Calculate stats from all MOZ orders
       setStats({
         total: mozOrders.length,
         completed: mozOrders.filter(o => o.status === 'completed').length,
