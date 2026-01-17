@@ -127,13 +127,123 @@ const ApiDocumentation = () => {
 
   // Resposta do pagamento por cartão retorna dados para formulário embedded
   const cardResponseExample = `{
-  "success": true,
-  "paymentId": "550e8400-e29b-41d4-a716-446655440000",
+  "id": "550e8400-e29b-41d4-a716-446655440000",
   "orderId": "order_789",
-  "clientSecret": "secret_xxx",
-  "publishableKey": "pub_xxx",
   "status": "pending",
-  "message": "Use clientSecret e publishableKey para renderizar o formulário de cartão"
+  "amount": 15000,
+  "currency": "AOA",
+  "paymentMethod": "card",
+  "card": {
+    "paymentIntentId": "pi_xxx",
+    "clientSecret": "pi_xxx_secret_xxx",
+    "publishableKey": "pk_live_xxx"
+  },
+  "instructions": "Use clientSecret e publishableKey com CardElement (não PaymentElement)",
+  "expiresAt": "2025-01-18T23:59:59.000Z"
+}`;
+
+  // Exemplo de integração React com CardElement (white-label)
+  const cardIntegrationExample = `// IMPORTANTE: Use CardElement (white-label) e NÃO PaymentElement (mostra marca Stripe)
+// Instale: npm install @stripe/react-stripe-js @stripe/stripe-js
+
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+
+// 1. Criar pagamento via API Kambafy
+async function createCardPayment(orderId, amount, customer) {
+  const response = await fetch('${API_BASE_URL}', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': 'YOUR_API_KEY'
+    },
+    body: JSON.stringify({
+      orderId,
+      amount,
+      currency: 'AOA',
+      paymentMethod: 'card',
+      customerName: customer.name,
+      customerEmail: customer.email
+    })
+  });
+  return response.json();
+}
+
+// 2. Componente do Formulário de Cartão (WHITE-LABEL)
+function CardForm({ clientSecret, onSuccess, onError }) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!stripe || !elements) return;
+
+    setLoading(true);
+    const cardElement = elements.getElement(CardElement);
+    
+    // Confirmar pagamento com CardElement
+    const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+      payment_method: { card: cardElement }
+    });
+
+    if (error) {
+      onError(error.message);
+    } else if (paymentIntent.status === 'succeeded') {
+      onSuccess(paymentIntent);
+    }
+    setLoading(false);
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      {/* CardElement é WHITE-LABEL - sem marca do Stripe */}
+      <div style={{ padding: '12px', border: '1px solid #ccc', borderRadius: '8px' }}>
+        <CardElement options={{
+          style: {
+            base: { fontSize: '16px', color: '#424770' },
+            invalid: { color: '#9e2146' }
+          },
+          hidePostalCode: true // Opcional: esconder código postal
+        }} />
+      </div>
+      <button type="submit" disabled={!stripe || loading}>
+        {loading ? 'Processando...' : 'Pagar'}
+      </button>
+    </form>
+  );
+}
+
+// 3. Componente Principal
+function CheckoutPage() {
+  const [paymentData, setPaymentData] = useState(null);
+
+  useEffect(() => {
+    // Criar pagamento ao carregar
+    createCardPayment('order_123', 15000, {
+      name: 'João Silva',
+      email: 'joao@email.com'
+    }).then(data => {
+      if (data.card?.publishableKey && data.card?.clientSecret) {
+        setPaymentData(data);
+      }
+    });
+  }, []);
+
+  if (!paymentData) return <div>Carregando...</div>;
+
+  // Usar publishableKey retornada pela API
+  const stripePromise = loadStripe(paymentData.card.publishableKey);
+
+  return (
+    <Elements stripe={stripePromise}>
+      <CardForm 
+        clientSecret={paymentData.card.clientSecret}
+        onSuccess={(pi) => console.log('Sucesso!', pi)}
+        onError={(err) => console.error('Erro:', err)}
+      />
+    </Elements>
+  );
 }`;
 
   const curlCreateMbway = `curl -X POST "${API_BASE_URL}" \\
@@ -606,6 +716,7 @@ app.post('/webhook', (req, res) => {
                 <TabsList className="mb-4 flex-wrap">
                   <TabsTrigger value="curl">cURL</TabsTrigger>
                   <TabsTrigger value="javascript">JavaScript</TabsTrigger>
+                  <TabsTrigger value="react-card">React/Card</TabsTrigger>
                   <TabsTrigger value="python">Python</TabsTrigger>
                   <TabsTrigger value="php">PHP</TabsTrigger>
                 </TabsList>
@@ -627,6 +738,13 @@ app.post('/webhook', (req, res) => {
                     <p className="text-sm text-muted-foreground mb-2">
                       Pagamentos por cartão. A API retorna um <code className="bg-muted px-1 rounded">clientSecret</code> e <code className="bg-muted px-1 rounded">publishableKey</code> para você renderizar um formulário de cartão diretamente no seu site.
                     </p>
+                    <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-4 mb-4">
+                      <h5 className="font-semibold text-amber-700 dark:text-amber-400 mb-2">⚠️ Importante: Use CardElement (White-Label)</h5>
+                      <p className="text-sm text-muted-foreground">
+                        Para um checkout <strong>100% white-label</strong> sem marcas do Stripe, use o componente <code className="bg-muted px-1 rounded">CardElement</code> e <strong>NÃO</strong> o <code className="bg-muted px-1 rounded">PaymentElement</code>.
+                        O PaymentElement mostra "Checkout rápido com Link" e "Processado por Stripe". Veja o exemplo completo na aba <strong>React/Card</strong>.
+                      </p>
+                    </div>
                     <CodeBlock code={curlCreateCard} language="bash" id="curl-card" />
                     <p className="text-sm text-muted-foreground mt-2 mb-2">Resposta:</p>
                     <CodeBlock code={cardResponseExample} language="json" id="curl-card-response" />
@@ -682,6 +800,17 @@ app.post('/webhook', (req, res) => {
 
                 <TabsContent value="javascript">
                   <CodeBlock code={jsExample} language="javascript" id="js-example" />
+                </TabsContent>
+
+                <TabsContent value="react-card" className="space-y-4">
+                  <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
+                    <h5 className="font-semibold text-green-700 dark:text-green-400 mb-2">✅ Recomendado: CardElement (White-Label)</h5>
+                    <p className="text-sm text-muted-foreground">
+                      Este exemplo usa <code className="bg-muted px-1 rounded">CardElement</code> que <strong>não mostra</strong> marcas do Stripe, Link, ou campos de país.
+                      É a forma correcta de integrar pagamentos por cartão com a API Kambafy.
+                    </p>
+                  </div>
+                  <CodeBlock code={cardIntegrationExample} language="javascript" id="react-card-example" />
                 </TabsContent>
 
                 <TabsContent value="python">
