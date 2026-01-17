@@ -766,7 +766,7 @@ async function createPayment(
               clientSecret: paymentIntent.client_secret,
               publishableKey: Deno.env.get('STRIPE_PUBLISHABLE_KEY') || null,
             },
-            instructions: 'Use o client_secret com Stripe.js ou Elements no frontend para completar o pagamento. O cliente insere os dados do cartão diretamente no seu site/app.',
+            instructions: 'Use o clientSecret e publishableKey para renderizar o formulário de cartão diretamente no seu site/app.',
             expiresAt: expiresAt,
             createdAt: payment.created_at,
           }),

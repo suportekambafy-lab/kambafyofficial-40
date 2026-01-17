@@ -154,7 +154,7 @@ export const StripePaymentForm: React.FC<StripePaymentFormProps> = ({
         </div>
 
         <div className="text-xs text-gray-400 text-center mt-2">
-          {t('payment.powered') || 'Powered by'} Stripe
+          {t('payment.powered') || 'Pagamento 100% seguro'}
         </div>
       </CardContent>
     </Card>

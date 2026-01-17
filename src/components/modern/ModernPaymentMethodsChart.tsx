@@ -14,7 +14,7 @@ interface PaymentMethodData {
 }
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
   'card': 'Cartão',
-  'stripe': 'Stripe',
+  'stripe': 'Cartão',
   'reference': 'Referência',
   'mpesa': 'M-Pesa',
   'multicaixa_express': 'Multicaixa Express',

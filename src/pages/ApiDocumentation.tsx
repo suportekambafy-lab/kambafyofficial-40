@@ -130,8 +130,8 @@ const ApiDocumentation = () => {
   "success": true,
   "paymentId": "550e8400-e29b-41d4-a716-446655440000",
   "orderId": "order_789",
-  "clientSecret": "pi_xxx_secret_xxx",
-  "publishableKey": "pk_live_xxx",
+  "clientSecret": "secret_xxx",
+  "publishableKey": "pub_xxx",
   "status": "pending",
   "message": "Use clientSecret e publishableKey para renderizar o formulário de cartão"
 }`;

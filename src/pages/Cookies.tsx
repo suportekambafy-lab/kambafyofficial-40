@@ -106,9 +106,9 @@ const Cookies = () => {
               </p>
             </div>
             <div className="p-4 border rounded-lg">
-              <h4 className="font-medium mb-2">Stripe</h4>
+              <h4 className="font-medium mb-2">Processador de Pagamentos</h4>
               <p className="text-sm text-muted-foreground">
-                Processamento seguro de pagamentos
+                Processamento seguro de cartões de crédito
               </p>
             </div>
           </div>
