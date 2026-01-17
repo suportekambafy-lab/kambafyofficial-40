@@ -1276,9 +1276,95 @@ setFormData({
 
                         {/* Aulas do Módulo */}
                         <div className="pl-4 md:pl-8 space-y-2">
-                          {getLessonsByModule(module.id).map(lesson => <div key={lesson.id} className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between p-2 md:p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
+                          {getLessonsByModule(module.id).map(lesson => <div 
+                            key={lesson.id} 
+                            className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between p-2 md:p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-all"
+                            draggable
+                            onDragStart={e => {
+                              e.stopPropagation();
+                              e.dataTransfer.effectAllowed = 'move';
+                              e.dataTransfer.setData('lessonId', lesson.id);
+                              e.dataTransfer.setData('lessonModuleId', module.id);
+                              e.currentTarget.style.opacity = '0.5';
+                              console.log('🎯 Drag started for lesson:', lesson.title);
+                            }}
+                            onDragEnd={e => {
+                              e.currentTarget.style.opacity = '1';
+                            }}
+                            onDragOver={e => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              e.dataTransfer.dropEffect = 'move';
+                              e.currentTarget.style.borderColor = '#3b82f6';
+                              e.currentTarget.style.borderWidth = '2px';
+                            }}
+                            onDragLeave={e => {
+                              e.currentTarget.style.borderColor = '';
+                              e.currentTarget.style.borderWidth = '';
+                            }}
+                            onDrop={async e => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              e.currentTarget.style.borderColor = '';
+                              e.currentTarget.style.borderWidth = '';
+                              const draggedLessonId = e.dataTransfer.getData('lessonId');
+                              const draggedFromModuleId = e.dataTransfer.getData('lessonModuleId');
+                              
+                              // Só permite reordenar aulas dentro do mesmo módulo
+                              if (!draggedLessonId || draggedFromModuleId !== module.id) return;
+                              if (draggedLessonId === lesson.id) return;
+                              
+                              const moduleLessons = getLessonsByModule(module.id);
+                              const draggedLesson = moduleLessons.find(l => l.id === draggedLessonId);
+                              if (!draggedLesson) return;
+                              
+                              console.log('🔄 Reordering lesson:', draggedLesson.title, '->', lesson.title);
+                              
+                              // Reordenar aulas
+                              const reorderedLessons = [...moduleLessons];
+                              const draggedIndex = reorderedLessons.findIndex(l => l.id === draggedLessonId);
+                              const targetIndex = reorderedLessons.findIndex(l => l.id === lesson.id);
+                              reorderedLessons.splice(draggedIndex, 1);
+                              reorderedLessons.splice(targetIndex, 0, draggedLesson);
+                              
+                              // Atualizar ordem
+                              const updatedLessons = reorderedLessons.map((l, idx) => ({
+                                ...l,
+                                order_number: idx + 1
+                              }));
+                              
+                              // Atualizar estado local
+                              setLessons(prev => {
+                                const otherLessons = prev.filter(l => l.module_id !== module.id);
+                                return [...otherLessons, ...updatedLessons];
+                              });
+                              
+                              // Atualizar no banco de dados
+                              try {
+                                for (const les of updatedLessons) {
+                                  const { error } = await supabase
+                                    .from('lessons')
+                                    .update({ order_number: les.order_number })
+                                    .eq('id', les.id);
+                                  if (error) throw error;
+                                }
+                                toast({
+                                  title: "Ordem atualizada",
+                                  description: "A ordem das aulas foi atualizada com sucesso."
+                                });
+                              } catch (error) {
+                                console.error('Erro ao reordenar aulas:', error);
+                                toast({
+                                  title: "Erro ao reordenar",
+                                  description: "Não foi possível atualizar a ordem das aulas.",
+                                  variant: "destructive"
+                                });
+                                loadLessons();
+                              }
+                            }}
+                          >
                               <div className="flex items-center gap-2 md:gap-3 flex-1">
-                                <GripVertical className="w-3 h-3 md:w-4 md:h-4 text-gray-400 cursor-move hidden md:block" />
+                                <GripVertical className="w-3 h-3 md:w-4 md:h-4 text-gray-400 cursor-grab active:cursor-grabbing hidden md:block" />
                                 <div className="w-2 h-2 md:w-3 md:h-3 bg-gray-200 rounded flex-shrink-0"></div>
                                 <div className="flex-1 min-w-0">
                                   <div className="font-medium flex items-center gap-2 text-xs md:text-sm">
