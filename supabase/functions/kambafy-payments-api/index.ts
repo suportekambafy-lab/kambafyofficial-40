@@ -26,13 +26,13 @@ interface CreatePaymentRequest {
   orderId: string;
   amount: number;
   currency?: string;
-  paymentMethod: 'express' | 'reference' | 'card';
+  paymentMethod: 'express' | 'reference' | 'card' | 'mbway' | 'multibanco';
   customerName: string;
   customerEmail: string;
   customerPhone?: string;
   metadata?: Record<string, any>;
   phoneNumber?: string;
-  // Campos específicos para pagamento com cartão
+  // Campos específicos para pagamento com cartão/mbway/multibanco
   successUrl?: string;
   cancelUrl?: string;
 }
@@ -250,6 +250,18 @@ async function createPayment(
       );
     }
 
+    if (paymentMethod === 'mbway' && !rawPhoneNumber) {
+      await logApiUsage(supabaseAdmin, partner.id, '/create-payment', 'POST', 400, Date.now() - startTime, req);
+      return new Response(
+        JSON.stringify({ 
+          error: 'phoneNumber is required for MB WAY payments', 
+          code: 'VALIDATION_ERROR',
+          details: 'Portuguese phone number required (e.g., +351912345678)'
+        }),
+        { status: 400, headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     if (paymentMethod === 'express' && (!normalizedPhoneNumber || !isValidPhoneNumber(normalizedPhoneNumber))) {
       await logApiUsage(supabaseAdmin, partner.id, '/create-payment', 'POST', 400, Date.now() - startTime, req);
       return new Response(
@@ -257,6 +269,19 @@ async function createPayment(
           error: 'Invalid phoneNumber format',
           code: 'VALIDATION_ERROR',
           details: 'Use only digits (9-15). Example: 923456789 or 244923456789. We ignore + and spaces.'
+        }),
+        { status: 400, headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validar moeda para métodos portugueses
+    if ((paymentMethod === 'mbway' || paymentMethod === 'multibanco') && currency !== 'EUR') {
+      await logApiUsage(supabaseAdmin, partner.id, '/create-payment', 'POST', 400, Date.now() - startTime, req);
+      return new Response(
+        JSON.stringify({
+          error: 'MB WAY and Multibanco only accept EUR currency',
+          code: 'VALIDATION_ERROR',
+          details: 'Set currency to EUR for Portuguese payment methods'
         }),
         { status: 400, headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } }
       );
@@ -299,15 +324,15 @@ async function createPayment(
     // Definir expiração baseado no método de pagamento
     const expiresAt = paymentMethod === 'express'
       ? new Date(Date.now() + 5 * 60 * 1000).toISOString()  // 5 minutos
-      : paymentMethod === 'card'
-        ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()  // 24 horas para cartão
+      : (paymentMethod === 'card' || paymentMethod === 'mbway' || paymentMethod === 'multibanco')
+        ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()  // 24 horas para cartão/mbway/multibanco
         : new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();  // 48 horas para referência
 
     let payment: any = null;
 
-    // PAGAMENTO COM CARTÃO (Stripe white-label)
-    if (paymentMethod === 'card') {
-      console.log('💳 Processing card payment via Stripe');
+    // PAGAMENTO COM CARTÃO, MB WAY ou MULTIBANCO (Stripe white-label)
+    if (paymentMethod === 'card' || paymentMethod === 'mbway' || paymentMethod === 'multibanco') {
+      console.log(`💳 Processing ${paymentMethod} payment via Stripe`);
       
       const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
       if (!stripeSecretKey) {
@@ -334,7 +359,7 @@ async function createPayment(
           order_id: orderId,
           amount,
           currency,
-          payment_method: 'card',
+          payment_method: paymentMethod, // card, mbway, or multibanco
           status: 'pending',
           customer_name: customerName,
           customer_email: customerEmail,
@@ -360,9 +385,24 @@ async function createPayment(
         const defaultSuccessUrl = `https://kambafy.com/payment/success?order_id=${orderId}`;
         const defaultCancelUrl = `https://kambafy.com/payment/cancel?order_id=${orderId}`;
 
+        // Determinar payment_method_types baseado no método
+        let stripePaymentMethodTypes: string[];
+        let paymentMethodLabel: string;
+        
+        if (paymentMethod === 'mbway') {
+          stripePaymentMethodTypes = ['card']; // MB WAY usa Stripe Link ou card como fallback
+          paymentMethodLabel = 'MB WAY';
+        } else if (paymentMethod === 'multibanco') {
+          stripePaymentMethodTypes = ['multibanco'];
+          paymentMethodLabel = 'Multibanco';
+        } else {
+          stripePaymentMethodTypes = ['card'];
+          paymentMethodLabel = 'Cartão';
+        }
+
         // Criar Stripe Checkout Session
-        const session = await stripe.checkout.sessions.create({
-          payment_method_types: ['card'],
+        const sessionParams: any = {
+          payment_method_types: stripePaymentMethodTypes,
           mode: 'payment',
           customer_email: customerEmail,
           line_items: [
@@ -385,11 +425,20 @@ async function createPayment(
             partner_id: partner.id,
             order_id: orderId,
             source: 'kambafy_partner_api',
+            payment_method: paymentMethod,
           },
           expires_at: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 horas
-        });
+        };
 
-        console.log('✅ Stripe session created:', session.id);
+        // Para MB WAY, adicionar phone_number_collection ou passar telefone
+        if (paymentMethod === 'mbway' && rawPhoneNumber) {
+          // Adicionar telefone nos metadados para referência
+          sessionParams.metadata.customer_phone = rawPhoneNumber;
+        }
+
+        const session = await stripe.checkout.sessions.create(sessionParams);
+
+        console.log(`✅ Stripe session created for ${paymentMethod}:`, session.id);
 
         // Atualizar registro com dados do Stripe
         const { data: updatedPayment, error: updateError } = await supabaseAdmin
@@ -435,7 +484,14 @@ async function createPayment(
 
       await logApiUsage(supabaseAdmin, partner.id, '/create-payment', 'POST', 201, Date.now() - startTime, req);
 
-      // Retornar resposta para cartão
+      // Instruções baseadas no método de pagamento
+      const instructionsMap: Record<string, string> = {
+        card: 'Redirecione o cliente para a URL de checkout para completar o pagamento com cartão.',
+        mbway: 'Redirecione o cliente para a URL de checkout. Ele receberá uma notificação no telemóvel para aprovar o pagamento MB WAY.',
+        multibanco: 'Redirecione o cliente para a URL de checkout para obter a referência Multibanco e efetuar o pagamento.',
+      };
+
+      // Retornar resposta para cartão/mbway/multibanco
       return new Response(
         JSON.stringify({
           id: payment.id,
@@ -443,7 +499,7 @@ async function createPayment(
           status: payment.status,
           amount: payment.amount,
           currency: payment.currency,
-          paymentMethod: 'card',
+          paymentMethod: paymentMethod,
           expiresAt: payment.expires_at,
           createdAt: payment.created_at,
           sandbox: sandboxMode,
@@ -451,7 +507,7 @@ async function createPayment(
             url: payment.metadata?.checkout_url,
             expiresIn: '24 horas',
           },
-          instructions: 'Redirecione o cliente para a URL de checkout para completar o pagamento com cartão.',
+          instructions: instructionsMap[paymentMethod] || instructionsMap.card,
         }),
         { status: 201, headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } }
       );
