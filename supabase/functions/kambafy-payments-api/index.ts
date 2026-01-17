@@ -330,9 +330,174 @@ async function createPayment(
 
     let payment: any = null;
 
-    // PAGAMENTO COM CARTÃO, MB WAY ou MULTIBANCO (Stripe white-label)
-    if (paymentMethod === 'card' || paymentMethod === 'mbway' || paymentMethod === 'multibanco') {
-      console.log(`💳 Processing ${paymentMethod} payment via Stripe`);
+    // PAGAMENTO COM MB WAY (via PaymentIntents - envia push notification)
+    if (paymentMethod === 'mbway') {
+      console.log(`📱 Processing MB WAY payment via Stripe PaymentIntents`);
+      
+      const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
+      if (!stripeSecretKey) {
+        await logApiUsage(supabaseAdmin, partner.id, '/create-payment', 'POST', 500, Date.now() - startTime, req);
+        return new Response(
+          JSON.stringify({ error: 'MB WAY payments not configured', code: 'MBWAY_NOT_CONFIGURED' }),
+          { status: 500, headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const stripe = new Stripe(stripeSecretKey, { apiVersion: '2023-10-16' });
+
+      // Converter amount para centavos
+      const amountInCents = Math.round(amount);
+
+      // Criar registro no banco primeiro
+      const { data: insertedPayment, error: insertError } = await supabaseAdmin
+        .from('external_payments')
+        .insert({
+          partner_id: partner.id,
+          order_id: orderId,
+          amount,
+          currency,
+          payment_method: paymentMethod,
+          status: 'pending',
+          customer_name: customerName,
+          customer_email: customerEmail,
+          customer_phone: rawPhoneNumber || null,
+          expires_at: expiresAt,
+          metadata: {
+            ...metadata,
+            is_sandbox: sandboxMode,
+          },
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error('❌ Insert error:', insertError);
+        throw new Error('Failed to save payment');
+      }
+
+      payment = insertedPayment;
+
+      try {
+        // Formatar telefone português (deve incluir código do país)
+        let formattedPhone = rawPhoneNumber!.replace(/\s+/g, '').replace(/-/g, '');
+        if (!formattedPhone.startsWith('+')) {
+          if (formattedPhone.startsWith('351')) {
+            formattedPhone = '+' + formattedPhone;
+          } else if (formattedPhone.startsWith('9')) {
+            formattedPhone = '+351' + formattedPhone;
+          } else {
+            formattedPhone = '+351' + formattedPhone;
+          }
+        }
+
+        console.log(`📱 Creating MB WAY PaymentIntent for phone: ${formattedPhone}`);
+
+        // Criar PaymentIntent com MB WAY
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount: amountInCents,
+          currency: 'eur',
+          payment_method_types: ['mbway'],
+          payment_method_data: {
+            type: 'mbway',
+            mbway: {
+              phone: formattedPhone,
+            },
+          },
+          confirm: true, // Confirma imediatamente - envia push ao telefone
+          metadata: {
+            external_payment_id: payment.id,
+            partner_id: partner.id,
+            order_id: orderId,
+            source: 'kambafy_partner_api',
+            payment_method: 'mbway',
+            customer_phone: formattedPhone,
+          },
+        });
+
+        console.log(`✅ MB WAY PaymentIntent created:`, paymentIntent.id, 'Status:', paymentIntent.status);
+
+        // Atualizar registro com dados do Stripe
+        const { data: updatedPayment, error: updateError } = await supabaseAdmin
+          .from('external_payments')
+          .update({
+            card_payment_intent_id: paymentIntent.id,
+            status: paymentIntent.status === 'succeeded' ? 'completed' : 'pending',
+            metadata: {
+              ...payment.metadata,
+              stripe_payment_intent_id: paymentIntent.id,
+              stripe_status: paymentIntent.status,
+              phone_used: formattedPhone,
+            },
+            updated_at: new Date().toISOString(),
+            ...(paymentIntent.status === 'succeeded' ? { completed_at: new Date().toISOString() } : {}),
+          })
+          .eq('id', payment.id)
+          .select()
+          .single();
+
+        if (updateError) {
+          console.error('⚠️ Failed to update payment with Stripe data:', updateError);
+        } else {
+          payment = updatedPayment;
+        }
+
+        await logApiUsage(supabaseAdmin, partner.id, '/create-payment', 'POST', 201, Date.now() - startTime, req);
+
+        // Retornar resposta para MB WAY
+        return new Response(
+          JSON.stringify({
+            id: payment.id,
+            orderId: payment.order_id,
+            status: paymentIntent.status === 'succeeded' ? 'completed' : 'pending',
+            amount: payment.amount,
+            currency: payment.currency,
+            paymentMethod: 'mbway',
+            mbway: {
+              paymentIntentId: paymentIntent.id,
+              status: paymentIntent.status,
+              phone: formattedPhone,
+              message: 'Notificação MB WAY enviada para o telemóvel do cliente. Aguarde a confirmação.',
+            },
+            instructions: 'O cliente receberá uma notificação push no app MB WAY para aprovar o pagamento. Use o endpoint GET /payment/{id} para verificar o status.',
+            expiresAt: expiresAt,
+            createdAt: payment.created_at,
+          }),
+          { status: 201, headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (stripeError: any) {
+        console.error('❌ MB WAY Stripe error:', stripeError.message);
+        
+        // Marcar como failed
+        await supabaseAdmin
+          .from('external_payments')
+          .update({
+            status: 'failed',
+            webhook_last_error: stripeError.message,
+            metadata: {
+              ...payment.metadata,
+              stripe_error: stripeError.message,
+              failed_at: new Date().toISOString(),
+            },
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', payment.id);
+
+        await logApiUsage(supabaseAdmin, partner.id, '/create-payment', 'POST', 400, Date.now() - startTime, req);
+
+        return new Response(
+          JSON.stringify({ 
+            error: 'Falha ao enviar notificação MB WAY', 
+            code: 'MBWAY_SEND_FAILED',
+            details: stripeError.message,
+          }),
+          { status: 400, headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    // PAGAMENTO COM CARTÃO ou MULTIBANCO (Stripe Checkout - redireciona)
+    if (paymentMethod === 'card' || paymentMethod === 'multibanco') {
+      console.log(`💳 Processing ${paymentMethod} payment via Stripe Checkout`);
       
       const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
       if (!stripeSecretKey) {
@@ -359,7 +524,7 @@ async function createPayment(
           order_id: orderId,
           amount,
           currency,
-          payment_method: paymentMethod, // card, mbway, or multibanco
+          payment_method: paymentMethod,
           status: 'pending',
           customer_name: customerName,
           customer_email: customerEmail,
@@ -386,20 +551,7 @@ async function createPayment(
         const defaultCancelUrl = `https://kambafy.com/payment/cancel?order_id=${orderId}`;
 
         // Determinar payment_method_types baseado no método
-        let stripePaymentMethodTypes: string[];
-        let paymentMethodLabel: string;
-        
-        if (paymentMethod === 'mbway') {
-          // MB WAY é um método de pagamento nativo do Stripe em Portugal
-          stripePaymentMethodTypes = ['mbway'];
-          paymentMethodLabel = 'MB WAY';
-        } else if (paymentMethod === 'multibanco') {
-          stripePaymentMethodTypes = ['multibanco'];
-          paymentMethodLabel = 'Multibanco';
-        } else {
-          stripePaymentMethodTypes = ['card'];
-          paymentMethodLabel = 'Cartão';
-        }
+        const stripePaymentMethodTypes = paymentMethod === 'multibanco' ? ['multibanco'] : ['card'];
 
         // Criar Stripe Checkout Session
         const sessionParams: any = {
@@ -430,12 +582,6 @@ async function createPayment(
           },
           expires_at: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 horas
         };
-
-        // Para MB WAY, adicionar phone_number_collection ou passar telefone
-        if (paymentMethod === 'mbway' && rawPhoneNumber) {
-          // Adicionar telefone nos metadados para referência
-          sessionParams.metadata.customer_phone = rawPhoneNumber;
-        }
 
         const session = await stripe.checkout.sessions.create(sessionParams);
 
@@ -488,7 +634,6 @@ async function createPayment(
       // Instruções baseadas no método de pagamento
       const instructionsMap: Record<string, string> = {
         card: 'Redirecione o cliente para a URL de checkout para completar o pagamento com cartão.',
-        mbway: 'Redirecione o cliente para a URL de checkout. Ele receberá uma notificação no telemóvel para aprovar o pagamento MB WAY.',
         multibanco: 'Redirecione o cliente para a URL de checkout para obter a referência Multibanco e efetuar o pagamento.',
       };
 
