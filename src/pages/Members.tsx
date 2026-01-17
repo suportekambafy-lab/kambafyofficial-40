@@ -686,49 +686,39 @@ const [formData, setFormData] = useState({
         }
         console.log('✅ Updated lesson data:', updatedData);
         
-        // Enviar notificação por email se checkbox estiver marcado e status for published
+        // Enviar notificação por email em segundo plano se checkbox estiver marcado
         if (formData.notify_students && formData.status === 'published' && updatedData) {
-          try {
-            console.log('📧 Enviando notificação de aula atualizada...');
-            let moduleName = '';
-            if (updatedData.module_id) {
-              const module = modules.find(m => m.id === updatedData.module_id);
-              if (module) {
-                moduleName = module.title;
-              }
+          let moduleName = '';
+          if (updatedData.module_id) {
+            const module = modules.find(m => m.id === updatedData.module_id);
+            if (module) moduleName = module.title;
+          }
+          
+          // Enviar em segundo plano (não bloqueia)
+          supabase.functions.invoke('send-new-lesson-notification', {
+            body: {
+              lessonId: updatedData.id,
+              memberAreaId: selectedArea?.id,
+              lessonTitle: updatedData.title,
+              lessonDescription: updatedData.description || '',
+              moduleName
             }
-            
-            const { data: notifData, error: notifError } = await supabase.functions.invoke('send-new-lesson-notification', {
-              body: {
-                lessonId: updatedData.id,
-                memberAreaId: selectedArea?.id,
-                lessonTitle: updatedData.title,
-                lessonDescription: updatedData.description || '',
-                moduleName
-              }
-            });
-            
+          }).then(({ data: notifData, error: notifError }) => {
             if (notifError) {
               console.error('⚠️ Erro ao enviar notificações:', notifError);
-              toast({
-                title: "Aula atualizada",
-                description: "Aula atualizada, mas houve um erro ao notificar os alunos.",
-                variant: "default"
-              });
             } else {
               console.log('✅ Notificações enviadas:', notifData);
               toast({
-                title: "Sucesso",
-                description: `Aula atualizada e ${notifData?.sent || 0} aluno(s) notificado(s) por email!`
+                title: "Notificações enviadas",
+                description: `${notifData?.sent || 0} aluno(s) notificado(s) por email!`
               });
             }
-          } catch (notifError) {
-            console.error('⚠️ Erro ao enviar notificações:', notifError);
-            toast({
-              title: "Aula atualizada",
-              description: "Aula atualizada com sucesso!"
-            });
-          }
+          }).catch(err => console.error('⚠️ Erro ao enviar notificações:', err));
+          
+          toast({
+            title: "Sucesso",
+            description: "Aula atualizada! Enviando notificações..."
+          });
         } else {
           toast({
             title: "Sucesso",
@@ -741,60 +731,46 @@ const [formData, setFormData] = useState({
           data,
           error
         } = await supabase.from('lessons').insert([lessonData]).select().single();
-        console.log('Insert lesson result:', {
-          data,
-          error
-        });
+        console.log('Insert lesson result:', { data, error });
         if (error) {
           console.error('Insert error:', error);
           throw error;
         }
         console.log('Successfully saved lesson with video_url:', data?.video_url);
         
-        // Enviar notificação por email se checkbox estiver marcado e status for published
+        // Enviar notificação por email em segundo plano se checkbox estiver marcado
         if (formData.notify_students && formData.status === 'published' && data) {
-          try {
-            console.log('📧 Enviando notificação de nova aula...');
-            // Buscar nome do módulo se existir
-            let moduleName = '';
-            if (data.module_id) {
-              const module = modules.find(m => m.id === data.module_id);
-              if (module) {
-                moduleName = module.title;
-              }
+          let moduleName = '';
+          if (data.module_id) {
+            const module = modules.find(m => m.id === data.module_id);
+            if (module) moduleName = module.title;
+          }
+          
+          // Enviar em segundo plano (não bloqueia)
+          supabase.functions.invoke('send-new-lesson-notification', {
+            body: {
+              lessonId: data.id,
+              memberAreaId: selectedArea?.id,
+              lessonTitle: data.title,
+              lessonDescription: data.description || '',
+              moduleName
             }
-            
-            const { data: notifData, error: notifError } = await supabase.functions.invoke('send-new-lesson-notification', {
-              body: {
-                lessonId: data.id,
-                memberAreaId: selectedArea?.id,
-                lessonTitle: data.title,
-                lessonDescription: data.description || '',
-                moduleName
-              }
-            });
-            
+          }).then(({ data: notifData, error: notifError }) => {
             if (notifError) {
               console.error('⚠️ Erro ao enviar notificações:', notifError);
-              toast({
-                title: "Aula criada",
-                description: "Aula criada, mas houve um erro ao notificar os alunos.",
-                variant: "default"
-              });
             } else {
               console.log('✅ Notificações enviadas:', notifData);
               toast({
-                title: "Sucesso",
-                description: `Aula criada e ${notifData?.sent || 0} aluno(s) notificado(s) por email!`
+                title: "Notificações enviadas",
+                description: `${notifData?.sent || 0} aluno(s) notificado(s) por email!`
               });
             }
-          } catch (notifError) {
-            console.error('⚠️ Erro ao enviar notificações:', notifError);
-            toast({
-              title: "Aula criada",
-              description: "Aula criada com sucesso!"
-            });
-          }
+          }).catch(err => console.error('⚠️ Erro ao enviar notificações:', err));
+          
+          toast({
+            title: "Sucesso",
+            description: "Aula criada! Enviando notificações..."
+          });
         } else {
           toast({
             title: "Sucesso",
