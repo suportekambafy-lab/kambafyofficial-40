@@ -495,9 +495,171 @@ async function createPayment(
       }
     }
 
-    // PAGAMENTO COM CARTÃO ou MULTIBANCO (Stripe Checkout - redireciona)
-    if (paymentMethod === 'card' || paymentMethod === 'multibanco') {
-      console.log(`💳 Processing ${paymentMethod} payment via Stripe Checkout`);
+    // PAGAMENTO COM MULTIBANCO (via PaymentIntents - retorna entidade/referência)
+    if (paymentMethod === 'multibanco') {
+      console.log(`🏦 Processing Multibanco payment via Stripe PaymentIntents`);
+      
+      const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
+      if (!stripeSecretKey) {
+        await logApiUsage(supabaseAdmin, partner.id, '/create-payment', 'POST', 500, Date.now() - startTime, req);
+        return new Response(
+          JSON.stringify({ error: 'Multibanco payments not configured', code: 'MULTIBANCO_NOT_CONFIGURED' }),
+          { status: 500, headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const stripe = new Stripe(stripeSecretKey, { apiVersion: '2023-10-16' });
+      const amountInCents = Math.round(amount);
+
+      // Criar registro no banco primeiro
+      const { data: insertedPayment, error: insertError } = await supabaseAdmin
+        .from('external_payments')
+        .insert({
+          partner_id: partner.id,
+          order_id: orderId,
+          amount,
+          currency,
+          payment_method: paymentMethod,
+          status: 'pending',
+          customer_name: customerName,
+          customer_email: customerEmail,
+          customer_phone: rawPhoneNumber || null,
+          expires_at: expiresAt,
+          metadata: {
+            ...metadata,
+            is_sandbox: sandboxMode,
+          },
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error('❌ Insert error:', insertError);
+        throw new Error('Failed to save payment');
+      }
+
+      payment = insertedPayment;
+
+      try {
+        // Criar PaymentIntent com Multibanco
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount: amountInCents,
+          currency: 'eur',
+          payment_method_types: ['multibanco'],
+          payment_method_data: {
+            type: 'multibanco',
+            billing_details: {
+              email: customerEmail,
+              name: customerName,
+            },
+          },
+          confirm: true,
+          metadata: {
+            external_payment_id: payment.id,
+            partner_id: partner.id,
+            order_id: orderId,
+            source: 'kambafy_partner_api',
+            payment_method: 'multibanco',
+          },
+        });
+
+        console.log(`✅ Multibanco PaymentIntent created:`, paymentIntent.id, 'Status:', paymentIntent.status);
+
+        // Extrair dados do Multibanco
+        let multibancoEntity = null;
+        let multibancoReference = null;
+        let multibancoExpiresAt = null;
+
+        if (paymentIntent.next_action?.type === 'multibanco_display_details') {
+          const details = paymentIntent.next_action.multibanco_display_details;
+          multibancoEntity = details?.entity;
+          multibancoReference = details?.reference;
+          multibancoExpiresAt = details?.expires_at ? new Date(details.expires_at * 1000).toISOString() : null;
+        }
+
+        // Atualizar registro com dados do Stripe
+        const { data: updatedPayment, error: updateError } = await supabaseAdmin
+          .from('external_payments')
+          .update({
+            card_payment_intent_id: paymentIntent.id,
+            reference_entity: multibancoEntity,
+            reference_number: multibancoReference,
+            expires_at: multibancoExpiresAt || expiresAt,
+            metadata: {
+              ...payment.metadata,
+              stripe_payment_intent_id: paymentIntent.id,
+              stripe_status: paymentIntent.status,
+              multibanco_entity: multibancoEntity,
+              multibanco_reference: multibancoReference,
+            },
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', payment.id)
+          .select()
+          .single();
+
+        if (updateError) {
+          console.error('⚠️ Failed to update payment with Stripe data:', updateError);
+        } else {
+          payment = updatedPayment;
+        }
+
+        await logApiUsage(supabaseAdmin, partner.id, '/create-payment', 'POST', 201, Date.now() - startTime, req);
+
+        // Retornar resposta para Multibanco
+        return new Response(
+          JSON.stringify({
+            id: payment.id,
+            orderId: payment.order_id,
+            status: 'pending',
+            amount: payment.amount,
+            currency: payment.currency,
+            paymentMethod: 'multibanco',
+            multibanco: {
+              paymentIntentId: paymentIntent.id,
+              entity: multibancoEntity,
+              reference: multibancoReference,
+              expiresAt: multibancoExpiresAt,
+            },
+            instructions: 'Utilize a entidade e referência para efetuar o pagamento num ATM ou homebanking. Use o endpoint GET /payment/{id} para verificar o status.',
+            expiresAt: multibancoExpiresAt || expiresAt,
+            createdAt: payment.created_at,
+          }),
+          { status: 201, headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (stripeError: any) {
+        console.error('❌ Multibanco Stripe error:', stripeError.message);
+        
+        await supabaseAdmin
+          .from('external_payments')
+          .update({
+            status: 'failed',
+            webhook_last_error: stripeError.message,
+            metadata: {
+              ...payment.metadata,
+              stripe_error: stripeError.message,
+              failed_at: new Date().toISOString(),
+            },
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', payment.id);
+
+        await logApiUsage(supabaseAdmin, partner.id, '/create-payment', 'POST', 400, Date.now() - startTime, req);
+
+        return new Response(
+          JSON.stringify({ 
+            error: 'Falha ao criar referência Multibanco', 
+            code: 'MULTIBANCO_FAILED',
+            details: stripeError.message,
+          }),
+          { status: 400, headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    // PAGAMENTO COM CARTÃO (via PaymentIntents - retorna client_secret)
+    if (paymentMethod === 'card') {
+      console.log(`💳 Processing Card payment via Stripe PaymentIntents`);
       
       const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
       if (!stripeSecretKey) {
@@ -509,11 +671,7 @@ async function createPayment(
       }
 
       const stripe = new Stripe(stripeSecretKey, { apiVersion: '2023-10-16' });
-
-      // Converter amount para centavos se necessário (assumindo que vem em centavos)
       const amountInCents = Math.round(amount);
-
-      // Determinar a moeda para Stripe (lowercase)
       const stripeCurrency = currency.toLowerCase();
 
       // Criar registro no banco primeiro
@@ -546,56 +704,32 @@ async function createPayment(
       payment = insertedPayment;
 
       try {
-        // Definir URLs de retorno
-        const defaultSuccessUrl = `https://kambafy.com/payment/success?order_id=${orderId}`;
-        const defaultCancelUrl = `https://kambafy.com/payment/cancel?order_id=${orderId}`;
-
-        // Determinar payment_method_types baseado no método
-        const stripePaymentMethodTypes = paymentMethod === 'multibanco' ? ['multibanco'] : ['card'];
-
-        // Criar Stripe Checkout Session
-        const sessionParams: any = {
-          payment_method_types: stripePaymentMethodTypes,
-          mode: 'payment',
-          customer_email: customerEmail,
-          line_items: [
-            {
-              price_data: {
-                currency: stripeCurrency,
-                product_data: {
-                  name: metadata?.productName || `Pedido ${orderId}`,
-                  description: metadata?.productDescription || `Pagamento para ${partner.business_name || 'Parceiro Kambafy'}`,
-                },
-                unit_amount: amountInCents,
-              },
-              quantity: 1,
-            },
-          ],
-          success_url: successUrl || defaultSuccessUrl,
-          cancel_url: cancelUrl || defaultCancelUrl,
+        // Criar PaymentIntent (não confirmado - cliente confirma com client_secret)
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount: amountInCents,
+          currency: stripeCurrency,
+          payment_method_types: ['card'],
           metadata: {
             external_payment_id: payment.id,
             partner_id: partner.id,
             order_id: orderId,
             source: 'kambafy_partner_api',
-            payment_method: paymentMethod,
+            payment_method: 'card',
           },
-          expires_at: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 horas
-        };
+          receipt_email: customerEmail,
+        });
 
-        const session = await stripe.checkout.sessions.create(sessionParams);
-
-        console.log(`✅ Stripe session created for ${paymentMethod}:`, session.id);
+        console.log(`✅ Card PaymentIntent created:`, paymentIntent.id, 'Status:', paymentIntent.status);
 
         // Atualizar registro com dados do Stripe
         const { data: updatedPayment, error: updateError } = await supabaseAdmin
           .from('external_payments')
           .update({
-            card_session_id: session.id,
+            card_payment_intent_id: paymentIntent.id,
             metadata: {
               ...payment.metadata,
-              checkout_url: session.url,
-              stripe_session_id: session.id,
+              stripe_payment_intent_id: paymentIntent.id,
+              stripe_status: paymentIntent.status,
             },
             updated_at: new Date().toISOString(),
           })
@@ -608,10 +742,32 @@ async function createPayment(
         } else {
           payment = updatedPayment;
         }
+
+        await logApiUsage(supabaseAdmin, partner.id, '/create-payment', 'POST', 201, Date.now() - startTime, req);
+
+        // Retornar resposta para Cartão
+        return new Response(
+          JSON.stringify({
+            id: payment.id,
+            orderId: payment.order_id,
+            status: 'pending',
+            amount: payment.amount,
+            currency: payment.currency,
+            paymentMethod: 'card',
+            card: {
+              paymentIntentId: paymentIntent.id,
+              clientSecret: paymentIntent.client_secret,
+              publishableKey: Deno.env.get('STRIPE_PUBLISHABLE_KEY') || null,
+            },
+            instructions: 'Use o client_secret com Stripe.js ou Elements no frontend para completar o pagamento. O cliente insere os dados do cartão diretamente no seu site/app.',
+            expiresAt: expiresAt,
+            createdAt: payment.created_at,
+          }),
+          { status: 201, headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } }
+        );
       } catch (stripeError: any) {
-        console.error('❌ Stripe error:', stripeError.message);
+        console.error('❌ Card Stripe error:', stripeError.message);
         
-        // Marcar como failed
         await supabaseAdmin
           .from('external_payments')
           .update({
@@ -626,37 +782,17 @@ async function createPayment(
           })
           .eq('id', payment.id);
 
-        throw stripeError;
+        await logApiUsage(supabaseAdmin, partner.id, '/create-payment', 'POST', 400, Date.now() - startTime, req);
+
+        return new Response(
+          JSON.stringify({ 
+            error: 'Falha ao criar pagamento com cartão', 
+            code: 'CARD_FAILED',
+            details: stripeError.message,
+          }),
+          { status: 400, headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } }
+        );
       }
-
-      await logApiUsage(supabaseAdmin, partner.id, '/create-payment', 'POST', 201, Date.now() - startTime, req);
-
-      // Instruções baseadas no método de pagamento
-      const instructionsMap: Record<string, string> = {
-        card: 'Redirecione o cliente para a URL de checkout para completar o pagamento com cartão.',
-        multibanco: 'Redirecione o cliente para a URL de checkout para obter a referência Multibanco e efetuar o pagamento.',
-      };
-
-      // Retornar resposta para cartão/mbway/multibanco
-      return new Response(
-        JSON.stringify({
-          id: payment.id,
-          orderId: payment.order_id,
-          status: payment.status,
-          amount: payment.amount,
-          currency: payment.currency,
-          paymentMethod: paymentMethod,
-          expiresAt: payment.expires_at,
-          createdAt: payment.created_at,
-          sandbox: sandboxMode,
-          checkout: {
-            url: payment.metadata?.checkout_url,
-            expiresIn: '24 horas',
-          },
-          instructions: instructionsMap[paymentMethod] || instructionsMap.card,
-        }),
-        { status: 201, headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } }
-      );
     }
 
     // MODO SANDBOX: Simular pagamento sem chamar AppyPay
