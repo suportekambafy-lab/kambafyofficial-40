@@ -414,7 +414,11 @@ export default function PartnersPortal() {
                           <TableCell>{Number(payment.amount).toLocaleString()} {payment.currency}</TableCell>
                           <TableCell>
                             <Badge variant="outline">
-                              {payment.payment_method === 'express' ? 'Express' : 'Referência'}
+                              {payment.payment_method === 'express' ? 'Express' : 
+                               payment.payment_method === 'mbway' ? 'MB WAY' :
+                               payment.payment_method === 'multibanco' ? 'Multibanco' :
+                               payment.payment_method === 'card' ? 'Cartão' :
+                               'Referência'}
                             </Badge>
                           </TableCell>
                           <TableCell>{getStatusBadge(payment.status)}</TableCell>
@@ -471,7 +475,11 @@ export default function PartnersPortal() {
                           </TableCell>
                           <TableCell>
                             <Badge variant="outline">
-                              {payment.payment_method === 'express' ? 'Express' : 'Referência'}
+                              {payment.payment_method === 'express' ? 'Express' : 
+                               payment.payment_method === 'mbway' ? 'MB WAY' :
+                               payment.payment_method === 'multibanco' ? 'Multibanco' :
+                               payment.payment_method === 'card' ? 'Cartão' :
+                               'Referência'}
                             </Badge>
                           </TableCell>
                           <TableCell>{getStatusBadge(payment.status)}</TableCell>
