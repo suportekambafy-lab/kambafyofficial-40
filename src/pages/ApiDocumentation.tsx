@@ -116,8 +116,8 @@ const ApiDocumentation = () => {
   -H "x-api-key: YOUR_API_KEY" \\
   -d '{
     "orderId": "order_789",
-    "amount": 15000,
-    "currency": "AOA",
+    "amount": 2500,
+    "currency": "EUR",
     "paymentMethod": "card",
     "customerName": "Pedro Costa",
     "customerEmail": "pedro@email.com",
@@ -130,8 +130,8 @@ const ApiDocumentation = () => {
   "id": "550e8400-e29b-41d4-a716-446655440000",
   "orderId": "order_789",
   "status": "pending",
-  "amount": 15000,
-  "currency": "AOA",
+  "amount": 2500,
+  "currency": "EUR",
   "paymentMethod": "card",
   "card": {
     "paymentIntentId": "pi_xxx",
@@ -160,7 +160,7 @@ async function createCardPayment(orderId, amount, customer) {
     body: JSON.stringify({
       orderId,
       amount,
-      currency: 'AOA',
+      currency: 'EUR',
       paymentMethod: 'card',
       customerName: customer.name,
       customerEmail: customer.email
