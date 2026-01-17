@@ -1,0 +1,1 @@
+UPDATE partners SET commission_rate = 8 WHERE id = '73804fe5-ff34-420c-b3d1-fee1f72c074f';
