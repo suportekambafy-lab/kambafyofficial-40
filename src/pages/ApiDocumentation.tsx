@@ -277,13 +277,22 @@ function CheckoutPage() {
 
   const multibancoResponseExample = `{
   "success": true,
+  "id": "660e8400-e29b-41d4-a716-446655440001",
   "paymentId": "660e8400-e29b-41d4-a716-446655440001",
   "orderId": "order_pt_002",
+  "status": "pending",
+  "amount": 5000,
+  "currency": "EUR",
+  "paymentMethod": "multibanco",
   "referenceEntity": "21432",
   "referenceNumber": "123 456 789",
+  "multibanco": {
+    "entity": "21432",
+    "reference": "123 456 789",
+    "expiresAt": "2025-01-20T23:59:59Z"
+  },
   "expiresAt": "2025-01-20T23:59:59Z",
-  "status": "pending",
-  "message": "Apresente a entidade e referência ao cliente para pagamento via ATM ou Homebanking"
+  "instructions": "Apresente a entidade e referência ao cliente para pagamento via ATM ou Homebanking"
 }`;
 
   const curlGetPayment = `curl -X GET "${API_BASE_URL}/payment/{payment_id}" \\
