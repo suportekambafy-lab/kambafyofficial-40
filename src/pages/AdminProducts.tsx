@@ -475,11 +475,12 @@ export default function AdminProducts() {
 
       // Se for um curso/área de membros, abrir a URL da área com acesso admin
       if (product.member_areas && product.member_areas.id) {
-        // Marcar acesso como admin no localStorage para bypass de login
+        // Marcar acesso como admin no localStorage COM EMAIL para validação server-side
         const adminAccessKey = `admin_member_area_access_${product.member_areas.id}`;
         localStorage.setItem(adminAccessKey, JSON.stringify({
           accessedAt: new Date().toISOString(),
-          isAdmin: true
+          isAdmin: true,
+          adminEmail: admin?.email // CRÍTICO: incluir email para validação server-side
         }));
 
         const url = `/members/area/${product.member_areas.id}?admin_access=true`;

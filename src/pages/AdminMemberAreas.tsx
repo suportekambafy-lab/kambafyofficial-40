@@ -15,6 +15,7 @@ import {
   GraduationCap
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAdminAuth } from '@/hooks/useAdminAuth';
 
 interface MemberArea {
   id: string;
@@ -33,6 +34,7 @@ interface MemberArea {
 }
 
 export default function AdminMemberAreas() {
+  const { admin } = useAdminAuth();
   const [memberAreas, setMemberAreas] = useState<MemberArea[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -106,11 +108,17 @@ export default function AdminMemberAreas() {
   };
 
   const openMemberArea = (memberAreaId: string, memberAreaName: string) => {
-    // Marcar acesso como admin no localStorage para bypass de login
+    if (!admin?.email) {
+      toast.error('Sessão de admin não encontrada');
+      return;
+    }
+    
+    // Marcar acesso como admin no localStorage COM EMAIL para validação server-side
     const adminAccessKey = `admin_member_area_access_${memberAreaId}`;
     localStorage.setItem(adminAccessKey, JSON.stringify({
       accessedAt: new Date().toISOString(),
-      isAdmin: true
+      isAdmin: true,
+      adminEmail: admin.email // CRÍTICO: incluir email para validação server-side
     }));
 
     // Abrir área de membros em nova aba

@@ -205,6 +205,13 @@ export type Database = {
             referencedRelation: "admin_users"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "admin_logs_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       admin_notifications: {
@@ -277,10 +284,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "admin_permissions_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "admin_permissions_granted_by_fkey"
             columns: ["granted_by"]
             isOneToOne: false
             referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_permissions_granted_by_fkey"
+            columns: ["granted_by"]
+            isOneToOne: false
+            referencedRelation: "admin_users_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -1551,6 +1572,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      failed_login_attempts: {
+        Row: {
+          attempt_type: string
+          attempted_at: string
+          email: string
+          id: string
+          ip_address: string | null
+        }
+        Insert: {
+          attempt_type?: string
+          attempted_at?: string
+          email: string
+          id?: string
+          ip_address?: string | null
+        }
+        Update: {
+          attempt_type?: string
+          attempted_at?: string
+          email?: string
+          id?: string
+          ip_address?: string | null
+        }
+        Relationships: []
       }
       google_ads_settings: {
         Row: {
@@ -2988,6 +3033,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "orders_approved_by_admin_id_fkey"
+            columns: ["approved_by_admin_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "orders_cohort_id_fkey"
             columns: ["cohort_id"]
             isOneToOne: false
@@ -3328,10 +3380,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "products_approved_by_admin_id_fkey"
+            columns: ["approved_by_admin_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "products_banned_by_admin_id_fkey"
             columns: ["banned_by_admin_id"]
             isOneToOne: false
             referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_banned_by_admin_id_fkey"
+            columns: ["banned_by_admin_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users_safe"
             referencedColumns: ["id"]
           },
           {
@@ -3949,6 +4015,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "refund_requests_processed_by_admin_id_fkey"
+            columns: ["processed_by_admin_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "refund_requests_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
@@ -4012,6 +4085,13 @@ export type Database = {
             columns: ["resolved_by"]
             isOneToOne: false
             referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "admin_users_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -4960,6 +5040,36 @@ export type Database = {
       }
     }
     Views: {
+      admin_users_safe: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          full_name: string | null
+          id: string | null
+          is_active: boolean | null
+          role: Database["public"]["Enums"]["admin_role"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          role?: Database["public"]["Enums"]["admin_role"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          role?: Database["public"]["Enums"]["admin_role"] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       balance_audit_discrepancies: {
         Row: {
           calculated_balance: number | null
@@ -5193,6 +5303,16 @@ export type Database = {
         Args: { p_customer_email: string; p_product_id: string }
         Returns: boolean
       }
+      check_rate_limit: {
+        Args: {
+          attempt_type?: string
+          check_email: string
+          check_ip?: string
+          max_attempts?: number
+          window_minutes?: number
+        }
+        Returns: Json
+      }
       check_student_access: {
         Args: { p_member_area_id: string; p_student_email: string }
         Returns: {
@@ -5210,7 +5330,12 @@ export type Database = {
         Returns: undefined
       }
       cleanup_expired_member_sessions: { Args: never; Returns: undefined }
+      cleanup_old_login_attempts: { Args: never; Returns: undefined }
       cleanup_passwordless_users: { Args: never; Returns: undefined }
+      clear_failed_attempts: {
+        Args: { attempt_email: string; attempt_type?: string }
+        Returns: undefined
+      }
       complete_refund: { Args: { p_refund_id: string }; Returns: undefined }
       count_all_products_for_admin: { Args: never; Returns: number }
       count_duplicate_withdrawals: { Args: never; Returns: number }
@@ -5359,6 +5484,7 @@ export type Database = {
           permission: string
         }[]
       }
+      get_admin_role: { Args: { admin_email: string }; Returns: string }
       get_all_identity_verifications_for_admin: {
         Args: never
         Returns: {
@@ -5827,6 +5953,14 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: undefined
       }
+      record_failed_attempt: {
+        Args: {
+          attempt_email: string
+          attempt_ip?: string
+          attempt_type?: string
+        }
+        Returns: undefined
+      }
       reject_referral_application: {
         Args: { application_id: string; reason: string }
         Returns: Json
@@ -5881,6 +6015,10 @@ export type Database = {
           is_valid: boolean
           role: string
         }[]
+      }
+      verify_admin_member_area_access: {
+        Args: { admin_email: string; target_member_area_id: string }
+        Returns: boolean
       }
       verify_webhook_signature: {
         Args: { payload: string; secret: string; signature: string }

@@ -72,7 +72,40 @@ Deno.serve(async (req) => {
     // Normalizar email (trim e lowercase)
     const normalizedEmail = email.trim().toLowerCase()
     
-    console.log(`🔐 Tentativa de login admin: ${normalizedEmail}`)
+    // Obter IP do cliente para rate limiting
+    const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
+                     req.headers.get('x-real-ip') || 
+                     'unknown'
+    
+    console.log(`🔐 Tentativa de login admin: ${normalizedEmail} (IP: ${clientIp})`)
+
+    // RATE LIMITING: Verificar se está bloqueado por muitas tentativas
+    const { data: rateLimitCheck, error: rateLimitError } = await supabaseAdmin
+      .rpc('check_rate_limit', {
+        check_email: normalizedEmail,
+        check_ip: clientIp,
+        attempt_type: 'admin_password',
+        max_attempts: 5,
+        window_minutes: 15
+      })
+
+    if (rateLimitError) {
+      console.error('⚠️ Erro ao verificar rate limit:', rateLimitError)
+      // Continuar mesmo com erro (fail open por segurança de disponibilidade)
+    } else if (rateLimitCheck?.blocked) {
+      console.log('🚫 Bloqueado por rate limiting:', rateLimitCheck.reason)
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Muitas tentativas de login. Aguarde 15 minutos antes de tentar novamente.',
+          rateLimited: true
+        }),
+        {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
+    }
 
     // 1. Verificar se é admin na tabela admin_users
     const { data: adminUser, error: adminError } = await supabaseAdmin
@@ -85,6 +118,14 @@ Deno.serve(async (req) => {
     if (adminError || !adminUser) {
       console.error('❌ Admin não encontrado:', adminError)
       console.error('📧 Email buscado:', normalizedEmail)
+      
+      // Registrar tentativa falha para rate limiting
+      await supabaseAdmin.rpc('record_failed_attempt', {
+        attempt_email: normalizedEmail,
+        attempt_ip: clientIp,
+        attempt_type: 'admin_password'
+      })
+      
       throw new Error('Credenciais inválidas')
     }
 
@@ -105,10 +146,24 @@ Deno.serve(async (req) => {
     
     if (!passwordMatch) {
       console.error('❌ Senha incorreta')
+      
+      // Registrar tentativa falha para rate limiting
+      await supabaseAdmin.rpc('record_failed_attempt', {
+        attempt_email: normalizedEmail,
+        attempt_ip: clientIp,
+        attempt_type: 'admin_password'
+      })
+      
       throw new Error('Credenciais inválidas')
     }
     
     console.log('✅ Senha verificada com sucesso')
+    
+    // Limpar tentativas falhas após login bem-sucedido
+    await supabaseAdmin.rpc('clear_failed_attempts', {
+      attempt_email: normalizedEmail,
+      attempt_type: 'admin_password'
+    })
 
     // 3. Se código não foi verificado ainda, solicitar ou verificar
     if (!codeAlreadyVerified) {

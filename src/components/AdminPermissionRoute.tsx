@@ -60,39 +60,49 @@ export default function AdminPermissionRoute({
 
       console.log('🔐 [ADMIN-PERMISSION-ROUTE] Verificando permissões:', {
         adminEmail: admin.email,
-        adminRole: (admin as any).role,
         adminId: admin.id,
         requiredPermission,
         requireSuperAdmin
       });
 
-      // CRITICAL: Super admins SEMPRE têm acesso a tudo
-      const isSuperAdmin = (admin as any).role === 'super_admin';
-      if (isSuperAdmin) {
-        console.log('✅ [ADMIN-PERMISSION-ROUTE] Super admin detectado - acesso total concedido');
-        setHasPermission(true);
-        setLoading(false);
-        return;
-      }
-
-      // Se requer super admin e não é super admin, negar acesso
-      if (requireSuperAdmin) {
-        console.log('❌ [ADMIN-PERMISSION-ROUTE] Página requer super admin e usuário não é super admin');
-        setHasPermission(false);
-        setLoading(false);
-        return;
-      }
-
-      // Se não há permissão específica requerida, permitir acesso
-      if (!requiredPermission) {
-        console.log('✅ [ADMIN-PERMISSION-ROUTE] Nenhuma permissão específica requerida - acesso concedido');
-        setHasPermission(true);
-        setLoading(false);
-        return;
-      }
-
-      // Verificar se o admin tem a permissão específica usando RPC para bypassar RLS
       try {
+        // CRÍTICO: Sempre validar role no servidor em vez de confiar no localStorage
+        const { data: serverRole, error: roleError } = await supabase
+          .rpc('get_admin_role', { admin_email: admin.email });
+        
+        if (roleError) {
+          console.error('❌ [ADMIN-PERMISSION-ROUTE] Erro ao verificar role no servidor:', roleError);
+          setHasPermission(false);
+          setLoading(false);
+          return;
+        }
+
+        const isSuperAdmin = serverRole === 'super_admin';
+        
+        if (isSuperAdmin) {
+          console.log('✅ [ADMIN-PERMISSION-ROUTE] Super admin detectado (validado pelo servidor)');
+          setHasPermission(true);
+          setLoading(false);
+          return;
+        }
+
+        // Se requer super admin e não é super admin, negar acesso
+        if (requireSuperAdmin) {
+          console.log('❌ [ADMIN-PERMISSION-ROUTE] Página requer super admin e usuário não é super admin');
+          setHasPermission(false);
+          setLoading(false);
+          return;
+        }
+
+        // Se não há permissão específica requerida, permitir acesso
+        if (!requiredPermission) {
+          console.log('✅ [ADMIN-PERMISSION-ROUTE] Nenhuma permissão específica requerida - acesso concedido');
+          setHasPermission(true);
+          setLoading(false);
+          return;
+        }
+
+        // Verificar se o admin tem a permissão específica usando RPC para bypassar RLS
         const permissionAliases: Record<string, string[]> = {
           // Compatibilidade (permissões antigas vs novas) - dois sentidos
           manage_users: ['users'],
