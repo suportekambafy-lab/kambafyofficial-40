@@ -616,12 +616,17 @@ async function createPayment(
         // Retornar resposta para Multibanco
         return new Response(
           JSON.stringify({
+            success: true,
             id: payment.id,
+            paymentId: payment.id,
             orderId: payment.order_id,
             status: 'pending',
             amount: payment.amount,
             currency: payment.currency,
             paymentMethod: 'multibanco',
+            // Aliases (compatibilidade)
+            referenceEntity: multibancoEntity,
+            referenceNumber: multibancoReference,
             multibanco: {
               paymentIntentId: paymentIntent.id,
               entity: multibancoEntity,
@@ -1081,6 +1086,18 @@ async function getPayment(
         entity: payment.reference_entity,
         reference: payment.reference_number,
       };
+    }
+
+    if (payment.payment_method === 'multibanco') {
+      response.multibanco = {
+        entity: payment.reference_entity,
+        reference: payment.reference_number,
+        expiresAt: payment.expires_at,
+      };
+
+      // Aliases (compatibilidade)
+      response.referenceEntity = payment.reference_entity;
+      response.referenceNumber = payment.reference_number;
     }
 
     return new Response(
