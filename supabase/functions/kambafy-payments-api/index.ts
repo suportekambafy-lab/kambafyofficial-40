@@ -392,17 +392,24 @@ async function createPayment(
 
         console.log(`📱 Creating MB WAY PaymentIntent for phone: ${formattedPhone}`);
 
-        // Criar PaymentIntent com MB WAY
+        // Criar PaymentMethod MB WAY primeiro (Stripe exige billing_details.phone)
+        const paymentMethod = await stripe.paymentMethods.create({
+          type: 'mb_way',
+          billing_details: {
+            name: customerName,
+            email: customerEmail,
+            phone: formattedPhone,
+          },
+        });
+
+        console.log(`✅ MB WAY PaymentMethod created: ${paymentMethod.id}`);
+
+        // Criar e confirmar PaymentIntent com o PaymentMethod
         const paymentIntent = await stripe.paymentIntents.create({
           amount: amountInCents,
           currency: 'eur',
+          payment_method: paymentMethod.id,
           payment_method_types: ['mb_way'],
-          payment_method_data: {
-            type: 'mb_way',
-            mb_way: {
-              phone: formattedPhone,
-            },
-          },
           confirm: true, // Confirma imediatamente - envia push ao telefone
           metadata: {
             external_payment_id: payment.id,
