@@ -741,8 +741,8 @@ app.post('/webhook', (req, res) => {
                     <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-4 mb-4">
                       <h5 className="font-semibold text-amber-700 dark:text-amber-400 mb-2">⚠️ Importante: Use CardElement (White-Label)</h5>
                       <p className="text-sm text-muted-foreground">
-                        Para um checkout <strong>100% white-label</strong> sem marcas do Stripe, use o componente <code className="bg-muted px-1 rounded">CardElement</code> e <strong>NÃO</strong> o <code className="bg-muted px-1 rounded">PaymentElement</code>.
-                        O PaymentElement mostra "Checkout rápido com Link" e "Processado por Stripe". Veja o exemplo completo na aba <strong>React/Card</strong>.
+                        Para um checkout <strong>100% white-label</strong> sem marcas externas, use o componente <code className="bg-muted px-1 rounded">CardElement</code> e <strong>NÃO</strong> o <code className="bg-muted px-1 rounded">PaymentElement</code>.
+                        O PaymentElement mostra "Checkout rápido com Link" e marcas de terceiros. Veja o exemplo completo na aba <strong>React/Card</strong>.
                       </p>
                     </div>
                     <CodeBlock code={curlCreateCard} language="bash" id="curl-card" />
