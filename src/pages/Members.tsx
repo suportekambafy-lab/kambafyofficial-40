@@ -685,10 +685,56 @@ const [formData, setFormData] = useState({
           throw error;
         }
         console.log('✅ Updated lesson data:', updatedData);
-        toast({
-          title: "Sucesso",
-          description: "Aula atualizada com sucesso"
-        });
+        
+        // Enviar notificação por email se checkbox estiver marcado e status for published
+        if (formData.notify_students && formData.status === 'published' && updatedData) {
+          try {
+            console.log('📧 Enviando notificação de aula atualizada...');
+            let moduleName = '';
+            if (updatedData.module_id) {
+              const module = modules.find(m => m.id === updatedData.module_id);
+              if (module) {
+                moduleName = module.title;
+              }
+            }
+            
+            const { data: notifData, error: notifError } = await supabase.functions.invoke('send-new-lesson-notification', {
+              body: {
+                lessonId: updatedData.id,
+                memberAreaId: selectedArea?.id,
+                lessonTitle: updatedData.title,
+                lessonDescription: updatedData.description || '',
+                moduleName
+              }
+            });
+            
+            if (notifError) {
+              console.error('⚠️ Erro ao enviar notificações:', notifError);
+              toast({
+                title: "Aula atualizada",
+                description: "Aula atualizada, mas houve um erro ao notificar os alunos.",
+                variant: "default"
+              });
+            } else {
+              console.log('✅ Notificações enviadas:', notifData);
+              toast({
+                title: "Sucesso",
+                description: `Aula atualizada e ${notifData?.sent || 0} aluno(s) notificado(s) por email!`
+              });
+            }
+          } catch (notifError) {
+            console.error('⚠️ Erro ao enviar notificações:', notifError);
+            toast({
+              title: "Aula atualizada",
+              description: "Aula atualizada com sucesso!"
+            });
+          }
+        } else {
+          toast({
+            title: "Sucesso",
+            description: "Aula atualizada com sucesso"
+          });
+        }
       } else {
         console.log('Creating new lesson');
         const {
@@ -2428,8 +2474,8 @@ setFormData({
               });
             }} />
 
-               {/* Checkbox para notificar alunos - Só aparece ao criar nova aula publicada */}
-               {!editingLesson && formData.status === 'published' && (
+               {/* Checkbox para notificar alunos - Aparece quando status é publicado */}
+               {formData.status === 'published' && (
                  <div className="flex items-center space-x-3 p-4 border rounded-lg bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
                    <Checkbox 
                      id="notify-students" 
