@@ -15,6 +15,9 @@ interface NewLessonNotificationRequest {
   moduleName?: string;
 }
 
+// Função para delay
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -75,100 +78,109 @@ serve(async (req) => {
 
     console.log(`📝 Preparando envio para ${students.length} alunos`);
 
-    const loginUrl = `https://kambafyofficial-40.lovable.app/member-login/${memberArea.url}`;
+    const loginUrl = `https://membros.kambafy.com/login/${memberAreaId}`;
     let sent = 0;
     let failed = 0;
-    const errors: string[] = [];
 
-    // Processar em lotes de 10 para evitar rate limiting
-    const batchSize = 10;
-    for (let i = 0; i < students.length; i += batchSize) {
-      const batch = students.slice(i, i + batchSize);
+    // Gerar HTML do email
+    const generateEmailHtml = (studentName: string) => `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #f4f4f5;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+            <tr>
+              <td style="padding: 40px 30px; text-align: center; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);">
+                <h1 style="color: #ffffff; margin: 0; font-size: 24px;">🎓 Nova Aula Disponível!</h1>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 40px 30px;">
+                <p style="margin: 0 0 20px 0; color: #374151; font-size: 16px;">
+                  Olá <strong>${studentName || 'Aluno'}</strong>,
+                </p>
+                <p style="margin: 0 0 20px 0; color: #374151; font-size: 16px;">
+                  Uma nova aula foi adicionada ao curso <strong>${memberArea.name}</strong>!
+                </p>
+                
+                <div style="background-color: #f8fafc; border-radius: 12px; padding: 24px; margin: 24px 0; border-left: 4px solid #3b82f6;">
+                  <h2 style="margin: 0 0 8px 0; color: #1e40af; font-size: 20px;">${lessonTitle}</h2>
+                  ${moduleName ? `<p style="margin: 0 0 12px 0; color: #6b7280; font-size: 14px;">📚 Módulo: ${moduleName}</p>` : ''}
+                  ${lessonDescription ? `<p style="margin: 0; color: #4b5563; font-size: 14px;">${lessonDescription}</p>` : ''}
+                </div>
+                
+                <div style="text-align: center; margin: 32px 0;">
+                  <a href="${loginUrl}" style="display: inline-block; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                    Ver Aula Agora
+                  </a>
+                </div>
+                
+                <p style="margin: 24px 0 0 0; color: #6b7280; font-size: 14px; text-align: center;">
+                  Não perca esta nova aula! Aproveite para continuar seu aprendizado.
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 24px 30px; background-color: #f8fafc; text-align: center; border-top: 1px solid #e5e7eb;">
+                <p style="margin: 0; color: #9ca3af; font-size: 12px;">
+                  Este email foi enviado automaticamente pelo Kambafy.
+                </p>
+                <p style="margin: 8px 0 0 0; color: #9ca3af; font-size: 12px;">
+                  Você está recebendo este email porque está matriculado em ${memberArea.name}.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </body>
+      </html>
+    `;
+
+    // Enviar emails sequencialmente com delay para respeitar rate limit (2/segundo)
+    // Processar em lotes de 2 emails com delay de 1 segundo entre lotes
+    const emailsPerSecond = 2;
+    
+    for (let i = 0; i < students.length; i += emailsPerSecond) {
+      const batch = students.slice(i, i + emailsPerSecond);
       
-      const emailPromises = batch.map(async (student) => {
-        try {
-          const emailHtml = `
-            <!DOCTYPE html>
-            <html>
-              <head>
-                <meta charset="utf-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              </head>
-              <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #f4f4f5;">
-                <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
-                  <tr>
-                    <td style="padding: 40px 30px; text-align: center; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);">
-                      <h1 style="color: #ffffff; margin: 0; font-size: 24px;">🎓 Nova Aula Disponível!</h1>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 40px 30px;">
-                      <p style="margin: 0 0 20px 0; color: #374151; font-size: 16px;">
-                        Olá <strong>${student.student_name || 'Aluno'}</strong>,
-                      </p>
-                      <p style="margin: 0 0 20px 0; color: #374151; font-size: 16px;">
-                        Uma nova aula foi adicionada ao curso <strong>${memberArea.name}</strong>!
-                      </p>
-                      
-                      <div style="background-color: #f8fafc; border-radius: 12px; padding: 24px; margin: 24px 0; border-left: 4px solid #3b82f6;">
-                        <h2 style="margin: 0 0 8px 0; color: #1e40af; font-size: 20px;">${lessonTitle}</h2>
-                        ${moduleName ? `<p style="margin: 0 0 12px 0; color: #6b7280; font-size: 14px;">📚 Módulo: ${moduleName}</p>` : ''}
-                        ${lessonDescription ? `<p style="margin: 0; color: #4b5563; font-size: 14px;">${lessonDescription}</p>` : ''}
-                      </div>
-                      
-                      <div style="text-align: center; margin: 32px 0;">
-                        <a href="${loginUrl}" style="display: inline-block; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">
-                          Ver Aula Agora
-                        </a>
-                      </div>
-                      
-                      <p style="margin: 24px 0 0 0; color: #6b7280; font-size: 14px; text-align: center;">
-                        Não perca esta nova aula! Aproveite para continuar seu aprendizado.
-                      </p>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 24px 30px; background-color: #f8fafc; text-align: center; border-top: 1px solid #e5e7eb;">
-                      <p style="margin: 0; color: #9ca3af; font-size: 12px;">
-                        Este email foi enviado automaticamente pelo Kambafy.
-                      </p>
-                      <p style="margin: 8px 0 0 0; color: #9ca3af; font-size: 12px;">
-                        Você está recebendo este email porque está matriculado em ${memberArea.name}.
-                      </p>
-                    </td>
-                  </tr>
-                </table>
-              </body>
-            </html>
-          `;
-
+      // Enviar lote em paralelo (máximo 2)
+      const results = await Promise.allSettled(
+        batch.map(async (student) => {
           const emailResponse = await resend.emails.send({
             from: 'Kambafy <noreply@kambafy.com>',
             to: [student.student_email],
             subject: `🎓 Nova aula: ${lessonTitle} - ${memberArea.name}`,
-            html: emailHtml,
+            html: generateEmailHtml(student.student_name),
           });
 
           if (emailResponse.error) {
-            console.error(`❌ Erro ao enviar para ${student.student_email}:`, emailResponse.error);
-            failed++;
-            errors.push(`${student.student_email}: ${emailResponse.error.message}`);
-          } else {
-            console.log(`✅ Email enviado para ${student.student_email}`);
-            sent++;
+            throw new Error(emailResponse.error.message);
           }
-        } catch (error: any) {
-          console.error(`❌ Erro ao enviar para ${student.student_email}:`, error);
-          failed++;
-          errors.push(`${student.student_email}: ${error.message}`);
-        }
-      });
+          
+          return student.student_email;
+        })
+      );
 
-      await Promise.all(emailPromises);
-      
-      // Pequena pausa entre lotes para evitar rate limiting
-      if (i + batchSize < students.length) {
-        await new Promise(resolve => setTimeout(resolve, 500));
+      // Contar resultados
+      for (const result of results) {
+        if (result.status === 'fulfilled') {
+          sent++;
+        } else {
+          failed++;
+          console.error(`❌ Falha:`, result.reason);
+        }
+      }
+
+      // Log de progresso a cada 50 emails
+      if ((i + emailsPerSecond) % 50 === 0 || i + emailsPerSecond >= students.length) {
+        console.log(`📊 Progresso: ${Math.min(i + emailsPerSecond, students.length)}/${students.length} processados (${sent} enviados, ${failed} falhas)`);
+      }
+
+      // Aguardar 1.1 segundo antes do próximo lote para respeitar rate limit
+      if (i + emailsPerSecond < students.length) {
+        await delay(1100);
       }
     }
 
@@ -188,18 +200,21 @@ serve(async (req) => {
       read: false
     }));
 
-    const { error: insertError } = await supabase
-      .from('member_area_notifications')
-      .insert(notifications);
+    // Inserir notificações em lotes de 100
+    const notifBatchSize = 100;
+    for (let i = 0; i < notifications.length; i += notifBatchSize) {
+      const batch = notifications.slice(i, i + notifBatchSize);
+      const { error: insertError } = await supabase
+        .from('member_area_notifications')
+        .insert(batch);
 
-    if (insertError) {
-      console.error('⚠️ Erro ao inserir notificações in-app:', insertError);
-      // Não falhar por causa disso, emails já foram enviados
-    } else {
-      console.log(`✅ ${students.length} notificações in-app criadas`);
+      if (insertError) {
+        console.error('⚠️ Erro ao inserir notificações in-app:', insertError);
+      }
     }
-
-    console.log(`📧 Resumo: ${sent} enviados, ${failed} falhas`);
+    
+    console.log(`✅ ${students.length} notificações in-app criadas`);
+    console.log(`📧 Resumo final: ${sent} enviados, ${failed} falhas de ${students.length} total`);
 
     return new Response(
       JSON.stringify({ 
@@ -207,7 +222,7 @@ serve(async (req) => {
         message: `Notificações enviadas para ${sent} aluno(s)`,
         sent,
         failed,
-        errors: errors.length > 0 ? errors : undefined
+        total: students.length
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
