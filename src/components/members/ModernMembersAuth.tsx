@@ -274,19 +274,33 @@ export function ModernMembersAuthProvider({ children, memberAreaId }: ModernMemb
       // Normalizar email para lowercase
       const normalizedEmail = user.email.toLowerCase().trim();
       
-      // Verificar se é acesso de admin (via localStorage)
+      // Verificar se é acesso de admin - VALIDAÇÃO SERVER-SIDE OBRIGATÓRIA
       const adminAccessKey = `admin_member_area_access_${memberAreaId}`;
       const adminAccess = localStorage.getItem(adminAccessKey);
       if (adminAccess) {
         try {
           const parsed = JSON.parse(adminAccess);
-          // Acesso admin válido por 24 horas
+          // Acesso admin válido por 24 horas (client-side check apenas para UX)
           const accessedAt = new Date(parsed.accessedAt);
           const now = new Date();
           const diffHours = (now.getTime() - accessedAt.getTime()) / (1000 * 60 * 60);
-          if (parsed.isAdmin && diffHours < 24) {
-            console.log('✅ ModernAuth: Acesso administrativo autorizado');
-            return true;
+          
+          if (parsed.isAdmin && diffHours < 24 && parsed.adminEmail) {
+            // CRÍTICO: Validar acesso de admin no servidor
+            const { data: isValidAdmin, error: adminError } = await supabase
+              .rpc('verify_admin_member_area_access', {
+                target_member_area_id: memberAreaId,
+                admin_email: parsed.adminEmail
+              });
+            
+            if (!adminError && isValidAdmin === true) {
+              console.log('✅ ModernAuth: Acesso administrativo autorizado (servidor validou)');
+              await loadMemberArea(memberAreaId);
+              return true;
+            } else {
+              console.warn('❌ ModernAuth: Acesso admin inválido - servidor rejeitou');
+              localStorage.removeItem(adminAccessKey);
+            }
           } else {
             localStorage.removeItem(adminAccessKey); // Limpar acesso expirado
           }

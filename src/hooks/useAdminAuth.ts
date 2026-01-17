@@ -42,9 +42,9 @@ export const useAdminAuthHook = () => {
       if (adminData) {
         const parsedAdmin = JSON.parse(adminData);
 
-        // Buscar dados atualizados do banco
+        // Buscar dados atualizados do banco (usando view segura que não expõe password_hash)
         const { data, error } = await supabase
-          .from('admin_users')
+          .from('admin_users_safe')
           .select('*')
           .eq('email', parsedAdmin.email)
           .single();
@@ -203,9 +203,10 @@ export const useAdminAuthHook = () => {
          }
          
          // Se a sessão Supabase foi restaurada ou já era válida, verificar no banco
+         // Usar view segura que não expõe password_hash
          {
            const { data, error } = await supabase
-             .from('admin_users')
+             .from('admin_users_safe')
              .select('*')
              .eq('email', parsedAdmin.email)
              .single();
