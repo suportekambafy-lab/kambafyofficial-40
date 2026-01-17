@@ -1011,11 +1011,12 @@ async function createPayment(
         expiresIn: '48 horas',
       };
     } else if (paymentMethod === 'card') {
-      response.checkout = {
-        url: payment.metadata?.checkout_url,
-        expiresIn: '24 horas',
+      response.card = {
+        paymentIntentId: payment.card_payment_intent_id,
+        clientSecret: payment.metadata?.stripe_payment_intent_id ? null : payment.metadata?.client_secret,
+        publishableKey: Deno.env.get('STRIPE_PUBLISHABLE_KEY') || null,
       };
-      response.instructions = 'Redirecione o cliente para a URL de checkout para completar o pagamento com cartão.';
+      response.instructions = 'Use o clientSecret e publishableKey para renderizar o formulário de cartão diretamente no seu site/app.';
     }
 
     return new Response(
