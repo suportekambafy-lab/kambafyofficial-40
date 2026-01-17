@@ -396,10 +396,10 @@ async function createPayment(
         const paymentIntent = await stripe.paymentIntents.create({
           amount: amountInCents,
           currency: 'eur',
-          payment_method_types: ['mbway'],
+          payment_method_types: ['mb_way'],
           payment_method_data: {
-            type: 'mbway',
-            mbway: {
+            type: 'mb_way',
+            mb_way: {
               phone: formattedPhone,
             },
           },
