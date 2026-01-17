@@ -135,6 +135,44 @@ const ApiDocumentation = () => {
   "message": "Redirecione o cliente para checkoutUrl para completar o pagamento"
 }`;
 
+  const curlCreateMbway = `curl -X POST "${API_BASE_URL}" \\
+  -H "Content-Type: application/json" \\
+  -H "x-api-key: YOUR_API_KEY" \\
+  -d '{
+    "orderId": "order_pt_001",
+    "amount": 2500,
+    "currency": "EUR",
+    "paymentMethod": "mbway",
+    "phoneNumber": "+351912345678",
+    "customerName": "João Ferreira",
+    "customerEmail": "joao.ferreira@email.pt",
+    "successUrl": "https://seusite.com/sucesso",
+    "cancelUrl": "https://seusite.com/cancelado"
+  }'`;
+
+  const curlCreateMultibanco = `curl -X POST "${API_BASE_URL}" \\
+  -H "Content-Type: application/json" \\
+  -H "x-api-key: YOUR_API_KEY" \\
+  -d '{
+    "orderId": "order_pt_002",
+    "amount": 5000,
+    "currency": "EUR",
+    "paymentMethod": "multibanco",
+    "customerName": "Ana Costa",
+    "customerEmail": "ana.costa@email.pt",
+    "successUrl": "https://seusite.com/sucesso",
+    "cancelUrl": "https://seusite.com/cancelado"
+  }'`;
+
+  const multibancoResponseExample = `{
+  "success": true,
+  "paymentId": "660e8400-e29b-41d4-a716-446655440001",
+  "orderId": "order_pt_002",
+  "checkoutUrl": "https://checkout.stripe.com/c/pay/cs_...",
+  "status": "pending",
+  "message": "Redirecione o cliente para checkoutUrl para obter a referência Multibanco"
+}`;
+
   const curlGetPayment = `curl -X GET "${API_BASE_URL}/payment/{payment_id}" \\
   -H "x-api-key: YOUR_API_KEY"`;
 
@@ -581,7 +619,7 @@ app.post('/webhook', (req, res) => {
                   <div>
                     <h4 className="font-semibold mb-2 flex items-center gap-2">
                       Criar Pagamento por Cartão de Crédito
-                      <Badge variant="outline" className="text-xs">Novo</Badge>
+                      <Badge variant="outline" className="text-xs">Internacional</Badge>
                     </h4>
                     <p className="text-sm text-muted-foreground mb-2">
                       Pagamentos por cartão são processados via Stripe. O cliente é redirecionado para uma página de checkout segura.
@@ -589,6 +627,28 @@ app.post('/webhook', (req, res) => {
                     <CodeBlock code={curlCreateCard} language="bash" id="curl-card" />
                     <p className="text-sm text-muted-foreground mt-2 mb-2">Resposta:</p>
                     <CodeBlock code={cardResponseExample} language="json" id="curl-card-response" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-2 flex items-center gap-2">
+                      Criar Pagamento MB WAY
+                      <Badge variant="outline" className="text-xs">Portugal</Badge>
+                    </h4>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Pagamento instantâneo via MB WAY (Portugal). O cliente recebe uma notificação no telemóvel para aprovar.
+                    </p>
+                    <CodeBlock code={curlCreateMbway} language="bash" id="curl-mbway" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-2 flex items-center gap-2">
+                      Criar Pagamento Multibanco
+                      <Badge variant="outline" className="text-xs">Portugal</Badge>
+                    </h4>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Gera uma referência Multibanco para pagamento em ATM ou homebanking (Portugal).
+                    </p>
+                    <CodeBlock code={curlCreateMultibanco} language="bash" id="curl-multibanco" />
+                    <p className="text-sm text-muted-foreground mt-2 mb-2">Resposta:</p>
+                    <CodeBlock code={multibancoResponseExample} language="json" id="curl-multibanco-response" />
                   </div>
                   <div>
                     <h4 className="font-semibold mb-2">Verificar Status do Pagamento</h4>
