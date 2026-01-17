@@ -295,6 +295,20 @@ async function createPayment(
       );
     }
 
+    // Check monthly transaction limit (0 = sem limite)
+    if (partner.monthly_transaction_limit > 0 && (partner.current_month_transactions || 0) + amount > partner.monthly_transaction_limit) {
+      await logApiUsage(supabaseAdmin, partner.id, '/create-payment', 'POST', 429, Date.now() - startTime, req);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Monthly transaction limit exceeded', 
+          code: 'LIMIT_EXCEEDED',
+          currentTotal: partner.current_month_transactions || 0,
+          limit: partner.monthly_transaction_limit
+        }),
+        { status: 429, headers: { ...corsHeaders, ...rateLimitHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Verificar se orderId já existe
     const { data: existing } = await supabaseAdmin
       .from('external_payments')

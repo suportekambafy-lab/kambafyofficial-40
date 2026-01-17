@@ -99,8 +99,8 @@ serve(async (req) => {
         throw new Error("Missing required fields: email, amount, orderId");
       }
 
-      // Check monthly transaction limit
-      if (partner.current_month_transactions + body.amount > partner.monthly_transaction_limit) {
+      // Check monthly transaction limit (0 = sem limite)
+      if (partner.monthly_transaction_limit > 0 && partner.current_month_transactions + body.amount > partner.monthly_transaction_limit) {
         statusCode = 429;
         throw new Error("Monthly transaction limit exceeded");
       }
