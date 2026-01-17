@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Download, AlertCircle, PiggyBank } from "lucide-react";
+import { RefreshCw, Download, AlertCircle, PiggyBank, Info } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,7 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useCurrencyBalances, CURRENCY_CONFIG } from "@/hooks/useCurrencyBalances";
 import { CurrencyTabs } from "@/components/financial/CurrencyTabs";
 import { MultiCurrencyOverview } from "@/components/financial/MultiCurrencyOverview";
-
+import { SuspendedWithdrawalInfoModal } from "@/components/financial/SuspendedWithdrawalInfoModal";
 interface WithdrawalRequest {
   id: string;
   amount: number;
@@ -85,6 +85,7 @@ export function FinancialView() {
   const [identityVerification, setIdentityVerification] = useState<IdentityVerification | null>(null);
   const [hasPaymentMethods, setHasPaymentMethods] = useState(false);
   const [totalWithdrawn, setTotalWithdrawn] = useState<Record<string, number>>({});
+  const [suspendedInfoModalOpen, setSuspendedInfoModalOpen] = useState(false);
 
   const loadUserData = useCallback(async () => {
     if (!user) return;
@@ -313,6 +314,7 @@ export function FinancialView() {
                       {withdrawalRequests.map((request) => {
                         const currency = request.currency || "KZ";
                         const config = CURRENCY_CONFIG[currency] || CURRENCY_CONFIG.KZ;
+                        const isSuspended = request.status === "suspenso";
                         return (
                           <TableRow key={request.id}>
                             <TableCell className="text-xs sm:text-sm">
@@ -326,7 +328,21 @@ export function FinancialView() {
                                 {config.flag} {currency}
                               </span>
                             </TableCell>
-                            <TableCell>{getStatusBadge(request.status)}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                {getStatusBadge(request.status)}
+                                {isSuspended && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6 text-orange-500 hover:text-orange-600 hover:bg-orange-100 dark:hover:bg-orange-950"
+                                    onClick={() => setSuspendedInfoModalOpen(true)}
+                                  >
+                                    <Info className="h-4 w-4" />
+                                  </Button>
+                                )}
+                              </div>
+                            </TableCell>
                           </TableRow>
                         );
                       })}
@@ -349,6 +365,12 @@ export function FinancialView() {
           loadBalances();
           loadWithdrawalHistory();
         }}
+      />
+
+      {/* Suspended Withdrawal Info Modal */}
+      <SuspendedWithdrawalInfoModal
+        open={suspendedInfoModalOpen}
+        onOpenChange={setSuspendedInfoModalOpen}
       />
     </>
   );
