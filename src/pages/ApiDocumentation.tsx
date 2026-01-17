@@ -35,12 +35,39 @@ const ApiDocumentation = () => {
     </div>
   );
 
+  // Métodos de pagamento por região
+  const paymentMethodsByRegion = {
+    angola: {
+      title: '🇦🇴 Angola',
+      currency: 'AOA (Kwanza)',
+      methods: [
+        { name: 'express', label: 'Multicaixa Express (USSD)', description: 'Pagamento via USSD - cliente recebe notificação push no telemóvel' },
+        { name: 'reference', label: 'Referência (ATM)', description: 'Gera referência para pagamento em ATM ou Internet Banking' },
+      ]
+    },
+    portugal: {
+      title: '🇵🇹 Portugal',
+      currency: 'EUR (Euro)',
+      methods: [
+        { name: 'mbway', label: 'MB WAY', description: 'Pagamento instantâneo via app MB WAY - cliente aprova no telemóvel' },
+        { name: 'multibanco', label: 'Multibanco', description: 'Gera entidade e referência para pagamento em ATM ou Homebanking' },
+      ]
+    },
+    international: {
+      title: '🌍 Internacional',
+      currency: 'EUR, USD, GBP',
+      methods: [
+        { name: 'card', label: 'Cartão de Crédito/Débito', description: 'Visa, Mastercard, American Express - aceita qualquer moeda' },
+      ]
+    }
+  };
+
   const endpoints = [
     {
       method: 'POST',
       path: '/',
       title: 'Criar Pagamento',
-      description: 'Cria um novo pagamento via Express, Referência ou Cartão de Crédito',
+      description: 'Cria um novo pagamento (Express, Referência, MB WAY, Multibanco ou Cartão)',
       badge: 'Essencial',
       badgeVariant: 'default' as const,
     },
@@ -48,7 +75,7 @@ const ApiDocumentation = () => {
       method: 'GET',
       path: '/payment/{id}',
       title: 'Verificar Status',
-      description: 'Consulta o status atual de um pagamento',
+      description: 'Consulta o status actual de um pagamento',
       badge: 'Essencial',
       badgeVariant: 'default' as const,
     },
@@ -684,7 +711,72 @@ app.post('/webhook', (req, res) => {
             </CardContent>
           </Card>
 
-          {/* Endpoints */}
+          {/* Payment Methods by Region */}
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CreditCard className="w-5 h-5" />
+                Métodos de Pagamento por Região
+              </CardTitle>
+              <CardDescription>
+                Escolha o método adequado conforme o país do cliente
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-3 gap-6">
+                {/* Angola */}
+                <div className="border rounded-lg p-4">
+                  <h4 className="font-bold text-lg mb-1">{paymentMethodsByRegion.angola.title}</h4>
+                  <p className="text-sm text-muted-foreground mb-4">Moeda: <code className="bg-muted px-1 rounded">{paymentMethodsByRegion.angola.currency}</code></p>
+                  <div className="space-y-3">
+                    {paymentMethodsByRegion.angola.methods.map((method) => (
+                      <div key={method.name} className="p-3 bg-muted/50 rounded-lg">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge variant="default">{method.name}</Badge>
+                          <span className="font-medium text-sm">{method.label}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{method.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Portugal */}
+                <div className="border rounded-lg p-4">
+                  <h4 className="font-bold text-lg mb-1">{paymentMethodsByRegion.portugal.title}</h4>
+                  <p className="text-sm text-muted-foreground mb-4">Moeda: <code className="bg-muted px-1 rounded">{paymentMethodsByRegion.portugal.currency}</code></p>
+                  <div className="space-y-3">
+                    {paymentMethodsByRegion.portugal.methods.map((method) => (
+                      <div key={method.name} className="p-3 bg-muted/50 rounded-lg">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge variant="secondary">{method.name}</Badge>
+                          <span className="font-medium text-sm">{method.label}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{method.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Internacional */}
+                <div className="border rounded-lg p-4">
+                  <h4 className="font-bold text-lg mb-1">{paymentMethodsByRegion.international.title}</h4>
+                  <p className="text-sm text-muted-foreground mb-4">Moeda: <code className="bg-muted px-1 rounded">{paymentMethodsByRegion.international.currency}</code></p>
+                  <div className="space-y-3">
+                    {paymentMethodsByRegion.international.methods.map((method) => (
+                      <div key={method.name} className="p-3 bg-muted/50 rounded-lg">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge variant="outline">{method.name}</Badge>
+                          <span className="font-medium text-sm">{method.label}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{method.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
           <Card className="mb-8">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -730,80 +822,101 @@ app.post('/webhook', (req, res) => {
                   <TabsTrigger value="php">PHP</TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="curl" className="space-y-6">
-                  <div>
-                    <h4 className="font-semibold mb-2">Criar Pagamento Express (USSD)</h4>
-                    <CodeBlock code={curlCreateExpress} language="bash" id="curl-express" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold mb-2">Criar Pagamento por Referência (ATM)</h4>
-                    <CodeBlock code={curlCreateReference} language="bash" id="curl-reference" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold mb-2 flex items-center gap-2">
-                      Criar Pagamento por Cartão de Crédito
-                      <Badge variant="outline" className="text-xs">Internacional</Badge>
-                    </h4>
-                    <p className="text-sm text-muted-foreground mb-2">
-                      Pagamentos por cartão. A API retorna um <code className="bg-muted px-1 rounded">clientSecret</code> e <code className="bg-muted px-1 rounded">publishableKey</code> para você renderizar um formulário de cartão diretamente no seu site.
-                    </p>
-                    <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-4 mb-4">
-                      <h5 className="font-semibold text-amber-700 dark:text-amber-400 mb-2">⚠️ Importante: Use CardElement (White-Label)</h5>
-                      <p className="text-sm text-muted-foreground">
-                        Para um checkout <strong>100% white-label</strong> sem marcas externas, use o componente <code className="bg-muted px-1 rounded">CardElement</code> e <strong>NÃO</strong> o <code className="bg-muted px-1 rounded">PaymentElement</code>.
-                        O PaymentElement mostra "Checkout rápido com Link" e marcas de terceiros. Veja o exemplo completo na aba <strong>React/Card</strong>.
-                      </p>
+                <TabsContent value="curl" className="space-y-8">
+                  {/* Angola */}
+                  <div className="border-l-4 border-primary pl-4">
+                    <h3 className="font-bold text-lg mb-4 flex items-center gap-2">🇦🇴 Angola <Badge>AOA</Badge></h3>
+                    <div className="space-y-4">
+                      <div>
+                        <h4 className="font-semibold mb-2">Multicaixa Express (USSD/Push)</h4>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Cliente recebe notificação push no telemóvel para aprovar o pagamento.
+                        </p>
+                        <CodeBlock code={curlCreateExpress} language="bash" id="curl-express" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">Referência (ATM/Internet Banking)</h4>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Gera referência para pagamento em qualquer caixa ATM ou via Internet Banking.
+                        </p>
+                        <CodeBlock code={curlCreateReference} language="bash" id="curl-reference" />
+                      </div>
                     </div>
-                    <CodeBlock code={curlCreateCard} language="bash" id="curl-card" />
-                    <p className="text-sm text-muted-foreground mt-2 mb-2">Resposta:</p>
-                    <CodeBlock code={cardResponseExample} language="json" id="curl-card-response" />
                   </div>
-                  <div>
-                    <h4 className="font-semibold mb-2 flex items-center gap-2">
-                      Criar Pagamento MB WAY
-                      <Badge variant="outline" className="text-xs">Portugal</Badge>
-                    </h4>
-                    <p className="text-sm text-muted-foreground mb-2">
-                      Pagamento instantâneo via MB WAY (Portugal). O cliente recebe uma notificação no telemóvel para aprovar.
-                    </p>
-                    <CodeBlock code={curlCreateMbway} language="bash" id="curl-mbway" />
+
+                  {/* Portugal */}
+                  <div className="border-l-4 border-blue-500 pl-4">
+                    <h3 className="font-bold text-lg mb-4 flex items-center gap-2">🇵🇹 Portugal <Badge variant="secondary">EUR</Badge></h3>
+                    <div className="space-y-4">
+                      <div>
+                        <h4 className="font-semibold mb-2">MB WAY</h4>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Pagamento instantâneo - cliente recebe notificação no telemóvel para aprovar via app MB WAY.
+                        </p>
+                        <CodeBlock code={curlCreateMbway} language="bash" id="curl-mbway" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">Multibanco</h4>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Gera entidade e referência para pagamento em ATM ou Homebanking português.
+                        </p>
+                        <CodeBlock code={curlCreateMultibanco} language="bash" id="curl-multibanco" />
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-semibold mb-2 flex items-center gap-2">
-                      Criar Pagamento Multibanco
-                      <Badge variant="outline" className="text-xs">Portugal</Badge>
-                    </h4>
-                    <p className="text-sm text-muted-foreground mb-2">
-                      Gera uma referência Multibanco para pagamento em ATM ou homebanking (Portugal).
-                    </p>
-                    <CodeBlock code={curlCreateMultibanco} language="bash" id="curl-multibanco" />
-                    <p className="text-sm text-muted-foreground mt-2 mb-2">Resposta:</p>
-                    <CodeBlock code={multibancoResponseExample} language="json" id="curl-multibanco-response" />
+
+                  {/* Internacional */}
+                  <div className="border-l-4 border-green-500 pl-4">
+                    <h3 className="font-bold text-lg mb-4 flex items-center gap-2">🌍 Internacional <Badge variant="outline">EUR, USD, GBP</Badge></h3>
+                    <div className="space-y-4">
+                      <div>
+                        <h4 className="font-semibold mb-2">Cartão de Crédito/Débito</h4>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Aceita Visa, Mastercard, American Express de qualquer país.
+                        </p>
+                        <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-4 mb-4">
+                          <h5 className="font-semibold text-amber-700 dark:text-amber-400 mb-2">⚠️ Use CardElement (White-Label)</h5>
+                          <p className="text-sm text-muted-foreground">
+                            Para checkout sem marcas externas, use <code className="bg-muted px-1 rounded">CardElement</code> e <strong>NÃO</strong> PaymentElement. Veja aba <strong>React/Card</strong>.
+                          </p>
+                        </div>
+                        <CodeBlock code={curlCreateCard} language="bash" id="curl-card" />
+                        <p className="text-sm text-muted-foreground mt-2 mb-2">Resposta:</p>
+                        <CodeBlock code={cardResponseExample} language="json" id="curl-card-response" />
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-semibold mb-2">Verificar Status do Pagamento</h4>
-                    <CodeBlock code={curlGetPayment} language="bash" id="curl-get" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold mb-2">Listar Pagamentos</h4>
-                    <CodeBlock code={curlListPayments} language="bash" id="curl-list" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold mb-2">Consultar Saldo</h4>
-                    <CodeBlock code={`curl -X GET "${API_BASE_URL}/balance?email=cliente@email.com" \\
+
+                  {/* Outros Endpoints */}
+                  <div className="border-t pt-6">
+                    <h3 className="font-bold text-lg mb-4">📋 Outros Endpoints</h3>
+                    <div className="space-y-4">
+                      <div>
+                        <h4 className="font-semibold mb-2">Verificar Status do Pagamento</h4>
+                        <CodeBlock code={curlGetPayment} language="bash" id="curl-get" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">Listar Pagamentos</h4>
+                        <CodeBlock code={curlListPayments} language="bash" id="curl-list" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">Consultar Saldo</h4>
+                        <CodeBlock code={`curl -X GET "${API_BASE_URL}/balance?email=cliente@email.com" \\
   -H "x-api-key: YOUR_API_KEY"`} language="bash" id="curl-balance" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold mb-2">Solicitar Reembolso</h4>
-                    <CodeBlock code={`curl -X POST "${API_BASE_URL}/refunds" \\
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">Solicitar Reembolso</h4>
+                        <CodeBlock code={`curl -X POST "${API_BASE_URL}/refunds" \\
   -H "Content-Type: application/json" \\
   -H "x-api-key: YOUR_API_KEY" \\
   -d '{"paymentId": "payment_id_here", "reason": "Cliente solicitou cancelamento"}'`} language="bash" id="curl-refund" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold mb-2">Ver Estatísticas</h4>
-                    <CodeBlock code={`curl -X GET "${API_BASE_URL}/stats" \\
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">Ver Estatísticas</h4>
+                        <CodeBlock code={`curl -X GET "${API_BASE_URL}/stats" \\
   -H "x-api-key: YOUR_API_KEY"`} language="bash" id="curl-stats" />
+                      </div>
+                    </div>
                   </div>
                 </TabsContent>
 
