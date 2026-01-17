@@ -125,14 +125,15 @@ const ApiDocumentation = () => {
     "cancelUrl": "https://seusite.com/cancelado"
   }'`;
 
-  // Resposta do pagamento por cartão retorna uma URL de checkout
+  // Resposta do pagamento por cartão retorna dados para formulário embedded
   const cardResponseExample = `{
   "success": true,
   "paymentId": "550e8400-e29b-41d4-a716-446655440000",
   "orderId": "order_789",
-  "checkoutUrl": "https://checkout.stripe.com/c/pay/cs_...",
+  "clientSecret": "pi_xxx_secret_xxx",
+  "publishableKey": "pk_live_xxx",
   "status": "pending",
-  "message": "Redirecione o cliente para checkoutUrl para completar o pagamento"
+  "message": "Use clientSecret e publishableKey para renderizar o formulário de cartão"
 }`;
 
   const curlCreateMbway = `curl -X POST "${API_BASE_URL}" \\
@@ -168,9 +169,11 @@ const ApiDocumentation = () => {
   "success": true,
   "paymentId": "660e8400-e29b-41d4-a716-446655440001",
   "orderId": "order_pt_002",
-  "checkoutUrl": "https://checkout.stripe.com/c/pay/cs_...",
+  "referenceEntity": "21432",
+  "referenceNumber": "123 456 789",
+  "expiresAt": "2025-01-20T23:59:59Z",
   "status": "pending",
-  "message": "Redirecione o cliente para checkoutUrl para obter a referência Multibanco"
+  "message": "Apresente a entidade e referência ao cliente para pagamento via ATM ou Homebanking"
 }`;
 
   const curlGetPayment = `curl -X GET "${API_BASE_URL}/payment/{payment_id}" \\
@@ -622,7 +625,7 @@ app.post('/webhook', (req, res) => {
                       <Badge variant="outline" className="text-xs">Internacional</Badge>
                     </h4>
                     <p className="text-sm text-muted-foreground mb-2">
-                      Pagamentos por cartão são processados via Stripe. O cliente é redirecionado para uma página de checkout segura.
+                      Pagamentos por cartão. A API retorna um <code className="bg-muted px-1 rounded">clientSecret</code> e <code className="bg-muted px-1 rounded">publishableKey</code> para você renderizar um formulário de cartão diretamente no seu site.
                     </p>
                     <CodeBlock code={curlCreateCard} language="bash" id="curl-card" />
                     <p className="text-sm text-muted-foreground mt-2 mb-2">Resposta:</p>
