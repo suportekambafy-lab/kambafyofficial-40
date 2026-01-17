@@ -127,7 +127,8 @@ const [formData, setFormData] = useState({
     lesson_materials: [] as LessonMaterial[],
     is_scheduled: false,
     scheduled_at: null as Date | null,
-    cover_image_url: ''
+    cover_image_url: '',
+    notify_students: true // Notificar alunos por email por padrão
   });
   const [videoSourceType, setVideoSourceType] = useState<'upload' | 'youtube'>('upload');
   const [moduleFormData, setModuleFormData] = useState({
@@ -703,10 +704,57 @@ const [formData, setFormData] = useState({
           throw error;
         }
         console.log('Successfully saved lesson with video_url:', data?.video_url);
-        toast({
-          title: "Sucesso",
-          description: "Aula criada com sucesso"
-        });
+        
+        // Enviar notificação por email se checkbox estiver marcado e status for published
+        if (formData.notify_students && formData.status === 'published' && data) {
+          try {
+            console.log('📧 Enviando notificação de nova aula...');
+            // Buscar nome do módulo se existir
+            let moduleName = '';
+            if (data.module_id) {
+              const module = modules.find(m => m.id === data.module_id);
+              if (module) {
+                moduleName = module.title;
+              }
+            }
+            
+            const { data: notifData, error: notifError } = await supabase.functions.invoke('send-new-lesson-notification', {
+              body: {
+                lessonId: data.id,
+                memberAreaId: selectedArea?.id,
+                lessonTitle: data.title,
+                lessonDescription: data.description || '',
+                moduleName
+              }
+            });
+            
+            if (notifError) {
+              console.error('⚠️ Erro ao enviar notificações:', notifError);
+              toast({
+                title: "Aula criada",
+                description: "Aula criada, mas houve um erro ao notificar os alunos.",
+                variant: "default"
+              });
+            } else {
+              console.log('✅ Notificações enviadas:', notifData);
+              toast({
+                title: "Sucesso",
+                description: `Aula criada e ${notifData?.sent || 0} aluno(s) notificado(s) por email!`
+              });
+            }
+          } catch (notifError) {
+            console.error('⚠️ Erro ao enviar notificações:', notifError);
+            toast({
+              title: "Aula criada",
+              description: "Aula criada com sucesso!"
+            });
+          }
+        } else {
+          toast({
+            title: "Sucesso",
+            description: "Aula criada com sucesso"
+          });
+        }
       }
 
       // Reset form and close dialog
@@ -756,7 +804,8 @@ const [formData, setFormData] = useState({
       lesson_materials: processedMaterials,
       is_scheduled: lesson.is_scheduled || false,
       scheduled_at: lesson.scheduled_at ? new Date(lesson.scheduled_at) : null,
-      cover_image_url: (lesson as any).cover_image_url || ''
+      cover_image_url: (lesson as any).cover_image_url || '',
+      notify_students: false // Ao editar, não notificar por padrão
     });
     console.log('📝 Form data set to:', {
       complementary_links: processedLinks,
@@ -897,7 +946,8 @@ setFormData({
       lesson_materials: [],
       is_scheduled: false,
       scheduled_at: null,
-      cover_image_url: ''
+      cover_image_url: '',
+      notify_students: true
     });
     setVideoSourceType('upload');
     setEditingLesson(null);
@@ -1026,7 +1076,8 @@ setFormData({
       lesson_materials: [],
       is_scheduled: false,
       scheduled_at: null,
-      cover_image_url: ''
+      cover_image_url: '',
+      notify_students: true
     });
     setEditingLesson(null);
     setSelectedModuleForLesson(moduleId);
@@ -2376,6 +2427,29 @@ setFormData({
                 return updated;
               });
             }} />
+
+               {/* Checkbox para notificar alunos - Só aparece ao criar nova aula publicada */}
+               {!editingLesson && formData.status === 'published' && (
+                 <div className="flex items-center space-x-3 p-4 border rounded-lg bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
+                   <Checkbox 
+                     id="notify-students" 
+                     checked={formData.notify_students} 
+                     onCheckedChange={checked => setFormData(prev => ({
+                       ...prev,
+                       notify_students: checked === true
+                     }))} 
+                   />
+                   <div className="flex-1">
+                     <Label htmlFor="notify-students" className="font-medium text-blue-900 dark:text-blue-100 cursor-pointer">
+                       Notificar alunos por email
+                     </Label>
+                     <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
+                       Enviar email para todos os alunos matriculados informando sobre a nova aula
+                     </p>
+                   </div>
+                   <Mail className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                 </div>
+               )}
                
                <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => {

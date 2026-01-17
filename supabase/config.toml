@@ -284,3 +284,6 @@ verify_jwt = false
 
 [functions.send-referral-program-email]
 verify_jwt = false
+
+[functions.send-new-lesson-notification]
+verify_jwt = false
