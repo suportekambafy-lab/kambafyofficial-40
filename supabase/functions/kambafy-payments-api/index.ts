@@ -390,7 +390,8 @@ async function createPayment(
         let paymentMethodLabel: string;
         
         if (paymentMethod === 'mbway') {
-          stripePaymentMethodTypes = ['card']; // MB WAY usa Stripe Link ou card como fallback
+          // MB WAY é um método de pagamento nativo do Stripe em Portugal
+          stripePaymentMethodTypes = ['mbway'];
           paymentMethodLabel = 'MB WAY';
         } else if (paymentMethod === 'multibanco') {
           stripePaymentMethodTypes = ['multibanco'];
