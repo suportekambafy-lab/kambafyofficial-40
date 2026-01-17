@@ -40,7 +40,7 @@ const ApiDocumentation = () => {
       method: 'POST',
       path: '/',
       title: 'Criar Pagamento',
-      description: 'Cria um novo pagamento via Express (USSD) ou Referência (ATM)',
+      description: 'Cria um novo pagamento via Express, Referência ou Cartão de Crédito',
       badge: 'Essencial',
       badgeVariant: 'default' as const,
     },
@@ -110,6 +110,30 @@ const ApiDocumentation = () => {
     "customerName": "Maria Santos",
     "customerEmail": "maria@email.com"
   }'`;
+
+  const curlCreateCard = `curl -X POST "${API_BASE_URL}" \\
+  -H "Content-Type: application/json" \\
+  -H "x-api-key: YOUR_API_KEY" \\
+  -d '{
+    "orderId": "order_789",
+    "amount": 15000,
+    "currency": "AOA",
+    "paymentMethod": "card",
+    "customerName": "Pedro Costa",
+    "customerEmail": "pedro@email.com",
+    "successUrl": "https://seusite.com/sucesso",
+    "cancelUrl": "https://seusite.com/cancelado"
+  }'`;
+
+  // Resposta do pagamento por cartão retorna uma URL de checkout
+  const cardResponseExample = `{
+  "success": true,
+  "paymentId": "550e8400-e29b-41d4-a716-446655440000",
+  "orderId": "order_789",
+  "checkoutUrl": "https://checkout.stripe.com/c/pay/cs_...",
+  "status": "pending",
+  "message": "Redirecione o cliente para checkoutUrl para completar o pagamento"
+}`;
 
   const curlGetPayment = `curl -X GET "${API_BASE_URL}/payment/{payment_id}" \\
   -H "x-api-key: YOUR_API_KEY"`;
@@ -391,7 +415,7 @@ app.post('/webhook', (req, res) => {
           <div className="text-center mb-12">
             <h1 className="text-4xl font-bold mb-4">API de Pagamentos</h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Integre pagamentos Express (USSD) e Referência (ATM) em suas aplicações com nossa API RESTful simples e segura.
+              Integre pagamentos Express (USSD), Referência (ATM) e Cartão de Crédito em suas aplicações com nossa API RESTful simples e segura.
             </p>
           </div>
 
@@ -553,6 +577,18 @@ app.post('/webhook', (req, res) => {
                   <div>
                     <h4 className="font-semibold mb-2">Criar Pagamento por Referência (ATM)</h4>
                     <CodeBlock code={curlCreateReference} language="bash" id="curl-reference" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-2 flex items-center gap-2">
+                      Criar Pagamento por Cartão de Crédito
+                      <Badge variant="outline" className="text-xs">Novo</Badge>
+                    </h4>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Pagamentos por cartão são processados via Stripe. O cliente é redirecionado para uma página de checkout segura.
+                    </p>
+                    <CodeBlock code={curlCreateCard} language="bash" id="curl-card" />
+                    <p className="text-sm text-muted-foreground mt-2 mb-2">Resposta:</p>
+                    <CodeBlock code={cardResponseExample} language="json" id="curl-card-response" />
                   </div>
                   <div>
                     <h4 className="font-semibold mb-2">Verificar Status do Pagamento</h4>
