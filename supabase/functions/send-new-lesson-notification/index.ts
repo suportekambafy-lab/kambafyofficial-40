@@ -71,16 +71,53 @@ serve(async (req) => {
     if (!students || students.length === 0) {
       console.log('ℹ️ Nenhum aluno encontrado na área de membros');
       return new Response(
-        JSON.stringify({ success: true, message: 'Nenhum aluno encontrado', sent: 0, failed: 0 }),
+        JSON.stringify({ success: true, message: 'Nenhum aluno encontrado', sent: 0, failed: 0, skipped: 0 }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log(`📝 Preparando envio para ${students.length} alunos`);
+    // Buscar alunos que JÁ receberam email desta aula
+    const { data: alreadySent, error: alreadySentError } = await supabase
+      .from('lesson_notification_sent')
+      .select('student_email')
+      .eq('lesson_id', lessonId);
+
+    if (alreadySentError) {
+      console.error('⚠️ Erro ao buscar notificações já enviadas:', alreadySentError);
+      // Continua mesmo com erro, para não bloquear envio
+    }
+
+    // Criar set de emails já notificados
+    const alreadySentEmails = new Set(alreadySent?.map(s => s.student_email.toLowerCase()) || []);
+    
+    // Filtrar apenas alunos que ainda não receberam
+    const studentsToNotify = students.filter(
+      s => !alreadySentEmails.has(s.student_email.toLowerCase())
+    );
+
+    const skipped = students.length - studentsToNotify.length;
+    
+    console.log(`📝 Total alunos: ${students.length}, Já notificados: ${skipped}, A notificar: ${studentsToNotify.length}`);
+
+    if (studentsToNotify.length === 0) {
+      console.log('ℹ️ Todos os alunos já foram notificados desta aula');
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: 'Todos os alunos já foram notificados desta aula',
+          sent: 0, 
+          failed: 0, 
+          skipped,
+          total: students.length
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     const loginUrl = `https://membros.kambafy.com/login/${memberAreaId}`;
     let sent = 0;
     let failed = 0;
+    const successfulEmails: string[] = [];
 
     // Gerar HTML do email
     const generateEmailHtml = (studentName: string) => `
@@ -139,11 +176,10 @@ serve(async (req) => {
     `;
 
     // Enviar emails sequencialmente com delay para respeitar rate limit (2/segundo)
-    // Processar em lotes de 2 emails com delay de 1 segundo entre lotes
     const emailsPerSecond = 2;
     
-    for (let i = 0; i < students.length; i += emailsPerSecond) {
-      const batch = students.slice(i, i + emailsPerSecond);
+    for (let i = 0; i < studentsToNotify.length; i += emailsPerSecond) {
+      const batch = studentsToNotify.slice(i, i + emailsPerSecond);
       
       // Enviar lote em paralelo (máximo 2)
       const results = await Promise.allSettled(
@@ -167,6 +203,7 @@ serve(async (req) => {
       for (const result of results) {
         if (result.status === 'fulfilled') {
           sent++;
+          successfulEmails.push(result.value);
         } else {
           failed++;
           console.error(`❌ Falha:`, result.reason);
@@ -174,18 +211,41 @@ serve(async (req) => {
       }
 
       // Log de progresso a cada 50 emails
-      if ((i + emailsPerSecond) % 50 === 0 || i + emailsPerSecond >= students.length) {
-        console.log(`📊 Progresso: ${Math.min(i + emailsPerSecond, students.length)}/${students.length} processados (${sent} enviados, ${failed} falhas)`);
+      if ((i + emailsPerSecond) % 50 === 0 || i + emailsPerSecond >= studentsToNotify.length) {
+        console.log(`📊 Progresso: ${Math.min(i + emailsPerSecond, studentsToNotify.length)}/${studentsToNotify.length} processados (${sent} enviados, ${failed} falhas)`);
       }
 
       // Aguardar 1.1 segundo antes do próximo lote para respeitar rate limit
-      if (i + emailsPerSecond < students.length) {
+      if (i + emailsPerSecond < studentsToNotify.length) {
         await delay(1100);
       }
     }
 
-    // Criar notificações in-app para os alunos também
-    const notifications = students.map(student => ({
+    // Registrar emails enviados com sucesso na tabela de rastreamento
+    if (successfulEmails.length > 0) {
+      const sentRecords = successfulEmails.map(email => ({
+        lesson_id: lessonId,
+        student_email: email,
+        member_area_id: memberAreaId
+      }));
+
+      // Inserir em lotes de 100
+      const recordBatchSize = 100;
+      for (let i = 0; i < sentRecords.length; i += recordBatchSize) {
+        const batch = sentRecords.slice(i, i + recordBatchSize);
+        const { error: insertError } = await supabase
+          .from('lesson_notification_sent')
+          .insert(batch);
+
+        if (insertError) {
+          console.error('⚠️ Erro ao registrar emails enviados:', insertError);
+        }
+      }
+      console.log(`✅ ${successfulEmails.length} registros de envio salvos`);
+    }
+
+    // Criar notificações in-app apenas para quem foi notificado
+    const notifications = studentsToNotify.map(student => ({
       member_area_id: memberAreaId,
       student_email: student.student_email,
       type: 'new_lesson',
@@ -213,8 +273,8 @@ serve(async (req) => {
       }
     }
     
-    console.log(`✅ ${students.length} notificações in-app criadas`);
-    console.log(`📧 Resumo final: ${sent} enviados, ${failed} falhas de ${students.length} total`);
+    console.log(`✅ ${studentsToNotify.length} notificações in-app criadas`);
+    console.log(`📧 Resumo final: ${sent} enviados, ${failed} falhas, ${skipped} ignorados (já notificados)`);
 
     return new Response(
       JSON.stringify({ 
@@ -222,6 +282,7 @@ serve(async (req) => {
         message: `Notificações enviadas para ${sent} aluno(s)`,
         sent,
         failed,
+        skipped,
         total: students.length
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

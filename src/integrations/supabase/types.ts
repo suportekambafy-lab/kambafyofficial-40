@@ -1781,6 +1781,48 @@ export type Database = {
           },
         ]
       }
+      lesson_notification_sent: {
+        Row: {
+          created_at: string
+          id: string
+          lesson_id: string
+          member_area_id: string
+          sent_at: string
+          student_email: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lesson_id: string
+          member_area_id: string
+          sent_at?: string
+          student_email: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lesson_id?: string
+          member_area_id?: string
+          sent_at?: string
+          student_email?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_notification_sent_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_notification_sent_member_area_id_fkey"
+            columns: ["member_area_id"]
+            isOneToOne: false
+            referencedRelation: "member_areas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lesson_progress: {
         Row: {
           completed: boolean
