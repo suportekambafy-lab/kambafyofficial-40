@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -209,21 +209,30 @@ export function MyCoproductionsPage() {
     </Card>
   );
 
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Users className="w-6 h-6 text-primary" />
-        <div>
-          <h1 className="text-2xl font-bold">Minhas Co-Produções</h1>
-          <p className="text-muted-foreground">
-            Gerencie os produtos onde você é co-produtor
-          </p>
-        </div>
-      </div>
+  const totalCount = pendingInvites.length + activeCoproductions.length + inactiveCoproductions.length;
 
+  if (totalCount === 0) {
+    return (
+      <Card className="border-dashed">
+        <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+          <Users className="w-12 h-12 text-muted-foreground/50 mb-4" />
+          <h3 className="text-lg font-medium text-foreground mb-2">
+            Nenhuma co-produção
+          </h3>
+          <p className="text-muted-foreground max-w-md">
+            Você ainda não foi convidado para co-produzir nenhum produto.
+            Quando um produtor te convidar, o convite aparecerá aqui.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
       <Tabs defaultValue="pending" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="pending" className="relative">
+        <TabsList className="inline-flex h-auto p-1 bg-muted/50 rounded-lg">
+          <TabsTrigger value="pending" className="relative px-4 py-2 rounded-md">
             Pendentes
             {pendingInvites.length > 0 && (
               <Badge className="ml-2 h-5 px-1.5 bg-yellow-500">
@@ -231,7 +240,7 @@ export function MyCoproductionsPage() {
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="active">
+          <TabsTrigger value="active" className="px-4 py-2 rounded-md">
             Ativas
             {activeCoproductions.length > 0 && (
               <Badge variant="outline" className="ml-2 h-5 px-1.5">
@@ -239,7 +248,7 @@ export function MyCoproductionsPage() {
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="inactive">
+          <TabsTrigger value="inactive" className="px-4 py-2 rounded-md">
             Encerradas
           </TabsTrigger>
         </TabsList>
