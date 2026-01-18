@@ -1113,6 +1113,8 @@ export type Database = {
           accepted_at: string | null
           canceled_at: string | null
           canceled_by: string | null
+          commission_from_affiliate_sales: boolean
+          commission_from_producer_sales: boolean
           commission_rate: number
           coproducer_email: string
           coproducer_name: string | null
@@ -1131,6 +1133,8 @@ export type Database = {
           accepted_at?: string | null
           canceled_at?: string | null
           canceled_by?: string | null
+          commission_from_affiliate_sales?: boolean
+          commission_from_producer_sales?: boolean
           commission_rate: number
           coproducer_email: string
           coproducer_name?: string | null
@@ -1149,6 +1153,8 @@ export type Database = {
           accepted_at?: string | null
           canceled_at?: string | null
           canceled_by?: string | null
+          commission_from_affiliate_sales?: boolean
+          commission_from_producer_sales?: boolean
           commission_rate?: number
           coproducer_email?: string
           coproducer_name?: string | null

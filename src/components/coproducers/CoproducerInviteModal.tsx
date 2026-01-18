@@ -24,7 +24,14 @@ import {
 interface CoproducerInviteModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onInvite: (email: string, commissionRate: number, name?: string, durationDays?: number) => void;
+  onInvite: (params: {
+    email: string;
+    commissionRate: number;
+    name?: string;
+    durationDays?: number;
+    commissionFromProducerSales?: boolean;
+    commissionFromAffiliateSales?: boolean;
+  }) => void;
   isLoading: boolean;
   availableCommission: number;
 }
@@ -70,7 +77,13 @@ export function CoproducerInviteModal({
       return;
     }
     
-    onInvite(email.trim(), rate, undefined, parseInt(durationDays));
+    onInvite({
+      email: email.trim(),
+      commissionRate: rate,
+      durationDays: parseInt(durationDays),
+      commissionFromProducerSales: producerSales,
+      commissionFromAffiliateSales: affiliateSales
+    });
     
     setEmail('');
     setCommissionRate('');

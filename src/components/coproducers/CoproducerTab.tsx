@@ -242,8 +242,8 @@ export function CoproducerTab({ productId }: CoproducerTabProps) {
       <CoproducerInviteModal
         open={showInviteModal}
         onOpenChange={setShowInviteModal}
-        onInvite={(email, rate, name, durationDays) => {
-          inviteCoproducer({ email, commissionRate: rate, name, durationDays });
+        onInvite={(params) => {
+          inviteCoproducer(params);
           setShowInviteModal(false);
         }}
         isLoading={isInviting}

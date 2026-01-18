@@ -21,6 +21,8 @@ export interface Coproducer {
   accepted_at: string | null;
   created_at: string;
   updated_at: string;
+  commission_from_producer_sales: boolean;
+  commission_from_affiliate_sales: boolean;
 }
 
 export interface CoproducerWithProduct extends Coproducer {
@@ -90,12 +92,16 @@ export function useCoproducers(productId?: string) {
       email, 
       commissionRate, 
       name,
-      durationDays = 30
+      durationDays = 30,
+      commissionFromProducerSales = true,
+      commissionFromAffiliateSales = true
     }: { 
       email: string; 
       commissionRate: number;
       name?: string;
       durationDays?: number;
+      commissionFromProducerSales?: boolean;
+      commissionFromAffiliateSales?: boolean;
     }) => {
       if (!productId || !user) throw new Error('Produto ou usuário não encontrado');
 
@@ -136,7 +142,9 @@ export function useCoproducers(productId?: string) {
           coproducer_name: name || existingUser?.full_name || null,
           commission_rate: commissionRate,
           duration_days: durationDays,
-          status: 'pending'
+          status: 'pending',
+          commission_from_producer_sales: commissionFromProducerSales,
+          commission_from_affiliate_sales: commissionFromAffiliateSales
         })
         .select()
         .single();
