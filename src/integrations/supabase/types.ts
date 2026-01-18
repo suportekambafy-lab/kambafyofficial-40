@@ -5509,6 +5509,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      delete_product_if_no_paid_sales: {
+        Args: { p_product_id: string }
+        Returns: boolean
+      }
       detect_abandoned_purchase: {
         Args: {
           _amount: number
