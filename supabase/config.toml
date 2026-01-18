@@ -287,3 +287,6 @@ verify_jwt = false
 
 [functions.send-new-lesson-notification]
 verify_jwt = false
+
+[functions.send-coproducer-invite]
+verify_jwt = false

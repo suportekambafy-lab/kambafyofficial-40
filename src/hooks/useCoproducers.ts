@@ -148,12 +148,44 @@ export function useCoproducers(productId?: string) {
         throw error;
       }
 
+      // Buscar dados do produto e do dono para enviar e-mail
+      const { data: productData } = await supabase
+        .from('products')
+        .select('name')
+        .eq('id', productId)
+        .single();
+
+      const { data: ownerProfile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user.id)
+        .single();
+
+      // Enviar e-mail de convite
+      try {
+        await supabase.functions.invoke('send-coproducer-invite', {
+          body: {
+            coproducer_id: data.id,
+            coproducer_email: email.toLowerCase(),
+            coproducer_name: name || existingUser?.full_name || null,
+            owner_name: ownerProfile?.full_name || 'Produtor',
+            product_name: productData?.name || 'Produto',
+            commission_rate: commissionRate,
+            duration_days: durationDays
+          }
+        });
+        console.log('[useCoproducers] Invitation email sent successfully');
+      } catch (emailError) {
+        console.error('[useCoproducers] Failed to send invitation email:', emailError);
+        // Não falhar a operação se o e-mail não for enviado
+      }
+
       return data;
     },
     onSuccess: () => {
       toast({
         title: 'Convite enviado!',
-        message: 'O co-produtor foi convidado com sucesso.',
+        message: 'O co-produtor foi convidado e receberá um e-mail com o convite.',
         variant: 'success'
       });
       queryClient.invalidateQueries({ queryKey: ['coproducers', productId] });
