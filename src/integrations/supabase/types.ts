@@ -82,6 +82,48 @@ export type Database = {
           },
         ]
       }
+      account_collaborators: {
+        Row: {
+          accepted_at: string | null
+          collaborator_email: string
+          collaborator_user_id: string | null
+          created_at: string
+          id: string
+          invited_at: string
+          owner_user_id: string
+          permissions: Json
+          revoked_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          collaborator_email: string
+          collaborator_user_id?: string | null
+          created_at?: string
+          id?: string
+          invited_at?: string
+          owner_user_id: string
+          permissions?: Json
+          revoked_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          collaborator_email?: string
+          collaborator_user_id?: string | null
+          created_at?: string
+          id?: string
+          invited_at?: string
+          owner_user_id?: string
+          permissions?: Json
+          revoked_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       admin_action_logs: {
         Row: {
           action: string
@@ -5694,6 +5736,16 @@ export type Database = {
           video_url: string
         }[]
       }
+      get_managed_accounts: {
+        Args: never
+        Returns: {
+          accepted_at: string
+          owner_email: string
+          owner_name: string
+          owner_user_id: string
+          permissions: Json
+        }[]
+      }
       get_mozambique_admin_stats:
         | { Args: never; Returns: Json }
         | { Args: { end_date?: string; start_date?: string }; Returns: Json }
@@ -5969,6 +6021,10 @@ export type Database = {
       is_authenticated_super_admin: { Args: never; Returns: boolean }
       is_cart_recovery_enabled: {
         Args: { p_product_id: string }
+        Returns: boolean
+      }
+      is_collaborator_of: {
+        Args: { p_owner_user_id: string }
         Returns: boolean
       }
       is_coproduction_active: {
