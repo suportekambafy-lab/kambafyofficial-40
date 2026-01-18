@@ -19,6 +19,7 @@ import { AnimatedTabs } from "@/components/ui/animated-tabs";
 import { AccessDurationSelector } from "./AccessDurationSelector";
 import { useBunnyUpload } from "@/hooks/useBunnyUpload";
 import { usePreferredCurrency } from "@/hooks/usePreferredCurrency";
+import { CoproducerTab } from "@/components/coproducers";
 
 interface ProductFormProps {
   editingProduct?: any;
@@ -907,7 +908,13 @@ export default function ProductFormTabs({ editingProduct, selectedType = "", onS
       id: "advanced",
       label: "Configurações",
       content: advancedTab
-    }
+    },
+    // Aba de Co-Produção - só aparece quando editando um produto existente
+    ...(editingProduct?.id ? [{
+      id: "coproducers",
+      label: "Co-Produção",
+      content: <CoproducerTab productId={editingProduct.id} />
+    }] : [])
   ];
 
   return (
