@@ -242,72 +242,31 @@ export default function Products() {
     setDeleteLoading(true);
     
     try {
-      // Only block deletion if there are completed or pending orders (not cancelled/expired)
-      const { data: activeOrders, error: ordersError } = await supabase
-        .from('orders')
-        .select('id')
-        .eq('product_id', deleteProduct.id)
-        .in('status', ['completed', 'paid'])
-        .limit(1);
-
-      if (ordersError) {
-        console.error('Error checking orders:', ordersError);
-        toast({
-          title: "Erro",
-          description: "Erro ao verificar pedidos associados ao produto",
-          variant: "destructive"
-        });
-        setDeleteProduct(null);
-        return;
-      }
-
-      if (activeOrders && activeOrders.length > 0) {
-        toast({
-          title: "❌ Não é possível excluir",
-          description: "Este produto não pode ser excluído porque já tem vendas/pedidos associados. Você pode desativá-lo em vez de excluí-lo.",
-          variant: "destructive"
-        });
-        
-        setTimeout(() => {
-          setDeleteProduct(null);
-        }, 500);
-        return;
-      }
-
-      // Delete non-paid orders first (cancelled, expired, pending, etc.)
-      const { error: deleteOrdersError } = await supabase
-        .from('orders')
-        .delete()
-        .eq('product_id', deleteProduct.id)
-        .not('status', 'in', '("completed","paid")');
-
-      if (deleteOrdersError) {
-        console.error('Error deleting associated orders:', deleteOrdersError);
-        toast({
-          title: "Erro",
-          description: "Erro ao limpar pedidos cancelados do produto",
-          variant: "destructive"
-        });
-        setDeleteProduct(null);
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('products')
-        .delete()
-        .eq('id', deleteProduct.id)
-        .eq('user_id', user.id)
-        .select();
+      const { error } = await (supabase as any).rpc('delete_product_if_no_paid_sales', {
+        p_product_id: deleteProduct.id,
+      });
 
       if (error) {
-        toast({
-          title: "Erro",
-          description: `Erro ao excluir produto: ${error.message}`,
-          variant: "destructive"
-        });
+        const msg = String(error.message || '');
+
+        if (msg.includes('PRODUTO_COM_VENDAS_PAGAS')) {
+          toast({
+            title: "❌ Não é possível excluir",
+            description: "Este produto não pode ser excluído porque já tem vendas pagas.",
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Erro",
+            description: `Erro ao excluir produto: ${msg}`,
+            variant: "destructive"
+          });
+        }
+
         setDeleteProduct(null);
         return;
       }
+
       toast({
         title: "Sucesso",
         description: "Produto excluído com sucesso"
@@ -315,6 +274,7 @@ export default function Products() {
 
       await refetch();
       setDeleteProduct(null);
+
       
     } catch (error: any) {
       console.error('Unexpected error deleting product:', error);
