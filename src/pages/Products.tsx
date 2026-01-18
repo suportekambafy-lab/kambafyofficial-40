@@ -274,6 +274,24 @@ export default function Products() {
         return;
       }
 
+      // Delete non-paid orders first (cancelled, expired, pending, etc.)
+      const { error: deleteOrdersError } = await supabase
+        .from('orders')
+        .delete()
+        .eq('product_id', deleteProduct.id)
+        .not('status', 'in', '("completed","paid")');
+
+      if (deleteOrdersError) {
+        console.error('Error deleting associated orders:', deleteOrdersError);
+        toast({
+          title: "Erro",
+          description: "Erro ao limpar pedidos cancelados do produto",
+          variant: "destructive"
+        });
+        setDeleteProduct(null);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('products')
         .delete()
