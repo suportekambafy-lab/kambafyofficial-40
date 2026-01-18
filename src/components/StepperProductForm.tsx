@@ -16,6 +16,7 @@ import { ImageUploader } from "./ImageUploader";
 import { getAllPaymentMethods, PaymentMethod } from "@/utils/paymentMethods";
 import SubscriptionConfig from "./product-form/SubscriptionConfig";
 import { usePreferredCurrency } from "@/hooks/usePreferredCurrency";
+import { CoproducerTab } from "@/components/coproducers";
 
 interface StepperProductFormProps {
   editingProduct?: any;
@@ -95,7 +96,7 @@ const getStepTitle = (stepId: number, productType: string) => {
   return baseSteps[stepId - 1];
 };
 
-const getSteps = (productType: string) => {
+const getSteps = (productType: string, isEditing: boolean = false) => {
   const baseSteps = [
     { id: 1, title: "Informações Básicas", description: "Nome e descrição" },
     { id: 2, title: "Preço", description: "Defina os valores" },
@@ -103,18 +104,24 @@ const getSteps = (productType: string) => {
     { id: 4, title: "Configurações", description: "Tags, categoria e suporte" },
   ];
 
+  let steps = [...baseSteps];
+
   if (productType?.startsWith('Assinatura-')) {
-    return [
-      ...baseSteps,
+    steps.push(
       { id: 5, title: "Assinatura", description: "Configure a recorrência" },
       { id: 6, title: "Conteúdo", description: "Link ou área de membros" }
-    ];
+    );
+  } else {
+    steps.push({ id: 5, title: "Conteúdo", description: "Link ou área de membros" });
   }
 
-  return [
-    ...baseSteps,
-    { id: 5, title: "Conteúdo", description: "Link ou área de membros" }
-  ];
+  // Adicionar etapa de Co-Produção apenas quando editando
+  if (isEditing) {
+    const lastStepId = steps[steps.length - 1].id;
+    steps.push({ id: lastStepId + 1, title: "Co-Produção", description: "Convide co-produtores" });
+  }
+
+  return steps;
 };
 
 export default function StepperProductForm({ editingProduct, onSuccess, onCancel, selectedType }: StepperProductFormProps) {
@@ -129,7 +136,7 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
   // Usar preferredCurrency do hook, sem fallback para KZ
   const userBaseCurrency = preferredCurrency || '';
   
-  const STEPS = getSteps(selectedType || "");
+  const STEPS = getSteps(selectedType || "", !!editingProduct?.id);
 
   // Extrair o subtipo de assinatura (course ou software)
   const getSubscriptionType = (type: string): 'course' | 'software' | undefined => {
@@ -1004,6 +1011,11 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
                 </div>
               )}
             </>
+          )}
+
+          {/* Etapa de Co-Produção - só aparece quando editando */}
+          {editingProduct?.id && currentStep === STEPS.length && (
+            <CoproducerTab productId={editingProduct.id} />
           )}
         </CardContent>
       </Card>
