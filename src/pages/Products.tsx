@@ -242,10 +242,12 @@ export default function Products() {
     setDeleteLoading(true);
     
     try {
-      const { data: orders, error: ordersError } = await supabase
+      // Only block deletion if there are completed or pending orders (not cancelled/expired)
+      const { data: activeOrders, error: ordersError } = await supabase
         .from('orders')
         .select('id')
         .eq('product_id', deleteProduct.id)
+        .in('status', ['completed', 'pending', 'paid'])
         .limit(1);
 
       if (ordersError) {
@@ -259,7 +261,7 @@ export default function Products() {
         return;
       }
 
-      if (orders && orders.length > 0) {
+      if (activeOrders && activeOrders.length > 0) {
         toast({
           title: "❌ Não é possível excluir",
           description: "Este produto não pode ser excluído porque já tem vendas/pedidos associados. Você pode desativá-lo em vez de excluí-lo.",
