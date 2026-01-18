@@ -64,6 +64,7 @@ const SellerRefunds = createLazyWithRetry(() => import("./SellerRefunds"), "Sell
 const SellerSubscriptions = createLazyWithRetry(() => import("./SellerSubscriptions"), "SellerSubscriptions");
 const LiveView = createLazyWithRetry(() => import("./LiveView"), "LiveView");
 const SellerReferrals = createLazyWithRetry(() => import("./SellerReferrals"), "SellerReferrals");
+const Collaborators = createLazyWithRetry(() => import("./Collaborators"), "Collaborators");
 
 function SellerDashboardContent() {
   const location = useLocation();
@@ -132,7 +133,7 @@ function SellerDashboardContent() {
                 <Route path="/assinaturas" element={<SellerSubscriptions />} />
                 <Route path="/reembolsos" element={<SellerRefunds />} />
                 <Route path="/relatorios" element={<SellerReports />} />
-                <Route path="/colaboradores" element={<ComingSoon title="Colaboradores" description="O sistema de colaboradores estará disponível em breve para trabalho em equipe." />} />
+                <Route path="/colaboradores" element={<Collaborators />} />
                 <Route path="/apps" element={<Apps />} />
               </Routes>
             </Suspense>

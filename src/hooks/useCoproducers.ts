@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,6 +12,10 @@ export interface Coproducer {
   coproducer_email: string;
   coproducer_name: string | null;
   commission_rate: number;
+  duration_days: number;
+  expires_at: string | null;
+  canceled_at: string | null;
+  canceled_by: 'owner' | 'coproducer' | null;
   status: 'pending' | 'accepted' | 'rejected' | 'removed';
   invited_at: string;
   accepted_at: string | null;
@@ -24,8 +28,27 @@ export interface CoproducerWithProduct extends Coproducer {
     id: string;
     name: string;
     cover: string | null;
+    user_id: string;
   };
 }
+
+// Helper para verificar se co-produção está ativa
+export const isCoproductionActive = (coproducer: Coproducer): boolean => {
+  if (coproducer.status !== 'accepted') return false;
+  if (coproducer.canceled_at) return false;
+  if (coproducer.expires_at && new Date(coproducer.expires_at) < new Date()) return false;
+  return true;
+};
+
+// Helper para calcular dias restantes
+export const getDaysRemaining = (expiresAt: string | null): number | null => {
+  if (!expiresAt) return null;
+  const now = new Date();
+  const expires = new Date(expiresAt);
+  const diffTime = expires.getTime() - now.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return Math.max(0, diffDays);
+};
 
 export function useCoproducers(productId?: string) {
   const { user } = useAuth();
@@ -56,9 +79,9 @@ export function useCoproducers(productId?: string) {
     staleTime: 30000,
   });
 
-  // Calcular total de comissões
+  // Calcular total de comissões (apenas de co-produtores ativos)
   const totalCommission = coproducers
-    .filter(c => c.status === 'accepted' || c.status === 'pending')
+    .filter(c => (c.status === 'accepted' && !c.canceled_at && (!c.expires_at || new Date(c.expires_at) > new Date())) || c.status === 'pending')
     .reduce((sum, c) => sum + Number(c.commission_rate), 0);
 
   // Convidar co-produtor
@@ -66,17 +89,21 @@ export function useCoproducers(productId?: string) {
     mutationFn: async ({ 
       email, 
       commissionRate, 
-      name 
+      name,
+      durationDays = 30
     }: { 
       email: string; 
       commissionRate: number;
       name?: string;
+      durationDays?: number;
     }) => {
       if (!productId || !user) throw new Error('Produto ou usuário não encontrado');
 
       // Verificar se email já é co-produtor
       const existingCoproducer = coproducers.find(
-        c => c.coproducer_email.toLowerCase() === email.toLowerCase() && c.status !== 'removed'
+        c => c.coproducer_email.toLowerCase() === email.toLowerCase() && 
+             c.status !== 'removed' && 
+             !c.canceled_at
       );
       if (existingCoproducer) {
         throw new Error('Este email já é co-produtor deste produto');
@@ -108,6 +135,7 @@ export function useCoproducers(productId?: string) {
           coproducer_email: email.toLowerCase(),
           coproducer_name: name || existingUser?.full_name || null,
           commission_rate: commissionRate,
+          duration_days: durationDays,
           status: 'pending'
         })
         .select()
@@ -139,9 +167,16 @@ export function useCoproducers(productId?: string) {
     }
   });
 
-  // Remover co-produtor
-  const removeMutation = useMutation({
+  // Cancelar convite pendente (só dono pode fazer)
+  const cancelInviteMutation = useMutation({
     mutationFn: async (coproducerId: string) => {
+      const coproducer = coproducers.find(c => c.id === coproducerId);
+      if (!coproducer) throw new Error('Co-produtor não encontrado');
+      
+      if (coproducer.status !== 'pending') {
+        throw new Error('Só é possível cancelar convites pendentes');
+      }
+
       const { error } = await supabase
         .from('coproducers')
         .update({ status: 'removed' })
@@ -151,15 +186,15 @@ export function useCoproducers(productId?: string) {
     },
     onSuccess: () => {
       toast({
-        title: 'Co-produtor removido',
-        message: 'O co-produtor foi removido com sucesso.',
+        title: 'Convite cancelado',
+        message: 'O convite foi cancelado com sucesso.',
         variant: 'success'
       });
       queryClient.invalidateQueries({ queryKey: ['coproducers', productId] });
     },
     onError: (error: Error) => {
       toast({
-        title: 'Erro ao remover',
+        title: 'Erro ao cancelar',
         message: error.message,
         variant: 'error'
       });
@@ -173,8 +208,8 @@ export function useCoproducers(productId?: string) {
     availableCommission: 99 - totalCommission,
     inviteCoproducer: inviteMutation.mutate,
     isInviting: inviteMutation.isPending,
-    removeCoproducer: removeMutation.mutate,
-    isRemoving: removeMutation.isPending,
+    cancelInvite: cancelInviteMutation.mutate,
+    isCanceling: cancelInviteMutation.isPending,
     refetch
   };
 }
@@ -201,7 +236,8 @@ export function useMyCoproductions() {
           products:product_id (
             id,
             name,
-            cover
+            cover,
+            user_id
           )
         `)
         .or(`coproducer_email.eq.${user.email.toLowerCase()},coproducer_user_id.eq.${user.id}`)
@@ -218,8 +254,13 @@ export function useMyCoproductions() {
   // Convites pendentes
   const pendingInvites = coproductions.filter(c => c.status === 'pending');
   
-  // Co-produções ativas
-  const activeCoproductions = coproductions.filter(c => c.status === 'accepted');
+  // Co-produções ativas (aceitas, não canceladas, não expiradas)
+  const activeCoproductions = coproductions.filter(c => isCoproductionActive(c));
+  
+  // Co-produções expiradas ou canceladas
+  const inactiveCoproductions = coproductions.filter(c => 
+    c.status === 'accepted' && !isCoproductionActive(c)
+  );
 
   // Responder convite
   const respondMutation = useMutation({
@@ -232,12 +273,19 @@ export function useMyCoproductions() {
     }) => {
       if (!user) throw new Error('Usuário não autenticado');
 
+      const coproduction = coproductions.find(c => c.id === coproducerId);
+      if (!coproduction) throw new Error('Convite não encontrado');
+
+      const now = new Date();
+      const expiresAt = new Date(now.getTime() + (coproduction.duration_days * 24 * 60 * 60 * 1000));
+
       const { error } = await supabase
         .from('coproducers')
         .update({
           status: accept ? 'accepted' : 'rejected',
           coproducer_user_id: user.id,
-          accepted_at: accept ? new Date().toISOString() : null
+          accepted_at: accept ? now.toISOString() : null,
+          expires_at: accept ? expiresAt.toISOString() : null
         })
         .eq('id', coproducerId);
 
@@ -262,13 +310,55 @@ export function useMyCoproductions() {
     }
   });
 
+  // Cancelar co-produção (só co-produtor pode fazer após aceitar)
+  const cancelCoproductionMutation = useMutation({
+    mutationFn: async (coproducerId: string) => {
+      if (!user) throw new Error('Usuário não autenticado');
+
+      const coproduction = coproductions.find(c => c.id === coproducerId);
+      if (!coproduction) throw new Error('Co-produção não encontrada');
+      
+      if (coproduction.status !== 'accepted') {
+        throw new Error('Só é possível cancelar co-produções aceitas');
+      }
+
+      const { error } = await supabase
+        .from('coproducers')
+        .update({
+          canceled_at: new Date().toISOString(),
+          canceled_by: 'coproducer'
+        })
+        .eq('id', coproducerId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Co-produção cancelada',
+        message: 'Você não receberá mais comissões deste produto.',
+        variant: 'success'
+      });
+      queryClient.invalidateQueries({ queryKey: ['my-coproductions'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erro ao cancelar',
+        message: error.message,
+        variant: 'error'
+      });
+    }
+  });
+
   return {
     coproductions,
     pendingInvites,
     activeCoproductions,
+    inactiveCoproductions,
     isLoading,
     respondToInvite: respondMutation.mutate,
     isResponding: respondMutation.isPending,
+    cancelCoproduction: cancelCoproductionMutation.mutate,
+    isCanceling: cancelCoproductionMutation.isPending,
     refetch
   };
 }
