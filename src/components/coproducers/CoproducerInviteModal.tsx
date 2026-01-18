@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   Dialog,
   DialogContent,
@@ -11,6 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2, HelpCircle, ExternalLink } from 'lucide-react';
 import { validateEmail } from '@/components/checkout/EnhancedFormValidation';
 import {
@@ -39,6 +39,8 @@ export function CoproducerInviteModal({
   const [email, setEmail] = useState('');
   const [commissionRate, setCommissionRate] = useState('');
   const [durationDays, setDurationDays] = useState('30');
+  const [producerSales, setProducerSales] = useState(true);
+  const [affiliateSales, setAffiliateSales] = useState(true);
   const [errors, setErrors] = useState<{ email?: string; commission?: string }>({});
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -73,6 +75,8 @@ export function CoproducerInviteModal({
     setEmail('');
     setCommissionRate('');
     setDurationDays('30');
+    setProducerSales(true);
+    setAffiliateSales(true);
     setErrors({});
   };
 
@@ -80,6 +84,8 @@ export function CoproducerInviteModal({
     setEmail('');
     setCommissionRate('');
     setDurationDays('30');
+    setProducerSales(true);
+    setAffiliateSales(true);
     setErrors({});
     onOpenChange(false);
   };
@@ -163,6 +169,35 @@ export function CoproducerInviteModal({
               {errors.commission && (
                 <p className="text-sm text-destructive">{errors.commission}</p>
               )}
+            </div>
+          </div>
+
+          {/* Tipos de vendas */}
+          <div className="grid grid-cols-[140px_1fr] items-start gap-4">
+            <Label className="text-right text-muted-foreground pt-1">
+              Deve receber comissões de quais vendas?
+            </Label>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Checkbox 
+                  id="producer-sales"
+                  checked={producerSales}
+                  onCheckedChange={(checked) => setProducerSales(checked === true)}
+                />
+                <Label htmlFor="producer-sales" className="font-normal cursor-pointer">
+                  Vendas do produtor
+                </Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox 
+                  id="affiliate-sales"
+                  checked={affiliateSales}
+                  onCheckedChange={(checked) => setAffiliateSales(checked === true)}
+                />
+                <Label htmlFor="affiliate-sales" className="font-normal cursor-pointer">
+                  Vendas dos afiliados
+                </Label>
+              </div>
             </div>
           </div>
 
