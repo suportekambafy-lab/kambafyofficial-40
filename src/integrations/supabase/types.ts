@@ -1066,6 +1066,59 @@ export type Database = {
         }
         Relationships: []
       }
+      coproducers: {
+        Row: {
+          accepted_at: string | null
+          commission_rate: number
+          coproducer_email: string
+          coproducer_name: string | null
+          coproducer_user_id: string | null
+          created_at: string | null
+          id: string
+          invited_at: string | null
+          owner_user_id: string
+          product_id: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          commission_rate: number
+          coproducer_email: string
+          coproducer_name?: string | null
+          coproducer_user_id?: string | null
+          created_at?: string | null
+          id?: string
+          invited_at?: string | null
+          owner_user_id: string
+          product_id: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          commission_rate?: number
+          coproducer_email?: string
+          coproducer_name?: string | null
+          coproducer_user_id?: string | null
+          created_at?: string | null
+          id?: string
+          invited_at?: string | null
+          owner_user_id?: string
+          product_id?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coproducers_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coupon_uses: {
         Row: {
           coupon_id: string
@@ -5929,6 +5982,16 @@ export type Database = {
           _user_agent?: string
         }
         Returns: undefined
+      }
+      process_coproducer_commissions: {
+        Args: {
+          p_currency: string
+          p_order_id: string
+          p_product_id: string
+          p_product_name: string
+          p_seller_amount: number
+        }
+        Returns: number
       }
       process_missing_customer_access: {
         Args: never
