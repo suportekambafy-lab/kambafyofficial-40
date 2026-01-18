@@ -12,7 +12,8 @@ import {
   MoreVertical,
   Loader2,
   Trash2,
-  Info
+  Info,
+  ExternalLink
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -315,7 +316,15 @@ export default function Collaborators() {
       <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
         <Info className="w-4 h-4 text-primary" />
         <span>Aprenda mais sobre os </span>
-        <a href="#" className="text-primary hover:underline">colaboradores</a>
+        <a 
+          href="https://ajuda.kambafy.com/colaboradores" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="text-primary hover:underline inline-flex items-center gap-1"
+        >
+          colaboradores
+          <ExternalLink className="w-3 h-3" />
+        </a>
       </div>
 
       {/* Add Collaborator Modal */}

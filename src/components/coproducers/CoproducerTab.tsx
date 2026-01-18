@@ -223,10 +223,12 @@ export function CoproducerTab({ productId }: CoproducerTabProps) {
         </Table>
       </div>
 
-      {/* Link de ajuda */}
-      <div 
+      {/* Link de ajuda - abre em nova aba */}
+      <a 
+        href="https://ajuda.kambafy.com/coproducao"
+        target="_blank"
+        rel="noopener noreferrer"
         className="flex items-center justify-center gap-2 text-sm text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
-        onClick={() => window.location.href = '/vendedor/documentacao?artigo=como-funciona-coproducao&categoria=coproducao'}
       >
         <Info className="w-4 h-4 text-primary" />
         <span>Aprenda mais sobre a</span>
@@ -234,7 +236,7 @@ export function CoproducerTab({ productId }: CoproducerTabProps) {
           co-produção
           <ExternalLink className="w-3 h-3" />
         </span>
-      </div>
+      </a>
 
       {/* Modal de convite */}
       <CoproducerInviteModal
