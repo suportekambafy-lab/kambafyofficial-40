@@ -6065,16 +6065,28 @@ export type Database = {
         }
         Returns: undefined
       }
-      process_coproducer_commissions: {
-        Args: {
-          p_currency: string
-          p_order_id: string
-          p_product_id: string
-          p_product_name: string
-          p_seller_amount: number
-        }
-        Returns: number
-      }
+      process_coproducer_commissions:
+        | {
+            Args: {
+              p_currency: string
+              p_order_id: string
+              p_product_id: string
+              p_product_name: string
+              p_seller_amount: number
+            }
+            Returns: number
+          }
+        | {
+            Args: {
+              p_currency: string
+              p_is_affiliate_sale?: boolean
+              p_order_id: string
+              p_product_id: string
+              p_product_name: string
+              p_seller_amount: number
+            }
+            Returns: number
+          }
       process_missing_customer_access: {
         Args: never
         Returns: {

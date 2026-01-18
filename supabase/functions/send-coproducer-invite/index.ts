@@ -19,6 +19,8 @@ interface CoproducerInviteRequest {
   product_name: string;
   commission_rate: number;
   duration_days: number;
+  commission_from_producer_sales: boolean;
+  commission_from_affiliate_sales: boolean;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -40,7 +42,9 @@ const handler = async (req: Request): Promise<Response> => {
       owner_name,
       product_name,
       commission_rate,
-      duration_days
+      duration_days,
+      commission_from_producer_sales = true,
+      commission_from_affiliate_sales = true
     }: CoproducerInviteRequest = await req.json();
 
     console.log("[send-coproducer-invite] Processing invite for:", coproducer_email);
@@ -79,9 +83,14 @@ const handler = async (req: Request): Promise<Response> => {
               
               <div style="background-color: #f9fafb; border-radius: 8px; padding: 20px; margin-bottom: 24px; border-left: 4px solid #6366f1;">
                 <h2 style="margin: 0 0 12px 0; color: #111827; font-size: 18px;">${product_name}</h2>
-                <p style="margin: 0; color: #6b7280; font-size: 14px;">
+                <p style="margin: 0 0 12px 0; color: #6b7280; font-size: 14px;">
                   📊 Comissão: <strong style="color: #059669;">${commission_rate}%</strong> sobre cada venda<br>
                   📅 Duração do contrato: <strong>${duration_days} dias</strong>
+                </p>
+                <p style="margin: 0; color: #6b7280; font-size: 14px;">
+                  💰 <strong>Origem das comissões:</strong><br>
+                  ${commission_from_producer_sales ? '✅' : '❌'} Vendas do produtor<br>
+                  ${commission_from_affiliate_sales ? '✅' : '❌'} Vendas dos afiliados
                 </p>
               </div>
               

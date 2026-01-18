@@ -179,7 +179,9 @@ export function useCoproducers(productId?: string) {
             owner_name: ownerProfile?.full_name || 'Produtor',
             product_name: productData?.name || 'Produto',
             commission_rate: commissionRate,
-            duration_days: durationDays
+            duration_days: durationDays,
+            commission_from_producer_sales: commissionFromProducerSales,
+            commission_from_affiliate_sales: commissionFromAffiliateSales
           }
         });
         console.log('[useCoproducers] Invitation email sent successfully');
