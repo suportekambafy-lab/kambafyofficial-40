@@ -1,309 +1,506 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { useState, useMemo } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
-  BookOpen, 
-  Package, 
-  CreditCard, 
-  Users, 
-  Settings,
-  Shield,
+  Search, 
+  ChevronLeft,
+  Users,
+  GraduationCap,
+  CreditCard,
+  Link as LinkIcon,
+  Package,
   TrendingUp,
-  FileText
+  BookOpen,
+  ExternalLink,
+  ThumbsUp,
+  ThumbsDown,
+  MessageCircle
 } from "lucide-react";
+import { 
+  helpCategories, 
+  helpArticles, 
+  getArticleBySlug, 
+  getArticlesByCategory,
+  getRelatedArticles,
+  searchArticles,
+  HelpArticle,
+  HelpCategory
+} from "@/data/helpArticles";
+
+// Mapeamento de ícones
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  Users,
+  GraduationCap,
+  CreditCard,
+  Link: LinkIcon,
+  Package,
+  TrendingUp
+};
+
+// Componente para renderizar markdown simples
+const MarkdownContent = ({ content }: { content: string }) => {
+  const lines = content.trim().split('\n');
+  
+  return (
+    <div className="prose prose-sm dark:prose-invert max-w-none">
+      {lines.map((line, index) => {
+        // Headers
+        if (line.startsWith('# ')) {
+          return <h1 key={index} className="text-2xl font-bold mt-6 mb-4 text-foreground">{line.slice(2)}</h1>;
+        }
+        if (line.startsWith('## ')) {
+          return <h2 key={index} className="text-xl font-semibold mt-6 mb-3 text-foreground">{line.slice(3)}</h2>;
+        }
+        if (line.startsWith('### ')) {
+          return <h3 key={index} className="text-lg font-medium mt-4 mb-2 text-foreground">{line.slice(4)}</h3>;
+        }
+        
+        // Lists
+        if (line.startsWith('- ')) {
+          return (
+            <li key={index} className="ml-4 text-muted-foreground list-disc">
+              {line.slice(2)}
+            </li>
+          );
+        }
+        
+        // Numbered lists
+        const numberedMatch = line.match(/^(\d+)\. (.+)/);
+        if (numberedMatch) {
+          return (
+            <li key={index} className="ml-4 text-muted-foreground list-decimal">
+              {numberedMatch[2]}
+            </li>
+          );
+        }
+        
+        // Check/X items
+        if (line.startsWith('- ✅') || line.startsWith('- ❌')) {
+          return (
+            <p key={index} className="ml-4 text-muted-foreground">
+              {line.slice(2)}
+            </p>
+          );
+        }
+        
+        // Tables
+        if (line.startsWith('|')) {
+          if (line.includes('---')) return null; // Skip separator
+          const cells = line.split('|').filter(Boolean).map(c => c.trim());
+          const isHeader = index > 0 && lines[index + 1]?.includes('---');
+          return (
+            <div key={index} className={`grid grid-cols-2 gap-4 py-2 px-4 ${isHeader ? 'font-semibold bg-muted/50 rounded-t-lg' : 'border-b'}`}>
+              {cells.map((cell, i) => (
+                <span key={i} className="text-muted-foreground">{cell}</span>
+              ))}
+            </div>
+          );
+        }
+        
+        // Empty lines
+        if (line.trim() === '') {
+          return <div key={index} className="h-2" />;
+        }
+        
+        // Regular paragraphs
+        // Handle bold text
+        const formattedLine = line.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        
+        return (
+          <p 
+            key={index} 
+            className="text-muted-foreground leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: formattedLine }}
+          />
+        );
+      })}
+    </div>
+  );
+};
+
+// Função para abrir o Crisp Chat
+const openCrispChat = () => {
+  if (window.$crisp) {
+    window.$crisp.push(['do', 'chat:show']);
+    window.$crisp.push(['do', 'chat:open']);
+  }
+};
 
 export default function SellerDocumentation() {
-  return (
-    <div className="p-4 md:p-6 space-y-6">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold text-foreground">Documentação</h1>
-        <p className="text-lg text-muted-foreground">
-          Guias completos para usar a plataforma Kambafy
-        </p>
-      </div>
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [feedback, setFeedback] = useState<'up' | 'down' | null>(null);
 
-      <Tabs defaultValue="primeiros-passos" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4">
-          <TabsTrigger value="primeiros-passos">Primeiros Passos</TabsTrigger>
-          <TabsTrigger value="produtos">Produtos</TabsTrigger>
-          <TabsTrigger value="vendas">Vendas</TabsTrigger>
-          <TabsTrigger value="avancado">Avançado</TabsTrigger>
-        </TabsList>
+  const currentArticleSlug = searchParams.get('artigo');
+  const currentCategorySlug = searchParams.get('categoria');
 
-        <TabsContent value="primeiros-passos" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5" />
-                Começando na Kambafy
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <h3 className="text-lg font-semibold flex items-center gap-2">
-                    1. Configure seu perfil
-                  </h3>
-                  <p className="text-muted-foreground">
-                    Comece completando suas informações pessoais e de pagamento na seção de configurações. 
-                    Adicione seu IBAN para receber pagamentos (sem o código do país AO06).
-                  </p>
-                </div>
+  const currentArticle = currentArticleSlug ? getArticleBySlug(currentArticleSlug) : null;
+  const currentCategory = currentCategorySlug ? helpCategories.find(c => c.slug === currentCategorySlug) : null;
+  
+  const relatedArticles = currentArticle ? getRelatedArticles(currentArticle.id) : [];
+  
+  const categoryArticles = currentCategorySlug 
+    ? getArticlesByCategory(currentCategorySlug) 
+    : [];
 
-                <div className="space-y-2">
-                  <h3 className="text-lg font-semibold flex items-center gap-2">
-                    2. Crie seu primeiro produto
-                  </h3>
-                  <p className="text-muted-foreground">
-                    Vá para a seção "Produtos" e clique em "Novo Produto". Escolha entre produto digital, 
-                    físico, serviço ou área de membros. Preencha as informações básicas como nome, descrição e preço.
-                  </p>
-                </div>
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    return searchArticles(searchQuery);
+  }, [searchQuery]);
 
-                <div className="space-y-2">
-                  <h3 className="text-lg font-semibold flex items-center gap-2">
-                    3. Configure o checkout
-                  </h3>
-                  <p className="text-muted-foreground">
-                    Personalize sua página de checkout com cores, textos e elementos visuais que representam 
-                    sua marca. Adicione provas sociais para aumentar a confiança dos compradores.
-                  </p>
-                </div>
+  const handleArticleClick = (article: HelpArticle) => {
+    setSearchParams({ artigo: article.slug, categoria: article.categorySlug });
+    setSearchQuery("");
+    setFeedback(null);
+  };
 
-                <div className="space-y-2">
-                  <h3 className="text-lg font-semibold flex items-center gap-2">
-                    4. Publique e compartilhe
-                  </h3>
-                  <p className="text-muted-foreground">
-                    Depois de configurar tudo, publique seu produto e comece a compartilhar o link em suas 
-                    redes sociais, site ou com seus afiliados.
-                  </p>
-                </div>
+  const handleCategoryClick = (category: HelpCategory) => {
+    setSearchParams({ categoria: category.slug });
+    setSearchQuery("");
+  };
+
+  const handleBack = () => {
+    if (currentArticle) {
+      setSearchParams({ categoria: currentArticle.categorySlug });
+    } else {
+      setSearchParams({});
+    }
+    setFeedback(null);
+  };
+
+  const handleBackToCategories = () => {
+    setSearchParams({});
+  };
+
+  // View: Artigo específico
+  if (currentArticle) {
+    return (
+      <div className="min-h-screen bg-background">
+        {/* Header */}
+        <div className="border-b bg-card">
+          <div className="max-w-7xl mx-auto px-4 py-4">
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" size="sm" onClick={handleBack}>
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Voltar
+              </Button>
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar na Central de Ajuda"
+                  className="pl-9"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="produtos" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Package className="h-5 w-5" />
-                Gerenciando Produtos
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Accordion type="single" collapsible className="space-y-2">
-                <AccordionItem value="tipos" className="border rounded-lg px-4">
-                  <AccordionTrigger className="text-left hover:no-underline">
-                    Tipos de Produtos
-                  </AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground pb-4 space-y-3">
-                    <div>
-                      <Badge className="mb-2">Digital</Badge>
-                      <p>E-books, cursos, vídeos, áudios e outros arquivos digitais. Entrega automática após o pagamento.</p>
-                    </div>
-                    <div>
-                      <Badge className="mb-2">Físico</Badge>
-                      <p>Produtos que precisam de envio físico. Você gerencia o envio após receber o pedido.</p>
-                    </div>
-                    <div>
-                      <Badge className="mb-2">Serviço</Badge>
-                      <p>Consultorias, mentorias ou qualquer serviço prestado. Coordene a entrega diretamente com o cliente.</p>
-                    </div>
-                    <div>
-                      <Badge className="mb-2">Área de Membros</Badge>
-                      <p>Crie uma área exclusiva com conteúdo protegido por assinatura ou pagamento único.</p>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-
-                <AccordionItem value="precos" className="border rounded-lg px-4">
-                  <AccordionTrigger className="text-left hover:no-underline">
-                    Configuração de Preços
-                  </AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground pb-4 space-y-2">
-                    <p>Você pode configurar diferentes modelos de precificação:</p>
-                    <ul className="list-disc list-inside space-y-1">
-                      <li>Pagamento único</li>
-                      <li>Parcelamento (até 12x)</li>
-                      <li>Assinatura recorrente (mensal/anual)</li>
-                      <li>Preço dinâmico (cliente escolhe o valor)</li>
-                    </ul>
-                  </AccordionContent>
-                </AccordionItem>
-
-                <AccordionItem value="protecao" className="border rounded-lg px-4">
-                  <AccordionTrigger className="text-left hover:no-underline">
-                    Proteção de Conteúdo Digital
-                  </AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground pb-4 space-y-2">
-                    <p>Seus produtos digitais são protegidos automaticamente com:</p>
-                    <ul className="list-disc list-inside space-y-1">
-                      <li>Criptografia de arquivos</li>
-                      <li>Controle de acesso por usuário</li>
-                      <li>Marca d'água em vídeos</li>
-                      <li>Monitoramento de downloads suspeitos</li>
-                      <li>Links temporários de download</li>
-                    </ul>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="vendas" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
-                Vendas e Comissões
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Accordion type="single" collapsible className="space-y-2">
-                <AccordionItem value="comissoes" className="border rounded-lg px-4">
-                  <AccordionTrigger className="text-left hover:no-underline">
-                    Sistema de Comissões
-                  </AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground pb-4 space-y-2">
-                    <p>A Kambafy cobra apenas <strong>8% por venda realizada</strong>. Não há mensalidades ou taxas fixas.</p>
-                    <p>A comissão é deduzida automaticamente e o restante fica disponível em seu saldo.</p>
-                    <p className="text-sm italic">Exemplo: Venda de 10.000 AOA = 800 AOA de comissão + 9.200 AOA para você</p>
-                  </AccordionContent>
-                </AccordionItem>
-
-                <AccordionItem value="recebimentos" className="border rounded-lg px-4">
-                  <AccordionTrigger className="text-left hover:no-underline">
-                    Como Receber Pagamentos
-                  </AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground pb-4 space-y-2">
-                    <p>O dinheiro das vendas fica disponível após <strong>7 dias</strong> da data da venda.</p>
-                    <p>Para solicitar um saque:</p>
-                    <ol className="list-decimal list-inside space-y-1">
-                      <li>Vá na seção "Financeiro"</li>
-                      <li>Clique em "Solicitar Saque"</li>
-                      <li>Informe o valor desejado</li>
-                      <li>Confirme seu IBAN</li>
-                    </ol>
-                    <p className="text-sm">Prazo de processamento: até 2 dias úteis</p>
-                  </AccordionContent>
-                </AccordionItem>
-
-                <AccordionItem value="afiliados" className="border rounded-lg px-4">
-                  <AccordionTrigger className="text-left hover:no-underline">
-                    Programa de Afiliados
-                  </AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground pb-4 space-y-2">
-                    <p>Aumente suas vendas convidando outras pessoas para promover seus produtos.</p>
-                    <p>Como funciona:</p>
-                    <ol className="list-decimal list-inside space-y-1">
-                      <li>Configure a porcentagem de comissão (ex: 30%)</li>
-                      <li>Gere e compartilhe seu link de afiliado</li>
-                      <li>Afiliados promovem seu produto</li>
-                      <li>Eles recebem comissão por cada venda gerada</li>
-                    </ol>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="avancado" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Settings className="h-5 w-5" />
-                Recursos Avançados
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Accordion type="single" collapsible className="space-y-2">
-                <AccordionItem value="checkout" className="border rounded-lg px-4">
-                  <AccordionTrigger className="text-left hover:no-underline">
-                    Personalização de Checkout
-                  </AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground pb-4 space-y-2">
-                    <p>Customize sua página de checkout para aumentar conversões:</p>
-                    <ul className="list-disc list-inside space-y-1">
-                      <li>Cores e logotipo da sua marca</li>
-                      <li>Textos e copywriting personalizados</li>
-                      <li>Provas sociais (avaliações, número de vendas)</li>
-                      <li>Urgência e escassez (ofertas limitadas)</li>
-                      <li>Upsells e ofertas adicionais</li>
-                    </ul>
-                  </AccordionContent>
-                </AccordionItem>
-
-                <AccordionItem value="integracao" className="border rounded-lg px-4">
-                  <AccordionTrigger className="text-left hover:no-underline">
-                    Integrações e Webhooks
-                  </AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground pb-4 space-y-2">
-                    <p>Conecte a Kambafy com outras ferramentas:</p>
-                    <ul className="list-disc list-inside space-y-1">
-                      <li>Configure webhooks para notificações de vendas</li>
-                      <li>Integre com ferramentas de email marketing</li>
-                      <li>Conecte com plataformas de gestão</li>
-                      <li>Exporte dados para análise externa</li>
-                    </ul>
-                  </AccordionContent>
-                </AccordionItem>
-
-                <AccordionItem value="seguranca" className="border rounded-lg px-4">
-                  <AccordionTrigger className="text-left hover:no-underline">
-                    Segurança e Privacidade
-                  </AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground pb-4 space-y-2">
-                    <p>Suas informações e de seus clientes estão protegidas:</p>
-                    <ul className="list-disc list-inside space-y-1">
-                      <li>Criptografia SSL em todas as transações</li>
-                      <li>Conformidade com LGPD/GDPR</li>
-                      <li>Backup automático de dados</li>
-                      <li>Autenticação de dois fatores</li>
-                      <li>Monitoramento 24/7 de segurança</li>
-                    </ul>
-                  </AccordionContent>
-                </AccordionItem>
-
-                <AccordionItem value="analytics" className="border rounded-lg px-4">
-                  <AccordionTrigger className="text-left hover:no-underline">
-                    Análise e Relatórios
-                  </AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground pb-4 space-y-2">
-                    <p>Acompanhe o desempenho dos seus produtos:</p>
-                    <ul className="list-disc list-inside space-y-1">
-                      <li>Dashboard com métricas em tempo real</li>
-                      <li>Taxa de conversão por produto</li>
-                      <li>Origem das vendas (tráfego, afiliados)</li>
-                      <li>Relatórios personalizados e exportáveis</li>
-                      <li>Análise de abandono de carrinho</li>
-                    </ul>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      <Card className="bg-primary/5 border-primary/20">
-        <CardContent className="p-6">
-          <div className="flex items-start gap-4">
-            <Shield className="h-8 w-8 text-primary flex-shrink-0 mt-1" />
-            <div className="space-y-2">
-              <h3 className="font-semibold text-lg">Precisa de Ajuda?</h3>
-              <p className="text-muted-foreground">
-                Nossa equipe de suporte está disponível de segunda a sexta, das 8h às 18h. 
-                Use o chat ao vivo para tirar dúvidas ou entre em contato por email.
-              </p>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="flex gap-8">
+            {/* Sidebar - Artigos relacionados */}
+            <aside className="hidden lg:block w-64 flex-shrink-0">
+              <div className="sticky top-6">
+                <h3 className="font-semibold mb-4 text-sm text-muted-foreground uppercase tracking-wider">
+                  Artigos relacionados
+                </h3>
+                <nav className="space-y-1">
+                  {relatedArticles.map((article) => (
+                    <button
+                      key={article.id}
+                      onClick={() => handleArticleClick(article)}
+                      className="block w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                    >
+                      {article.title}
+                    </button>
+                  ))}
+                </nav>
+
+                <div className="mt-8 pt-6 border-t">
+                  <h3 className="font-semibold mb-4 text-sm text-muted-foreground uppercase tracking-wider">
+                    Mais em {currentArticle.category}
+                  </h3>
+                  <nav className="space-y-1">
+                    {getArticlesByCategory(currentArticle.categorySlug)
+                      .filter(a => a.id !== currentArticle.id)
+                      .slice(0, 5)
+                      .map((article) => (
+                        <button
+                          key={article.id}
+                          onClick={() => handleArticleClick(article)}
+                          className="block w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                        >
+                          {article.title}
+                        </button>
+                      ))}
+                  </nav>
+                </div>
+              </div>
+            </aside>
+
+            {/* Conteúdo principal */}
+            <main className="flex-1 min-w-0">
+              <Card>
+                <CardContent className="p-6 md:p-8">
+                  {/* Breadcrumb */}
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
+                    <button 
+                      onClick={handleBackToCategories}
+                      className="hover:text-foreground"
+                    >
+                      Central de Ajuda
+                    </button>
+                    <span>/</span>
+                    <button 
+                      onClick={handleBack}
+                      className="hover:text-foreground"
+                    >
+                      {currentArticle.category}
+                    </button>
+                  </div>
+
+                  {/* Conteúdo do artigo */}
+                  <MarkdownContent content={currentArticle.content} />
+
+                  {/* Feedback */}
+                  <div className="mt-12 pt-6 border-t">
+                    <p className="text-sm text-muted-foreground mb-3">Este artigo foi útil?</p>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant={feedback === 'up' ? 'default' : 'outline'} 
+                        size="sm"
+                        onClick={() => setFeedback('up')}
+                      >
+                        <ThumbsUp className="h-4 w-4 mr-1" />
+                        Sim
+                      </Button>
+                      <Button 
+                        variant={feedback === 'down' ? 'default' : 'outline'} 
+                        size="sm"
+                        onClick={() => setFeedback('down')}
+                      >
+                        <ThumbsDown className="h-4 w-4 mr-1" />
+                        Não
+                      </Button>
+                    </div>
+                    {feedback && (
+                      <p className="text-sm text-muted-foreground mt-3">
+                        Obrigado pelo feedback!
+                      </p>
+                    )}
+                  </div>
+
+                  {/* CTA suporte */}
+                  <div className="mt-8 p-4 bg-muted/50 rounded-lg flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">Não encontrou o que buscava?</p>
+                      <p className="text-sm text-muted-foreground">Entre em contato com nosso suporte</p>
+                    </div>
+                    <Button onClick={openCrispChat}>
+                      <MessageCircle className="h-4 w-4 mr-2" />
+                      Falar com suporte
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </main>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // View: Lista de artigos de uma categoria
+  if (currentCategory) {
+    return (
+      <div className="min-h-screen bg-background">
+        {/* Header */}
+        <div className="border-b bg-card">
+          <div className="max-w-4xl mx-auto px-4 py-4">
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" size="sm" onClick={handleBackToCategories}>
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Voltar
+              </Button>
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar na Central de Ajuda"
+                  className="pl-9"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Search results overlay */}
+        {searchQuery && searchResults.length > 0 && (
+          <div className="max-w-4xl mx-auto px-4">
+            <Card className="mt-2 absolute z-50 w-full max-w-md">
+              <CardContent className="p-2">
+                {searchResults.slice(0, 5).map((article) => (
+                  <button
+                    key={article.id}
+                    onClick={() => handleArticleClick(article)}
+                    className="block w-full text-left px-3 py-2 rounded-lg hover:bg-muted"
+                  >
+                    <p className="font-medium text-sm">{article.title}</p>
+                    <p className="text-xs text-muted-foreground">{article.category}</p>
+                  </button>
+                ))}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          {/* Breadcrumb */}
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
+            <button 
+              onClick={handleBackToCategories}
+              className="hover:text-foreground"
+            >
+              Central de Ajuda
+            </button>
+            <span>/</span>
+            <span className="text-foreground">{currentCategory.name}</span>
+          </div>
+
+          <h1 className="text-3xl font-bold mb-2">{currentCategory.name}</h1>
+          <p className="text-muted-foreground mb-8">{currentCategory.description}</p>
+
+          {/* Lista de artigos */}
+          <div className="space-y-2">
+            {categoryArticles.map((article) => (
+              <button
+                key={article.id}
+                onClick={() => handleArticleClick(article)}
+                className="w-full text-left p-4 rounded-lg border hover:bg-muted/50 transition-colors flex items-center justify-between group"
+              >
+                <span className="font-medium">{article.title}</span>
+                <ExternalLink className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // View: Lista de categorias (home)
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header com busca */}
+      <div className="bg-primary/5 border-b">
+        <div className="max-w-4xl mx-auto px-4 py-12 text-center">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <BookOpen className="h-8 w-8 text-primary" />
+            <h1 className="text-3xl font-bold">Central de Ajuda</h1>
+          </div>
+          <p className="text-muted-foreground mb-6">
+            Encontre respostas para suas dúvidas sobre a plataforma
+          </p>
+          
+          <div className="relative max-w-md mx-auto">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input
+              placeholder="Buscar artigos..."
+              className="pl-12 h-12 text-base"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            
+            {/* Search results dropdown */}
+            {searchQuery && searchResults.length > 0 && (
+              <Card className="absolute top-full left-0 right-0 mt-2 z-50">
+                <CardContent className="p-2">
+                  <ScrollArea className="max-h-64">
+                    {searchResults.map((article) => (
+                      <button
+                        key={article.id}
+                        onClick={() => handleArticleClick(article)}
+                        className="block w-full text-left px-3 py-2 rounded-lg hover:bg-muted"
+                      >
+                        <p className="font-medium text-sm">{article.title}</p>
+                        <p className="text-xs text-muted-foreground">{article.category}</p>
+                      </button>
+                    ))}
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Grid de categorias */}
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {helpCategories.map((category) => {
+            const Icon = iconMap[category.icon] || BookOpen;
+            const articleCount = getArticlesByCategory(category.slug).length;
+            
+            return (
+              <button
+                key={category.id}
+                onClick={() => handleCategoryClick(category)}
+                className="text-left p-6 rounded-xl border hover:border-primary/50 hover:bg-muted/50 transition-all group"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold mb-1">{category.name}</h3>
+                    <p className="text-sm text-muted-foreground mb-2">{category.description}</p>
+                    <Badge variant="secondary" className="text-xs">
+                      {articleCount} artigo{articleCount !== 1 ? 's' : ''}
+                    </Badge>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Artigos populares */}
+        <div className="mt-12">
+          <h2 className="text-xl font-semibold mb-4">Artigos populares</h2>
+          <div className="space-y-2">
+            {helpArticles.slice(0, 5).map((article) => (
+              <button
+                key={article.id}
+                onClick={() => handleArticleClick(article)}
+                className="w-full text-left p-4 rounded-lg border hover:bg-muted/50 transition-colors flex items-center justify-between group"
+              >
+                <div>
+                  <span className="font-medium">{article.title}</span>
+                  <span className="ml-2 text-xs text-muted-foreground">{article.category}</span>
+                </div>
+                <ExternalLink className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* CTA Suporte */}
+        <div className="mt-12 p-6 bg-muted/50 rounded-xl text-center">
+          <h3 className="font-semibold mb-2">Não encontrou o que buscava?</h3>
+          <p className="text-muted-foreground mb-4">Nossa equipe está pronta para ajudar</p>
+          <Button onClick={openCrispChat}>
+            <MessageCircle className="h-4 w-4 mr-2" />
+            Falar com suporte
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

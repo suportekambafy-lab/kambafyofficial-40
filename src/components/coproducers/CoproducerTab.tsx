@@ -224,13 +224,16 @@ export function CoproducerTab({ productId }: CoproducerTabProps) {
       </div>
 
       {/* Link de ajuda */}
-      <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+      <div 
+        className="flex items-center justify-center gap-2 text-sm text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+        onClick={() => window.location.href = '/vendedor/documentacao?artigo=como-funciona-coproducao&categoria=coproducao'}
+      >
         <Info className="w-4 h-4 text-primary" />
         <span>Aprenda mais sobre a</span>
-        <a href="#" className="text-primary hover:underline inline-flex items-center gap-1">
+        <span className="text-primary hover:underline inline-flex items-center gap-1">
           co-produção
           <ExternalLink className="w-3 h-3" />
-        </a>
+        </span>
       </div>
 
       {/* Modal de convite */}

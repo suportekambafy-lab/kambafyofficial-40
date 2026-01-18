@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Dialog,
   DialogContent,
@@ -10,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, HelpCircle } from 'lucide-react';
+import { Loader2, HelpCircle, ExternalLink } from 'lucide-react';
 import { validateEmail } from '@/components/checkout/EnhancedFormValidation';
 import {
   Select,
@@ -166,11 +167,15 @@ export function CoproducerInviteModal({
           </div>
 
           {/* Info box */}
-          <div className="flex items-start gap-3 p-3 bg-primary/5 border-l-4 border-primary rounded-r-md">
-            <HelpCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-            <a href="#" className="text-primary hover:underline text-sm">
+          <div 
+            className="flex items-center gap-3 p-3 bg-primary/5 border-l-4 border-primary rounded-r-md cursor-pointer hover:bg-primary/10 transition-colors"
+            onClick={() => window.location.href = '/vendedor/documentacao?artigo=como-funciona-coproducao&categoria=coproducao'}
+          >
+            <HelpCircle className="w-5 h-5 text-primary shrink-0" />
+            <span className="text-primary text-sm flex-1">
               Aprenda mais sobre modelos de co-produção
-            </a>
+            </span>
+            <ExternalLink className="w-4 h-4 text-primary" />
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0 pt-4 border-t">
