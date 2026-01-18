@@ -4,7 +4,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Package, LayoutGrid, List, Users, ShoppingBag } from "lucide-react";
+import { Plus, Package, LayoutGrid, List } from "lucide-react";
 import { toast } from "@/hooks/useCustomToast";
 import StepperProductForm from '@/components/StepperProductForm';
 import ProductTypeSelector from '@/components/ProductTypeSelector';
@@ -379,24 +379,21 @@ export default function Products() {
             <TabsList className="inline-flex h-auto p-1 bg-muted/50 rounded-lg">
               <TabsTrigger 
                 value="my-products" 
-                className="flex items-center gap-2 px-4 py-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md"
+                className="px-4 py-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md"
               >
-                <Package className="w-4 h-4" />
-                <span>Meus produtos</span>
+                Meus produtos
               </TabsTrigger>
               <TabsTrigger 
                 value="coproductions" 
-                className="flex items-center gap-2 px-4 py-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md"
+                className="px-4 py-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md"
               >
-                <Users className="w-4 h-4" />
-                <span>Minhas co-produções</span>
+                Minhas co-produções
               </TabsTrigger>
               <TabsTrigger 
                 value="affiliations" 
-                className="flex items-center gap-2 px-4 py-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md"
+                className="px-4 py-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md"
               >
-                <ShoppingBag className="w-4 h-4" />
-                <span>Minhas afiliações</span>
+                Minhas afiliações
               </TabsTrigger>
             </TabsList>
 
