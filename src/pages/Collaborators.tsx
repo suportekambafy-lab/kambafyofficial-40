@@ -317,7 +317,7 @@ export default function Collaborators() {
         <Info className="w-4 h-4 text-primary" />
         <span>Aprenda mais sobre os </span>
         <a 
-          href="https://kambafy.com/ajuda/colaboradores" 
+          href="https://kambafy.com/ajuda#colaboradores"
           target="_blank" 
           rel="noopener noreferrer"
           className="text-primary hover:underline inline-flex items-center gap-1"

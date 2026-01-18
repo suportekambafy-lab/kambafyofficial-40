@@ -225,7 +225,7 @@ export function CoproducerTab({ productId }: CoproducerTabProps) {
 
       {/* Link de ajuda - abre em nova aba */}
       <a 
-        href="https://kambafy.com/ajuda/coproducao"
+        href="https://kambafy.com/ajuda#coproducao"
         target="_blank"
         rel="noopener noreferrer"
         className="flex items-center justify-center gap-2 text-sm text-muted-foreground cursor-pointer hover:text-foreground transition-colors"

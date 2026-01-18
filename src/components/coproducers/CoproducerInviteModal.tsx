@@ -168,7 +168,7 @@ export function CoproducerInviteModal({
 
           {/* Info box - abre em nova aba */}
           <a 
-            href="https://kambafy.com/ajuda/coproducao"
+            href="https://kambafy.com/ajuda#coproducao"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-3 p-3 bg-primary/5 border-l-4 border-primary rounded-r-md cursor-pointer hover:bg-primary/10 transition-colors"
