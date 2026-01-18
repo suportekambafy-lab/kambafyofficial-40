@@ -166,17 +166,19 @@ export function CoproducerInviteModal({
             </div>
           </div>
 
-          {/* Info box */}
-          <div 
+          {/* Info box - abre em nova aba */}
+          <a 
+            href="https://ajuda.kambafy.com/coproducao"
+            target="_blank"
+            rel="noopener noreferrer"
             className="flex items-center gap-3 p-3 bg-primary/5 border-l-4 border-primary rounded-r-md cursor-pointer hover:bg-primary/10 transition-colors"
-            onClick={() => window.location.href = '/vendedor/documentacao?artigo=como-funciona-coproducao&categoria=coproducao'}
           >
             <HelpCircle className="w-5 h-5 text-primary shrink-0" />
             <span className="text-primary text-sm flex-1">
               Aprenda mais sobre modelos de co-produção
             </span>
             <ExternalLink className="w-4 h-4 text-primary" />
-          </div>
+          </a>
 
           <DialogFooter className="gap-2 sm:gap-0 pt-4 border-t">
             <Button type="button" variant="outline" onClick={handleClose}>
