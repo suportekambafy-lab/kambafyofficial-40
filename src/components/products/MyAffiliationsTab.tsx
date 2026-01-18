@@ -102,7 +102,7 @@ export function MyAffiliationsTab() {
     return (
       <Card className="border-dashed">
         <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-          <ShoppingBag className="w-12 h-12 text-muted-foreground/50 mb-4" />
+          
           <h3 className="text-lg font-medium text-foreground mb-2">
             Nenhuma afiliação ativa
           </h3>
