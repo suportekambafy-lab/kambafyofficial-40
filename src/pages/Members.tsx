@@ -2571,7 +2571,7 @@ setFormData({
             </Card>
 
             <a 
-              href="https://kambafy.com/ajuda/area-membros"
+              href="https://kambafy.com/ajuda#area-membros"
               target="_blank"
               rel="noopener noreferrer"
               className="bg-blue-50 border border-blue-200 rounded-lg p-3 md:p-4 flex items-center justify-center gap-2 md:gap-3 cursor-pointer hover:bg-blue-100 transition-colors"
