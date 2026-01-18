@@ -247,7 +247,7 @@ export default function Products() {
         .from('orders')
         .select('id')
         .eq('product_id', deleteProduct.id)
-        .in('status', ['completed', 'pending', 'paid'])
+        .in('status', ['completed', 'paid'])
         .limit(1);
 
       if (ordersError) {
