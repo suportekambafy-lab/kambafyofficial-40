@@ -10,8 +10,15 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, Mail, Percent, User, Calendar } from 'lucide-react';
+import { Loader2, HelpCircle } from 'lucide-react';
 import { validateEmail } from '@/components/checkout/EnhancedFormValidation';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface CoproducerInviteModalProps {
   open: boolean;
@@ -29,24 +36,21 @@ export function CoproducerInviteModal({
   availableCommission
 }: CoproducerInviteModalProps) {
   const [email, setEmail] = useState('');
-  const [name, setName] = useState('');
   const [commissionRate, setCommissionRate] = useState('');
   const [durationDays, setDurationDays] = useState('30');
-  const [errors, setErrors] = useState<{ email?: string; commission?: string; duration?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; commission?: string }>({});
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    const newErrors: { email?: string; commission?: string; duration?: string } = {};
+    const newErrors: { email?: string; commission?: string } = {};
     
-    // Validar email
     if (!email.trim()) {
       newErrors.email = 'Email é obrigatório';
     } else if (!validateEmail(email)) {
       newErrors.email = 'Email inválido';
     }
     
-    // Validar comissão
     const rate = parseFloat(commissionRate);
     if (!commissionRate) {
       newErrors.commission = 'Comissão é obrigatória';
@@ -58,26 +62,14 @@ export function CoproducerInviteModal({
       newErrors.commission = `Máximo disponível: ${availableCommission}%`;
     }
     
-    // Validar duração
-    const duration = parseInt(durationDays);
-    if (!durationDays) {
-      newErrors.duration = 'Duração é obrigatória';
-    } else if (isNaN(duration) || duration < 1) {
-      newErrors.duration = 'Duração mínima: 1 dia';
-    } else if (duration > 365) {
-      newErrors.duration = 'Duração máxima: 365 dias';
-    }
-    
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
     
-    onInvite(email.trim(), rate, name.trim() || undefined, duration);
+    onInvite(email.trim(), rate, undefined, parseInt(durationDays));
     
-    // Reset form
     setEmail('');
-    setName('');
     setCommissionRate('');
     setDurationDays('30');
     setErrors({});
@@ -85,7 +77,6 @@ export function CoproducerInviteModal({
 
   const handleClose = () => {
     setEmail('');
-    setName('');
     setCommissionRate('');
     setDurationDays('30');
     setErrors({});
@@ -94,129 +85,95 @@ export function CoproducerInviteModal({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Convidar Co-Produtor</DialogTitle>
+          <DialogTitle>Co-produção</DialogTitle>
           <DialogDescription>
-            Envie um convite para alguém co-produzir este produto. 
-            O co-produtor receberá a percentagem definida em cada venda.
+            Preencha as informações do seu co-produtor.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6 py-4">
           {/* Email */}
-          <div className="space-y-2">
-            <Label htmlFor="email">
-              <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4" />
-                Email do Co-Produtor *
-              </div>
+          <div className="grid grid-cols-[140px_1fr] items-center gap-4">
+            <Label htmlFor="email" className="text-right text-muted-foreground">
+              E-mail do co-produtor
             </Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="email@exemplo.com"
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                if (errors.email) setErrors(prev => ({ ...prev, email: undefined }));
-              }}
-              className={errors.email ? 'border-destructive' : ''}
-            />
-            {errors.email && (
-              <p className="text-sm text-destructive">{errors.email}</p>
-            )}
-          </div>
-
-          {/* Nome (opcional) */}
-          <div className="space-y-2">
-            <Label htmlFor="name">
-              <div className="flex items-center gap-2">
-                <User className="w-4 h-4" />
-                Nome (opcional)
-              </div>
-            </Label>
-            <Input
-              id="name"
-              type="text"
-              placeholder="Nome do co-produtor"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </div>
-
-          {/* Comissão */}
-          <div className="space-y-2">
-            <Label htmlFor="commission">
-              <div className="flex items-center gap-2">
-                <Percent className="w-4 h-4" />
-                Percentagem de Comissão *
-              </div>
-            </Label>
-            <div className="relative">
+            <div className="space-y-1">
               <Input
-                id="commission"
-                type="number"
-                min="1"
-                max={availableCommission}
-                step="0.01"
-                placeholder={`1 - ${availableCommission}`}
-                value={commissionRate}
+                id="email"
+                type="email"
+                placeholder=""
+                value={email}
                 onChange={(e) => {
-                  setCommissionRate(e.target.value);
-                  if (errors.commission) setErrors(prev => ({ ...prev, commission: undefined }));
+                  setEmail(e.target.value);
+                  if (errors.email) setErrors(prev => ({ ...prev, email: undefined }));
                 }}
-                className={errors.commission ? 'border-destructive pr-8' : 'pr-8'}
+                className={errors.email ? 'border-destructive' : ''}
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                %
-              </span>
+              {errors.email && (
+                <p className="text-sm text-destructive">{errors.email}</p>
+              )}
             </div>
-            {errors.commission ? (
-              <p className="text-sm text-destructive">{errors.commission}</p>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                Disponível: até {availableCommission}%
-              </p>
-            )}
           </div>
 
           {/* Duração do contrato */}
-          <div className="space-y-2">
-            <Label htmlFor="duration">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                Validade do Contrato *
-              </div>
+          <div className="grid grid-cols-[140px_1fr] items-center gap-4">
+            <Label htmlFor="duration" className="text-right text-muted-foreground">
+              Duração do contrato
             </Label>
-            <div className="relative">
-              <Input
-                id="duration"
-                type="number"
-                min="1"
-                max="365"
-                placeholder="30"
-                value={durationDays}
-                onChange={(e) => {
-                  setDurationDays(e.target.value);
-                  if (errors.duration) setErrors(prev => ({ ...prev, duration: undefined }));
-                }}
-                className={errors.duration ? 'border-destructive pr-12' : 'pr-12'}
-              />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                dias
-              </span>
-            </div>
-            {errors.duration ? (
-              <p className="text-sm text-destructive">{errors.duration}</p>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                Após este período, a co-produção expira automaticamente
-              </p>
-            )}
+            <Select value={durationDays} onValueChange={setDurationDays}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="30">30 dias</SelectItem>
+                <SelectItem value="60">60 dias</SelectItem>
+                <SelectItem value="90">90 dias</SelectItem>
+                <SelectItem value="180">180 dias</SelectItem>
+                <SelectItem value="365">365 dias</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          <DialogFooter className="gap-2 sm:gap-0">
+          {/* Comissão */}
+          <div className="grid grid-cols-[140px_1fr] items-center gap-4">
+            <Label htmlFor="commission" className="text-right text-muted-foreground">
+              Comissão (%)
+            </Label>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Input
+                  id="commission"
+                  type="number"
+                  min="1"
+                  max={availableCommission}
+                  step="0.01"
+                  placeholder=""
+                  value={commissionRate}
+                  onChange={(e) => {
+                    setCommissionRate(e.target.value);
+                    if (errors.commission) setErrors(prev => ({ ...prev, commission: undefined }));
+                  }}
+                  className={`w-24 ${errors.commission ? 'border-destructive' : ''}`}
+                />
+                <span className="text-muted-foreground">%</span>
+              </div>
+              {errors.commission && (
+                <p className="text-sm text-destructive">{errors.commission}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Info box */}
+          <div className="flex items-start gap-3 p-3 bg-primary/5 border-l-4 border-primary rounded-r-md">
+            <HelpCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+            <a href="#" className="text-primary hover:underline text-sm">
+              Aprenda mais sobre modelos de co-produção
+            </a>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0 pt-4 border-t">
             <Button type="button" variant="outline" onClick={handleClose}>
               Cancelar
             </Button>
@@ -224,10 +181,10 @@ export function CoproducerInviteModal({
               {isLoading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Enviando...
+                  Convidando...
                 </>
               ) : (
-                'Enviar Convite'
+                'Convidar'
               )}
             </Button>
           </DialogFooter>
