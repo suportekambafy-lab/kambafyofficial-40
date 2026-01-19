@@ -20,7 +20,7 @@ const ExpressPaymentModal: React.FC<ExpressPaymentModalProps> = ({
   onClose,
   onTimeExpired,
   onRestart,
-  totalSeconds = 90,
+  totalSeconds = 60,
   orderTotal,
   productName
 }) => {
