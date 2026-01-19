@@ -155,7 +155,7 @@ Deno.serve(async (req) => {
             },
             embed: {
               whitelist: [
-                'app.kambafy.com',
+                'kambafy.com',
                 'membros.kambafy.com',
                 '*.kambafy.com',
                 'localhost',
@@ -186,7 +186,7 @@ Deno.serve(async (req) => {
               privacy: {
                 view: 'disable',
                 embed: 'whitelist',
-                domains: ['app.kambafy.com', 'membros.kambafy.com', '*.kambafy.com'],
+                domains: ['kambafy.com', 'membros.kambafy.com', '*.kambafy.com'],
               },
             },
           })

@@ -142,7 +142,7 @@ const ResetPassword = () => {
         <Helmet>
           <title>Redefinir senha | Kambafy</title>
           <meta name="description" content="Verificando seu link para redefinir a senha da conta Kambafy." />
-          <link rel="canonical" href="https://app.kambafy.com/reset-password" />
+          <link rel="canonical" href="https://kambafy.com/reset-password" />
         </Helmet>
         <div className="min-h-screen flex items-center justify-center bg-background">
           <Card className="w-full max-w-md">
@@ -163,7 +163,7 @@ const ResetPassword = () => {
         <Helmet>
           <title>Redefinir senha | Kambafy</title>
           <meta name="description" content="Crie uma nova senha para acessar sua conta Kambafy com segurança." />
-          <link rel="canonical" href="https://app.kambafy.com/reset-password" />
+          <link rel="canonical" href="https://kambafy.com/reset-password" />
         </Helmet>
         <div className="min-h-screen flex items-center justify-center bg-background">
           <Card className="w-full max-w-md">

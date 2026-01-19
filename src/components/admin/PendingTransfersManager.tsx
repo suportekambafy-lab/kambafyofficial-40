@@ -680,7 +680,7 @@ export function PendingTransfersManager() {
                     seller_commission: sellerCommission,
                     currency: orderData.currency || 'KZ',
                     customer_name: orderData.customer_name,
-                    url: 'https://app.kambafy.com/vendedor/vendas'
+                    url: 'https://kambafy.com/vendedor/vendas'
                   }
                 }
               });

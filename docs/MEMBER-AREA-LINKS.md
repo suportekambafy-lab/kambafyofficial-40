@@ -6,8 +6,7 @@ O sistema foi atualizado para usar o subdomínio **`membros.kambafy.com`** para 
 
 ## Novos Subdomínios
 
-- **`kambafy.com`** - Landing page principal
-- **`app.kambafy.com`** - Dashboard de vendedores e autenticação
+- **`kambafy.com`** - Landing page principal e Dashboard de vendedores
 - **`pay.kambafy.com`** - Checkout e pagamentos
 - **`admin.kambafy.com`** - Painel administrativo
 - **`membros.kambafy.com`** - **NOVO** - Área de membros e login de estudantes
