@@ -182,19 +182,9 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
         }
       }
     } else if (currentSubdomain === 'app') {
-      // app.kambafy.com: redirecionar landing page principal para o domínio main
-      if (currentPath === '/' || currentPath === '') {
-        shouldRedirect = true;
-        targetSubdomain = 'main';
-      } 
-      else if (restrictedFromApp.some(route => currentPath.startsWith(route))) {
-        shouldRedirect = true;
-        if (currentPath.startsWith('/admin')) {
-          targetSubdomain = 'admin';
-        } else if (currentPath.startsWith('/checkout') || currentPath.startsWith('/obrigado')) {
-          targetSubdomain = 'pay';
-        }
-      }
+      // app.kambafy.com: SEMPRE redirecionar para kambafy.com (domínio principal)
+      shouldRedirect = true;
+      targetSubdomain = 'main';
     } else if (currentSubdomain === 'membros') {
       // membros.kambafy.com: permitir APENAS rotas de área de membros
       // ✅ Áreas específicas: /login/:id, /area/:id
