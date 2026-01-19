@@ -183,8 +183,14 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
       }
     } else if (currentSubdomain === 'app') {
       // app.kambafy.com: SEMPRE redirecionar para kambafy.com (domínio principal)
-      shouldRedirect = true;
-      targetSubdomain = 'main';
+      // O redirecionamento é feito diretamente para evitar loops
+      const targetUrl = `https://kambafy.com${currentPath}`;
+      console.log('🔄 SubdomainGuard: Redirecionando app.kambafy.com para kambafy.com', {
+        from: window.location.href,
+        to: targetUrl
+      });
+      window.location.replace(targetUrl); // Usar replace para não adicionar ao histórico
+      return;
     } else if (currentSubdomain === 'membros') {
       // membros.kambafy.com: permitir APENAS rotas de área de membros
       // ✅ Áreas específicas: /login/:id, /area/:id
