@@ -9,7 +9,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const DEFAULT_APP_ORIGIN = "https://app.kambafy.com";
+const DEFAULT_APP_ORIGIN = "https://kambafy.com";
 
 interface CoproducerInviteRequest {
   coproducer_id: string;

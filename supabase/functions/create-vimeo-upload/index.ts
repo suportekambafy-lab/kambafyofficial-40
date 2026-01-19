@@ -92,7 +92,6 @@ Deno.serve(async (req) => {
       },
       embed_domains: [  // ✅ FORMATO CORRETO: embed_domains no root
         'kambafy.com',
-        'app.kambafy.com',
         'membros.kambafy.com',
         '*.kambafy.com',
         'localhost',

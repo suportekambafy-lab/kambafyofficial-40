@@ -383,16 +383,16 @@ const handler = async (req: Request): Promise<Response> => {
 
             <!-- Access Button -->
             <div style="padding: 0 30px 30px; text-align: center;">
-              <a href="https://app.kambafy.com/auth" style="display: inline-block; background-color: #3b82f6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; margin-bottom: 15px;">
+              <a href="https://kambafy.com/auth" style="display: inline-block; background-color: #3b82f6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; margin-bottom: 15px;">
                 🔐 Acessar Painel Kambafy
               </a>
               <br>
-              <a href="https://app.kambafy.com/settings" style="display: inline-block; background-color: #f59e0b; color: white; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px; margin-top: 10px;">
+              <a href="https://kambafy.com/settings" style="display: inline-block; background-color: #f59e0b; color: white; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px; margin-top: 10px;">
                 🔑 Alterar Senha
               </a>
               <p style="margin: 20px 0 0; color: #64748b; font-size: 13px;">
                 Ou acesse: <br>
-                <code style="background: #f1f5f9; padding: 5px 10px; border-radius: 4px; font-size: 12px; color: #475569;">https://app.kambafy.com/auth</code>
+                <code style="background: #f1f5f9; padding: 5px 10px; border-radius: 4px; font-size: 12px; color: #475569;">https://kambafy.com/auth</code>
               </p>
             </div>
 

@@ -16,7 +16,7 @@ interface PartnerInviteRequest {
   contact_name: string;
 }
 
-const DEFAULT_APP_ORIGIN = "https://app.kambafy.com";
+const DEFAULT_APP_ORIGIN = "https://kambafy.com";
 
 const normalizeEmail = (value: string) => value.trim().toLowerCase();
 

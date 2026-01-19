@@ -322,7 +322,7 @@ Deno.serve(async (req) => {
                       <p>Este acesso foi liberado manualmente e já está disponível para você.</p>
                       ${memberArea ? `
                         <p>Acesse sua área de membros agora:</p>
-                        <a href="https://app.kambafy.com/area/${memberArea.url}" class="button">Acessar Área de Membros</a>
+                        <a href="https://membros.kambafy.com/login/${memberArea.url}" class="button">Acessar Área de Membros</a>
                       ` : ''}
                       <p>Aproveite todo o conteúdo disponível!</p>
                     </div>
