@@ -434,8 +434,7 @@ const handler = async (req: Request): Promise<Response> => {
         }
 
         // Get member area URL if it's a course
-        // Usar o domínio principal app.kambafy.com com rota que funciona sem subdomínio
-        // O cliente pode acessar direto ou será redirecionado pelo SubdomainGuard em produção
+        // Usar o domínio membros.kambafy.com para área de membros
         let memberAreaUrl = null;
         if (memberAreaId) {
           // Usar rota no domínio principal - o SubdomainGuard em produção redireciona se necessário
@@ -979,7 +978,7 @@ const handler = async (req: Request): Promise<Response> => {
 
         // Send SMS for purchase confirmation if phone number is provided
         if (customerPhone) {
-          // Usar app.kambafy.com para links de área de membros (SubdomainGuard redireciona em produção)
+          // Usar membros.kambafy.com para links de área de membros
           const smsUrl = memberAreaId ? `https://membros.kambafy.com/login/${memberAreaId}` : shareLink;
           await sendSMSNotification(customerPhone, 'purchase_confirmation', {
             customerName,

@@ -53,7 +53,7 @@ export function useSubdomain() {
       } else if (hostname.startsWith('membros.')) {
         subdomain = 'membros';
       } else if (hostname.startsWith('app.')) {
-        subdomain = 'app';
+        subdomain = 'main'; // app.kambafy.com agora redireciona para kambafy.com
       } else if (hostname.startsWith('pay.')) {
         subdomain = 'pay';
       } else if (hostname.startsWith('admin.')) {
@@ -105,7 +105,7 @@ export function useSubdomain() {
           targetHostname = `membros.${baseDomain}`;
           break;
         case 'app':
-          targetHostname = `app.${baseDomain}`;
+          targetHostname = baseDomain; // app.kambafy.com agora é kambafy.com
           break;
         case 'pay':
           targetHostname = `pay.${baseDomain}`;
