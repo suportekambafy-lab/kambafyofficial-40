@@ -1,25 +1,45 @@
 import { useMemo } from 'react';
 
+type Subdomain = 'main' | 'app' | 'pay' | 'admin' | 'mobile' | 'membros';
+
+type SubdomainTarget = Exclude<Subdomain, 'main'> | 'main';
+
+const KNOWN_SUBDOMAINS = new Set<Exclude<Subdomain, 'main'>>([
+  'app',
+  'pay',
+  'admin',
+  'mobile',
+  'membros'
+]);
+
 export function useSubdomain() {
   const { currentSubdomain, getSubdomainUrl } = useMemo(() => {
-    const hostname = window.location.hostname;
-    
+    const rawHostname = window.location.hostname;
+    const hostname = rawHostname.toLowerCase();
+    const normalizedHostname = hostname.replace(/^www\./, '');
+
     // Detect current subdomain
-    let subdomain: 'main' | 'app' | 'pay' | 'admin' | 'mobile' | 'membros' = 'main';
-    
+    let subdomain: Subdomain = 'main';
+
+    const isDevOrPreview =
+      normalizedHostname.includes('localhost') ||
+      normalizedHostname.includes('127.0.0.1') ||
+      normalizedHostname.includes('lovable.app') ||
+      normalizedHostname.includes('lovableproject.com');
+
     // Para desenvolvimento/preview, permitir TODAS as rotas sem restrições de subdomínio
-    if (hostname.includes('localhost') || hostname.includes('127.0.0.1') || hostname.includes('lovable.app') || hostname.includes('lovableproject.com')) {
+    if (isDevOrPreview) {
       const path = window.location.pathname;
-      
+
       // 🔍 Debug logging da detecção de subdomínio
       console.log('🔍 useSubdomain: PRÉ-VISUALIZAÇÃO/DEV - Todas as rotas permitidas', {
-        hostname,
+        hostname: normalizedHostname,
         path,
-        isPreview: hostname.includes('lovable.app'),
+        isPreview: normalizedHostname.includes('lovable.app'),
         isDevelopment: true,
         message: 'Sem restrições de subdomínio na pré-visualização'
       });
-      
+
       // Na pré-visualização, detectar subdomínio apenas para funcionalidades internas,
       // mas TODAS as rotas são permitidas
       if (path.startsWith('/mobile')) {
@@ -27,8 +47,13 @@ export function useSubdomain() {
       } else if (path.startsWith('/admin')) {
         subdomain = 'admin';
       } else if (path.startsWith('/checkout') || path.startsWith('/obrigado')) {
-        subdomain = 'pay'; 
-      } else if (path.startsWith('/auth') || path.startsWith('/vendedor') || path.startsWith('/apps') || path.startsWith('/minhas-compras')) {
+        subdomain = 'pay';
+      } else if (
+        path.startsWith('/auth') ||
+        path.startsWith('/vendedor') ||
+        path.startsWith('/apps') ||
+        path.startsWith('/minhas-compras')
+      ) {
         subdomain = 'app';
       } else if (path.startsWith('/login/') || path.startsWith('/area/') || path.startsWith('/members/')) {
         subdomain = 'membros';
@@ -39,67 +64,70 @@ export function useSubdomain() {
       } else {
         subdomain = 'main'; // Padrão para desenvolvimento
       }
-      
+
       console.log('✅ useSubdomain: Subdomínio detectado na pré-visualização:', {
         subdomain,
         path,
-        hostname,
+        hostname: normalizedHostname,
         message: 'Todas as rotas funcionam sem redirecionamento'
       });
     } else {
-      // Para produção com domínios customizados
-      if (hostname.startsWith('mobile.')) {
+      // Produção: detectar subdomínio pela primeira label do hostname (suporta "www.")
+      const firstLabel = normalizedHostname.split('.')[0];
+
+      if (firstLabel === 'mobile') {
         subdomain = 'mobile';
-      } else if (hostname.startsWith('membros.')) {
+      } else if (firstLabel === 'membros') {
         subdomain = 'membros';
-      } else if (hostname.startsWith('app.')) {
+      } else if (firstLabel === 'app') {
         subdomain = 'app';
-      } else if (hostname.startsWith('pay.')) {
+      } else if (firstLabel === 'pay') {
         subdomain = 'pay';
-      } else if (hostname.startsWith('admin.')) {
+      } else if (firstLabel === 'admin') {
         subdomain = 'admin';
       } else {
         subdomain = 'main';
       }
     }
-    
-    const getSubdomainUrl = (targetSubdomain: 'main' | 'app' | 'pay' | 'admin' | 'mobile' | 'membros', path?: string) => {
+
+    const getSubdomainUrl = (targetSubdomain: SubdomainTarget, path?: string) => {
       const currentPath = path || window.location.pathname + window.location.search + window.location.hash;
-      
+
       // MOBILE É ISOLADO - nunca redireciona para outro subdomínio
       if (subdomain === 'mobile') {
         return currentPath;
       }
-      
+
       // Para desenvolvimento/preview, navegar dentro do mesmo domínio
-      if (hostname.includes('localhost') || hostname.includes('127.0.0.1') || hostname.includes('lovable.app') || hostname.includes('lovableproject.com')) {
+      if (isDevOrPreview) {
         console.log('🔗 getSubdomainUrl DEV: Retornando path local', {
           currentPath,
           targetSubdomain,
-          hostname,
+          hostname: normalizedHostname,
           message: 'Em desenvolvimento, não há redirecionamento de domínio'
         });
         return currentPath;
       }
-      
+
       // Se não for kambafy.com, manter na mesma aplicação
-      if (!hostname.includes('kambafy.com')) {
+      if (!normalizedHostname.includes('kambafy.com')) {
         console.log('🔗 getSubdomainUrl CUSTOM DOMAIN: Retornando path local', {
           currentPath,
           targetSubdomain,
-          hostname,
+          hostname: normalizedHostname,
           message: 'Em domínio customizado, não há redirecionamento de domínio'
         });
         return currentPath;
       }
-      
-      // Para produção com domínios customizados (exceto mobile)
-      const baseDomain = hostname.replace(/^(app\.|pay\.|admin\.|membros\.)/, '');
-      
-      let targetHostname;
+
+      // Base domain: remove subdomínios conhecidos (app/pay/admin/membros/mobile)
+      const labels = normalizedHostname.split('.');
+      const baseDomain = KNOWN_SUBDOMAINS.has(labels[0] as any) ? labels.slice(1).join('.') : normalizedHostname;
+
+      let targetHostname: string;
       switch (targetSubdomain) {
         case 'mobile':
-          targetHostname = hostname; // Fica onde está
+          targetHostname = normalizedHostname; // Fica onde está
           break;
         case 'membros':
           targetHostname = `membros.${baseDomain}`;
@@ -118,12 +146,12 @@ export function useSubdomain() {
           targetHostname = baseDomain;
           break;
       }
-      
+
       return `${window.location.protocol}//${targetHostname}${currentPath}`;
     };
-    
+
     return { currentSubdomain: subdomain, getSubdomainUrl };
   }, []);
-  
+
   return { currentSubdomain, getSubdomainUrl };
 }
