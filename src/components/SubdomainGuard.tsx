@@ -94,7 +94,7 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
     // membros.kambafy.com = Área de membros
     // mobile.kambafy.com = App mobile
     
-    const publicPages = ['/', '/como-funciona', '/precos', '/recursos', '/ajuda', '/contato', '/denuncie', '/status', '/privacidade', '/termos', '/cookies', '/features', '/pricing', '/how-it-works', '/contact', '/help-center', '/privacy', '/terms'];
+    const publicPages = ['/', '/como-funciona', '/precos', '/recursos', '/ajuda', '/contato', '/denuncie', '/status', '/privacidade', '/termos', '/cookies', '/features', '/pricing', '/how-it-works', '/contact', '/help-center', '/privacy', '/terms', '/nova-area-membros'];
     
     let shouldRedirect = false;
     let targetSubdomain: 'main' | 'app' | 'pay' | 'admin' | 'membros' = 'main';
@@ -108,18 +108,36 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
         return;
       }
       
-      // TODAS as outras rotas vão para app.kambafy.com
-      if (currentPath.startsWith('/admin')) {
-        shouldRedirect = true;
-        targetSubdomain = 'admin';
-      } else if (currentPath.startsWith('/checkout') || currentPath.startsWith('/obrigado')) {
-        shouldRedirect = true;
-        targetSubdomain = 'pay';
-      } else {
-        // Qualquer outra rota (auth, vendedor, produtos, etc) vai para app.kambafy.com
-        shouldRedirect = true;
-        targetSubdomain = 'app';
+      // ⚠️ CRÍTICO: Redirecionar IMEDIATAMENTE rotas não-públicas para subdomínios corretos
+      // Auth, vendedor, produtos, etc -> app.kambafy.com
+      if (currentPath.startsWith('/auth') || currentPath.startsWith('/vendedor') || 
+          currentPath.startsWith('/produtos') || currentPath.startsWith('/minhas-compras') ||
+          currentPath.startsWith('/apps') || currentPath.startsWith('/meus-acessos')) {
+        const targetUrl = `${window.location.protocol}//app.kambafy.com${currentPath}`;
+        console.log('🔄 SubdomainGuard: FORÇANDO rota para app.kambafy.com', { from: currentPath, to: targetUrl });
+        window.location.href = targetUrl;
+        return;
       }
+      
+      // Admin -> admin.kambafy.com
+      if (currentPath.startsWith('/admin')) {
+        const targetUrl = `${window.location.protocol}//admin.kambafy.com${currentPath}`;
+        console.log('🔄 SubdomainGuard: FORÇANDO rota para admin.kambafy.com', { from: currentPath, to: targetUrl });
+        window.location.href = targetUrl;
+        return;
+      }
+      
+      // Checkout -> pay.kambafy.com
+      if (currentPath.startsWith('/checkout') || currentPath.startsWith('/obrigado')) {
+        const targetUrl = `${window.location.protocol}//pay.kambafy.com${currentPath}`;
+        console.log('🔄 SubdomainGuard: FORÇANDO rota para pay.kambafy.com', { from: currentPath, to: targetUrl });
+        window.location.href = targetUrl;
+        return;
+      }
+      
+      // Qualquer outra rota não pública -> app.kambafy.com
+      shouldRedirect = true;
+      targetSubdomain = 'app';
     } else if (currentSubdomain === 'app') {
       // app.kambafy.com: Dashboard e tudo relacionado ao vendedor
       
