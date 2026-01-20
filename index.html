@@ -84,12 +84,31 @@
     <!-- OneSignal Web SDK -->
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     <script>
-      window.OneSignalDeferred = window.OneSignalDeferred || [];
-      OneSignalDeferred.push(async function(OneSignal) {
-        await OneSignal.init({
-          appId: "e1a77f24-25aa-4f9d-a0fd-316ecc8885cd",
+      (function () {
+        const hostname = window.location.hostname.toLowerCase().replace(/^www\./, '');
+        const isDev = hostname.includes('localhost') || hostname.includes('127.0.0.1');
+        const isPreview = hostname.includes('lovable.app') || hostname.includes('lovableproject.com');
+
+        // ⚠️ OneSignal Web (v16) está configurado para rodar apenas no domínio mobile.
+        // Em outros subdomínios ele lança: "Can only be used on: https://mobile.kambafy.com".
+        const shouldInitOneSignal = hostname === 'mobile.kambafy.com' || isDev || isPreview;
+
+        if (!shouldInitOneSignal) {
+          console.log('ℹ️ [OneSignal] Init ignorado neste domínio:', hostname);
+          return;
+        }
+
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        window.OneSignalDeferred.push(async function (OneSignal) {
+          try {
+            await OneSignal.init({
+              appId: "e1a77f24-25aa-4f9d-a0fd-316ecc8885cd",
+            });
+          } catch (err) {
+            console.warn('⚠️ [OneSignal] Falha ao inicializar (ignorado):', err);
+          }
         });
-      });
+      })();
     </script>
     
     <link rel="preconnect" href="https://pay.kambafy.com" crossorigin />

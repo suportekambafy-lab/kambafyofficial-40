@@ -31,13 +31,32 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
         return;
       }
 
+      const WINDOW_NAME_PREFIX = '__kambafy_subdomain_last_redirect=';
+
+      const readWindowStamp = (): RedirectStamp | null => {
+        const raw = window.name || '';
+        if (!raw.startsWith(WINDOW_NAME_PREFIX)) return null;
+        try {
+          return JSON.parse(raw.slice(WINDOW_NAME_PREFIX.length));
+        } catch {
+          return null;
+        }
+      };
+
+      const writeWindowStamp = (stamp: RedirectStamp) => {
+        // window.name persiste entre navegações até em subdomínios diferentes (mesma aba)
+        window.name = WINDOW_NAME_PREFIX + JSON.stringify(stamp);
+      };
+
       try {
         const key = '__kambafy_subdomain_last_redirect';
         const raw = sessionStorage.getItem(key);
-        const last: RedirectStamp | null = raw ? JSON.parse(raw) : null;
+        const lastSession: RedirectStamp | null = raw ? JSON.parse(raw) : null;
+        const lastWindow: RedirectStamp | null = readWindowStamp();
+        const last: RedirectStamp | null = lastWindow || lastSession;
         const now = Date.now();
 
-        // Detectar loop de "vai e volta" rápido (A -> B -> A)
+        // Detectar loop de "vai e volta" rápido (A -> B -> A) inclusive entre subdomínios
         if (last && last.from === targetUrl && last.to === from && now - last.at < 4000) {
           console.error('🛑 SubdomainGuard: LOOP detectado, bloqueando redirecionamento', {
             from,
@@ -50,6 +69,7 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
 
         const stamp: RedirectStamp = { from, to: targetUrl, at: now, reason };
         sessionStorage.setItem(key, JSON.stringify(stamp));
+        writeWindowStamp(stamp);
       } catch {
         // ignore
       }
