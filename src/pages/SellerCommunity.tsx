@@ -18,6 +18,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { PostComments } from "@/components/community/PostComments";
+import { getAuthUrl } from "@/utils/authRedirect";
+
 type Category = 'duvidas' | 'dicas' | 'novidades' | 'produtos' | 'marketing' | 'tecnologia' | 'geral';
 interface Post {
   id: string;
@@ -189,7 +191,7 @@ export default function SellerCommunity() {
         }} transition={{
           delay: 0.4
         }}>
-            <Button size="lg" className="gap-2" onClick={() => window.location.href = '/auth'}>
+            <Button size="lg" className="gap-2" onClick={() => window.location.href = getAuthUrl({ mode: 'login' })}>
               <Crown className="w-5 h-5" />
               Entrar na Comunidade
             </Button>

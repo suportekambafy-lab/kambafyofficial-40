@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -16,6 +15,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { redirectToAuth, isProductionEnvironment } from '@/utils/authRedirect';
 
 interface AvatarDrawerProps {
   isOpen: boolean;
@@ -41,12 +41,18 @@ export function AvatarDrawer({
   const handleSignOut = async () => {
     try {
       await signOut();
-      navigate('/auth');
       onClose();
       toast({
         title: "Logout realizado",
         description: "Você foi desconectado com sucesso."
       });
+      
+      // Redirect to app.kambafy.com/auth in production
+      if (isProductionEnvironment()) {
+        redirectToAuth({ mode: 'login' });
+      } else {
+        navigate('/auth?mode=login');
+      }
     } catch (error) {
       toast({
         title: "Erro",

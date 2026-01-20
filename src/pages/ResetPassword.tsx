@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Eye, EyeOff, CheckCircle } from 'lucide-react';
 import { useCustomToast } from '@/hooks/useCustomToast';
+import { redirectToAuth, getAuthUrl } from '@/utils/authRedirect';
 
 const ResetPassword = () => {
   const [searchParams] = useSearchParams();
@@ -126,7 +127,7 @@ const ResetPassword = () => {
 
       await supabase.auth.signOut();
       setTimeout(() => {
-        navigate('/auth', { replace: true });
+        redirectToAuth({ mode: 'login', replace: true });
       }, 3000);
     } catch (err: any) {
       setError(err?.message || 'Erro ao definir nova senha. Tente novamente.');
@@ -177,7 +178,7 @@ const ResetPassword = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button onClick={() => navigate('/auth')} className="w-full">
+              <Button onClick={() => redirectToAuth({ mode: 'login' })} className="w-full">
                 Ir para Login
               </Button>
             </CardContent>
@@ -200,7 +201,7 @@ const ResetPassword = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <Button 
-              onClick={() => navigate('/auth')}
+              onClick={() => redirectToAuth({ mode: 'login' })}
               className="w-full"
             >
               Voltar ao Login

@@ -28,6 +28,7 @@ import { HeroVideoUploader } from "@/components/HeroVideoUploader";
 import { MemberAreaCreationForm } from "@/components/MemberAreaCreationForm";
 import { MemberAreaOffersManager } from "@/components/MemberAreaOffersManager";
 import { useNavigate } from "react-router-dom";
+import { getAuthUrl } from "@/utils/authRedirect";
 import type { Lesson, Module, MemberArea, ComplementaryLink, LessonMaterial } from "@/types/memberArea";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { OptimizedPageWrapper } from "@/components/ui/optimized-page-wrapper";
@@ -1136,7 +1137,7 @@ setFormData({
         <div className="text-center">
           <h2 className="text-lg md:text-xl font-semibold mb-3 md:mb-4">Acesso Negado</h2>
           <p className="text-muted-foreground mb-3 md:mb-4 text-sm md:text-base">Você precisa estar logado para acessar esta página.</p>
-          <Button onClick={() => window.location.href = '/auth'} size="sm" className="text-xs md:text-sm">
+          <Button onClick={() => window.location.href = getAuthUrl({ mode: 'login' })} size="sm" className="text-xs md:text-sm">
             Fazer Login
           </Button>
         </div>

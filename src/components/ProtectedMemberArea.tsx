@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -7,6 +6,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Lock, ArrowLeft } from "lucide-react";
+import { getAuthUrl } from "@/utils/authRedirect";
 
 interface ProtectedMemberAreaProps {
   children: React.ReactNode;
@@ -156,7 +156,7 @@ export default function ProtectedMemberArea({ children }: ProtectedMemberAreaPro
             </p>
             <div className="space-y-3">
               <Button 
-                onClick={() => navigate('/auth')}
+                onClick={() => window.location.href = getAuthUrl({ mode: 'login' })}
                 className="w-full bg-checkout-green hover:bg-checkout-green/90"
               >
                 Fazer Login
