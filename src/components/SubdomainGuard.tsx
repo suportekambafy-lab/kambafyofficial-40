@@ -164,12 +164,22 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
       // Todas as outras rotas são permitidas no app.kambafy.com
     } else if (currentSubdomain === 'membros') {
       // membros.kambafy.com: permitir APENAS rotas de área de membros
+      // (e permitir acesso ao portal principal via /auth -> app.kambafy.com)
+
+      // Portal principal (auth) deve ficar no app subdomain
+      if (currentPath.startsWith('/auth') || currentPath.startsWith('/verificar-2fa') || currentPath.startsWith('/reset-password')) {
+        const targetUrl = getSubdomainUrl('app', currentPath);
+        console.log('🔄 SubdomainGuard: membros -> app (portal)', { from: currentPath, to: targetUrl });
+        window.location.href = targetUrl;
+        return;
+      }
+
       const isSpecificArea = currentPath.match(/^\/(login|area)\/[^/]+/);
-      
+
       if (isSpecificArea) {
         return; // Permitir acesso
       }
-      
+
       // Se NÃO é área específica, redirecionar para kambafy.com
       window.location.href = 'https://kambafy.com';
       return;

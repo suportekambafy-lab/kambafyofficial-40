@@ -8,7 +8,7 @@ export function useAuthGuard() {
   const { user, session, loading } = useAuth();
   const [authReady, setAuthReady] = useState(false);
   const navigate = useNavigate();
-  const { currentSubdomain } = useSubdomain();
+  const { currentSubdomain, getSubdomainUrl } = useSubdomain();
 
   useEffect(() => {
     if (!loading) {
@@ -26,16 +26,38 @@ export function useAuthGuard() {
       }
       
       // Não interferir nas rotas de área de membros - elas têm sua própria proteção
-      if (window.location.pathname.includes('/members/area/') || 
-          window.location.pathname.includes('/members/login/')) {
+      if (
+        window.location.pathname.includes('/members/area/') ||
+        window.location.pathname.includes('/members/login/') ||
+        window.location.pathname.match(/^\/(login|area)\//)
+      ) {
         console.log('ℹ️ useAuthGuard: Rota de área de membros detectada, ignorando');
         return;
       }
-      
-      // Se não há usuário ou sessão válida, redirecionar para login
+
+      // Não bloquear as próprias rotas de autenticação
+      if (
+        window.location.pathname.startsWith('/auth') ||
+        window.location.pathname.startsWith('/verificar-2fa') ||
+        window.location.pathname.startsWith('/reset-password')
+      ) {
+        return;
+      }
+
+      // Se não há usuário ou sessão válida, redirecionar para login (SEMPRE no app subdomain)
       if (!user || !session) {
-        console.log('🔒 useAuthGuard: Usuário não autenticado, redirecionando para /auth');
-        navigate('/auth', { replace: true });
+        const authPath = '/auth?mode=login';
+
+        console.log('🔒 useAuthGuard: Usuário não autenticado, redirecionando para login', {
+          currentSubdomain,
+          authPath
+        });
+
+        if (currentSubdomain === 'app') {
+          navigate(authPath, { replace: true });
+        } else {
+          window.location.href = getSubdomainUrl('app', authPath);
+        }
         return;
       }
       
