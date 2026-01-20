@@ -64,8 +64,15 @@ self.addEventListener('fetch', (event) => {
   // NUNCA cachear HTML e rotas principais
   if (NEVER_CACHE.some(path => url.pathname === path || url.pathname.startsWith(path))) {
     event.respondWith(
-      fetch(event.request).catch(() => {
-        return caches.match(event.request);
+      fetch(event.request).catch(async () => {
+        const cached = await caches.match(event.request);
+        return (
+          cached ||
+          new Response('Offline', {
+            status: 503,
+            headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+          })
+        );
       })
     );
     return;
@@ -81,9 +88,16 @@ self.addEventListener('fetch', (event) => {
             cache.put(event.request, response.clone());
             return response;
           })
-          .catch(() => {
-            // Se offline, retornar do cache
-            return cache.match(event.request);
+          .catch(async () => {
+            // Se offline, retornar do cache (ou uma resposta válida)
+            const cached = await cache.match(event.request);
+            return (
+              cached ||
+              new Response('Offline', {
+                status: 503,
+                headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+              })
+            );
           });
       })
     );
@@ -92,8 +106,15 @@ self.addEventListener('fetch', (event) => {
   
   // Para tudo o resto, tentar network primeiro
   event.respondWith(
-    fetch(event.request).catch(() => {
-      return caches.match(event.request);
+    fetch(event.request).catch(async () => {
+      const cached = await caches.match(event.request);
+      return (
+        cached ||
+        new Response('Offline', {
+          status: 503,
+          headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+        })
+      );
     })
   );
 });
