@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { useSubdomain } from '@/hooks/useSubdomain';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -12,11 +13,18 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { user, session, loading, requires2FA, verified2FA } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { currentSubdomain, getSubdomainUrl } = useSubdomain();
 
   useEffect(() => {
     if (!loading && (!user || !session)) {
-      console.log('🔒 ProtectedRoute: Redirecionando para /auth');
-      navigate('/auth', { replace: true });
+      const authPath = '/auth?mode=login';
+      console.log('🔒 ProtectedRoute: Redirecionando para login', { currentSubdomain, authPath });
+
+      if (currentSubdomain === 'app') {
+        navigate(authPath, { replace: true });
+      } else {
+        window.location.href = getSubdomainUrl('app', authPath);
+      }
       return;
     }
 

@@ -9,6 +9,7 @@ import { useDebounced } from '@/hooks/useDebounced';
 import TwoFactorVerification from '@/components/TwoFactorVerification';
 import { CanvasRevealEffect } from '@/components/ui/canvas-reveal-effect';
 import { cn } from '@/lib/utils';
+import { useSubdomain } from '@/hooks/useSubdomain';
 
 // Gerar um ID único para o dispositivo/navegador
 const getDeviceId = (): string => {
@@ -65,14 +66,12 @@ const trustDevice = (email: string): void => {
   localStorage.setItem('member_area_trusted_devices', JSON.stringify(devices));
 };
 export default function ModernMembersLogin() {
-  const {
-    id: memberAreaId
-  } = useParams();
+  const { id: memberAreaId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const {
-    toast
-  } = useCustomToast();
+  const { getSubdomainUrl } = useSubdomain();
+  const portalLoginUrl = getSubdomainUrl('app', '/auth?mode=login');
+  const { toast } = useCustomToast();
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [memberArea, setMemberArea] = useState<any>(null);
@@ -376,7 +375,7 @@ export default function ModernMembersLogin() {
                 <p className="text-xs text-white/30 mb-2">
                   Precisa acessar o portal de clientes?
                 </p>
-                <a href="/auth" className="text-sm font-medium text-white/50 hover:text-white/70 transition-colors underline underline-offset-4">
+                <a href={portalLoginUrl} className="text-sm font-medium text-white/50 hover:text-white/70 transition-colors underline underline-offset-4">
                   Clique aqui para fazer login no portal
                 </a>
               </motion.div>
