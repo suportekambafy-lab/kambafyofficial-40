@@ -154,13 +154,28 @@ export function KambafyLanding() {
       console.log('🧹 Chatbase completamente removido da página');
     };
   }, []);
+  // Helper para navegar para auth - em produção vai direto para app.kambafy.com
+  const navigateToAuth = (params: string = '') => {
+    const hostname = window.location.hostname;
+    const isProduction = hostname.includes('kambafy.com') && 
+                         !hostname.includes('localhost') && 
+                         !hostname.includes('lovable.app');
+    
+    if (isProduction && !hostname.startsWith('app.')) {
+      // Em produção no domínio principal, redirecionar direto para app.kambafy.com
+      const targetUrl = `${window.location.protocol}//app.kambafy.com/auth${params ? '?' + params : ''}`;
+      console.log('🔄 Landing: Redirecionando direto para app.kambafy.com/auth');
+      window.location.href = targetUrl;
+    } else {
+      // Em desenvolvimento ou já no app subdomain, usar navegação interna
+      navigate(`/auth${params ? '?' + params : ''}`);
+    }
+  };
+
   const handleLoginOptionSelect = (option: 'business' | 'customer') => {
     setIsLoginDrawerOpen(false);
     const userType = option === 'business' ? 'seller' : 'customer';
-    
-    // ✅ CORRIGIDO: Usar navegação interna em vez de window.location.href
-    console.log('🔧 CORRIGIDO: Navegação interna para /auth:', { userType });
-    navigate(`/auth?type=${userType}`);
+    navigateToAuth(`type=${userType}`);
   };
   return <div className="font-bricolage">
       <Header onLoginOptionSelect={handleLoginOptionSelect} />
@@ -209,9 +224,18 @@ const Header = ({
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
   const handleAuthNavigation = (mode: 'login' | 'signup') => {
-    // ✅ CORRIGIDO: Usar navegação interna em vez de window.location.href
-    console.log('🔧 CORRIGIDO: Navegação interna para /auth:', { mode });
-    navigate(`/auth?mode=${mode}`);
+    const hostname = window.location.hostname;
+    const isProduction = hostname.includes('kambafy.com') && 
+                         !hostname.includes('localhost') && 
+                         !hostname.includes('lovable.app');
+    
+    if (isProduction && !hostname.startsWith('app.')) {
+      const targetUrl = `${window.location.protocol}//app.kambafy.com/auth?mode=${mode}`;
+      console.log('🔄 Header: Redirecionando direto para app.kambafy.com/auth');
+      window.location.href = targetUrl;
+    } else {
+      navigate(`/auth?mode=${mode}`);
+    }
   };
   return <header>
       <nav data-state={menuState && 'active'} className="fixed z-20 w-full px-2 group">
@@ -316,9 +340,18 @@ const Header = ({
 const HeroSection = () => {
   const navigate = useNavigate();
   const handleGetStarted = () => {
-    // ✅ CORRIGIDO: Usar navegação interna em vez de window.location.href
-    console.log('🔧 CORRIGIDO: Navegação interna para /auth?mode=signup');
-    navigate('/auth?mode=signup');
+    const hostname = window.location.hostname;
+    const isProduction = hostname.includes('kambafy.com') && 
+                         !hostname.includes('localhost') && 
+                         !hostname.includes('lovable.app');
+    
+    if (isProduction && !hostname.startsWith('app.')) {
+      const targetUrl = `${window.location.protocol}//app.kambafy.com/auth?mode=signup`;
+      console.log('🔄 Hero: Redirecionando direto para app.kambafy.com/auth');
+      window.location.href = targetUrl;
+    } else {
+      navigate('/auth?mode=signup');
+    }
   };
   return <section>
       <div className="relative pt-24 md:pt-36">
@@ -707,8 +740,17 @@ const PricingSection = () => {
               </div>
 
               <Button className="w-full mt-8 bg-checkout-green hover:bg-checkout-green/90 text-white py-6 text-lg" onClick={() => {
-                const navigate = (window as any).__navigate;
-                if (navigate) navigate('/auth?mode=signup');
+                const hostname = window.location.hostname;
+                const isProduction = hostname.includes('kambafy.com') && 
+                                     !hostname.includes('localhost') && 
+                                     !hostname.includes('lovable.app');
+                
+                if (isProduction && !hostname.startsWith('app.')) {
+                  window.location.href = `${window.location.protocol}//app.kambafy.com/auth?mode=signup`;
+                } else {
+                  const navigate = (window as any).__navigate;
+                  if (navigate) navigate('/auth?mode=signup');
+                }
               }}>
                 Começar Agora Grátis
                 <ArrowRight className="ml-2 w-5 h-5" />
@@ -823,9 +865,18 @@ const FAQSection = () => {
 const CTASection = () => {
   const navigate = useNavigate();
   const handleGetStarted = () => {
-    // ✅ CORRIGIDO: Usar navegação interna em vez de window.location.href
-    console.log('🔧 CORRIGIDO: Navegação interna para /auth?mode=signup (CTA Section)');
-    navigate('/auth?mode=signup');
+    const hostname = window.location.hostname;
+    const isProduction = hostname.includes('kambafy.com') && 
+                         !hostname.includes('localhost') && 
+                         !hostname.includes('lovable.app');
+    
+    if (isProduction && !hostname.startsWith('app.')) {
+      const targetUrl = `${window.location.protocol}//app.kambafy.com/auth?mode=signup`;
+      console.log('🔄 CTA: Redirecionando direto para app.kambafy.com/auth');
+      window.location.href = targetUrl;
+    } else {
+      navigate('/auth?mode=signup');
+    }
   };
   return <section className="py-24 bg-background">
       <div className="mx-auto max-w-4xl px-6 text-center">

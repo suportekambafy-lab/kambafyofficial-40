@@ -231,7 +231,15 @@ const Features = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
               <a 
-                href="/auth" 
+                href={(() => {
+                  const hostname = window.location.hostname;
+                  const isProduction = hostname.includes('kambafy.com') && 
+                                       !hostname.includes('localhost') && 
+                                       !hostname.includes('lovable.app');
+                  return isProduction && !hostname.startsWith('app.') 
+                    ? `${window.location.protocol}//app.kambafy.com/auth` 
+                    : '/auth';
+                })()}
                 className="inline-block bg-checkout-green hover:bg-checkout-green/90 text-white font-medium px-6 sm:px-8 py-3 rounded-xl transition-colors duration-300"
               >
                 {t('features.ctaButton')}
