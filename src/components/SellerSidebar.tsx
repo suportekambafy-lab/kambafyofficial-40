@@ -250,11 +250,32 @@ export function SellerSidebar() {
       });
       
       await signOut();
+      
+      // Redirecionar para app.kambafy.com/auth em produção
+      const hostname = window.location.hostname;
+      const isProduction = hostname.includes('kambafy.com') && 
+                           !hostname.includes('localhost') && 
+                           !hostname.includes('lovable.app');
+      
+      if (isProduction) {
+        window.location.href = `${window.location.protocol}//app.kambafy.com/auth?mode=login`;
+      } else {
+        window.location.replace('/auth?mode=login');
+      }
     } catch (error) {
       console.error('Error during logout:', error);
       
       // Force redirect even if error occurs
-      window.location.replace('/auth');
+      const hostname = window.location.hostname;
+      const isProduction = hostname.includes('kambafy.com') && 
+                           !hostname.includes('localhost') && 
+                           !hostname.includes('lovable.app');
+      
+      if (isProduction) {
+        window.location.href = `${window.location.protocol}//app.kambafy.com/auth?mode=login`;
+      } else {
+        window.location.replace('/auth?mode=login');
+      }
     }
   };
 
@@ -482,11 +503,32 @@ export function TopBar() {
       });
       
       await signOut();
+      
+      // Redirecionar para app.kambafy.com/auth em produção
+      const hostname = window.location.hostname;
+      const isProduction = hostname.includes('kambafy.com') && 
+                           !hostname.includes('localhost') && 
+                           !hostname.includes('lovable.app');
+      
+      if (isProduction) {
+        window.location.href = `${window.location.protocol}//app.kambafy.com/auth?mode=login`;
+      } else {
+        window.location.replace('/auth?mode=login');
+      }
     } catch (error) {
       console.error('Error during logout:', error);
       
       // Force redirect even if error occurs
-      window.location.replace('/auth');
+      const hostname = window.location.hostname;
+      const isProduction = hostname.includes('kambafy.com') && 
+                           !hostname.includes('localhost') && 
+                           !hostname.includes('lovable.app');
+      
+      if (isProduction) {
+        window.location.href = `${window.location.protocol}//app.kambafy.com/auth?mode=login`;
+      } else {
+        window.location.replace('/auth?mode=login');
+      }
     }
   };
 

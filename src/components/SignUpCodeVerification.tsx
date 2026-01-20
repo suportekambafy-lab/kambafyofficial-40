@@ -9,6 +9,7 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
+import { getAuthUrl } from '@/utils/authRedirect';
 
 interface SignUpCodeVerificationProps {
   email: string;
@@ -168,7 +169,7 @@ const SignUpCodeVerification = ({
             variant: "destructive"
           });
           setTimeout(() => {
-            window.location.href = '/auth?mode=signup';
+            window.location.href = getAuthUrl({ mode: 'signup' });
           }, 2000);
           return;
         }

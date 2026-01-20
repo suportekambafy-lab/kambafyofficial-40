@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { AlertTriangle, Mail, Send, LogOut } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
+import { redirectToAuth } from '@/utils/authRedirect';
 
 interface BannedUserDialogProps {
   banReason: string;
@@ -20,7 +20,6 @@ export function BannedUserDialog({ banReason, userEmail, userName }: BannedUserD
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [contestSent, setContestSent] = useState(false);
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   const handleSubmitContest = async () => {
     if (!contestMessage.trim()) {
@@ -81,7 +80,7 @@ Este email foi enviado através do sistema de contestação da Kambafy.
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    navigate('/auth');
+    redirectToAuth({ mode: 'login' });
   };
 
   console.log('🚫 BannedUserDialog renderizando:', { banReason, userEmail, userName });

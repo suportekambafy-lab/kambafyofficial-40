@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Play, Users, Monitor, Smartphone, Shield, Zap, ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { useState } from "react";
+import { getAuthUrl } from "@/utils/authRedirect";
 
 // Import screenshots
 import memberAreaLogin from "@/assets/member-area-login.png";
@@ -12,6 +13,7 @@ import memberAreaPlayer from "@/assets/member-area-player.png";
 
 const NewMemberAreaLanding = () => {
   const navigate = useNavigate();
+  const authUrl = getAuthUrl({ mode: 'signup' });
   const [activeScreenshot, setActiveScreenshot] = useState(0);
 
   const features = [
@@ -114,7 +116,7 @@ const NewMemberAreaLanding = () => {
           </button>
           
           <motion.button
-            onClick={() => navigate('/auth')}
+            onClick={() => window.location.href = authUrl}
             className="bg-[#81e76a] text-[#111111] px-3 sm:px-4 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-semibold hover:bg-opacity-90 transition-colors duration-200"
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
@@ -394,7 +396,7 @@ const NewMemberAreaLanding = () => {
               Comece agora e transforme a experiência do seu curso com a nova área de membros da Kambafy.
             </p>
             <motion.button 
-              onClick={() => navigate('/auth')}
+              onClick={() => window.location.href = authUrl}
               className="bg-[#81e76a] text-[#111111] px-6 sm:px-8 py-2.5 sm:py-3 rounded-md text-sm sm:text-base font-semibold hover:bg-opacity-90 transition-colors w-full sm:w-auto"
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}

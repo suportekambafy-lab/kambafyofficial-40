@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, AuthError, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,6 +5,7 @@ import { toast } from '@/hooks/useCustomToast';
 import { BannedUserDialog } from '@/components/BannedUserDialog';
 import { linkOneSignalExternalId } from '@/utils/onesignal-external-id';
 import { captureFullTrackingData } from '@/utils/ipTracker';
+import { getAuthUrl } from '@/utils/authRedirect';
 
 interface AuthContextType {
   user: User | null;
@@ -275,7 +275,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                    try { localStorage.removeItem('googleAuthMode'); } catch { /* ignore */ }
                   await supabase.auth.signOut();
                   const userType = (() => { try { return localStorage.getItem('userType'); } catch { return ''; } })();
-                  window.location.href = `/auth?mode=signup&type=${userType}&error=google-account-not-found`;
+                  window.location.href = getAuthUrl({ mode: 'signup', type: userType as 'customer' | 'seller' | undefined, error: 'google-account-not-found' });
                   return;
                 }
                 

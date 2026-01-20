@@ -37,6 +37,7 @@ import kambafy_icon from "@/assets/kambafy-icon-gray.png";
 import teamImage from "@/assets/team-collaboration.jpg";
 import aboutSectionImage from "@/assets/about-section-team.jpg";
 import victorAvatar from "@/assets/testimonial-victor-muabi.jpg";
+import { getAuthUrl, isProductionEnvironment } from "@/utils/authRedirect";
 
 function cn(...classes: (string | undefined | null | boolean)[]): string {
   return classes.filter(Boolean).join(" ");
@@ -335,7 +336,11 @@ const InteractiveHero: React.FC = () => {
    });
 
    const handleAuthNavigation = (mode: 'login' | 'signup') => {
-     navigate(`/auth?mode=${mode}`);
+     if (isProductionEnvironment()) {
+       window.location.href = getAuthUrl({ mode });
+     } else {
+       navigate(`/auth?mode=${mode}`);
+     }
    };
 
    const dotsRef = useRef<Dot[]>([]);

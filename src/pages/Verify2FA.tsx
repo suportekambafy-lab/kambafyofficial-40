@@ -7,6 +7,7 @@ import { toast } from '@/hooks/useCustomToast';
 import loginHeroImage from '@/assets/about-section-team.jpg';
 import KambafyLogo from '@/assets/kambafy-logo-gray.svg';
 import { motion } from 'framer-motion';
+import { redirectToAuth, isProductionEnvironment } from '@/utils/authRedirect';
 
 const Verify2FA = () => {
   const { user, requires2FA, verified2FA, pending2FAEmail, verify2FA, signOut } = useAuth();
@@ -20,7 +21,7 @@ const Verify2FA = () => {
   useEffect(() => {
     // Se não está logado, redirecionar para login
     if (!user) {
-      navigate('/auth', { replace: true });
+      redirectToAuth({ mode: 'login', replace: true });
       return;
     }
 
@@ -60,7 +61,7 @@ const Verify2FA = () => {
 
   const handleBack = async () => {
     await signOut();
-    navigate('/auth', { replace: true });
+    redirectToAuth({ mode: 'login', replace: true });
   };
 
   if (!user || !requires2FA) {

@@ -87,11 +87,23 @@ export function CustomerTopBar({ showAppBanner = true }: CustomerTopBarProps) {
   const handleSignOut = async () => {
     try {
       await signOut();
-      navigate('/auth');
+      
+      // Redirecionar para app.kambafy.com/auth em produção
+      const hostname = window.location.hostname;
+      const isProduction = hostname.includes('kambafy.com') && 
+                           !hostname.includes('localhost') && 
+                           !hostname.includes('lovable.app');
+      
       toast({
         title: "Logout realizado",
         description: "Você foi desconectado com sucesso."
       });
+      
+      if (isProduction) {
+        window.location.href = `${window.location.protocol}//app.kambafy.com/auth?mode=login`;
+      } else {
+        navigate('/auth?mode=login');
+      }
     } catch (error) {
       toast({
         title: "Erro",
