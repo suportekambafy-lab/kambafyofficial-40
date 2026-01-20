@@ -147,9 +147,11 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
     
     // Define quais rotas são RESTRITAS de cada subdomínio (não permitidas)
     // NOTA: /login/:id e /area/:id são tratadas separadamente
-    const restrictedFromMain = ['/auth', '/vendedor', '/apps', '/meus-acessos', '/admin']; 
-    const restrictedFromApp = ['/checkout', '/obrigado', '/admin']; 
-    const restrictedFromPay = ['/auth', '/vendedor', '/apps', '/meus-acessos', '/admin']; 
+    // ✅ Como o app.kambafy.com foi descontinuado, rotas de app (ex: /auth, /vendedor)
+    // agora são permitidas diretamente em kambafy.com.
+    const restrictedFromMain = ['/admin'];
+    const restrictedFromApp = ['/checkout', '/obrigado', '/admin'];
+    const restrictedFromPay = ['/admin'];
     const restrictedFromAdmin = ['/checkout', '/obrigado', '/auth', '/vendedor', '/apps', '/meus-acessos'];
     
     // Verifica se a rota atual é restrita do subdomínio atual
@@ -172,14 +174,10 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
         return; // Manter no domínio principal
       }
       
-      // Apenas restringir rotas específicas de autenticação e dashboard
+      // Apenas restringir rotas específicas de admin
       if (restrictedFromMain.some(route => currentPath.startsWith(route))) {
         shouldRedirect = true;
-        if (currentPath.startsWith('/admin')) {
-          targetSubdomain = 'admin';
-        } else {
-          targetSubdomain = 'app';
-        }
+        targetSubdomain = 'admin';
       }
     } else if (currentSubdomain === 'app') {
       // app.kambafy.com: SEMPRE redirecionar para kambafy.com (domínio principal)
@@ -226,9 +224,6 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
         if (restrictedFromPay.some(route => currentPath.startsWith(route))) {
           if (currentPath.startsWith('/admin')) {
             targetSubdomain = 'admin';
-          } else if (currentPath.startsWith('/auth') || currentPath.startsWith('/vendedor') || 
-              currentPath.startsWith('/apps') || currentPath.startsWith('/meus-acessos')) {
-            targetSubdomain = 'app';
           } else {
             targetSubdomain = 'main';
           }
@@ -272,6 +267,13 @@ export function SubdomainGuard({ children }: SubdomainGuardProps) {
         reason: `Subdomínio ${currentSubdomain} não permite rota ${currentPath}`,
         targetSubdomain
       });
+
+      // ✅ Evitar loop: se o destino é igual à URL atual, não redirecionar
+      if (targetUrl === window.location.href) {
+        console.warn('⚠️ SubdomainGuard: destino igual à URL atual; ignorando para evitar refresh loop');
+        return;
+      }
+
       window.location.href = targetUrl;
     } else {
       console.log('✅ SubdomainGuard: Nenhum redirecionamento necessário', {
