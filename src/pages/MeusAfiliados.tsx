@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, MoreVertical, Filter, Users, Clock, XCircle, CheckCircle, Calendar, Mail, Package, Percent, Edit } from 'lucide-react';
+import { Search, MoreVertical, Filter, Users, Clock, XCircle, CheckCircle, Calendar, Mail, Package, Percent } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -19,7 +19,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -27,7 +26,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useCustomToast } from '@/hooks/useCustomToast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from '@/hooks/useTranslation';
-import { EditCommissionModal } from '@/components/affiliates/EditCommissionModal';
 
 interface Affiliate {
   id: string;
@@ -58,9 +56,6 @@ export default function MeusAfiliados() {
   const [filteredAffiliates, setFilteredAffiliates] = useState<Affiliate[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedAffiliates, setSelectedAffiliates] = useState<string[]>([]);
-  const [editingAffiliate, setEditingAffiliate] = useState<Affiliate | null>(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isSavingCommission, setIsSavingCommission] = useState(false);
   const { toast } = useCustomToast();
   const { user } = useAuth();
 
@@ -164,39 +159,6 @@ export default function MeusAfiliados() {
     } catch (error) {
       console.error('Erro ao atualizar status:', error);
       toast({ message: 'Erro ao atualizar status do afiliado' });
-    }
-  };
-
-  const handleEditCommission = (affiliate: Affiliate) => {
-    setEditingAffiliate(affiliate);
-    setIsEditModalOpen(true);
-  };
-
-  const handleSaveCommission = async (affiliateId: string, newCommission: string) => {
-    try {
-      setIsSavingCommission(true);
-      
-      const { error } = await supabase
-        .from('affiliates')
-        .update({ 
-          commission_rate: newCommission,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', affiliateId);
-
-      if (error) {
-        console.error('Erro ao atualizar comissão:', error);
-        toast({ message: 'Erro ao atualizar comissão do afiliado' });
-        return;
-      }
-
-      toast({ message: 'Comissão atualizada com sucesso!' });
-      fetchAffiliates();
-    } catch (error) {
-      console.error('Erro ao atualizar comissão:', error);
-      toast({ message: 'Erro ao atualizar comissão do afiliado' });
-    } finally {
-      setIsSavingCommission(false);
     }
   };
 
@@ -448,18 +410,11 @@ export default function MeusAfiliados() {
                               <TableCell>
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" size="sm" className="h-8 w-8 p-0">
+                                    <Button variant="ghost" size="sm">
                                       <MoreVertical className="h-4 w-4" />
                                     </Button>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end">
-                                    <DropdownMenuItem 
-                                      onClick={() => handleEditCommission(affiliate)}
-                                    >
-                                      <Edit className="h-4 w-4 mr-2" />
-                                      Editar Comissão
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
                                     {affiliate.status === 'pendente' && (
                                       <>
                                         <DropdownMenuItem 
@@ -520,18 +475,11 @@ export default function MeusAfiliados() {
                           </div>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="outline" size="sm" className="h-8 w-8 p-0">
+                              <Button variant="ghost" size="sm">
                                 <MoreVertical className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem 
-                                onClick={() => handleEditCommission(affiliate)}
-                              >
-                                <Edit className="h-4 w-4 mr-2" />
-                                Editar Comissão
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
                               {affiliate.status === 'pendente' && (
                                 <>
                                   <DropdownMenuItem 
@@ -615,15 +563,6 @@ export default function MeusAfiliados() {
         </Tabs>
       </div>
       </div>
-
-      {/* Modal de edição de comissão */}
-      <EditCommissionModal
-        open={isEditModalOpen}
-        onOpenChange={setIsEditModalOpen}
-        affiliate={editingAffiliate}
-        onSave={handleSaveCommission}
-        isSaving={isSavingCommission}
-      />
     </ProtectedRoute>
   );
 }

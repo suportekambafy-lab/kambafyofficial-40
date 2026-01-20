@@ -5,21 +5,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MessageCircle, Mail, Search } from 'lucide-react';
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { SEO, pageSEO } from "@/components/SEO";
 import { CrispChat } from "@/components/CrispChat";
 import { useTranslation } from "@/contexts/TranslationContext";
-import { HelpCategoryNav, categories } from "@/components/help/HelpCategoryNav";
-import { HelpCategorySection } from "@/components/help/HelpCategorySection";
-import { helpCenterCategories } from "@/data/helpCenterFaqs";
 
 const HelpCenter = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeCategory, setActiveCategory] = useState("geral");
   const [loading, setLoading] = useState(false);
   const [contactForm, setContactForm] = useState({
     name: "",
@@ -29,37 +25,33 @@ const HelpCenter = () => {
     message: ""
   });
 
-  // Handle hash-based navigation
-  useEffect(() => {
-    const handleHashChange = () => {
-      const hash = window.location.hash.replace('#', '');
-      if (hash && categories.some(c => c.id === hash)) {
-        setActiveCategory(hash);
-        setTimeout(() => {
-          const element = document.getElementById(hash);
-          if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }
-        }, 100);
-      }
-    };
-
-    // Check on mount
-    handleHashChange();
-
-    // Listen for hash changes
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
-  }, []);
-
-  const handleCategoryClick = (categoryId: string) => {
-    setActiveCategory(categoryId);
-    window.history.pushState(null, '', `#${categoryId}`);
-    const element = document.getElementById(categoryId);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const faqs = [
+    {
+      question: t('helpCenter.faq1.question'),
+      answer: t('helpCenter.faq1.answer')
+    },
+    {
+      question: t('helpCenter.faq2.question'),
+      answer: t('helpCenter.faq2.answer')
+    },
+    {
+      question: t('helpCenter.faq3.question'),
+      answer: t('helpCenter.faq3.answer')
+    },
+    {
+      question: t('helpCenter.faq4.question'),
+      answer: t('helpCenter.faq4.answer')
+    },
+    {
+      question: t('helpCenter.faq5.question'),
+      answer: t('helpCenter.faq5.answer')
     }
-  };
+  ];
+
+  const filteredFaqs = faqs.filter(
+    faq => faq.question.toLowerCase().includes(searchQuery.toLowerCase()) || 
+           faq.answer.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -127,25 +119,12 @@ const HelpCenter = () => {
     }
   ];
 
-  // Filter categories based on search or show active category
-  const categoriesToShow = searchQuery 
-    ? helpCenterCategories 
-    : helpCenterCategories.filter(c => c.id === activeCategory);
-
-  const hasSearchResults = searchQuery && categoriesToShow.some(category => 
-    category.faqs.some(faq => 
-      faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      faq.answer.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-  );
-
   return (
     <>
       <SEO {...pageSEO.helpCenter} />
       <CrispChat />
       <PageLayout title={t('helpCenter.pageTitle')}>
         <div className="space-y-8 md:space-y-12 px-4">
-          {/* Header */}
           <div className="text-center">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4">
               {t('helpCenter.title')} <span className="text-checkout-green">{t('helpCenter.titleHighlight')}</span>
@@ -154,8 +133,7 @@ const HelpCenter = () => {
               {t('helpCenter.subtitle')}
             </p>
             
-            {/* Search */}
-            <div className="relative max-w-md mx-auto mb-6 sm:mb-8">
+            <div className="relative max-w-md mx-auto">
               <Input 
                 placeholder={t('helpCenter.searchPlaceholder')} 
                 className="pl-10" 
@@ -164,17 +142,8 @@ const HelpCenter = () => {
               />
               <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 transform -translate-y-1/2" />
             </div>
-
-            {/* Category Navigation */}
-            {!searchQuery && (
-              <HelpCategoryNav 
-                activeCategory={activeCategory} 
-                onCategoryClick={handleCategoryClick} 
-              />
-            )}
           </div>
 
-          {/* Contact Options */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 max-w-3xl mx-auto">
             {contactOptions.map((option, index) => (
               <div key={index} className="text-center p-4 sm:p-6 bg-checkout-green/5 border border-checkout-green/10 rounded-2xl">
@@ -193,33 +162,33 @@ const HelpCenter = () => {
             ))}
           </div>
 
-          {/* FAQ Sections */}
-          <div className="max-w-4xl mx-auto space-y-8 sm:space-y-12">
-            {categoriesToShow.map((category) => (
-              <HelpCategorySection
-                key={category.id}
-                id={category.id}
-                title={category.title}
-                description={category.description}
-                faqs={category.faqs}
-                searchQuery={searchQuery}
-              />
-            ))}
-
-            {/* No results message */}
-            {searchQuery && !hasSearchResults && (
-              <div className="text-center py-6 sm:py-8">
-                <p className="text-sm sm:text-base text-muted-foreground mb-3 sm:mb-4">
-                  {t('helpCenter.noResults')} "{searchQuery}"
-                </p>
-                <p className="text-xs sm:text-sm text-muted-foreground">
-                  {t('helpCenter.notFound')}
-                </p>
-              </div>
-            )}
+          <div>
+            <h3 className="text-xl sm:text-2xl font-bold text-center mb-6 sm:mb-8">{t('helpCenter.faqTitle')}</h3>
+            <div className="space-y-4 sm:space-y-6">
+              {filteredFaqs.map((faq, index) => (
+                <div key={index} className="border border-checkout-green/10 rounded-2xl p-4 sm:p-6">
+                  <h4 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3 text-checkout-green">
+                    {faq.question}
+                  </h4>
+                  <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+                    {faq.answer}
+                  </p>
+                </div>
+              ))}
+              
+              {filteredFaqs.length === 0 && searchQuery && (
+                <div className="text-center py-6 sm:py-8">
+                  <p className="text-sm sm:text-base text-muted-foreground mb-3 sm:mb-4">
+                    {t('helpCenter.noResults')} "{searchQuery}"
+                  </p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
+                    {t('helpCenter.notFound')}
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Contact Form */}
           <Card>
             <CardHeader>
               <CardTitle className="text-center text-lg sm:text-xl">{t('helpCenter.contactTitle')}</CardTitle>

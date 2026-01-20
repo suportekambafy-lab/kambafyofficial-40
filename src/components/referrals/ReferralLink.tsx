@@ -30,7 +30,7 @@ export function ReferralLink({ referralCode, onUpdateCode, isUpdating }: Referra
   const [showQR, setShowQR] = useState(false);
 
   // Sempre usar o domínio oficial no link exibido
-  const baseUrl = 'https://kambafy.com';
+  const baseUrl = 'https://app.kambafy.com';
 
   const referralLink = referralCode 
     ? `${baseUrl}/auth?mode=signup&type=seller&ref=${referralCode}`

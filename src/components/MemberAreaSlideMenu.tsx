@@ -172,7 +172,7 @@ export function MemberAreaSlideMenu({
             <h3 className="text-sm font-semibold text-gray-400 px-2">Navegação Rápida</h3>
             
             <Button onClick={() => {
-            window.location.href = 'https://kambafy.com/auth?type=customer';
+            window.location.href = 'https://app.kambafy.com/auth?type=customer';
             setOpen(false);
           }} variant="ghost" className="w-full justify-start gap-3 bg-gray-900 hover:bg-gray-800 text-white">
               <ShoppingBag className="w-4 h-4 text-emerald-400" />
@@ -183,7 +183,7 @@ export function MemberAreaSlideMenu({
             </Button>
 
             <Button onClick={() => {
-            window.location.href = 'https://kambafy.com/auth?type=seller';
+            window.location.href = 'https://app.kambafy.com/auth?type=seller';
             setOpen(false);
           }} variant="ghost" className="w-full justify-start gap-3 bg-gray-900 hover:bg-gray-800 text-white">
               <LayoutDashboard className="w-4 h-4 text-emerald-400" />

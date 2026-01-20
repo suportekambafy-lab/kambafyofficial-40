@@ -10,28 +10,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, HelpCircle, ExternalLink } from 'lucide-react';
+import { Loader2, Mail, Percent, User } from 'lucide-react';
 import { validateEmail } from '@/components/checkout/EnhancedFormValidation';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 
 interface CoproducerInviteModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onInvite: (params: {
-    email: string;
-    commissionRate: number;
-    name?: string;
-    durationDays?: number;
-    commissionFromProducerSales?: boolean;
-    commissionFromAffiliateSales?: boolean;
-  }) => void;
+  onInvite: (email: string, commissionRate: number, name?: string) => void;
   isLoading: boolean;
   availableCommission: number;
 }
@@ -44,10 +29,8 @@ export function CoproducerInviteModal({
   availableCommission
 }: CoproducerInviteModalProps) {
   const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
   const [commissionRate, setCommissionRate] = useState('');
-  const [durationDays, setDurationDays] = useState('30');
-  const [producerSales, setProducerSales] = useState(true);
-  const [affiliateSales, setAffiliateSales] = useState(true);
   const [errors, setErrors] = useState<{ email?: string; commission?: string }>({});
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -55,12 +38,14 @@ export function CoproducerInviteModal({
     
     const newErrors: { email?: string; commission?: string } = {};
     
+    // Validar email
     if (!email.trim()) {
       newErrors.email = 'Email é obrigatório';
     } else if (!validateEmail(email)) {
       newErrors.email = 'Email inválido';
     }
     
+    // Validar comissão
     const rate = parseFloat(commissionRate);
     if (!commissionRate) {
       newErrors.commission = 'Comissão é obrigatória';
@@ -77,158 +62,113 @@ export function CoproducerInviteModal({
       return;
     }
     
-    onInvite({
-      email: email.trim(),
-      commissionRate: rate,
-      durationDays: parseInt(durationDays),
-      commissionFromProducerSales: producerSales,
-      commissionFromAffiliateSales: affiliateSales
-    });
+    onInvite(email.trim(), rate, name.trim() || undefined);
     
+    // Reset form
     setEmail('');
+    setName('');
     setCommissionRate('');
-    setDurationDays('30');
-    setProducerSales(true);
-    setAffiliateSales(true);
     setErrors({});
   };
 
   const handleClose = () => {
     setEmail('');
+    setName('');
     setCommissionRate('');
-    setDurationDays('30');
-    setProducerSales(true);
-    setAffiliateSales(true);
     setErrors({});
     onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Co-produção</DialogTitle>
+          <DialogTitle>Convidar Co-Produtor</DialogTitle>
           <DialogDescription>
-            Preencha as informações do seu co-produtor.
+            Envie um convite para alguém co-produzir este produto. 
+            O co-produtor receberá a percentagem definida em cada venda.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6 py-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* Email */}
-          <div className="grid grid-cols-[140px_1fr] items-center gap-4">
-            <Label htmlFor="email" className="text-right text-muted-foreground">
-              E-mail do co-produtor
+          <div className="space-y-2">
+            <Label htmlFor="email">
+              <div className="flex items-center gap-2">
+                <Mail className="w-4 h-4" />
+                Email do Co-Produtor *
+              </div>
             </Label>
-            <div className="space-y-1">
-              <Input
-                id="email"
-                type="email"
-                placeholder=""
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  if (errors.email) setErrors(prev => ({ ...prev, email: undefined }));
-                }}
-                className={errors.email ? 'border-destructive' : ''}
-              />
-              {errors.email && (
-                <p className="text-sm text-destructive">{errors.email}</p>
-              )}
-            </div>
+            <Input
+              id="email"
+              type="email"
+              placeholder="email@exemplo.com"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (errors.email) setErrors(prev => ({ ...prev, email: undefined }));
+              }}
+              className={errors.email ? 'border-destructive' : ''}
+            />
+            {errors.email && (
+              <p className="text-sm text-destructive">{errors.email}</p>
+            )}
           </div>
 
-          {/* Duração do contrato */}
-          <div className="grid grid-cols-[140px_1fr] items-center gap-4">
-            <Label htmlFor="duration" className="text-right text-muted-foreground">
-              Duração do contrato
+          {/* Nome (opcional) */}
+          <div className="space-y-2">
+            <Label htmlFor="name">
+              <div className="flex items-center gap-2">
+                <User className="w-4 h-4" />
+                Nome (opcional)
+              </div>
             </Label>
-            <Select value={durationDays} onValueChange={setDurationDays}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="30">30 dias</SelectItem>
-                <SelectItem value="60">60 dias</SelectItem>
-                <SelectItem value="90">90 dias</SelectItem>
-                <SelectItem value="180">180 dias</SelectItem>
-                <SelectItem value="365">365 dias</SelectItem>
-              </SelectContent>
-            </Select>
+            <Input
+              id="name"
+              type="text"
+              placeholder="Nome do co-produtor"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
           </div>
 
           {/* Comissão */}
-          <div className="grid grid-cols-[140px_1fr] items-center gap-4">
-            <Label htmlFor="commission" className="text-right text-muted-foreground">
-              Comissão (%)
-            </Label>
-            <div className="space-y-1">
+          <div className="space-y-2">
+            <Label htmlFor="commission">
               <div className="flex items-center gap-2">
-                <Input
-                  id="commission"
-                  type="number"
-                  min="1"
-                  max={availableCommission}
-                  step="0.01"
-                  placeholder=""
-                  value={commissionRate}
-                  onChange={(e) => {
-                    setCommissionRate(e.target.value);
-                    if (errors.commission) setErrors(prev => ({ ...prev, commission: undefined }));
-                  }}
-                  className={`w-24 ${errors.commission ? 'border-destructive' : ''}`}
-                />
-                <span className="text-muted-foreground">%</span>
+                <Percent className="w-4 h-4" />
+                Percentagem de Comissão *
               </div>
-              {errors.commission && (
-                <p className="text-sm text-destructive">{errors.commission}</p>
-              )}
+            </Label>
+            <div className="relative">
+              <Input
+                id="commission"
+                type="number"
+                min="1"
+                max={availableCommission}
+                step="0.01"
+                placeholder={`1 - ${availableCommission}`}
+                value={commissionRate}
+                onChange={(e) => {
+                  setCommissionRate(e.target.value);
+                  if (errors.commission) setErrors(prev => ({ ...prev, commission: undefined }));
+                }}
+                className={errors.commission ? 'border-destructive pr-8' : 'pr-8'}
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                %
+              </span>
             </div>
+            {errors.commission ? (
+              <p className="text-sm text-destructive">{errors.commission}</p>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Disponível: até {availableCommission}%
+              </p>
+            )}
           </div>
 
-          {/* Tipos de vendas */}
-          <div className="grid grid-cols-[140px_1fr] items-start gap-4">
-            <Label className="text-right text-muted-foreground pt-1">
-              Deve receber comissões de quais vendas?
-            </Label>
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Checkbox 
-                  id="producer-sales"
-                  checked={producerSales}
-                  onCheckedChange={(checked) => setProducerSales(checked === true)}
-                />
-                <Label htmlFor="producer-sales" className="font-normal cursor-pointer">
-                  Vendas do produtor
-                </Label>
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox 
-                  id="affiliate-sales"
-                  checked={affiliateSales}
-                  onCheckedChange={(checked) => setAffiliateSales(checked === true)}
-                />
-                <Label htmlFor="affiliate-sales" className="font-normal cursor-pointer">
-                  Vendas dos afiliados
-                </Label>
-              </div>
-            </div>
-          </div>
-
-          {/* Info box - abre em nova aba */}
-          <a 
-            href="https://kambafy.com/ajuda#coproducao"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-3 p-3 bg-primary/5 border-l-4 border-primary rounded-r-md cursor-pointer hover:bg-primary/10 transition-colors"
-          >
-            <HelpCircle className="w-5 h-5 text-primary shrink-0" />
-            <span className="text-primary text-sm flex-1">
-              Aprenda mais sobre modelos de co-produção
-            </span>
-            <ExternalLink className="w-4 h-4 text-primary" />
-          </a>
-
-          <DialogFooter className="gap-2 sm:gap-0 pt-4 border-t">
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button type="button" variant="outline" onClick={handleClose}>
               Cancelar
             </Button>
@@ -236,10 +176,10 @@ export function CoproducerInviteModal({
               {isLoading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Convidando...
+                  Enviando...
                 </>
               ) : (
-                'Convidar'
+                'Enviar Convite'
               )}
             </Button>
           </DialogFooter>

@@ -127,7 +127,7 @@ export function VimeoBatchUpdate() {
             <Label htmlFor="domains">Domínios Permitidos (um por linha)</Label>
             <Textarea
               id="domains"
-              placeholder="membros.kambafy.com&#10;kambafy.com"
+              placeholder="membros.kambafy.com&#10;app.kambafy.com"
               value={domains}
               onChange={(e) => setDomains(e.target.value)}
               rows={3}

@@ -65,19 +65,13 @@ interface FormData {
   };
 }
 
-const getStepTitle = (stepId: number, productType: string, isEditing: boolean = false) => {
+const getStepTitle = (stepId: number, productType: string) => {
   const baseSteps = [
     { id: 1, title: "Informações Básicas", description: "Nome e descrição" },
     { id: 2, title: "Preço", description: "Defina os valores" },
     { id: 3, title: "Métodos de Pagamento", description: "Formas de recebimento" },
     { id: 4, title: "Configurações", description: "Tags, categoria e suporte" },
   ];
-  
-  // Co-Produção step (last step when editing)
-  const coproductionStepId = productType?.startsWith('Assinatura-') ? 7 : 6;
-  if (isEditing && stepId === coproductionStepId) {
-    return { id: stepId, title: "Co-Produção", description: "Convide co-produtores" };
-  }
   
   if (stepId === 5 && productType?.startsWith('Assinatura-')) {
     return { id: 5, title: "Configuração de Assinatura", description: "Defina os termos da assinatura" };
@@ -592,8 +586,8 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
       {/* Conteúdo da Etapa Atual */}
       <Card>
         <CardHeader>
-          <CardTitle>{getStepTitle(currentStep, formData.type, !!editingProduct).title}</CardTitle>
-          <p className="text-sm text-muted-foreground">{getStepTitle(currentStep, formData.type, !!editingProduct).description}</p>
+          <CardTitle>{getStepTitle(currentStep, formData.type).title}</CardTitle>
+          <p className="text-sm text-muted-foreground">{getStepTitle(currentStep, formData.type).description}</p>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Etapa 1: Informações Básicas */}

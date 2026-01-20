@@ -56,7 +56,7 @@ Deno.serve(async (req) => {
       errors: [] as string[]
     }
 
-    const siteUrl = Deno.env.get('SITE_URL') || 'https://kambafy.com'
+    const siteUrl = Deno.env.get('SITE_URL') || 'https://app.kambafy.com'
 
     for (const email of uniqueEmails) {
       try {

@@ -195,7 +195,7 @@ const handler = async (req: Request): Promise<Response> => {
                       <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                         <tr>
                           <td align="center">
-                            <a href="https://kambafy.com/meus-acessos" 
+                            <a href="https://app.kambafy.com/meus-acessos" 
                                style="display: inline-block; padding: 14px 32px; background-color: #10b981; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 16px; border-radius: 8px;">
                               Ver Meus Acessos
                             </a>
@@ -336,7 +336,7 @@ const handler = async (req: Request): Promise<Response> => {
                       <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                         <tr>
                           <td align="center">
-                            <a href="https://kambafy.com/meus-acessos" 
+                            <a href="https://app.kambafy.com/meus-acessos" 
                                style="display: inline-block; padding: 14px 32px; background-color: #71717a; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 16px; border-radius: 8px;">
                               Ver Detalhes
                             </a>
@@ -480,7 +480,7 @@ const handler = async (req: Request): Promise<Response> => {
                       <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                         <tr>
                           <td align="center">
-                            <a href="https://kambafy.com/meus-acessos" 
+                            <a href="https://app.kambafy.com/meus-acessos" 
                                style="display: inline-block; padding: 14px 32px; background-color: #3b82f6; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 16px; border-radius: 8px;">
                               Contestar em Meus Acessos
                             </a>

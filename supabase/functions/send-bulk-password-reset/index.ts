@@ -84,7 +84,7 @@ const handler = async (req: Request): Promise<Response> => {
           type: 'recovery',
           email: profile.email,
           options: {
-            redirectTo: 'https://kambafy.com/reset-password'
+            redirectTo: 'https://app.kambafy.com/reset-password'
           }
         });
 

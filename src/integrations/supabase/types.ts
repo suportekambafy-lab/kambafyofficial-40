@@ -82,48 +82,6 @@ export type Database = {
           },
         ]
       }
-      account_collaborators: {
-        Row: {
-          accepted_at: string | null
-          collaborator_email: string
-          collaborator_user_id: string | null
-          created_at: string
-          id: string
-          invited_at: string
-          owner_user_id: string
-          permissions: Json
-          revoked_at: string | null
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          accepted_at?: string | null
-          collaborator_email: string
-          collaborator_user_id?: string | null
-          created_at?: string
-          id?: string
-          invited_at?: string
-          owner_user_id: string
-          permissions?: Json
-          revoked_at?: string | null
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          accepted_at?: string | null
-          collaborator_email?: string
-          collaborator_user_id?: string | null
-          created_at?: string
-          id?: string
-          invited_at?: string
-          owner_user_id?: string
-          permissions?: Json
-          revoked_at?: string | null
-          status?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       admin_action_logs: {
         Row: {
           action: string
@@ -1111,17 +1069,11 @@ export type Database = {
       coproducers: {
         Row: {
           accepted_at: string | null
-          canceled_at: string | null
-          canceled_by: string | null
-          commission_from_affiliate_sales: boolean
-          commission_from_producer_sales: boolean
           commission_rate: number
           coproducer_email: string
           coproducer_name: string | null
           coproducer_user_id: string | null
           created_at: string | null
-          duration_days: number
-          expires_at: string | null
           id: string
           invited_at: string | null
           owner_user_id: string
@@ -1131,17 +1083,11 @@ export type Database = {
         }
         Insert: {
           accepted_at?: string | null
-          canceled_at?: string | null
-          canceled_by?: string | null
-          commission_from_affiliate_sales?: boolean
-          commission_from_producer_sales?: boolean
           commission_rate: number
           coproducer_email: string
           coproducer_name?: string | null
           coproducer_user_id?: string | null
           created_at?: string | null
-          duration_days?: number
-          expires_at?: string | null
           id?: string
           invited_at?: string | null
           owner_user_id: string
@@ -1151,17 +1097,11 @@ export type Database = {
         }
         Update: {
           accepted_at?: string | null
-          canceled_at?: string | null
-          canceled_by?: string | null
-          commission_from_affiliate_sales?: boolean
-          commission_from_producer_sales?: boolean
           commission_rate?: number
           coproducer_email?: string
           coproducer_name?: string | null
           coproducer_user_id?: string | null
           created_at?: string | null
-          duration_days?: number
-          expires_at?: string | null
           id?: string
           invited_at?: string | null
           owner_user_id?: string
@@ -5515,10 +5455,6 @@ export type Database = {
         }
         Returns: boolean
       }
-      delete_product_if_no_paid_sales: {
-        Args: { p_product_id: string }
-        Returns: boolean
-      }
       detect_abandoned_purchase: {
         Args: {
           _amount: number
@@ -5744,16 +5680,6 @@ export type Database = {
           user_id: string
           video_data: Json
           video_url: string
-        }[]
-      }
-      get_managed_accounts: {
-        Args: never
-        Returns: {
-          accepted_at: string
-          owner_email: string
-          owner_name: string
-          owner_user_id: string
-          permissions: Json
         }[]
       }
       get_mozambique_admin_stats:
@@ -6033,14 +5959,6 @@ export type Database = {
         Args: { p_product_id: string }
         Returns: boolean
       }
-      is_collaborator_of: {
-        Args: { p_owner_user_id: string }
-        Returns: boolean
-      }
-      is_coproduction_active: {
-        Args: { p_coproducer_id: string }
-        Returns: boolean
-      }
       is_current_user_admin: { Args: never; Returns: boolean }
       is_member_area_owner: { Args: { area_id: string }; Returns: boolean }
       is_super_admin: { Args: { user_email: string }; Returns: boolean }
@@ -6065,28 +5983,16 @@ export type Database = {
         }
         Returns: undefined
       }
-      process_coproducer_commissions:
-        | {
-            Args: {
-              p_currency: string
-              p_order_id: string
-              p_product_id: string
-              p_product_name: string
-              p_seller_amount: number
-            }
-            Returns: number
-          }
-        | {
-            Args: {
-              p_currency: string
-              p_is_affiliate_sale?: boolean
-              p_order_id: string
-              p_product_id: string
-              p_product_name: string
-              p_seller_amount: number
-            }
-            Returns: number
-          }
+      process_coproducer_commissions: {
+        Args: {
+          p_currency: string
+          p_order_id: string
+          p_product_id: string
+          p_product_name: string
+          p_seller_amount: number
+        }
+        Returns: number
+      }
       process_missing_customer_access: {
         Args: never
         Returns: {

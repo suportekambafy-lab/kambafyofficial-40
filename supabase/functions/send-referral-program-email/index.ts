@@ -113,7 +113,7 @@ const handler = async (req: Request): Promise<Response> => {
             <p>Continue vendendo seus produtos na Kambafy! Quando for aprovado, você poderá começar a indicar novos vendedores imediatamente.</p>
             
             <div style="text-align: center; margin: 30px 0;">
-              <a href="https://kambafy.com/vendedor/produtos" class="btn" style="background: #F59E0B;">Ir para Meus Produtos</a>
+              <a href="https://app.kambafy.com/vendedor/produtos" class="btn" style="background: #F59E0B;">Ir para Meus Produtos</a>
             </div>
           </div>
           
@@ -125,7 +125,7 @@ const handler = async (req: Request): Promise<Response> => {
         </html>
       `;
     } else if (type === 'application_approved') {
-      const referralLink = `https://kambafy.com/auth?mode=signup&type=seller&ref=${referralCode}`;
+      const referralLink = `https://app.kambafy.com/auth?mode=signup&type=seller&ref=${referralCode}`;
       const commissionText = rewardOption === 'long_term' 
         ? '1,5% por 12 meses' 
         : '2% por 6 meses';
@@ -179,7 +179,7 @@ const handler = async (req: Request): Promise<Response> => {
             </ol>
             
             <div style="text-align: center; margin: 30px 0;">
-              <a href="https://kambafy.com/vendedor/indicacoes" class="btn">Ver Meu Painel de Indicações</a>
+              <a href="https://app.kambafy.com/vendedor/indicacoes" class="btn">Ver Meu Painel de Indicações</a>
             </div>
             
             <div style="background: #FEF3C7; padding: 15px; border-radius: 8px; margin-top: 20px;">
@@ -234,7 +234,7 @@ const handler = async (req: Request): Promise<Response> => {
             <p>Enquanto isso, continue aproveitando todas as funcionalidades da Kambafy para vender seus produtos digitais!</p>
             
             <div style="text-align: center; margin: 30px 0;">
-              <a href="https://kambafy.com/vendedor/produtos" class="btn" style="background: #6B7280;">Ir para Meus Produtos</a>
+              <a href="https://app.kambafy.com/vendedor/produtos" class="btn" style="background: #6B7280;">Ir para Meus Produtos</a>
             </div>
           </div>
           

@@ -175,7 +175,7 @@ const handler = async (req: Request): Promise<Response> => {
                     <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                       <tr>
                         <td align="center">
-                          <a href="https://kambafy.com/vendedor/reembolsos" 
+                          <a href="https://app.kambafy.com/vendedor/reembolsos" 
                              style="display: inline-block; padding: 14px 32px; background-color: #f59e0b; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 16px; border-radius: 8px;">
                             Ver Pedido de Reembolso
                           </a>

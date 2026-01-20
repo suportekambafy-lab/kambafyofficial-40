@@ -60,7 +60,7 @@ const handler = async (req: Request): Promise<Response> => {
         type: "recovery",
         email: normalizedEmail,
         options: {
-          redirectTo: "https://kambafy.com/reset-password",
+          redirectTo: "https://app.kambafy.com/reset-password",
         },
       });
 
@@ -104,7 +104,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Criar link customizado que NÃO passa pelo /auth/v1/verify do Supabase
     // O app vai usar verifyOtp com token_hash para validar
-    const customResetLink = `https://kambafy.com/reset-password?token_hash=${encodeURIComponent(tokenHash)}&type=recovery`;
+    const customResetLink = `https://app.kambafy.com/reset-password?token_hash=${encodeURIComponent(tokenHash)}&type=recovery`;
 
     console.log("🔗 Custom reset link created (token_hash based)");
 

@@ -2570,21 +2570,15 @@ setFormData({
               </CardContent>
             </Card>
 
-            <a 
-              href="https://kambafy.com/ajuda#area-membros"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-blue-50 border border-blue-200 rounded-lg p-3 md:p-4 flex items-center justify-center gap-2 md:gap-3 cursor-pointer hover:bg-blue-100 transition-colors"
-            >
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 md:p-4 flex items-center justify-center gap-2 md:gap-3">
               <div className="w-5 h-5 md:w-6 md:h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
                 <span className="text-white text-xs">i</span>
               </div>
               <span className="text-blue-800 text-sm md:text-base">
                 Aprenda mais sobre a{" "}
-                <span className="underline">área de membros</span>
+                <a href="#" className="underline">área de membros</a>
               </span>
-              <ExternalLink className="w-4 h-4 text-blue-600" />
-            </a>
+            </div>
           </TabsContent>
 
           <TabsContent value="cursos" className="space-y-4 md:space-y-6">
