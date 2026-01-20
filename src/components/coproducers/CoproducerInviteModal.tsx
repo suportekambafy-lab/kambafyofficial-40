@@ -10,13 +10,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, Mail, Percent, User } from 'lucide-react';
+import { Loader2, Mail, Percent, User, Calendar } from 'lucide-react';
 import { validateEmail } from '@/components/checkout/EnhancedFormValidation';
 
 interface CoproducerInviteModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onInvite: (email: string, commissionRate: number, name?: string) => void;
+  onInvite: (email: string, commissionRate: number, name?: string, durationDays?: number) => void;
   isLoading: boolean;
   availableCommission: number;
 }
@@ -31,12 +31,13 @@ export function CoproducerInviteModal({
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [commissionRate, setCommissionRate] = useState('');
-  const [errors, setErrors] = useState<{ email?: string; commission?: string }>({});
+  const [durationDays, setDurationDays] = useState('30');
+  const [errors, setErrors] = useState<{ email?: string; commission?: string; duration?: string }>({});
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    const newErrors: { email?: string; commission?: string } = {};
+    const newErrors: { email?: string; commission?: string; duration?: string } = {};
     
     // Validar email
     if (!email.trim()) {
@@ -57,17 +58,28 @@ export function CoproducerInviteModal({
       newErrors.commission = `Máximo disponível: ${availableCommission}%`;
     }
     
+    // Validar duração
+    const duration = parseInt(durationDays);
+    if (!durationDays) {
+      newErrors.duration = 'Duração é obrigatória';
+    } else if (isNaN(duration) || duration < 1) {
+      newErrors.duration = 'Duração mínima: 1 dia';
+    } else if (duration > 365) {
+      newErrors.duration = 'Duração máxima: 365 dias';
+    }
+    
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
     
-    onInvite(email.trim(), rate, name.trim() || undefined);
+    onInvite(email.trim(), rate, name.trim() || undefined, duration);
     
     // Reset form
     setEmail('');
     setName('');
     setCommissionRate('');
+    setDurationDays('30');
     setErrors({});
   };
 
@@ -75,6 +87,7 @@ export function CoproducerInviteModal({
     setEmail('');
     setName('');
     setCommissionRate('');
+    setDurationDays('30');
     setErrors({});
     onOpenChange(false);
   };
@@ -164,6 +177,41 @@ export function CoproducerInviteModal({
             ) : (
               <p className="text-sm text-muted-foreground">
                 Disponível: até {availableCommission}%
+              </p>
+            )}
+          </div>
+
+          {/* Duração do contrato */}
+          <div className="space-y-2">
+            <Label htmlFor="duration">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4" />
+                Validade do Contrato *
+              </div>
+            </Label>
+            <div className="relative">
+              <Input
+                id="duration"
+                type="number"
+                min="1"
+                max="365"
+                placeholder="30"
+                value={durationDays}
+                onChange={(e) => {
+                  setDurationDays(e.target.value);
+                  if (errors.duration) setErrors(prev => ({ ...prev, duration: undefined }));
+                }}
+                className={errors.duration ? 'border-destructive pr-12' : 'pr-12'}
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                dias
+              </span>
+            </div>
+            {errors.duration ? (
+              <p className="text-sm text-destructive">{errors.duration}</p>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Após este período, a co-produção expira automaticamente
               </p>
             )}
           </div>

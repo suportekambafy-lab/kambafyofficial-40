@@ -1069,11 +1069,15 @@ export type Database = {
       coproducers: {
         Row: {
           accepted_at: string | null
+          canceled_at: string | null
+          canceled_by: string | null
           commission_rate: number
           coproducer_email: string
           coproducer_name: string | null
           coproducer_user_id: string | null
           created_at: string | null
+          duration_days: number
+          expires_at: string | null
           id: string
           invited_at: string | null
           owner_user_id: string
@@ -1083,11 +1087,15 @@ export type Database = {
         }
         Insert: {
           accepted_at?: string | null
+          canceled_at?: string | null
+          canceled_by?: string | null
           commission_rate: number
           coproducer_email: string
           coproducer_name?: string | null
           coproducer_user_id?: string | null
           created_at?: string | null
+          duration_days?: number
+          expires_at?: string | null
           id?: string
           invited_at?: string | null
           owner_user_id: string
@@ -1097,11 +1105,15 @@ export type Database = {
         }
         Update: {
           accepted_at?: string | null
+          canceled_at?: string | null
+          canceled_by?: string | null
           commission_rate?: number
           coproducer_email?: string
           coproducer_name?: string | null
           coproducer_user_id?: string | null
           created_at?: string | null
+          duration_days?: number
+          expires_at?: string | null
           id?: string
           invited_at?: string | null
           owner_user_id?: string
@@ -5957,6 +5969,10 @@ export type Database = {
       is_authenticated_super_admin: { Args: never; Returns: boolean }
       is_cart_recovery_enabled: {
         Args: { p_product_id: string }
+        Returns: boolean
+      }
+      is_coproduction_active: {
+        Args: { p_coproducer_id: string }
         Returns: boolean
       }
       is_current_user_admin: { Args: never; Returns: boolean }
