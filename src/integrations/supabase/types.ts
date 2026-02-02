@@ -1476,6 +1476,33 @@ export type Database = {
           },
         ]
       }
+      express_checkout_codes: {
+        Row: {
+          code: string
+          created_at: string | null
+          email: string
+          expires_at: string
+          id: string
+          used: boolean | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          email: string
+          expires_at: string
+          id?: string
+          used?: boolean | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          email?: string
+          expires_at?: string
+          id?: string
+          used?: boolean | null
+        }
+        Relationships: []
+      }
       external_payments: {
         Row: {
           amount: number
@@ -1866,6 +1893,38 @@ export type Database = {
           verified_by_name?: string | null
         }
         Relationships: []
+      }
+      incident_updates: {
+        Row: {
+          created_at: string
+          id: string
+          incident_id: string
+          message: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          incident_id: string
+          message: string
+          status: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          incident_id?: string
+          message?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "incident_updates_incident_id_fkey"
+            columns: ["incident_id"]
+            isOneToOne: false
+            referencedRelation: "platform_incidents"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       kambapay_registrations: {
         Row: {
@@ -3327,6 +3386,45 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_incidents: {
+        Row: {
+          affected_services: string[] | null
+          created_at: string
+          description: string | null
+          id: string
+          resolved_at: string | null
+          severity: string
+          started_at: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          affected_services?: string[] | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          resolved_at?: string | null
+          severity?: string
+          started_at?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          affected_services?: string[] | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          resolved_at?: string | null
+          severity?: string
+          started_at?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           access_duration_description: string | null
@@ -3365,6 +3463,7 @@ export type Database = {
           revision_requested: boolean | null
           revision_requested_at: string | null
           sales: number | null
+          sales_page_url: string | null
           seo_description: string | null
           seo_keywords: string[] | null
           seo_title: string | null
@@ -3417,6 +3516,7 @@ export type Database = {
           revision_requested?: boolean | null
           revision_requested_at?: string | null
           sales?: number | null
+          sales_page_url?: string | null
           seo_description?: string | null
           seo_keywords?: string[] | null
           seo_title?: string | null
@@ -3469,6 +3569,7 @@ export type Database = {
           revision_requested?: boolean | null
           revision_requested_at?: string | null
           sales?: number | null
+          sales_page_url?: string | null
           seo_description?: string | null
           seo_keywords?: string[] | null
           seo_title?: string | null
@@ -4323,6 +4424,80 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      saved_customers: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          name: string | null
+          phone: string | null
+          stripe_customer_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          name?: string | null
+          phone?: string | null
+          stripe_customer_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          name?: string | null
+          phone?: string | null
+          stripe_customer_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      saved_payment_methods: {
+        Row: {
+          card_brand: string | null
+          card_exp_month: number | null
+          card_exp_year: number | null
+          card_last4: string | null
+          created_at: string | null
+          customer_id: string
+          id: string
+          is_default: boolean | null
+          stripe_payment_method_id: string
+        }
+        Insert: {
+          card_brand?: string | null
+          card_exp_month?: number | null
+          card_exp_year?: number | null
+          card_last4?: string | null
+          created_at?: string | null
+          customer_id: string
+          id?: string
+          is_default?: boolean | null
+          stripe_payment_method_id: string
+        }
+        Update: {
+          card_brand?: string | null
+          card_exp_month?: number | null
+          card_exp_year?: number | null
+          card_last4?: string | null
+          created_at?: string | null
+          customer_id?: string
+          id?: string
+          is_default?: boolean | null
+          stripe_payment_method_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_payment_methods_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "saved_customers"
             referencedColumns: ["id"]
           },
         ]
@@ -6066,6 +6241,27 @@ export type Database = {
         Returns: undefined
       }
       process_coproducer_commissions:
+        | {
+            Args: {
+              p_currency: string
+              p_order_id: string
+              p_product_id: string
+              p_product_name: string
+              p_seller_amount: number
+            }
+            Returns: number
+          }
+        | {
+            Args: {
+              p_currency: string
+              p_is_affiliate_sale?: boolean
+              p_order_id: string
+              p_product_id: string
+              p_product_name: string
+              p_seller_amount: number
+            }
+            Returns: number
+          }
         | {
             Args: {
               p_currency: string
