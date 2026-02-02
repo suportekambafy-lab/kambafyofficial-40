@@ -102,6 +102,14 @@ const Checkout = () => {
     markAsInvalidAffiliate,
     clearAffiliateCode
   } = useAffiliateTracking();
+  
+  // Estado para afiliado validado (usado especialmente para Moçambique)
+  const [validatedAffiliate, setValidatedAffiliate] = useState<{
+    code: string;
+    commission_rate: number;
+    commission_amount: number;
+  } | null>(null);
+  
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
@@ -406,6 +414,61 @@ const Checkout = () => {
       paymentCompleted
     }
   );
+
+  // 🔗 Validar afiliado quando produto carregar (para Moçambique e outros)
+  useEffect(() => {
+    const validateAffiliate = async () => {
+      if (!affiliateCode || !product?.id) {
+        setValidatedAffiliate(null);
+        return;
+      }
+      
+      console.log('🔍 Validando afiliado:', affiliateCode, 'para produto:', product.id);
+      
+      const { data: affiliate, error } = await supabase
+        .from('affiliates')
+        .select('commission_rate, affiliate_user_id')
+        .eq('affiliate_code', affiliateCode)
+        .eq('product_id', product.id)
+        .eq('status', 'ativo')
+        .maybeSingle();
+      
+      if (affiliate && !error) {
+        console.log('✅ Afiliado válido encontrado:', affiliate);
+        const rate = parseFloat(affiliate.commission_rate.replace('%', '')) / 100;
+        
+        markAsValidAffiliate();
+        setValidatedAffiliate({
+          code: affiliateCode,
+          commission_rate: rate,
+          commission_amount: 0 // Será calculado pelo próximo useEffect
+        });
+      } else {
+        console.log('❌ Afiliado inválido ou não encontrado:', affiliateCode, error);
+        markAsInvalidAffiliate();
+        setValidatedAffiliate(null);
+      }
+    };
+    
+    validateAffiliate();
+  }, [affiliateCode, product?.id, markAsValidAffiliate, markAsInvalidAffiliate]);
+
+  // 💰 Recalcular comissão do afiliado quando preço mudar
+  useEffect(() => {
+    if (validatedAffiliate && totalAmountForDetection > 0) {
+      const newCommission = Math.round(totalAmountForDetection * validatedAffiliate.commission_rate * 100) / 100;
+      console.log('💰 Recalculando comissão afiliado:', {
+        totalPrice: totalAmountForDetection,
+        rate: validatedAffiliate.commission_rate,
+        commission: newCommission
+      });
+      
+      setValidatedAffiliate(prev => prev ? {
+        ...prev,
+        commission_amount: newCommission
+      } : null);
+    }
+  }, [totalAmountForDetection, validatedAffiliate?.commission_rate]);
 
   // Remover efeito que aguarda geo - não precisamos mais
   // Os preços se atualizam automaticamente quando geo estiver pronto
@@ -3071,8 +3134,8 @@ const Checkout = () => {
                       });
                     }}
                     orderBumpData={orderBump ? Array.from(selectedOrderBumps.values()).map(({ data }) => data) : null}
-                    affiliateCode={affiliateCode}
-                    affiliateCommission={hasAffiliate ? (totalPrice * 0.1) : null}
+                    affiliateCode={validatedAffiliate?.code || null}
+                    affiliateCommission={validatedAffiliate?.commission_amount || null}
                     cohortId={cohortId}
                     t={(key: string) => key}
                   />
