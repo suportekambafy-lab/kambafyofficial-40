@@ -242,7 +242,7 @@ export const MozambiquePaymentForm = ({
           orderData: {
             affiliate_code: affiliateCode,
             affiliate_commission: affiliateCommission,
-            cohort_id: cohortId,
+            cohort_id: cohortId && cohortId.trim() !== '' ? cohortId : null, // Converter string vazia para null (UUID)
             order_bump_data: orderBumpData,
             seller_commission: sellerCommission
           }

@@ -2001,7 +2001,7 @@ const Checkout = () => {
         affiliate_code: affiliate_code_to_use,
         affiliate_commission: affiliate_commission_kz,
         seller_commission: seller_commission_kz,
-        cohort_id: cohortId, // Adicionar cohort_id
+        cohort_id: cohortId && cohortId.trim() !== '' ? cohortId : null, // Converter string vazia para null (UUID)
         utm_params: utmParams, // Parâmetros UTM para tracking
         order_bump_data: orderBump ? JSON.stringify({
           bump_product_name: orderBump.bump_product_name,
