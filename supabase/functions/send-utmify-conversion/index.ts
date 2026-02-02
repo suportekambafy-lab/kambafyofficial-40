@@ -6,8 +6,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Taxa de câmbio KZ para USD (aproximada)
+// Taxas de câmbio para USD (aproximadas)
 const KZ_TO_USD_RATE = 920; // 1 USD = 920 KZ
+const MZN_TO_USD_RATE = 64; // 1 USD = 64 MZN
 
 // Mapeamento de nomes de países para códigos ISO 2 caracteres
 const countryNameToISO: Record<string, string> = {
@@ -163,11 +164,16 @@ serve(async (req) => {
     let amountInCents: number;
     const amount = parseFloat(orderData.amount.toString());
 
-    if (orderData.currency?.toUpperCase() === 'KZ') {
-      // Converter KZ para USD e depois para centavos
+    if (orderData.currency?.toUpperCase() === 'KZ' || orderData.currency?.toUpperCase() === 'AOA') {
+      // Converter KZ/AOA para USD e depois para centavos
       const amountInUSD = amount / KZ_TO_USD_RATE;
       amountInCents = Math.round(amountInUSD * 100);
       console.log(`💱 Conversão: ${amount} KZ → $${(amountInCents / 100).toFixed(2)} USD`);
+    } else if (orderData.currency?.toUpperCase() === 'MZN' || orderData.currency?.toUpperCase() === 'MT') {
+      // Converter MZN/MT (Moçambique) para USD e depois para centavos
+      const amountInUSD = amount / MZN_TO_USD_RATE;
+      amountInCents = Math.round(amountInUSD * 100);
+      console.log(`💱 Conversão: ${amount} MZN → $${(amountInCents / 100).toFixed(2)} USD`);
     } else if (orderData.currency?.toUpperCase() === 'EUR') {
       // Converter EUR para USD (aproximado 1 EUR = 1.08 USD)
       const amountInUSD = amount * 1.08;
@@ -194,7 +200,13 @@ serve(async (req) => {
       'reference': 'boleto',
       'card': 'credit_card',
       'stripe': 'credit_card',
-      'multibanco': 'boleto'
+      'multibanco': 'boleto',
+      // Moçambique payment methods
+      'mpesa': 'pix',
+      'm-pesa': 'pix',
+      'emola': 'pix',
+      'e-mola': 'pix',
+      'card_mz': 'credit_card'
     };
 
     const mappedPaymentMethod = paymentMethodMap[orderData.paymentMethod?.toLowerCase()] || 'other';

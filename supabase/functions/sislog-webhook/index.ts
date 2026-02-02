@@ -297,6 +297,39 @@ serve(async (req) => {
       console.error('❌ Error in Facebook conversion process:', fbConversionError);
     }
 
+    // 📊 ENVIAR CONVERSÃO PARA UTMIFY
+    try {
+      console.log('📊 Sending UTMify conversion...');
+      
+      const utmifyPayload = {
+        orderId: order.order_id,
+        orderUuid: order.id,
+        amount: parseFloat(order.amount),
+        currency: 'MZN',
+        customerName: order.customer_name,
+        customerEmail: order.customer_email,
+        customerPhone: order.customer_phone,
+        customerCountry: 'Mozambique',
+        productId: order.product_id,
+        productName: product.name,
+        paymentMethod: provider?.toLowerCase() || order.payment_method,
+        utmParams: order.utm_data || {},
+        orderBumpData: order.order_bump_data
+      };
+      
+      const { data: utmResult, error: utmError } = await supabaseAdmin.functions.invoke('send-utmify-conversion', {
+        body: utmifyPayload
+      });
+      
+      if (utmError) {
+        console.error('❌ UTMify error:', utmError);
+      } else {
+        console.log('✅ UTMify conversion sent:', utmResult);
+      }
+    } catch (utmifyError) {
+      console.error('❌ UTMify process error:', utmifyError);
+    }
+
     // Process order bumps if any
     if (order.order_bump_data) {
       try {
