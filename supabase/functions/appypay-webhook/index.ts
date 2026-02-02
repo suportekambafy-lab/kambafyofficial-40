@@ -276,48 +276,69 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Step 2: Search for order - try by merchantTransactionId first (appypay_transaction_id), then by order_id (referenceNumber)
+    // Step 2: Search for order with retry (webhook can arrive BEFORE order is saved)
+    // 🔥 FIX: Added retry mechanism for orders table - webhook can arrive before order is inserted
     let orders: any[] | null = null;
     let orderError: any = null;
     
-    // Try finding by merchantTransactionId (stored in appypay_transaction_id)
-    if (payload.merchantTransactionId) {
-      const result = await supabase
-        .from('orders')
-        .select('*')
-        .eq('appypay_transaction_id', payload.merchantTransactionId)
-        .in('payment_method', ['express', 'reference'])
-        .limit(1);
+    const lookupOrderOnce = async (): Promise<any[] | null> => {
+      let foundOrders: any[] | null = null;
       
-      orders = result.data;
-      orderError = result.error;
-      
-      if (orders && orders.length > 0) {
-        console.log(`[APPYPAY-WEBHOOK] Order found by merchantTransactionId: ${payload.merchantTransactionId}`);
+      // Try finding by merchantTransactionId (stored in appypay_transaction_id)
+      if (payload.merchantTransactionId) {
+        const result = await supabase
+          .from('orders')
+          .select('*')
+          .eq('appypay_transaction_id', payload.merchantTransactionId)
+          .in('payment_method', ['express', 'reference'])
+          .limit(1);
+        
+        if (result.error) {
+          console.error('[APPYPAY-WEBHOOK] Error fetching order by merchantTransactionId:', result.error);
+        }
+        
+        if (result.data && result.data.length > 0) {
+          console.log(`[APPYPAY-WEBHOOK] Order found by merchantTransactionId: ${payload.merchantTransactionId}`);
+          return result.data;
+        }
       }
-    }
+      
+      // If not found and we have a reference number, try by order_id (referenceNumber)
+      if (payload.reference?.referenceNumber) {
+        const result = await supabase
+          .from('orders')
+          .select('*')
+          .eq('order_id', payload.reference.referenceNumber)
+          .in('payment_method', ['express', 'reference'])
+          .limit(1);
+        
+        if (result.error) {
+          console.error('[APPYPAY-WEBHOOK] Error fetching order by referenceNumber:', result.error);
+        }
+        
+        if (result.data && result.data.length > 0) {
+          console.log(`[APPYPAY-WEBHOOK] Order found by referenceNumber: ${payload.reference.referenceNumber}`);
+          return result.data;
+        }
+      }
+      
+      return null;
+    };
     
-    // If not found and we have a reference number, try by order_id (referenceNumber)
-    if ((!orders || orders.length === 0) && payload.reference?.referenceNumber) {
-      console.log(`[APPYPAY-WEBHOOK] Trying to find order by referenceNumber: ${payload.reference.referenceNumber}`);
-      const result = await supabase
-        .from('orders')
-        .select('*')
-        .eq('order_id', payload.reference.referenceNumber)
-        .in('payment_method', ['express', 'reference'])
-        .limit(1);
+    // 🔥 CRITICAL: Retry up to 50 times (25 seconds) for orders table
+    // This handles the race condition where webhook arrives before create-appypay-charge saves the order
+    const maxOrderLookupAttempts = 50;
+    const orderRetryDelayMs = 500;
+    
+    for (let attempt = 1; attempt <= maxOrderLookupAttempts && (!orders || orders.length === 0); attempt++) {
+      orders = await lookupOrderOnce();
       
-      orders = result.data;
-      orderError = result.error;
-      
-      if (orders && orders.length > 0) {
-        console.log(`[APPYPAY-WEBHOOK] Order found by referenceNumber: ${payload.reference.referenceNumber}`);
+      if (!orders || orders.length === 0) {
+        if (attempt < maxOrderLookupAttempts) {
+          console.log(`[APPYPAY-WEBHOOK] Order not found yet. Retrying in ${orderRetryDelayMs}ms (${attempt}/${maxOrderLookupAttempts})...`);
+          await new Promise((resolve) => setTimeout(resolve, orderRetryDelayMs));
+        }
       }
-    }
-
-    if (orderError) {
-      console.error('[APPYPAY-WEBHOOK] Error fetching order:', orderError);
-      throw new Error(`Database error: ${orderError.message}`);
     }
 
     if (!orders || orders.length === 0) {
