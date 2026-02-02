@@ -1878,11 +1878,20 @@ const Checkout = () => {
       let seller_commission: number | null = null;
       let affiliate_code_to_use: string | null = null;
 
-      // ✅ Sempre preservar o código se ele existir (mesmo que a validação no frontend falhe).
-      // A validação/cálculo final passa a ser garantida no backend (create-appypay-charge)
-      // para evitar problemas de RLS / timing.
-      if (hasAffiliate && affiliateCode) {
-        affiliate_code_to_use = affiliateCode;
+      // ✅ SEMPRE capturar o código de afiliado de TODAS as fontes possíveis.
+      // Prioridade: 1) hook affiliateCode, 2) localStorage, 3) URL atual
+      // O backend (create-appypay-charge) fará a validação final.
+      const storedAffiliateCode = localStorage.getItem('affiliate_code');
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlAffiliateCode = urlParams.get('ref');
+      
+      affiliate_code_to_use = affiliateCode || storedAffiliateCode || urlAffiliateCode || null;
+      
+      if (affiliate_code_to_use) {
+        console.log('🔗 Código de afiliado capturado para envio ao backend:', {
+          source: affiliateCode ? 'hook' : (storedAffiliateCode ? 'localStorage' : 'URL'),
+          code: affiliate_code_to_use
+        });
       }
 
       const validateAffiliateOnDemand = async (): Promise<number | null> => {
@@ -3143,7 +3152,17 @@ const Checkout = () => {
                       });
                     }}
                     orderBumpData={orderBump ? Array.from(selectedOrderBumps.values()).map(({ data }) => data) : null}
-                    affiliateCode={validatedAffiliate?.code || null}
+                    affiliateCode={(() => {
+                      // ✅ SEMPRE capturar o código de afiliado de TODAS as fontes possíveis para Moçambique
+                      const storedCode = localStorage.getItem('affiliate_code');
+                      const urlParams = new URLSearchParams(window.location.search);
+                      const urlCode = urlParams.get('ref');
+                      const code = validatedAffiliate?.code || affiliateCode || storedCode || urlCode || null;
+                      if (code) {
+                        console.log('🇲🇿 Código de afiliado para Moçambique:', code);
+                      }
+                      return code;
+                    })()}
                     affiliateCommission={validatedAffiliate?.commission_amount || null}
                     cohortId={cohortId}
                     t={(key: string) => key}

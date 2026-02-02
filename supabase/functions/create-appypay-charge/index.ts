@@ -487,6 +487,12 @@ Deno.serve(async (req) => {
         ? String(checkoutOrderData.affiliate_code).trim()
         : null;
 
+      logStep('🔍 Affiliate code received from frontend', {
+        affiliate_code: resolvedAffiliateCode,
+        affiliate_commission_from_frontend: checkoutOrderData?.affiliate_commission,
+        productId
+      });
+
       let resolvedAffiliateCommission: number | null = null;
       if (checkoutOrderData?.affiliate_commission !== undefined && checkoutOrderData?.affiliate_commission !== null) {
         const parsed = parseFloat(String(checkoutOrderData.affiliate_commission));
