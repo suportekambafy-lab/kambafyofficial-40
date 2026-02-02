@@ -193,7 +193,7 @@ const Checkout = () => {
     file: File;
     bank: string;
   } | null>(null);
-  const [expressCountdownTime, setExpressCountdownTime] = useState(90);
+  const [expressCountdownTime, setExpressCountdownTime] = useState(60);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Verificar se é um upsell de outro pedido
@@ -266,7 +266,7 @@ const Checkout = () => {
       // Iniciar countdown
       // Multicaixa Express expira em 15 minutos no backend (create-appypay-charge)
       // então o countdown do checkout deve refletir isso para evitar “timeout” prematuro.
-      setExpressCountdownTime(15 * 60);
+      setExpressCountdownTime(60);
       const interval = setInterval(() => {
         setExpressCountdownTime(prevTime => {
           if (prevTime <= 1) {
@@ -276,11 +276,6 @@ const Checkout = () => {
             return 0;
           }
 
-          // Atualizar elemento do DOM se existir
-          const timerElement = document.getElementById('countdown-timer');
-          if (timerElement) {
-            timerElement.textContent = (prevTime - 1).toString();
-          }
           return prevTime - 1;
         });
       }, 1000);
@@ -291,13 +286,7 @@ const Checkout = () => {
         clearInterval(countdownIntervalRef.current);
         countdownIntervalRef.current = null;
       }
-      setExpressCountdownTime(15 * 60);
-
-      // Resetar elemento do DOM
-      const timerElement = document.getElementById('countdown-timer');
-      if (timerElement) {
-        timerElement.textContent = String(15 * 60);
-      }
+      setExpressCountdownTime(60);
     }
 
     // Cleanup ao desmontar componente
@@ -2339,7 +2328,7 @@ const Checkout = () => {
         
         // Start polling for payment status
         let pollAttempts = 0;
-        const maxPollAttempts = 45; // Poll for up to 90 seconds (45 * 2 seconds)
+        const maxPollAttempts = 30; // Poll for up to 60 seconds (30 * 2 seconds)
         
         const pollInterval = setInterval(async () => {
           pollAttempts++;
@@ -3093,12 +3082,12 @@ const Checkout = () => {
                                 cx="100" 
                                 cy="100" 
                                 r="90" 
-                                stroke={expressCountdownTime > 60 ? '#22c55e' : expressCountdownTime > 30 ? '#f59e0b' : expressCountdownTime > 15 ? '#f97316' : '#ef4444'} 
+                                stroke={expressCountdownTime > 40 ? '#22c55e' : expressCountdownTime > 20 ? '#f59e0b' : expressCountdownTime > 10 ? '#f97316' : '#ef4444'} 
                                 strokeWidth="12" 
                                 fill="transparent" 
                                 strokeLinecap="round" 
                                 strokeDasharray={565.48} 
-                                strokeDashoffset={565.48 - (565.48 * (90 - expressCountdownTime) / 90)} 
+                                strokeDashoffset={565.48 - (565.48 * (60 - expressCountdownTime) / 60)}
                                 style={{
                                   transition: 'stroke-dashoffset 1s linear, stroke 0.3s ease'
                                 }} 
