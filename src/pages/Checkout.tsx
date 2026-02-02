@@ -1882,45 +1882,29 @@ const Checkout = () => {
       const orderId = Math.random().toString(36).substr(2, 9).toUpperCase();
       const totalAmount = finalProductPrice + totalOrderBumpPrice;
 
-      // Calcular comissões se houver afiliado
-      let affiliate_commission = null;
-      let seller_commission = null;
-      if (hasAffiliate && affiliateCode) {
-        console.log('🔍 Calculando comissões para afiliado:', affiliateCode);
-
-        // Buscar informações do afiliado
-        const {
-          data: affiliate,
-          error: affiliateError
-        } = await supabase.from('affiliates').select('commission_rate').eq('affiliate_code', affiliateCode).eq('product_id', product.id).eq('status', 'ativo').maybeSingle();
-        console.log('🔍 Dados do afiliado:', {
-          affiliate,
-          affiliateError
+      // 🔥 CORREÇÃO: Usar validatedAffiliate ao invés de recalcular
+      // O validatedAffiliate já foi validado e calculado nos useEffects anteriores
+      let affiliate_commission: number | null = null;
+      let seller_commission: number | null = null;
+      let affiliate_code_to_use: string | null = null;
+      
+      if (validatedAffiliate?.code && validatedAffiliate?.commission_rate) {
+        console.log('🔍 Usando afiliado validado:', validatedAffiliate);
+        
+        // Recalcular comissão com o totalAmount atual para garantir precisão
+        affiliate_commission = Math.round(totalAmount * validatedAffiliate.commission_rate * 100) / 100;
+        seller_commission = Math.round((totalAmount - affiliate_commission) * 100) / 100;
+        affiliate_code_to_use = validatedAffiliate.code;
+        
+        console.log('💰 Comissões para Express/Reference:', {
+          totalAmount,
+          commission_rate: validatedAffiliate.commission_rate,
+          affiliate_commission,
+          seller_commission,
+          affiliate_code: affiliate_code_to_use
         });
-        if (affiliate && !affiliateError) {
-          console.log('✅ Afiliado válido encontrado:', affiliate);
-          markAsValidAffiliate();
-          const commission_rate = affiliate.commission_rate;
-          const commission_decimal = parseFloat(commission_rate.replace('%', '')) / 100;
-          affiliate_commission = Math.round(totalAmount * commission_decimal * 100) / 100; // Arredondar para 2 casas
-          seller_commission = Math.round((totalAmount - affiliate_commission) * 100) / 100;
-          console.log('💰 Comissões calculadas:', {
-            totalAmount,
-            commission_rate,
-            commission_decimal,
-            affiliate_commission,
-            seller_commission
-          });
-        } else {
-          console.log('❌ Nenhum afiliado válido encontrado para o código:', affiliateCode, affiliateError);
-          markAsInvalidAffiliate();
-          seller_commission = totalAmount;
-          // Limpar código de afiliado inválido e código da session
-          clearAffiliateCode();
-          affiliate_commission = null;
-        }
       } else {
-        console.log('ℹ️ Sem afiliado, vendedor recebe tudo');
+        console.log('ℹ️ Sem afiliado validado, vendedor recebe tudo');
         seller_commission = totalAmount;
       }
 
@@ -1949,7 +1933,7 @@ const Checkout = () => {
         // Angola payment methods should start as pending
         user_id: null,
         // Always null for checkout page orders (guest orders)
-        affiliate_code: affiliate_commission ? affiliateCode : null,
+        affiliate_code: affiliate_code_to_use,
         affiliate_commission: affiliate_commission_kz,
         seller_commission: seller_commission_kz,
         cohort_id: cohortId, // Adicionar cohort_id
