@@ -20,7 +20,7 @@ import { getPaymentMethodsByCountry } from "@/utils/paymentMethods";
 import { getPaymentMethodImage } from "@/utils/paymentMethodImages";
 import { SEO } from "@/components/SEO";
 import { setProductSEO } from "@/utils/seoUtils";
-import { useAffiliateTracking } from "@/hooks/useAffiliateTracking";
+import { useAffiliateTracking, getAffiliateCodeFromAllSources } from "@/hooks/useAffiliateTracking";
 import { logger } from "@/utils/productionLogger";
 import { getSubscriptionIntervalText } from "@/utils/priceFormatting";
 import { useCheckoutPresence } from "@/hooks/useCheckoutPresence";
@@ -705,8 +705,13 @@ const Checkout = () => {
         message: "O pagamento foi recusado ou cancelado. Por favor, tente novamente.",
         variant: "error"
       });
-      // Limpar parâmetros de erro da URL
-      window.history.replaceState({}, document.title, window.location.pathname);
+      // Limpar parâmetros de erro da URL - MAS PRESERVAR ref e UTMs
+      const cleanParams = new URLSearchParams(window.location.search);
+      cleanParams.delete('error');
+      const newUrl = cleanParams.toString() 
+        ? `${window.location.pathname}?${cleanParams.toString()}`
+        : window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
     }
 
     // Verificar se o usuário foi redirecionado de volta do Klarna
@@ -762,8 +767,13 @@ const Checkout = () => {
         return;
       } else if (redirectStatus === 'failed') {
         console.log('❌ Klarna payment failed or cancelled, staying on checkout');
-        // Limpar os parâmetros da URL mas permanecer no checkout
-        window.history.replaceState({}, document.title, window.location.pathname);
+        // Limpar os parâmetros da URL mas PRESERVAR ref e UTMs
+        const cleanParams = new URLSearchParams(window.location.search);
+        ['error', 'payment_return', 'redirect_status', 'order_id', 'payment_intent_id', 'amount', 'currency'].forEach(p => cleanParams.delete(p));
+        const newUrl = cleanParams.toString() 
+          ? `${window.location.pathname}?${cleanParams.toString()}`
+          : window.location.pathname;
+        window.history.replaceState({}, document.title, newUrl);
         toast({
           title: "Pagamento cancelado",
           message: "O pagamento foi cancelado. Você pode tentar novamente.",
@@ -783,12 +793,18 @@ const Checkout = () => {
         }).then(({ data, error }) => {
           if (error) {
             console.error('Error checking payment status:', error);
+            // Limpar parâmetros da URL mas PRESERVAR ref e UTMs
+            const cleanParams = new URLSearchParams(window.location.search);
+            ['error', 'payment_return', 'redirect_status', 'order_id', 'payment_intent_id', 'amount', 'currency'].forEach(p => cleanParams.delete(p));
+            const newUrl = cleanParams.toString() 
+              ? `${window.location.pathname}?${cleanParams.toString()}`
+              : window.location.pathname;
+            window.history.replaceState({}, document.title, newUrl);
             toast({
               title: "Erro",
               message: "Não foi possível verificar o status do pagamento.",
               variant: "error"
             });
-            window.history.replaceState({}, document.title, window.location.pathname);
             return;
           }
           
@@ -811,7 +827,12 @@ const Checkout = () => {
           } else if (data?.status === 'canceled' || data?.status === 'requires_payment_method') {
             // Pagamento foi recusado/cancelado
             console.log('❌ MB Way payment was rejected/canceled');
-            window.history.replaceState({}, document.title, window.location.pathname);
+            const cleanParams2 = new URLSearchParams(window.location.search);
+            ['error', 'payment_return', 'redirect_status', 'order_id', 'payment_intent_id', 'amount', 'currency'].forEach(p => cleanParams2.delete(p));
+            const newUrl2 = cleanParams2.toString() 
+              ? `${window.location.pathname}?${cleanParams2.toString()}`
+              : window.location.pathname;
+            window.history.replaceState({}, document.title, newUrl2);
             toast({
               title: "Pagamento recusado",
               message: "O pagamento MB Way foi recusado ou cancelado. Por favor, tente novamente.",
@@ -820,7 +841,12 @@ const Checkout = () => {
           } else if (data?.status === 'requires_action' || data?.status === 'processing') {
             // Pagamento ainda pendente de confirmação
             console.log('⏳ MB Way payment still pending');
-            window.history.replaceState({}, document.title, window.location.pathname);
+            const cleanParams3 = new URLSearchParams(window.location.search);
+            ['error', 'payment_return', 'redirect_status', 'order_id', 'payment_intent_id', 'amount', 'currency'].forEach(p => cleanParams3.delete(p));
+            const newUrl3 = cleanParams3.toString() 
+              ? `${window.location.pathname}?${cleanParams3.toString()}`
+              : window.location.pathname;
+            window.history.replaceState({}, document.title, newUrl3);
             toast({
               title: "Aguardando confirmação",
               message: "Por favor, confirme o pagamento na aplicação MB Way do seu telemóvel.",
@@ -830,7 +856,12 @@ const Checkout = () => {
         });
       } else {
         // Sem payment intent id, mostrar erro
-        window.history.replaceState({}, document.title, window.location.pathname);
+        const cleanParams4 = new URLSearchParams(window.location.search);
+        ['error', 'payment_return', 'redirect_status', 'order_id', 'payment_intent_id', 'amount', 'currency'].forEach(p => cleanParams4.delete(p));
+        const newUrl4 = cleanParams4.toString() 
+          ? `${window.location.pathname}?${cleanParams4.toString()}`
+          : window.location.pathname;
+        window.history.replaceState({}, document.title, newUrl4);
         toast({
           title: "Pagamento recusado",
           message: "O pagamento foi recusado. Por favor, tente novamente.",
@@ -1527,15 +1558,17 @@ const Checkout = () => {
         // Continuar mesmo se falhar o hash - não bloquear o checkout
       }
 
-      // Calcular comissões se houver afiliado
+      // Calcular comissões se houver afiliado - usar função consolidada
       let affiliate_commission = null;
       let seller_commission = null;
-      if (hasAffiliate && affiliateCode) {
-        console.log('🔍 Calculando comissões para afiliado:', affiliateCode);
+      const bankTransferAffiliateCode = getAffiliateCodeFromAllSources() || affiliateCode;
+      
+      if (bankTransferAffiliateCode) {
+        console.log('🔍 Calculando comissões para afiliado (transferência):', bankTransferAffiliateCode);
         const {
           data: affiliate,
           error: affiliateError
-        } = await supabase.from('affiliates').select('commission_rate').eq('affiliate_code', affiliateCode).eq('product_id', product.id).eq('status', 'ativo').maybeSingle();
+        } = await supabase.from('affiliates').select('commission_rate').eq('affiliate_code', bankTransferAffiliateCode).eq('product_id', product.id).eq('status', 'ativo').maybeSingle();
         if (affiliate && !affiliateError) {
           console.log('✅ Afiliado válido encontrado:', affiliate);
           markAsValidAffiliate();
@@ -1545,12 +1578,11 @@ const Checkout = () => {
           // Aplicar taxa de 8.99% no valor restante após comissão do afiliado
           seller_commission = Math.round((totalAmount - affiliate_commission) * 0.9101 * 100) / 100;
         } else {
-          console.log('❌ Nenhum afiliado válido encontrado para o código:', affiliateCode, affiliateError);
+          console.log('❌ Nenhum afiliado válido encontrado para o código:', bankTransferAffiliateCode, affiliateError);
           markAsInvalidAffiliate();
           // Aplicar taxa de 8.99% mesmo quando não há afiliado válido
           seller_commission = Math.round(totalAmount * 0.9101 * 100) / 100;
-          // Limpar código de afiliado inválido e código da session
-          clearAffiliateCode();
+          // NÃO limpar o código aqui - deixar o backend fazer a validação final
           affiliate_commission = null;
         }
       } else {
@@ -1580,7 +1612,7 @@ const Checkout = () => {
         payment_method: 'transfer',
         status: 'pending',
         user_id: null,
-        affiliate_code: affiliate_commission ? affiliateCode : null,
+        affiliate_code: bankTransferAffiliateCode || null,
         affiliate_commission: affiliate_commission_kz,
         seller_commission: seller_commission_kz,
         order_bump_data: orderBump ? JSON.stringify({
@@ -1878,35 +1910,34 @@ const Checkout = () => {
       let seller_commission: number | null = null;
       let affiliate_code_to_use: string | null = null;
 
-      // ✅ SEMPRE capturar o código de afiliado de TODAS as fontes possíveis.
-      // Prioridade: 1) hook affiliateCode, 2) localStorage, 3) URL atual
+      // ✅ SEMPRE capturar o código de afiliado de TODAS as fontes possíveis usando a função consolidada.
+      // Prioridade: 1) URL, 2) Cookie cross-subdomain, 3) window.name, 4) localStorage, 5) hook state
       // O backend (create-appypay-charge) fará a validação final.
-      const storedAffiliateCode = localStorage.getItem('affiliate_code');
-      const urlParams = new URLSearchParams(window.location.search);
-      const urlAffiliateCode = urlParams.get('ref');
-      
-      affiliate_code_to_use = affiliateCode || storedAffiliateCode || urlAffiliateCode || null;
+      affiliate_code_to_use = getAffiliateCodeFromAllSources() || affiliateCode || null;
       
       if (affiliate_code_to_use) {
         console.log('🔗 Código de afiliado capturado para envio ao backend:', {
-          source: affiliateCode ? 'hook' : (storedAffiliateCode ? 'localStorage' : 'URL'),
-          code: affiliate_code_to_use
+          code: affiliate_code_to_use,
+          hookValue: affiliateCode,
+          fromConsolidatedFunction: true
         });
+      } else {
+        console.log('⚠️ Nenhum código de afiliado encontrado em nenhuma fonte');
       }
 
-      const validateAffiliateOnDemand = async (): Promise<number | null> => {
-        if (!hasAffiliate || !affiliateCode || !product?.id) return null;
+      const validateAffiliateOnDemand = async (codeToValidate: string | null): Promise<number | null> => {
+        if (!codeToValidate || !product?.id) return null;
 
         // Se o estado já está validado e bate com o código atual, reaproveitar
-        if (validatedAffiliate?.code === affiliateCode && validatedAffiliate?.commission_rate) {
+        if (validatedAffiliate?.code === codeToValidate && validatedAffiliate?.commission_rate) {
           return validatedAffiliate.commission_rate;
         }
 
-        console.log('🔍 Fallback: validando afiliado no momento da compra:', affiliateCode);
+        console.log('🔍 Fallback: validando afiliado no momento da compra:', codeToValidate);
         const { data: affiliate, error: affiliateError } = await supabase
           .from('affiliates')
           .select('commission_rate')
-          .eq('affiliate_code', affiliateCode)
+          .eq('affiliate_code', codeToValidate)
           .eq('product_id', product.id)
           .eq('status', 'ativo')
           .maybeSingle();
@@ -1919,9 +1950,9 @@ const Checkout = () => {
         return null;
       };
 
-      const affiliateRate = await validateAffiliateOnDemand();
+      const affiliateRate = await validateAffiliateOnDemand(affiliate_code_to_use);
 
-      if (affiliateRate && hasAffiliate && affiliateCode) {
+      if (affiliateRate && affiliate_code_to_use) {
         // (Opcional) cálculo local apenas para logs/UI; o backend é a fonte de verdade.
         affiliate_commission = Math.round(totalAmount * affiliateRate * 100) / 100;
         seller_commission = Math.round((totalAmount - affiliate_commission) * 100) / 100;
