@@ -475,7 +475,32 @@ Deno.serve(async (req) => {
     if (!skipOrderSave) {
       // AppyPay is Angola only - 8.99% platform fee
       const grossAmount = parseFloat(originalAmount?.toString() || amount.toString());
-      const sellerCommission = grossAmount * 0.9101; // 8.99% platform fee (Angola)
+      
+      // 🔥 CORREÇÃO: Respeitar seller_commission do frontend se houver afiliado
+      // O frontend já calcula: seller_commission = totalAmount - affiliate_commission
+      // Aqui aplicamos a taxa da plataforma (8.99%) sobre o valor do vendedor
+      const ANGOLA_PLATFORM_FEE = 0.0899;
+      let sellerCommission: number;
+      
+      if (checkoutOrderData?.affiliate_code && checkoutOrderData?.affiliate_commission) {
+        // Se há afiliado, usar seller_commission já calculado e aplicar taxa
+        const sellerGross = parseFloat(checkoutOrderData.seller_commission?.toString() || '0');
+        sellerCommission = Math.round(sellerGross * (1 - ANGOLA_PLATFORM_FEE) * 100) / 100;
+        console.log('💰 Venda com afiliado detectada:', {
+          affiliate_code: checkoutOrderData.affiliate_code,
+          affiliate_commission: checkoutOrderData.affiliate_commission,
+          seller_gross: sellerGross,
+          seller_net: sellerCommission,
+          platform_fee: ANGOLA_PLATFORM_FEE
+        });
+      } else {
+        // Venda direta: vendedor recebe 91.01%
+        sellerCommission = Math.round(grossAmount * 0.9101 * 100) / 100;
+        console.log('💰 Venda direta (sem afiliado):', {
+          gross: grossAmount,
+          seller_net: sellerCommission
+        });
+      }
       
       // Calcular expires_at baseado no método de pagamento
       let expiresAt = null;
@@ -509,7 +534,10 @@ Deno.serve(async (req) => {
         stripe_session_id: null, // AppyPay doesn't use Stripe
         status: orderStatus,
         amount: grossAmount.toString(), // Garantir que amount está correto
-        seller_commission: sellerCommission, // SOBRESCREVER com desconto de 8%
+        seller_commission: sellerCommission, // Já corrigido acima para respeitar afiliado
+        // 🔥 PRESERVAR dados do afiliado do frontend
+        affiliate_code: checkoutOrderData.affiliate_code || null,
+        affiliate_commission: checkoutOrderData.affiliate_commission || null,
         expires_at: expiresAt,
         customer_country: customerCountry || checkoutOrderData.customer_country || null,
         user_id: sellerUserId // Garantir que user_id é o vendedor

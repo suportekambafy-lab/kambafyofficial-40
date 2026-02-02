@@ -222,8 +222,31 @@ serve(async (req) => {
     }
 
     // SISLOG is Mozambique only - 9.99% platform fee (seller gets 90.01%)
+    const MOZAMBIQUE_PLATFORM_FEE = 0.0999;
     const MOZAMBIQUE_SELLER_RATE = 0.9001; // 90.01% after 9.99% platform fee
-    const sellerCommission = Math.round(amount * MOZAMBIQUE_SELLER_RATE * 100) / 100;
+    let sellerCommission: number;
+    
+    // 🔥 CORREÇÃO: Respeitar affiliate_commission se houver afiliado
+    if (orderData?.affiliate_code && orderData?.affiliate_commission) {
+      // Se há afiliado, o seller recebe: (amount - affiliate_commission) * (1 - platform_fee)
+      const affiliateCommission = parseFloat(orderData.affiliate_commission.toString());
+      const sellerGross = amount - affiliateCommission;
+      sellerCommission = Math.round(sellerGross * MOZAMBIQUE_SELLER_RATE * 100) / 100;
+      console.log('💰 Venda com afiliado (SISLOG):', {
+        affiliate_code: orderData.affiliate_code,
+        affiliate_commission: affiliateCommission,
+        seller_gross: sellerGross,
+        seller_net: sellerCommission,
+        platform_fee: MOZAMBIQUE_PLATFORM_FEE
+      });
+    } else {
+      // Venda direta: vendedor recebe 90.01%
+      sellerCommission = Math.round(amount * MOZAMBIQUE_SELLER_RATE * 100) / 100;
+      console.log('💰 Venda direta SISLOG (sem afiliado):', {
+        amount,
+        seller_net: sellerCommission
+      });
+    }
 
     // Create order in database
     const orderToInsert = {
