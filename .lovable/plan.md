@@ -1,174 +1,119 @@
 
-# Plano: Corrigir Facebook Pixel Purchase e UTMify para Moçambique
+# Plano: Corrigir Registro de Vendas de Afiliados
 
 ## Resumo do Problema
 
-Os eventos de conversão (Purchase) não estão sendo enviados corretamente para o Facebook Pixel e UTMify quando pagamentos são confirmados via **SISLOG** (M-Pesa e e-Mola em Moçambique).
+Vendas de afiliados não estão sendo registradas corretamente. O código de afiliado não está sendo salvo nas ordens, especialmente para pagamentos de Moçambique (M-Pesa/e-Mola).
 
 ---
 
 ## Problemas Identificados
 
-### 1. UTMify não está sendo chamado nas funções SISLOG
-
-| Função | Facebook CAPI | UTMify |
-|--------|--------------|--------|
-| `sislog-webhook` | ✅ Envia | ❌ **Não envia** |
-| `sislog-callback` | ✅ Envia | ❌ **Não envia** |
-| `check-sislog-payments` (cron) | ❌ **Não envia** | ❌ **Não envia** |
-
-### 2. Função UTMify não suporta MZN
-
-No arquivo `send-utmify-conversion/index.ts` (linhas 166-180):
-- **Problema**: Só converte `KZ`, `EUR` e `USD`. Para `MZN`, assume que o valor já está em USD.
-- **Impacto**: Uma venda de 1.000 MT é enviada como $1.000 USD (deveria ser ~$15.60 USD)
-
-### 3. Métodos de pagamento MZ não mapeados
+### 1. Checkout.tsx - Moçambique (linhas 3074-3075)
 
 ```typescript
-// Atual (não inclui mpesa/emola)
-const paymentMethodMap = {
-  'express': 'pix',
-  'transfer': 'bank_transfer',
-  ...
-};
-// mpesa e emola caem em 'other'
+affiliateCode={affiliateCode}
+affiliateCommission={hasAffiliate ? (totalPrice * 0.1) : null}  // ❌ HARDCODED 10%
 ```
 
-### 4. Função check-sislog-payments não dispara conversões
+**Problema**: A comissão de afiliado está **hardcoded em 10%**, ignorando a taxa real configurada no banco de dados.
 
-Quando o cron job confirma um pagamento pendente, ele:
-- ✅ Atualiza status para `completed`
-- ✅ Cria `customer_access`
-- ✅ Envia e-mail e notificação
-- ❌ **Não envia Facebook CAPI**
-- ❌ **Não envia UTMify**
+### 2. Falta de Validação do Afiliado para Moçambique
+
+Para Angola (`handlePurchase`, linhas 1825-1858), há validação:
+```typescript
+const { data: affiliate } = await supabase
+  .from('affiliates')
+  .select('commission_rate')
+  .eq('affiliate_code', affiliateCode)
+  .eq('product_id', product.id)
+  .eq('status', 'ativo')
+  .maybeSingle();
+```
+
+Para Moçambique, essa validação **não existe**. O código é passado diretamente sem verificar se é válido.
+
+### 3. Consequência
+
+Se o código de afiliado não for validado antes, e a comissão for `null`, a ordem é salva **sem o código de afiliado**, resultando em venda direta ao invés de venda de afiliado.
 
 ---
 
 ## Solução Proposta
 
-### Passo 1: Atualizar `send-utmify-conversion`
+### Passo 1: Adicionar Estado para Afiliado Validado
 
-Adicionar suporte para MZN e mapear métodos M-Pesa/e-Mola:
+Adicionar estados no `Checkout.tsx` para armazenar dados do afiliado validado:
 
 ```typescript
-// Taxa de câmbio MZN para USD
-const MZN_TO_USD_RATE = 64; // 1 USD ≈ 64 MZN
-
-// Na conversão de moeda:
-if (orderData.currency?.toUpperCase() === 'MZN') {
-  const amountInUSD = amount / MZN_TO_USD_RATE;
-  amountInCents = Math.round(amountInUSD * 100);
-  console.log(`💱 Conversão: ${amount} MZN → $${(amountInCents / 100).toFixed(2)} USD`);
-}
-
-// No mapeamento de métodos:
-const paymentMethodMap = {
-  ...
-  'mpesa': 'pix',      // M-Pesa → PIX
-  'emola': 'pix',      // e-Mola → PIX
-  'card_mz': 'credit_card'
-};
+const [validatedAffiliate, setValidatedAffiliate] = useState<{
+  code: string;
+  commission_rate: number;
+  commission_amount: number;
+} | null>(null);
 ```
 
-### Passo 2: Adicionar UTMify ao `sislog-webhook`
+### Passo 2: Validar Afiliado ao Carregar Produto
 
-Após a linha 298 (depois do envio do Facebook), adicionar:
+Quando o produto carregar e houver `affiliateCode`, validar imediatamente:
 
 ```typescript
-// 📊 ENVIAR CONVERSÃO PARA UTMIFY
-try {
-  console.log('📊 Sending UTMify conversion...');
-  
-  const utmifyPayload = {
-    orderId: order.order_id,
-    orderUuid: order.id,
-    amount: parseFloat(order.amount),
-    currency: 'MZN',
-    customerName: order.customer_name,
-    customerEmail: order.customer_email,
-    customerPhone: order.customer_phone,
-    customerCountry: 'Mozambique',
-    productId: order.product_id,
-    productName: product.name,
-    paymentMethod: provider?.toLowerCase() || order.payment_method,
-    utmParams: order.utm_data || {},
-    orderBumpData: order.order_bump_data
+useEffect(() => {
+  const validateAffiliate = async () => {
+    if (!affiliateCode || !product?.id) return;
+    
+    const { data: affiliate } = await supabase
+      .from('affiliates')
+      .select('commission_rate, affiliate_user_id')
+      .eq('affiliate_code', affiliateCode)
+      .eq('product_id', product.id)
+      .eq('status', 'ativo')
+      .maybeSingle();
+    
+    if (affiliate) {
+      const rate = parseFloat(affiliate.commission_rate.replace('%', '')) / 100;
+      const commissionAmount = Math.round(totalPrice * rate * 100) / 100;
+      
+      setValidatedAffiliate({
+        code: affiliateCode,
+        commission_rate: rate,
+        commission_amount: commissionAmount
+      });
+      markAsValidAffiliate();
+    } else {
+      setValidatedAffiliate(null);
+      markAsInvalidAffiliate();
+      // NÃO limpar código aqui - só limpar após tentativa de pagamento
+    }
   };
   
-  const { data: utmResult, error: utmError } = await supabaseAdmin.functions.invoke('send-utmify-conversion', {
-    body: utmifyPayload
-  });
-  
-  if (utmError) {
-    console.error('❌ UTMify error:', utmError);
-  } else {
-    console.log('✅ UTMify conversion sent:', utmResult);
-  }
-} catch (utmifyError) {
-  console.error('❌ UTMify process error:', utmifyError);
-}
+  validateAffiliate();
+}, [affiliateCode, product?.id, totalPrice]);
 ```
 
-### Passo 3: Adicionar UTMify ao `sislog-callback`
+### Passo 3: Passar Dados Validados para MozambiquePaymentForm
 
-Mesmo bloco de código adicionado após o envio do Facebook (após linha 306).
-
-### Passo 4: Adicionar conversões ao `check-sislog-payments`
-
-Dentro do bloco `if (isPaid)` (após linha 270), adicionar:
+Alterar linhas 3074-3075:
 
 ```typescript
-// Enviar Facebook CAPI
-try {
-  const eventId = `sislog_check_${order.order_id}_${Date.now()}`;
-  const nameParts = (order.customer_name || '').trim().split(' ');
-  
-  await supabaseAdmin.functions.invoke('send-facebook-conversion', {
-    body: {
-      productId: order.product_id,
-      userId: order.products?.user_id,
-      eventId: eventId,
-      eventName: 'Purchase',
-      value: parseFloat(order.amount),
-      currency: 'MZN',
-      orderId: order.order_id,
-      customer: {
-        email: order.customer_email,
-        phone: order.customer_phone || '',
-        firstName: nameParts[0] || '',
-        lastName: nameParts.slice(1).join(' ') || ''
-      }
-    }
-  });
-  console.log('✅ Facebook conversion sent');
-} catch (fbErr) {
-  console.error('⚠️ Facebook conversion error:', fbErr);
-}
+affiliateCode={validatedAffiliate?.code || null}
+affiliateCommission={validatedAffiliate?.commission_amount || null}
+```
 
-// Enviar UTMify
-try {
-  await supabaseAdmin.functions.invoke('send-utmify-conversion', {
-    body: {
-      orderId: order.order_id,
-      orderUuid: order.id,
-      amount: parseFloat(order.amount),
-      currency: 'MZN',
-      customerName: order.customer_name,
-      customerEmail: order.customer_email,
-      customerPhone: order.customer_phone,
-      customerCountry: 'Mozambique',
-      productId: order.product_id,
-      productName: order.products?.name,
-      paymentMethod: order.payment_method,
-      utmParams: order.utm_data || {}
-    }
-  });
-  console.log('✅ UTMify conversion sent');
-} catch (utmErr) {
-  console.error('⚠️ UTMify error:', utmErr);
-}
+### Passo 4: Recalcular Comissão Quando Preço Mudar
+
+A comissão deve ser recalculada quando o preço total mudar (ex: order bump adicionado):
+
+```typescript
+useEffect(() => {
+  if (validatedAffiliate && totalPrice > 0) {
+    const newCommission = Math.round(totalPrice * validatedAffiliate.commission_rate * 100) / 100;
+    setValidatedAffiliate(prev => prev ? {
+      ...prev,
+      commission_amount: newCommission
+    } : null);
+  }
+}, [totalPrice, validatedAffiliate?.commission_rate]);
 ```
 
 ---
@@ -177,33 +122,54 @@ try {
 
 | Arquivo | Alteração |
 |---------|-----------|
-| `supabase/functions/send-utmify-conversion/index.ts` | Adicionar taxa MZN e mapear mpesa/emola |
-| `supabase/functions/sislog-webhook/index.ts` | Adicionar chamada UTMify após Facebook |
-| `supabase/functions/sislog-callback/index.ts` | Adicionar chamada UTMify após Facebook |
-| `supabase/functions/check-sislog-payments/index.ts` | Adicionar FB CAPI + UTMify quando pago |
+| `src/pages/Checkout.tsx` | Adicionar validação de afiliado e estados |
+
+---
+
+## Fluxo Corrigido
+
+```text
+1. Usuário acessa checkout com ?ref=CODIGO
+   ↓
+2. Hook useAffiliateTracking captura código
+   ↓
+3. Produto carrega
+   ↓
+4. ✅ NOVO: Validar afiliado no banco (status='ativo', product_id)
+   ↓
+5. Se válido: armazenar código + taxa + comissão calculada
+   ↓
+6. Passar dados validados para MozambiquePaymentForm
+   ↓
+7. create-sislog-payment recebe affiliate_code e affiliate_commission corretos
+   ↓
+8. Trigger create_balance_transaction_on_sale processa comissão
+```
 
 ---
 
 ## Resultado Esperado
 
-Após implementação:
-1. ✅ Vendas via M-Pesa/e-Mola enviarão evento **Purchase** ao Facebook
-2. ✅ Vendas via M-Pesa/e-Mola enviarão conversão ao **UTMify**
-3. ✅ Valores em MZN serão convertidos corretamente para USD
-4. ✅ O cron job também disparará conversões para pagamentos confirmados posteriormente
+1. ✅ Código de afiliado será validado antes de qualquer pagamento
+2. ✅ Comissão será calculada com a taxa real do afiliado
+3. ✅ Vendas de Moçambique registrarão corretamente o afiliado
+4. ✅ Trigger do banco processará a comissão corretamente
 
 ---
 
 ## Detalhes Técnicos
 
-### Taxa de Conversão MZN
-```
-1 USD ≈ 64 MZN (taxa aproximada)
-```
+### Tabela `affiliates` - Colunas Relevantes
+- `affiliate_code`: Código único do afiliado
+- `product_id`: Produto ao qual é afiliado
+- `status`: 'ativo', 'pendente', 'recusado', etc.
+- `commission_rate`: Taxa de comissão (ex: '90%', '50%')
+- `affiliate_user_id`: ID do usuário afiliado
 
-### Mapeamento de Métodos para UTMify
-| Kambafy | UTMify |
-|---------|--------|
-| mpesa | pix |
-| emola | pix |
-| card_mz | credit_card |
+### Exemplo de Cálculo
+```
+Preço: 500 MT
+Taxa afiliado: 30%
+Comissão afiliado: 500 × 0.30 = 150 MT
+Vendedor recebe: 500 × 0.9001 - 150 = 300.05 MT (após taxa plataforma)
+```
