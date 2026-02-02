@@ -325,10 +325,10 @@ const handler = async (req: Request): Promise<Response> => {
       return null;
     };
     
-    // 🔥 CRITICAL: Retry up to 50 times (25 seconds) for orders table
-    // This handles the race condition where webhook arrives before create-appypay-charge saves the order
-    const maxOrderLookupAttempts = 50;
-    const orderRetryDelayMs = 500;
+    // 🔥 OPTIMIZED: Retry up to 5 times (1 second total) for orders table
+    // Webhook should find order quickly - order is saved before AppyPay responds
+    const maxOrderLookupAttempts = 5;
+    const orderRetryDelayMs = 200;
     
     for (let attempt = 1; attempt <= maxOrderLookupAttempts && (!orders || orders.length === 0); attempt++) {
       orders = await lookupOrderOnce();
@@ -395,10 +395,9 @@ const handler = async (req: Request): Promise<Response> => {
         return null;
       };
 
-      // O webhook "express" pode chegar vários segundos antes do insert em external_payments.
-      // Mantemos uma janela maior para evitar ficar preso em "pending".
-      const maxLookupAttempts = 25;
-      const retryDelayMs = 1000;
+      // 🔥 OPTIMIZED: Retry up to 5 times (1 second total)
+      const maxLookupAttempts = 5;
+      const retryDelayMs = 200;
 
       for (let attempt = 1; attempt <= maxLookupAttempts && !externalPayment; attempt++) {
         externalPayment = await lookupExternalPaymentOnce();

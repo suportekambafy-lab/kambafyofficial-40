@@ -193,7 +193,7 @@ const Checkout = () => {
     file: File;
     bank: string;
   } | null>(null);
-  const [expressCountdownTime, setExpressCountdownTime] = useState(60);
+  const [expressCountdownTime, setExpressCountdownTime] = useState(90);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Verificar se é um upsell de outro pedido
@@ -2339,7 +2339,7 @@ const Checkout = () => {
         
         // Start polling for payment status
         let pollAttempts = 0;
-        const maxPollAttempts = 18; // Poll for up to 90 seconds (18 * 5 seconds)
+        const maxPollAttempts = 45; // Poll for up to 90 seconds (45 * 2 seconds)
         
         const pollInterval = setInterval(async () => {
           pollAttempts++;
@@ -2434,7 +2434,7 @@ const Checkout = () => {
           } catch (pollError) {
             console.error('💥 Polling error:', pollError);
           }
-        }, 5000); // Poll every 5 seconds
+        }, 2000); // Poll every 2 seconds for faster feedback
         
         setProcessing(false);
       } else if (selectedPayment === 'reference' || selectedPayment === 'transfer') {
@@ -3093,7 +3093,7 @@ const Checkout = () => {
                                 cx="100" 
                                 cy="100" 
                                 r="90" 
-                                stroke={expressCountdownTime > 60 ? '#22c55e' : expressCountdownTime > 30 ? '#f59e0b' : expressCountdownTime > 10 ? '#f97316' : '#ef4444'} 
+                                stroke={expressCountdownTime > 60 ? '#22c55e' : expressCountdownTime > 30 ? '#f59e0b' : expressCountdownTime > 15 ? '#f97316' : '#ef4444'} 
                                 strokeWidth="12" 
                                 fill="transparent" 
                                 strokeLinecap="round" 
