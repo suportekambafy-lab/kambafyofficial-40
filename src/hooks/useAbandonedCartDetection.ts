@@ -123,18 +123,12 @@ export const useAbandonedCartDetection = (
     try {
       console.log('🛒 Marking abandoned purchases as recovered for:', data.customerEmail);
       
-      // Update all abandoned purchases for this email/product as recovered
-      const { error } = await supabase
-        .from('abandoned_purchases')
-        .update({
-          status: 'recovered',
-          recovered_at: new Date().toISOString(),
-          recovered_order_id: orderId,
-          updated_at: new Date().toISOString()
-        })
-        .eq('product_id', data.productId)
-        .eq('customer_email', data.customerEmail)
-        .eq('status', 'abandoned');
+      // Use RPC function to bypass RLS safely
+      const { error } = await supabase.rpc('mark_abandoned_purchase_recovered', {
+        p_customer_email: data.customerEmail,
+        p_product_id: data.productId,
+        p_recovered_order_id: orderId
+      });
 
       if (error) {
         console.error('Error marking as recovered:', error);

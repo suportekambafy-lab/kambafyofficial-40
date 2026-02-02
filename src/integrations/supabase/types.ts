@@ -6287,6 +6287,14 @@ export type Database = {
         }
         Returns: undefined
       }
+      mark_abandoned_purchase_recovered: {
+        Args: {
+          p_customer_email: string
+          p_product_id: string
+          p_recovered_order_id: string
+        }
+        Returns: boolean
+      }
       process_coproducer_commissions:
         | {
             Args: {
