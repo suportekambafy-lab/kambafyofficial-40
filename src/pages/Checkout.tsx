@@ -147,6 +147,10 @@ const Checkout = () => {
   const [cohort, setCohort] = useState<any>(null);
   const [cohortLoading, setCohortLoading] = useState(false);
   
+  // State para oferta específica
+  const [offerId, setOfferId] = useState<string | null>(null);
+  const [selectedOffer, setSelectedOffer] = useState<any>(null);
+  
   // Coupon state
   const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
   const [couponDiscount, setCouponDiscount] = useState(0);
@@ -212,6 +216,7 @@ const Checkout = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const upsellFrom = urlParams.get('upsell_from');
     const cohortParam = urlParams.get('cohort');
+    const offerParam = urlParams.get('offer');
     
     if (upsellFrom) {
       setUpsellFromOrder(upsellFrom);
@@ -221,6 +226,11 @@ const Checkout = () => {
     if (cohortParam) {
       setCohortId(cohortParam);
       console.log('🎓 Detectado cohort_id:', cohortParam);
+    }
+    
+    if (offerParam) {
+      setOfferId(offerParam);
+      console.log('🏷️ Detectado offer_id:', offerParam);
     }
 
     // Capturar UTM params
@@ -308,9 +318,30 @@ const Checkout = () => {
     }
   }, [convertPrice, userCountry]);
 
-  // Calcular o valor total usando preços finais (considerando personalizados e turmas)
+  // Calcular o valor total usando preços finais (considerando ofertas, turmas e personalizados)
   const getProductFinalPrice = useCallback(() => {
     if (!product) return 0;
+    
+    // 🏷️ PRIORIDADE 1: Se houver oferta selecionada via ?offer=, usar esse preço
+    if (selectedOffer && selectedOffer.price > 0) {
+      console.log('🏷️ Usando preço da oferta:', selectedOffer.price, selectedOffer.currency);
+      
+      // Se a moeda da oferta for diferente da moeda do país, pode precisar converter
+      if (userCountry && selectedOffer.currency !== userCountry.currency) {
+        // Mapeamento de moeda para código KZ-like
+        const currencyToKZ: Record<string, boolean> = { 'AOA': true, 'KZ': true };
+        if (currencyToKZ[selectedOffer.currency]) {
+          const converted = getConvertedPrice(selectedOffer.price);
+          console.log('🔄 Convertendo oferta de', selectedOffer.currency, 'para', userCountry.currency, ':', converted);
+          return converted;
+        }
+        // Oferta em outra moeda, usar direto
+        console.log('✅ Usando preço da oferta direto:', selectedOffer.price);
+        return selectedOffer.price;
+      }
+      
+      return selectedOffer.price;
+    }
     
     // Se houver turma com preço personalizado, usar esse preço
     if (cohort && cohort.price && cohort.price.trim() !== '' && cohort.product_id === product.id) {
@@ -353,7 +384,7 @@ const Checkout = () => {
       return parseFloat(product.custom_prices[userCountry.code]);
     }
     return getConvertedPrice(productPriceKZ);
-  }, [product, originalPriceKZ, userCountry, getConvertedPrice, cohort]);
+  }, [product, originalPriceKZ, userCountry, getConvertedPrice, cohort, selectedOffer]);
   const totalAmountForDetection = useMemo(() => product ? getProductFinalPrice() + totalOrderBumpPrice : 0, [product, getProductFinalPrice, totalOrderBumpPrice]);
 
   // State para controlar se o pagamento foi completado
@@ -884,6 +915,41 @@ const Checkout = () => {
     
     loadCohort();
   }, [cohortId, product?.member_area_id, toast]);
+  
+  // Carregar oferta específica (APENAS se houver offerId na URL)
+  useEffect(() => {
+    if (!offerId || !product?.id) return;
+    
+    const loadOffer = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('product_offers')
+          .select('*')
+          .eq('id', offerId)
+          .eq('product_id', product.id)
+          .eq('is_active', true)
+          .maybeSingle();
+        
+        if (error) {
+          console.error('❌ Erro ao carregar oferta:', error);
+        } else if (data) {
+          setSelectedOffer(data);
+          console.log('✅ Oferta carregada com sucesso:', {
+            id: data.id,
+            name: data.name,
+            price: data.price,
+            currency: data.currency
+          });
+        } else {
+          console.log('⚠️ Oferta não encontrada ou inativa:', offerId);
+        }
+      } catch (error) {
+        console.error('❌ Erro ao carregar oferta:', error);
+      }
+    };
+    
+    loadOffer();
+  }, [offerId, product?.id]);
   
   // Buscar vendas do produto específico
   useEffect(() => {

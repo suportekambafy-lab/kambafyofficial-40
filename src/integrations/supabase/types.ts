@@ -3425,6 +3425,50 @@ export type Database = {
         }
         Relationships: []
       }
+      product_offers: {
+        Row: {
+          created_at: string
+          currency: string
+          id: string
+          is_active: boolean
+          name: string
+          price: number
+          product_id: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          price: number
+          product_id: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          price?: number
+          product_id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_offers_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           access_duration_description: string | null
@@ -3450,6 +3494,7 @@ export type Database = {
           custom_prices: Json | null
           description: string | null
           fantasy_name: string | null
+          has_multiple_offers: boolean | null
           id: string
           image_alt: string | null
           impersonation_session_id: string | null
@@ -3503,6 +3548,7 @@ export type Database = {
           custom_prices?: Json | null
           description?: string | null
           fantasy_name?: string | null
+          has_multiple_offers?: boolean | null
           id?: string
           image_alt?: string | null
           impersonation_session_id?: string | null
@@ -3556,6 +3602,7 @@ export type Database = {
           custom_prices?: Json | null
           description?: string | null
           fantasy_name?: string | null
+          has_multiple_offers?: boolean | null
           id?: string
           image_alt?: string | null
           impersonation_session_id?: string | null
