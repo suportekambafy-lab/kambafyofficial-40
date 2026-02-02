@@ -17,6 +17,7 @@ import { getAllPaymentMethods, PaymentMethod } from "@/utils/paymentMethods";
 import SubscriptionConfig from "./product-form/SubscriptionConfig";
 import { usePreferredCurrency } from "@/hooks/usePreferredCurrency";
 import { CoproducerTab } from "@/components/coproducers";
+import { ProductOffersManager } from "./product-form/ProductOffersManager";
 
 interface StepperProductFormProps {
   editingProduct?: any;
@@ -46,6 +47,7 @@ interface FormData {
   accessDurationType: string;
   accessDurationValue: number | null;
   accessDurationDescription: string;
+  hasMultipleOffers: boolean;
   subscriptionConfig?: {
     is_subscription: boolean;
     product_type?: 'course' | 'software';
@@ -170,6 +172,7 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
     accessDurationType: "lifetime",
     accessDurationValue: null,
     accessDurationDescription: "",
+    hasMultipleOffers: false,
     subscriptionConfig: {
       is_subscription: isSubscription,
       product_type: subscriptionType,
@@ -238,6 +241,7 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
         accessDurationType: editingProduct.access_duration_type || "lifetime",
         accessDurationValue: editingProduct.access_duration_value || null,
         accessDurationDescription: editingProduct.access_duration_description || "",
+        hasMultipleOffers: editingProduct.has_multiple_offers || false,
         subscriptionConfig: editingProduct.subscription_config || {
           is_subscription: editIsSubscription,
           product_type: editSubscriptionType,
@@ -437,6 +441,7 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
         access_duration_value: formData.accessDurationValue,
         access_duration_description: formData.accessDurationDescription || null,
         subscription_config: subscriptionConfigWithStripe?.is_subscription ? subscriptionConfigWithStripe : null,
+        has_multiple_offers: formData.hasMultipleOffers,
         user_id: user?.id,
         // ✅ Manter status "Ativo" se produto já foi aprovado, senão usar "Pendente"
         status: (editingProduct && editingProduct.admin_approved) ? 'Ativo' : 'Pendente'
@@ -493,6 +498,7 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
         access_duration_value: formData.accessDurationValue,
         access_duration_description: formData.accessDurationDescription || null,
         subscription_config: formData.subscriptionConfig?.is_subscription ? formData.subscriptionConfig : null,
+        has_multiple_offers: formData.hasMultipleOffers,
         user_id: user?.id,
         status: 'Rascunho'
       };
@@ -721,6 +727,20 @@ export default function StepperProductForm({ editingProduct, onSuccess, onCancel
                 customPrices={formData.customPrices}
                 onCustomPricesChange={(prices) => setFormData({ ...formData, customPrices: prices })}
               />
+
+              {/* Múltiplas Ofertas - só exibir quando editando produto existente */}
+              {editingProduct?.id && (
+                <div className="mt-6 pt-6 border-t">
+                  <ProductOffersManager
+                    productId={editingProduct.id}
+                    productSlug={editingProduct.slug || editingProduct.id}
+                    baseCurrency={userBaseCurrency || 'AOA'}
+                    basePrice={formData.price}
+                    hasMultipleOffers={formData.hasMultipleOffers}
+                    onToggleMultipleOffers={(enabled) => setFormData({ ...formData, hasMultipleOffers: enabled })}
+                  />
+                </div>
+              )}
             </>
           )}
 
