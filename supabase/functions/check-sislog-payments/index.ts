@@ -269,6 +269,57 @@ Deno.serve(async (req) => {
             console.error(`⚠️ Error sending push notification:`, pushErr);
           }
 
+          // 📊 Enviar conversão Facebook CAPI
+          try {
+            const eventId = `sislog_check_${order.order_id}_${Date.now()}`;
+            const nameParts = (order.customer_name || '').trim().split(' ');
+            
+            await supabaseAdmin.functions.invoke('send-facebook-conversion', {
+              body: {
+                productId: order.product_id,
+                userId: order.products?.user_id,
+                eventId: eventId,
+                eventName: 'Purchase',
+                value: parseFloat(order.amount),
+                currency: 'MZN',
+                orderId: order.order_id,
+                customer: {
+                  email: order.customer_email,
+                  phone: order.customer_phone || '',
+                  firstName: nameParts[0] || '',
+                  lastName: nameParts.slice(1).join(' ') || ''
+                },
+                eventSourceUrl: `https://kambafy.com/checkout/${order.product_id}`
+              }
+            });
+            console.log(`✅ Facebook conversion sent for ${order.order_id}`);
+          } catch (fbErr) {
+            console.error(`⚠️ Facebook conversion error:`, fbErr);
+          }
+
+          // 📊 Enviar conversão UTMify
+          try {
+            await supabaseAdmin.functions.invoke('send-utmify-conversion', {
+              body: {
+                orderId: order.order_id,
+                orderUuid: order.id,
+                amount: parseFloat(order.amount),
+                currency: 'MZN',
+                customerName: order.customer_name,
+                customerEmail: order.customer_email,
+                customerPhone: order.customer_phone,
+                customerCountry: 'Mozambique',
+                productId: order.product_id,
+                productName: order.products?.name || 'Produto',
+                paymentMethod: order.payment_method,
+                utmParams: order.utm_data || {}
+              }
+            });
+            console.log(`✅ UTMify conversion sent for ${order.order_id}`);
+          } catch (utmErr) {
+            console.error(`⚠️ UTMify error:`, utmErr);
+          }
+
           results.push({
             order_id: order.order_id,
             transaction_id: transactionId,
