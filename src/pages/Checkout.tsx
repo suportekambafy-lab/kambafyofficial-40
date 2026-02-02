@@ -1882,26 +1882,51 @@ const Checkout = () => {
       const orderId = Math.random().toString(36).substr(2, 9).toUpperCase();
       const totalAmount = finalProductPrice + totalOrderBumpPrice;
 
-      // 🔥 CORREÇÃO: Usar validatedAffiliate ao invés de recalcular
-      // O validatedAffiliate já foi validado e calculado nos useEffects anteriores
+      // ✅ Afiliado (Express/Reference): usar validatedAffiliate quando disponível,
+      // mas fazer fallback de validação no momento da compra para não perder o código
+      // caso o useEffect ainda não tenha finalizado.
       let affiliate_commission: number | null = null;
       let seller_commission: number | null = null;
       let affiliate_code_to_use: string | null = null;
-      
-      if (validatedAffiliate?.code && validatedAffiliate?.commission_rate) {
-        console.log('🔍 Usando afiliado validado:', validatedAffiliate);
-        
-        // Recalcular comissão com o totalAmount atual para garantir precisão
-        affiliate_commission = Math.round(totalAmount * validatedAffiliate.commission_rate * 100) / 100;
+
+      const validateAffiliateOnDemand = async (): Promise<number | null> => {
+        if (!hasAffiliate || !affiliateCode || !product?.id) return null;
+
+        // Se o estado já está validado e bate com o código atual, reaproveitar
+        if (validatedAffiliate?.code === affiliateCode && validatedAffiliate?.commission_rate) {
+          return validatedAffiliate.commission_rate;
+        }
+
+        console.log('🔍 Fallback: validando afiliado no momento da compra:', affiliateCode);
+        const { data: affiliate, error: affiliateError } = await supabase
+          .from('affiliates')
+          .select('commission_rate')
+          .eq('affiliate_code', affiliateCode)
+          .eq('product_id', product.id)
+          .eq('status', 'ativo')
+          .maybeSingle();
+
+        if (affiliate && !affiliateError) {
+          const rate = parseFloat(affiliate.commission_rate.replace('%', '')) / 100;
+          return Number.isFinite(rate) ? rate : null;
+        }
+
+        return null;
+      };
+
+      const affiliateRate = await validateAffiliateOnDemand();
+
+      if (affiliateRate && hasAffiliate && affiliateCode) {
+        affiliate_code_to_use = affiliateCode;
+        affiliate_commission = Math.round(totalAmount * affiliateRate * 100) / 100;
         seller_commission = Math.round((totalAmount - affiliate_commission) * 100) / 100;
-        affiliate_code_to_use = validatedAffiliate.code;
-        
+
         console.log('💰 Comissões para Express/Reference:', {
           totalAmount,
-          commission_rate: validatedAffiliate.commission_rate,
+          commission_rate: affiliateRate,
           affiliate_commission,
           seller_commission,
-          affiliate_code: affiliate_code_to_use
+          affiliate_code: affiliate_code_to_use,
         });
       } else {
         console.log('ℹ️ Sem afiliado validado, vendedor recebe tudo');
@@ -1910,8 +1935,12 @@ const Checkout = () => {
 
       // Converter valores para KZ para vendedores angolanos
       const totalAmountInKZ = userCountry.currency !== 'KZ' ? Math.round(totalAmount * userCountry.exchangeRate) : totalAmount;
-      const affiliate_commission_kz = affiliate_commission ? userCountry.currency !== 'KZ' ? Math.round(affiliate_commission * userCountry.exchangeRate) : affiliate_commission : null;
-      const seller_commission_kz = seller_commission ? userCountry.currency !== 'KZ' ? Math.round(seller_commission * userCountry.exchangeRate) : seller_commission : null;
+      const affiliate_commission_kz = affiliate_commission !== null && !Number.isNaN(affiliate_commission)
+        ? (userCountry.currency !== 'KZ' ? Math.round(affiliate_commission * userCountry.exchangeRate) : affiliate_commission)
+        : null;
+      const seller_commission_kz = seller_commission !== null && !Number.isNaN(seller_commission)
+        ? (userCountry.currency !== 'KZ' ? Math.round(seller_commission * userCountry.exchangeRate) : seller_commission)
+        : null;
       console.log('💱 Conversão de moeda:', {
         originalAmount: totalAmount,
         originalCurrency: userCountry.currency,
