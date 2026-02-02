@@ -476,19 +476,78 @@ Deno.serve(async (req) => {
       // AppyPay is Angola only - 8.99% platform fee
       const grossAmount = parseFloat(originalAmount?.toString() || amount.toString());
       
-      // 🔥 CORREÇÃO: Respeitar seller_commission do frontend se houver afiliado
-      // O frontend já calcula: seller_commission = totalAmount - affiliate_commission
-      // Aqui aplicamos a taxa da plataforma (8.99%) sobre o valor do vendedor
       const ANGOLA_PLATFORM_FEE = 0.0899;
       let sellerCommission: number;
+
+      // ✅ Afiliados: sempre validar/normalizar no backend.
+      // Motivo: o checkout (cliente) pode não conseguir validar por RLS/timing.
+      // Regra: se houver affiliate_code válido e ativo para o produto, calcular affiliate_commission
+      // e então calcular sellerCommission sobre (gross - affiliateCommission).
+      let resolvedAffiliateCode: string | null = checkoutOrderData?.affiliate_code
+        ? String(checkoutOrderData.affiliate_code).trim()
+        : null;
+
+      let resolvedAffiliateCommission: number | null = null;
+      if (checkoutOrderData?.affiliate_commission !== undefined && checkoutOrderData?.affiliate_commission !== null) {
+        const parsed = parseFloat(String(checkoutOrderData.affiliate_commission));
+        resolvedAffiliateCommission = Number.isFinite(parsed) ? parsed : null;
+      }
+
+      if (resolvedAffiliateCode && productId) {
+        const { data: affiliateRow, error: affiliateError } = await supabase
+          .from('affiliates')
+          .select('commission_rate')
+          .eq('affiliate_code', resolvedAffiliateCode)
+          .eq('product_id', productId)
+          .eq('status', 'ativo')
+          .maybeSingle();
+
+        if (affiliateError || !affiliateRow) {
+          logStep('Affiliate code invalid/inactive - ignoring', {
+            affiliate_code: resolvedAffiliateCode,
+            productId,
+            error: affiliateError?.message
+          });
+          resolvedAffiliateCode = null;
+          resolvedAffiliateCommission = null;
+        } else {
+          // Se o frontend não calculou a comissão, calcular aqui
+          const needsCommissionCalculation =
+            resolvedAffiliateCommission === null ||
+            !Number.isFinite(resolvedAffiliateCommission) ||
+            resolvedAffiliateCommission <= 0;
+
+          if (needsCommissionCalculation) {
+            const rateStr = String(affiliateRow.commission_rate ?? '').replace('%', '').trim();
+            const rate = parseFloat(rateStr) / 100;
+
+            if (!Number.isFinite(rate) || rate <= 0 || rate > 1) {
+              logStep('Invalid affiliate commission_rate - ignoring affiliate', {
+                affiliate_code: resolvedAffiliateCode,
+                commission_rate: affiliateRow.commission_rate
+              });
+              resolvedAffiliateCode = null;
+              resolvedAffiliateCommission = null;
+            } else {
+              resolvedAffiliateCommission = Math.round(grossAmount * rate * 100) / 100;
+              logStep('Affiliate commission calculated in backend', {
+                affiliate_code: resolvedAffiliateCode,
+                rate,
+                grossAmount,
+                affiliate_commission: resolvedAffiliateCommission
+              });
+            }
+          }
+        }
+      }
       
-      if (checkoutOrderData?.affiliate_code && checkoutOrderData?.affiliate_commission) {
-        // Se há afiliado, usar seller_commission já calculado e aplicar taxa
-        const sellerGross = parseFloat(checkoutOrderData.seller_commission?.toString() || '0');
+      if (resolvedAffiliateCode && resolvedAffiliateCommission !== null && Number.isFinite(resolvedAffiliateCommission) && resolvedAffiliateCommission > 0) {
+        // Se há afiliado válido, o vendedor recebe (gross - affiliate) e então aplica taxa da plataforma
+        const sellerGross = Math.max(0, grossAmount - resolvedAffiliateCommission);
         sellerCommission = Math.round(sellerGross * (1 - ANGOLA_PLATFORM_FEE) * 100) / 100;
         console.log('💰 Venda com afiliado detectada:', {
-          affiliate_code: checkoutOrderData.affiliate_code,
-          affiliate_commission: checkoutOrderData.affiliate_commission,
+          affiliate_code: resolvedAffiliateCode,
+          affiliate_commission: resolvedAffiliateCommission,
           seller_gross: sellerGross,
           seller_net: sellerCommission,
           platform_fee: ANGOLA_PLATFORM_FEE
@@ -536,8 +595,8 @@ Deno.serve(async (req) => {
         amount: grossAmount.toString(), // Garantir que amount está correto
         seller_commission: sellerCommission, // Já corrigido acima para respeitar afiliado
         // 🔥 PRESERVAR dados do afiliado do frontend
-        affiliate_code: checkoutOrderData.affiliate_code || null,
-        affiliate_commission: checkoutOrderData.affiliate_commission || null,
+        affiliate_code: resolvedAffiliateCode,
+        affiliate_commission: resolvedAffiliateCommission,
         expires_at: expiresAt,
         customer_country: customerCountry || checkoutOrderData.customer_country || null,
         user_id: sellerUserId // Garantir que user_id é o vendedor
