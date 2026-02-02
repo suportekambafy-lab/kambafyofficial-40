@@ -264,7 +264,9 @@ const Checkout = () => {
   useEffect(() => {
     if (selectedPayment === 'express' && processing) {
       // Iniciar countdown
-      setExpressCountdownTime(90);
+      // Multicaixa Express expira em 15 minutos no backend (create-appypay-charge)
+      // então o countdown do checkout deve refletir isso para evitar “timeout” prematuro.
+      setExpressCountdownTime(15 * 60);
       const interval = setInterval(() => {
         setExpressCountdownTime(prevTime => {
           if (prevTime <= 1) {
@@ -289,12 +291,12 @@ const Checkout = () => {
         clearInterval(countdownIntervalRef.current);
         countdownIntervalRef.current = null;
       }
-      setExpressCountdownTime(90);
+      setExpressCountdownTime(15 * 60);
 
       // Resetar elemento do DOM
       const timerElement = document.getElementById('countdown-timer');
       if (timerElement) {
-        timerElement.textContent = '90';
+        timerElement.textContent = String(15 * 60);
       }
     }
 
@@ -1859,22 +1861,9 @@ const Checkout = () => {
       }
     }
 
-    // Para pagamento express, iniciar countdown
-    if (selectedPayment === 'express') {
-      // Iniciar countdown de 60 segundos
-      let timeLeft = 90;
-      const timer = setInterval(() => {
-        timeLeft--;
-        const timerElement = document.getElementById('countdown-timer');
-        if (timerElement) {
-          timerElement.textContent = timeLeft.toString();
-        }
-        if (timeLeft <= 0) {
-          clearInterval(timer);
-          handleExpressPaymentTimeout();
-        }
-      }, 1000);
-    }
+    // ⚠️ IMPORTANTE: não iniciar countdown aqui.
+    // O countdown oficial já é controlado pelo useEffect (selectedPayment + processing)
+    // e é limpo corretamente quando o pagamento é confirmado.
     setProcessing(true);
     try {
       console.log('Starting purchase process for product:', product);
@@ -1888,6 +1877,13 @@ const Checkout = () => {
       let affiliate_commission: number | null = null;
       let seller_commission: number | null = null;
       let affiliate_code_to_use: string | null = null;
+
+      // ✅ Sempre preservar o código se ele existir (mesmo que a validação no frontend falhe).
+      // A validação/cálculo final passa a ser garantida no backend (create-appypay-charge)
+      // para evitar problemas de RLS / timing.
+      if (hasAffiliate && affiliateCode) {
+        affiliate_code_to_use = affiliateCode;
+      }
 
       const validateAffiliateOnDemand = async (): Promise<number | null> => {
         if (!hasAffiliate || !affiliateCode || !product?.id) return null;
@@ -1917,7 +1913,7 @@ const Checkout = () => {
       const affiliateRate = await validateAffiliateOnDemand();
 
       if (affiliateRate && hasAffiliate && affiliateCode) {
-        affiliate_code_to_use = affiliateCode;
+        // (Opcional) cálculo local apenas para logs/UI; o backend é a fonte de verdade.
         affiliate_commission = Math.round(totalAmount * affiliateRate * 100) / 100;
         seller_commission = Math.round((totalAmount - affiliate_commission) * 100) / 100;
 
@@ -1929,7 +1925,7 @@ const Checkout = () => {
           affiliate_code: affiliate_code_to_use,
         });
       } else {
-        console.log('ℹ️ Sem afiliado validado, vendedor recebe tudo');
+        console.log('ℹ️ Afiliado não validado no frontend (vai depender do backend), vendedor recebe tudo (temporário)');
         seller_commission = totalAmount;
       }
 
