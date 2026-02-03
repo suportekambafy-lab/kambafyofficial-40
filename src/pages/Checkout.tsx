@@ -406,7 +406,7 @@ const Checkout = () => {
     }
   );
 
-  // 🔗 Validar afiliado quando produto carregar (para Moçambique e outros)
+  // 🔗 Validar afiliado quando produto carregar (usando RPC para bypass RLS)
   useEffect(() => {
     const validateAffiliate = async () => {
       if (!affiliateCode || !product?.id) {
@@ -414,19 +414,19 @@ const Checkout = () => {
         return;
       }
       
-      console.log('🔍 Validando afiliado:', affiliateCode, 'para produto:', product.id);
+      console.log('🔍 Validando afiliado via RPC:', affiliateCode, 'para produto:', product.id);
       
-      const { data: affiliate, error } = await supabase
-        .from('affiliates')
-        .select('commission_rate, affiliate_user_id')
-        .eq('affiliate_code', affiliateCode)
-        .eq('product_id', product.id)
-        .eq('status', 'ativo')
-        .maybeSingle();
+      // Usar RPC para validar afiliado - funciona para usuários anônimos
+      const { data: affiliateData, error } = await supabase
+        .rpc('validate_affiliate_for_checkout', {
+          p_affiliate_code: affiliateCode,
+          p_product_id: product.id
+        });
       
-      if (affiliate && !error) {
-        console.log('✅ Afiliado válido encontrado:', affiliate);
-        const rate = parseFloat(affiliate.commission_rate.replace('%', '')) / 100;
+      if (affiliateData && affiliateData.length > 0 && affiliateData[0].is_valid && !error) {
+        const affiliate = affiliateData[0];
+        console.log('✅ Afiliado válido encontrado via RPC:', affiliate);
+        const rate = parseFloat(String(affiliate.commission_rate).replace('%', '')) / 100;
         
         markAsValidAffiliate();
         setValidatedAffiliate({
@@ -435,7 +435,7 @@ const Checkout = () => {
           commission_amount: 0 // Será calculado pelo próximo useEffect
         });
       } else {
-        console.log('❌ Afiliado inválido ou não encontrado:', affiliateCode, error);
+        console.log('❌ Afiliado inválido ou não encontrado via RPC:', affiliateCode, error);
         markAsInvalidAffiliate();
         setValidatedAffiliate(null);
       }

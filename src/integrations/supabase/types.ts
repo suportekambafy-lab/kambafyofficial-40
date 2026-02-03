@@ -6416,6 +6416,14 @@ export type Database = {
           updated: boolean
         }[]
       }
+      validate_affiliate_for_checkout: {
+        Args: { p_affiliate_code: string; p_product_id: string }
+        Returns: {
+          affiliate_name: string
+          commission_rate: number
+          is_valid: boolean
+        }[]
+      }
       verify_admin_jwt: {
         Args: { jwt_token: string }
         Returns: {
