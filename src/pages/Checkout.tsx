@@ -1936,7 +1936,7 @@ const Checkout = () => {
           .select('commission_rate')
           .eq('affiliate_code', codeToValidate)
           .eq('product_id', product.id)
-          .eq('status', 'ativo')
+          .in('status', ['ativo', 'approved']) // Aceitar ambos os status
           .maybeSingle();
 
         if (affiliate && !affiliateError) {
@@ -2083,6 +2083,10 @@ const Checkout = () => {
         insertedOrder = multibancoResponse.data;
         orderError = multibancoResponse.error;
       }
+      // ✅ CRITICAL: Usar o order_id CORRETO retornado pelo AppyPay (reference_number para referências)
+      // Declarar ANTES do if/else para que seja acessível em todo o escopo
+      let finalOrderId = orderId;
+      
       if (orderError || !insertedOrder) {
         console.error('Error saving order:', orderError);
         toast({
@@ -2094,6 +2098,15 @@ const Checkout = () => {
         return;
       } else {
         console.log('Order saved successfully:', insertedOrder);
+        
+        // Atualizar com o order_id correto do AppyPay
+        finalOrderId = insertedOrder?.order_id || orderId;
+        console.log('🔑 Order ID para polling/redirect:', {
+          localOrderId: orderId,
+          appyPayOrderId: insertedOrder?.order_id,
+          finalOrderId
+        });
+        
         try {
           console.log('Updating product sales count...');
           const newSalesCount = (product.sales || 0) + 1;
@@ -2136,7 +2149,7 @@ const Checkout = () => {
               const webhookPayload = {
                 event: 'payment.success',
                 data: {
-                  order_id: orderId,
+                  order_id: finalOrderId,
                   amount: totalAmount.toString(),
                   base_product_price: product.price,
                   currency: userCountry.currency,
@@ -2155,7 +2168,7 @@ const Checkout = () => {
                   } : null
                 },
                 user_id: product.user_id,
-                order_id: orderId,
+                order_id: finalOrderId,
                 product_id: product.id
               };
               const {
@@ -2169,7 +2182,7 @@ const Checkout = () => {
               const productPurchasePayload = {
                 event: 'product.purchased',
                 data: {
-                  order_id: orderId,
+                  order_id: finalOrderId,
                   product_id: product.id,
                   product_name: product.name,
                   customer_email: formData.email,
@@ -2180,7 +2193,7 @@ const Checkout = () => {
                   timestamp: new Date().toISOString()
                 },
                 user_id: product.user_id,
-                order_id: orderId,
+                order_id: finalOrderId,
                 product_id: product.id
               };
               const {
@@ -2213,7 +2226,7 @@ const Checkout = () => {
             customerEmail: formData.email.trim().toLowerCase(),
             customerPhone: formData.phone.trim(),
             productName: product.name,
-            orderId: orderId,
+            orderId: finalOrderId,
             amount: totalAmount.toString(),
             currency: userCountry.currency,
             productId: productId,
@@ -2253,8 +2266,9 @@ const Checkout = () => {
       } else {
         console.log('✅ Payment completed - email will be sent by webhook');
       }
+      
       const params = new URLSearchParams({
-        order_id: orderId,
+        order_id: finalOrderId,
         customer_name: formData.fullName.trim(),
         customer_email: formData.email.trim().toLowerCase(),
         product_name: product.name,
@@ -2273,7 +2287,7 @@ const Checkout = () => {
 
       // Marcar pagamento como completado e abandonos como recuperados
       setPaymentCompleted(true);
-      markAsRecovered(orderId);
+      markAsRecovered(finalOrderId);
       console.log('✅ Venda concluída - abandonos marcados como recuperados');
 
       // ═══════════════════════════════════════════════════════════════
@@ -2302,7 +2316,7 @@ const Checkout = () => {
           window.dispatchEvent(new CustomEvent('purchase-completed', {
             detail: {
               productId,
-              orderId,
+              orderId: finalOrderId,
               amount: totalAmount,
               currency: userCountry.currency
             }
@@ -2312,7 +2326,7 @@ const Checkout = () => {
           supabase.functions.invoke('send-facebook-conversion', {
             body: {
               productId,
-              orderId,
+              orderId: finalOrderId,
               amount: totalAmount,
               currency: userCountry.currency,
               customerEmail: formData.email,
@@ -2330,7 +2344,7 @@ const Checkout = () => {
           if (checkoutSettings?.upsell?.enabled && checkoutSettings.upsell.link_pagina_upsell?.trim()) {
             console.log('🎯 Redirecionando para upsell:', checkoutSettings.upsell.link_pagina_upsell);
             const upsellUrl = new URL(checkoutSettings.upsell.link_pagina_upsell);
-            upsellUrl.searchParams.append('from_order', orderId);
+            upsellUrl.searchParams.append('from_order', finalOrderId);
             upsellUrl.searchParams.append('customer_email', formData.email);
             upsellUrl.searchParams.append('return_url', `${window.location.origin}/obrigado?${params.toString()}`);
             window.location.href = upsellUrl.toString();
@@ -2351,23 +2365,24 @@ const Checkout = () => {
         
         const pollInterval = setInterval(async () => {
           pollAttempts++;
-          console.log(`🔍 Polling attempt ${pollAttempts}/${maxPollAttempts} for order ${orderId}`);
+          console.log(`🔍 Polling attempt ${pollAttempts}/${maxPollAttempts} for order ${finalOrderId}`);
           
           try {
-            const { data: orderStatus, error: pollError } = await supabase
-              .from('orders')
-              .select('status')
-              .eq('order_id', orderId)
-              .single();
+            // ✅ CRITICAL: Usar edge function com service role key em vez de query direta
+            // A query direta falha por RLS (permission denied for table orders)
+            const { data: pollResponse, error: pollError } = await supabase.functions.invoke('check-order-status', {
+              body: { orderId: finalOrderId }
+            });
             
             if (pollError) {
               console.error('❌ Error polling order status:', pollError);
               return;
             }
             
-            console.log('📊 Current order status:', orderStatus?.status);
+            const orderStatus = pollResponse?.order?.status;
+            console.log('📊 Current order status:', orderStatus);
             
-            if (orderStatus?.status === 'completed') {
+            if (orderStatus === 'completed') {
               clearInterval(pollInterval);
               
               // CRÍTICO: Limpar countdown timer para evitar toast de timeout
@@ -2392,7 +2407,7 @@ const Checkout = () => {
               window.dispatchEvent(new CustomEvent('purchase-completed', {
                 detail: {
                   productId,
-                  orderId,
+                  orderId: finalOrderId,
                   amount: totalAmount,
                   currency: userCountry.currency
                 }
@@ -2402,7 +2417,7 @@ const Checkout = () => {
               supabase.functions.invoke('send-facebook-conversion', {
                 body: {
                   productId,
-                  orderId,
+                  orderId: finalOrderId,
                   amount: totalAmount,
                   currency: userCountry.currency,
                   customerEmail: formData.email,
@@ -2420,7 +2435,7 @@ const Checkout = () => {
               if (checkoutSettings?.upsell?.enabled && checkoutSettings.upsell.link_pagina_upsell?.trim()) {
                 console.log('🎯 Pagamento confirmado! Redirecionando para upsell:', checkoutSettings.upsell.link_pagina_upsell);
                 const upsellUrl = new URL(checkoutSettings.upsell.link_pagina_upsell);
-                upsellUrl.searchParams.append('from_order', orderId);
+                upsellUrl.searchParams.append('from_order', finalOrderId);
                 upsellUrl.searchParams.append('customer_email', formData.email);
                 upsellUrl.searchParams.append('return_url', `${window.location.origin}/obrigado?${params.toString()}`);
                 window.location.href = upsellUrl.toString();
@@ -2467,7 +2482,7 @@ const Checkout = () => {
               amount: totalAmountInKZ,
               currency: 'KZ',
               productName: product.name,
-              orderId: orderId
+              orderId: finalOrderId
             });
             setProcessing(false);
           } else {
@@ -2496,7 +2511,7 @@ const Checkout = () => {
         const shouldDispatchPixelEvent = insertedOrder?.status === 'completed';
         
         console.log('📊 Facebook Pixel Purchase Event Check:', {
-          orderId,
+          orderId: finalOrderId,
           paymentStatus: insertedOrder?.status,
           paymentMethod: selectedPayment,
           shouldDispatch: shouldDispatchPixelEvent
@@ -2508,7 +2523,7 @@ const Checkout = () => {
           window.dispatchEvent(new CustomEvent('purchase-completed', {
             detail: {
               productId,
-              orderId,
+              orderId: finalOrderId,
               amount: totalAmount,
               currency: userCountry.currency
             }
@@ -2518,7 +2533,7 @@ const Checkout = () => {
           supabase.functions.invoke('send-facebook-conversion', {
             body: {
               productId,
-              orderId,
+              orderId: finalOrderId,
               amount: totalAmount,
               currency: userCountry.currency,
               customerEmail: formData.email,
@@ -2532,7 +2547,7 @@ const Checkout = () => {
           if (checkoutSettings?.upsell?.enabled && checkoutSettings.upsell.link_pagina_upsell?.trim()) {
             console.log('🎯 Pagamento confirmado! Redirecionando para upsell:', checkoutSettings.upsell.link_pagina_upsell);
             const upsellUrl = new URL(checkoutSettings.upsell.link_pagina_upsell);
-            upsellUrl.searchParams.append('from_order', orderId);
+            upsellUrl.searchParams.append('from_order', finalOrderId);
             upsellUrl.searchParams.append('customer_email', formData.email);
             upsellUrl.searchParams.append('return_url', `${window.location.origin}/obrigado?${params.toString()}`);
             window.location.href = upsellUrl.toString();
