@@ -1554,15 +1554,20 @@ const Checkout = () => {
       
       if (bankTransferAffiliateCode) {
         console.log('🔍 Calculando comissões para afiliado (transferência):', bankTransferAffiliateCode);
-        const {
-          data: affiliate,
-          error: affiliateError
-        } = await supabase.from('affiliates').select('commission_rate').eq('affiliate_code', bankTransferAffiliateCode).eq('product_id', product.id).eq('status', 'ativo').maybeSingle();
-        if (affiliate && !affiliateError) {
-          console.log('✅ Afiliado válido encontrado:', affiliate);
+        // ✅ Usar RPC para funcionar também para compradores anônimos (bypass RLS)
+        const { data: affiliateData, error: affiliateError } = await supabase
+          .rpc('validate_affiliate_for_checkout', {
+            p_affiliate_code: bankTransferAffiliateCode,
+            p_product_id: product.id
+          });
+
+        const affiliate = affiliateData?.[0];
+
+        if (affiliate && affiliate.is_valid && !affiliateError) {
+          console.log('✅ Afiliado válido encontrado (RPC):', affiliate);
           markAsValidAffiliate();
-          const commission_rate = affiliate.commission_rate;
-          const commission_decimal = parseFloat(commission_rate.replace('%', '')) / 100;
+          const commissionRatePercent = Number(affiliate.commission_rate);
+          const commission_decimal = commissionRatePercent / 100;
           affiliate_commission = Math.round(totalAmount * commission_decimal * 100) / 100;
           // Aplicar taxa de 8.99% no valor restante após comissão do afiliado
           seller_commission = Math.round((totalAmount - affiliate_commission) * 0.9101 * 100) / 100;
@@ -1930,17 +1935,17 @@ const Checkout = () => {
           return validatedAffiliate.commission_rate;
         }
 
-        console.log('🔍 Fallback: validando afiliado no momento da compra:', codeToValidate);
-        const { data: affiliate, error: affiliateError } = await supabase
-          .from('affiliates')
-          .select('commission_rate')
-          .eq('affiliate_code', codeToValidate)
-          .eq('product_id', product.id)
-          .in('status', ['ativo', 'approved']) // Aceitar ambos os status
-          .maybeSingle();
+        console.log('🔍 Fallback: validando afiliado via RPC no momento da compra:', codeToValidate);
+        const { data: affiliateData, error: affiliateError } = await supabase
+          .rpc('validate_affiliate_for_checkout', {
+            p_affiliate_code: codeToValidate,
+            p_product_id: product.id
+          });
 
-        if (affiliate && !affiliateError) {
-          const rate = parseFloat(affiliate.commission_rate.replace('%', '')) / 100;
+        const affiliate = affiliateData?.[0];
+
+        if (affiliate && affiliate.is_valid && !affiliateError) {
+          const rate = Number(affiliate.commission_rate) / 100;
           return Number.isFinite(rate) ? rate : null;
         }
 
