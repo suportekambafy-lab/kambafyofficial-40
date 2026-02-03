@@ -547,23 +547,44 @@ Deno.serve(async (req) => {
         }
       }
       
+      // ============================================================
+      // NOVA LÓGICA: Taxa da plataforma sobre valor BRUTO primeiro
+      // ============================================================
+      
+      // 1. Calcular taxa da plataforma sobre o valor TOTAL (bruto)
+      const platformFee = Math.round(grossAmount * ANGOLA_PLATFORM_FEE * 100) / 100;
+      
+      // 2. Valor líquido após taxa da plataforma
+      const netAfterPlatformFee = Math.round((grossAmount - platformFee) * 100) / 100;
+      
+      // 3. Dividir valor líquido entre afiliado e vendedor
       if (resolvedAffiliateCode && resolvedAffiliateCommission !== null && Number.isFinite(resolvedAffiliateCommission) && resolvedAffiliateCommission > 0) {
-        // Se há afiliado válido, o vendedor recebe (gross - affiliate) e então aplica taxa da plataforma
-        const sellerGross = Math.max(0, grossAmount - resolvedAffiliateCommission);
-        sellerCommission = Math.round(sellerGross * (1 - ANGOLA_PLATFORM_FEE) * 100) / 100;
-        console.log('💰 Venda com afiliado detectada:', {
+        // Calcular taxa original do afiliado (baseado no bruto)
+        const affiliateRate = resolvedAffiliateCommission / grossAmount; // Ex: 9/10 = 0.90
+        
+        // Recalcular comissão do afiliado sobre o valor LÍQUIDO (após taxa plataforma)
+        resolvedAffiliateCommission = Math.round(netAfterPlatformFee * affiliateRate * 100) / 100;
+        
+        // Vendedor recebe o restante do valor líquido
+        sellerCommission = Math.round((netAfterPlatformFee - resolvedAffiliateCommission) * 100) / 100;
+        
+        console.log('💰 Venda com afiliado - NOVA LÓGICA:', {
+          gross_amount: grossAmount,
+          platform_fee: platformFee,
+          net_after_platform: netAfterPlatformFee,
           affiliate_code: resolvedAffiliateCode,
-          affiliate_commission: resolvedAffiliateCommission,
-          seller_gross: sellerGross,
-          seller_net: sellerCommission,
-          platform_fee: ANGOLA_PLATFORM_FEE
+          affiliate_rate: affiliateRate,
+          recalculated_affiliate_commission: resolvedAffiliateCommission,
+          seller_commission: sellerCommission
         });
       } else {
-        // Venda direta: vendedor recebe 91.01%
-        sellerCommission = Math.round(grossAmount * 0.9101 * 100) / 100;
-        console.log('💰 Venda direta (sem afiliado):', {
-          gross: grossAmount,
-          seller_net: sellerCommission
+        // Venda direta: vendedor recebe valor líquido completo
+        sellerCommission = netAfterPlatformFee;
+        console.log('💰 Venda direta (sem afiliado) - NOVA LÓGICA:', {
+          gross_amount: grossAmount,
+          platform_fee: platformFee,
+          net_after_platform: netAfterPlatformFee,
+          seller_commission: sellerCommission
         });
       }
       

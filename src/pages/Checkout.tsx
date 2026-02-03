@@ -1950,12 +1950,23 @@ const Checkout = () => {
       const affiliateRate = await validateAffiliateOnDemand(affiliate_code_to_use);
 
       if (affiliateRate && affiliate_code_to_use) {
-        // (Opcional) cálculo local apenas para logs/UI; o backend é a fonte de verdade.
-        affiliate_commission = Math.round(totalAmount * affiliateRate * 100) / 100;
-        seller_commission = Math.round((totalAmount - affiliate_commission) * 100) / 100;
+        // ============================================================
+        // NOVA LÓGICA: Taxa da plataforma sobre valor BRUTO primeiro
+        // ============================================================
+        const PLATFORM_FEE_RATE = 0.0899; // 8.99% para Angola
+        const platformFee = Math.round(totalAmount * PLATFORM_FEE_RATE * 100) / 100;
+        const netAfterPlatformFee = Math.round((totalAmount - platformFee) * 100) / 100;
+        
+        // Comissão do afiliado calculada sobre o valor LÍQUIDO (após taxa)
+        affiliate_commission = Math.round(netAfterPlatformFee * affiliateRate * 100) / 100;
+        
+        // Vendedor recebe o restante do valor líquido
+        seller_commission = Math.round((netAfterPlatformFee - affiliate_commission) * 100) / 100;
 
-        console.log('💰 Comissões para Express/Reference:', {
+        console.log('💰 Comissões para Express/Reference - NOVA LÓGICA:', {
           totalAmount,
+          platform_fee: platformFee,
+          net_after_platform: netAfterPlatformFee,
           commission_rate: affiliateRate,
           affiliate_commission,
           seller_commission,

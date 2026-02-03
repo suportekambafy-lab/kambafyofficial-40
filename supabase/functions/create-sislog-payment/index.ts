@@ -221,30 +221,51 @@ serve(async (req) => {
       );
     }
 
-    // SISLOG is Mozambique only - 9.99% platform fee (seller gets 90.01%)
+    // ============================================================
+    // NOVA LÓGICA: Taxa da plataforma sobre valor BRUTO primeiro
+    // ============================================================
+    // SISLOG is Mozambique only - 9.99% platform fee
     const MOZAMBIQUE_PLATFORM_FEE = 0.0999;
-    const MOZAMBIQUE_SELLER_RATE = 0.9001; // 90.01% after 9.99% platform fee
-    let sellerCommission: number;
     
-    // 🔥 CORREÇÃO: Respeitar affiliate_commission se houver afiliado
+    // 1. Calcular taxa da plataforma sobre o valor TOTAL (bruto)
+    const platformFee = Math.round(amount * MOZAMBIQUE_PLATFORM_FEE * 100) / 100;
+    
+    // 2. Valor líquido após taxa da plataforma
+    const netAfterPlatformFee = Math.round((amount - platformFee) * 100) / 100;
+    
+    let sellerCommission: number;
+    let recalculatedAffiliateCommission: number | null = null;
+    
+    // 3. Dividir valor líquido entre afiliado e vendedor
     if (orderData?.affiliate_code && orderData?.affiliate_commission) {
-      // Se há afiliado, o seller recebe: (amount - affiliate_commission) * (1 - platform_fee)
-      const affiliateCommission = parseFloat(orderData.affiliate_commission.toString());
-      const sellerGross = amount - affiliateCommission;
-      sellerCommission = Math.round(sellerGross * MOZAMBIQUE_SELLER_RATE * 100) / 100;
-      console.log('💰 Venda com afiliado (SISLOG):', {
+      // Calcular taxa original do afiliado (baseado no bruto)
+      const originalAffiliateCommission = parseFloat(orderData.affiliate_commission.toString());
+      const affiliateRate = originalAffiliateCommission / amount; // Ex: 9/10 = 0.90
+      
+      // Recalcular comissão do afiliado sobre o valor LÍQUIDO (após taxa plataforma)
+      recalculatedAffiliateCommission = Math.round(netAfterPlatformFee * affiliateRate * 100) / 100;
+      
+      // Vendedor recebe o restante do valor líquido
+      sellerCommission = Math.round((netAfterPlatformFee - recalculatedAffiliateCommission) * 100) / 100;
+      
+      console.log('💰 Venda com afiliado (SISLOG) - NOVA LÓGICA:', {
+        gross_amount: amount,
+        platform_fee: platformFee,
+        net_after_platform: netAfterPlatformFee,
         affiliate_code: orderData.affiliate_code,
-        affiliate_commission: affiliateCommission,
-        seller_gross: sellerGross,
-        seller_net: sellerCommission,
-        platform_fee: MOZAMBIQUE_PLATFORM_FEE
+        original_affiliate_commission: originalAffiliateCommission,
+        affiliate_rate: affiliateRate,
+        recalculated_affiliate_commission: recalculatedAffiliateCommission,
+        seller_commission: sellerCommission
       });
     } else {
-      // Venda direta: vendedor recebe 90.01%
-      sellerCommission = Math.round(amount * MOZAMBIQUE_SELLER_RATE * 100) / 100;
-      console.log('💰 Venda direta SISLOG (sem afiliado):', {
-        amount,
-        seller_net: sellerCommission
+      // Venda direta: vendedor recebe valor líquido completo
+      sellerCommission = netAfterPlatformFee;
+      console.log('💰 Venda direta SISLOG (sem afiliado) - NOVA LÓGICA:', {
+        gross_amount: amount,
+        platform_fee: platformFee,
+        net_after_platform: netAfterPlatformFee,
+        seller_commission: sellerCommission
       });
     }
 
