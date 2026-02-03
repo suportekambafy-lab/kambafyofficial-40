@@ -508,11 +508,21 @@ export function AppHome() {
 
       // ✅ Combinar vendas próprias + comissões de afiliado + módulos com earning_amount/earning_currency
       const allOrdersForMeta = [
-        // Vendas próprias - usar getActualCurrency
+        // Vendas próprias - PRIORIZAR seller_commission do banco
         ...(ownOrdersMeta.data || []).map((order: any) => {
           const actualCurrency = getActualCurrency(order);
-          const actualAmount = getActualAmount(order);
-          const earning_amount = calculateSellerEarning(actualAmount, actualCurrency);
+          
+          // ✅ PRIORIZAR seller_commission - já inclui dedução de afiliado + taxa plataforma
+          let earning_amount: number;
+          const sellerCommission = parseFloat(order.seller_commission?.toString() || '0');
+          
+          if (sellerCommission > 0) {
+            earning_amount = sellerCommission;
+          } else {
+            const actualAmount = getActualAmount(order);
+            earning_amount = calculateSellerEarning(actualAmount, actualCurrency);
+          }
+          
           return { ...order, earning_amount, earning_currency: actualCurrency, order_type: 'own' };
         }),
         // Comissões de afiliado - sempre KZ

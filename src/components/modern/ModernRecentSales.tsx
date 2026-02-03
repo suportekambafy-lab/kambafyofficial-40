@@ -251,14 +251,21 @@ export function ModernRecentSales() {
 
       // Combinar e formatar vendas
       const allOrders = [
-        // Vendas próprias - usar moeda real baseada no payment_method
+        // Vendas próprias - PRIORIZAR seller_commission do banco
         ...(ownOrders || []).map((order: any) => {
           const isRecovered = recoveredOrderIds.has(order.order_id);
-          
-          // ✅ Usar getActualCurrency para determinar moeda real pelo payment_method
           const actualCurrency = getActualCurrency(order);
-          const actualAmount = getActualAmount(order);
-          const earning_amount = calculateSellerEarning(actualAmount, actualCurrency);
+          
+          // ✅ PRIORIZAR seller_commission do banco - já inclui dedução de afiliado + taxa plataforma
+          let earning_amount: number;
+          const sellerCommission = parseFloat(order.seller_commission?.toString() || '0');
+          
+          if (sellerCommission > 0) {
+            earning_amount = sellerCommission;
+          } else {
+            const actualAmount = getActualAmount(order);
+            earning_amount = calculateSellerEarning(actualAmount, actualCurrency);
+          }
           
           return {
             ...order,

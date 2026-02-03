@@ -231,12 +231,22 @@ export function ModernDashboardHome() {
 
       // Combinar vendas próprias, comissões de afiliado E pagamentos de módulos
       const allOrdersWithEarnings = [
-        // Vendas próprias - usar moeda real baseada no método de pagamento
+        // Vendas próprias - PRIORIZAR seller_commission do banco (já calculado corretamente no backend)
         ...(ownOrders || []).map((order: any) => {
-          // ✅ Usar getActualCurrency para determinar moeda real pelo payment_method
           const actualCurrency = getActualCurrency(order);
-          const actualAmount = getActualAmount(order);
-          const earning_amount = calculateSellerEarning(actualAmount, actualCurrency);
+          
+          // ✅ PRIORIZAR seller_commission do banco - já inclui dedução de afiliado + taxa plataforma
+          let earning_amount: number;
+          const sellerCommission = parseFloat(order.seller_commission?.toString() || '0');
+          
+          if (sellerCommission > 0) {
+            // Usar valor do banco (correto - já calculado no backend)
+            earning_amount = sellerCommission;
+          } else {
+            // Fallback para vendas antigas sem seller_commission
+            const actualAmount = getActualAmount(order);
+            earning_amount = calculateSellerEarning(actualAmount, actualCurrency);
+          }
           
           return {
             ...order,
