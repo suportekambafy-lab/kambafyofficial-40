@@ -735,13 +735,26 @@ serve(async (req) => {
         if (existingOrder) {
           // Order existe - atualizar
           console.log('📝 Order encontrada, atualizando...');
+          // ============================================================
+          // NOVA LÓGICA: Taxa da plataforma sobre valor BRUTO primeiro
+          // ============================================================
+          const INTERNATIONAL_PLATFORM_FEE = 0.0999; // 9.99% para Stripe
+          const platformFeeKZ = Math.round(sellerCommissionInKZ * INTERNATIONAL_PLATFORM_FEE * 100) / 100;
+          const netAfterPlatformFeeKZ = Math.round((sellerCommissionInKZ - platformFeeKZ) * 100) / 100;
+          
+          console.log('💰 Stripe - NOVA LÓGICA:', {
+            gross_amount: sellerCommissionInKZ,
+            platform_fee: platformFeeKZ,
+            net_after_platform: netAfterPlatformFeeKZ
+          });
+          
           const { data: orderData, error: updateError } = await supabase
             .from('orders')
             .update({ 
               status: 'completed',
               updated_at: new Date().toISOString(),
               stripe_payment_intent_id: paymentIntent.id,
-              seller_commission: sellerCommissionInKZ * 0.9101,
+              seller_commission: netAfterPlatformFeeKZ,
               amount: amountInKZ.toString(),
               currency: 'KZ',
               // ✅ SALVAR MOEDA E VALOR ORIGINAIS
@@ -762,6 +775,19 @@ serve(async (req) => {
           // Order NÃO existe - criar nova
           console.log('🆕 Order não encontrada, criando nova...');
           
+          // ============================================================
+          // NOVA LÓGICA: Taxa da plataforma sobre valor BRUTO primeiro
+          // ============================================================
+          const INTERNATIONAL_PLATFORM_FEE_INSERT = 0.0999; // 9.99% para Stripe
+          const platformFeeKZInsert = Math.round(sellerCommissionInKZ * INTERNATIONAL_PLATFORM_FEE_INSERT * 100) / 100;
+          const netAfterPlatformFeeKZInsert = Math.round((sellerCommissionInKZ - platformFeeKZInsert) * 100) / 100;
+          
+          console.log('💰 Stripe INSERT - NOVA LÓGICA:', {
+            gross_amount: sellerCommissionInKZ,
+            platform_fee: platformFeeKZInsert,
+            net_after_platform: netAfterPlatformFeeKZInsert
+          });
+          
           // Usar productData que já foi buscado acima
           const { data: newOrder, error: insertError } = await supabase
             .from('orders')
@@ -777,7 +803,7 @@ serve(async (req) => {
               status: 'completed',
               payment_method: paymentIntent.metadata.paymentMethod || 'card',
               stripe_payment_intent_id: paymentIntent.id,
-              seller_commission: sellerCommissionInKZ * 0.9101,
+              seller_commission: netAfterPlatformFeeKZInsert,
               // ✅ SALVAR MOEDA E VALOR ORIGINAIS
               original_amount: paidAmount,
               original_currency: paidCurrency
