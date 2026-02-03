@@ -1,144 +1,135 @@
 
-Objetivo
-- Garantir que vendas feitas com link de afiliado (ex: `?ref=079DB20D`) sejam registradas com:
-  - `orders.affiliate_code` e `orders.affiliate_commission` preenchidos
-  - histórico do vendedor mostrando o valor líquido dele
-  - histórico do afiliado mostrando a comissão dele
-- Corrigir o “tempo do checkout esgotando” antes de marcar como pago (principalmente no Multicaixa Express).
+# Plano: Corrigir Cálculo de Comissões - Taxa da Plataforma Primeiro
 
-O que já está comprovado (com evidência)
-1) A venda `T0Y4J6FKV` (produto `08483bc7-2929-4214-95c3-d4e2b57d5428`) foi salva como `completed`, porém:
-   - `orders.affiliate_code = NULL`
-   - `orders.affiliate_commission = NULL`
-   - `orders.seller_commission = 9.1` (em KZ)
-   Isso prova que o problema começa antes do trigger: o checkout não está enviando/gravando o `affiliate_code` no pedido.
-2) O afiliado existe e está ativo no banco:
-   - `affiliates.affiliate_code = 079DB20D`
-   - `status = ativo`
-   - `commission_rate = 90%`
-3) Logs do Edge Function `create-appypay-charge` mostram:
-   - “Affiliate code received from frontend” com `affiliate_code: null` para esse `productId`.
-   Ou seja: o backend não está recebendo o código.
-4) Mesmo quando o código vier a chegar corretamente no `orders`, existe um bug potencial no trigger SQL que cria `balance_transactions`:
-   - Ele procura afiliados com `status = 'approved'`, mas no sistema o status é `ativo`.
-   Isso por si só faria a venda ser tratada como “sem afiliado”, mesmo com `affiliate_code` preenchido.
+## Resumo do Problema
 
-Causas-raiz prováveis (2 problemas ao mesmo tempo)
-A) Perda do `ref` no frontend (antes de chamar o Edge Function)
-- Existem trechos no `Checkout.tsx` que executam `window.history.replaceState(..., window.location.pathname)`, removendo todos os query params. Se isso acontecer antes do clique em “Pagar”, o `ref` some da URL.
-- Existe um efeito que valida afiliado e, ao falhar, chama `clearAffiliateCode()`. Isso apaga o código do storage. Se essa validação falhar por timing (produto ainda carregando) ou por qualquer motivo transitório, o código some.
-- `localStorage` não é compartilhado entre subdomínios. Se em algum momento o fluxo pula para `app.kambafy.com` (ex.: login) e depois volta para `pay.kambafy.com`, o código salvo em `localStorage` pode não existir no subdomínio atual.
-Resultado: na hora do pagamento, as três fontes (hook, localStorage, URL) podem estar vazias → o pedido vai com `affiliate_code: null`.
+Atualmente, a taxa da plataforma é calculada sobre o valor **após** descontar a comissão do afiliado. O correto é calcular a taxa da plataforma sobre o valor **total** primeiro, e depois dividir o restante entre vendedor e afiliado.
 
-B) Trigger/registro financeiro não compatível com status “ativo”
-- O trigger `create_balance_transaction_on_sale()` usa `status='approved'`. Isso não bate com `ativo`.
-- Além disso, do jeito que o trigger está escrito, quando o caso “com afiliado” passar a funcionar, a matemática precisa estar coerente com a arquitetura atual (edge functions calculam `seller_commission = (gross - affiliate) * (1 - fee)`), senão corremos o risco de valores errados/negativos.
+### Exemplo com produto de 10 KZ e afiliado com 90%:
 
-Plano de implementação (sequência)
-1) Tornar o “ref” persistente entre subdomínios e entre navegações
-1.1) Atualizar `useAffiliateTracking` para usar um storage cross-subdomain
-- Implementar leitura/escrita em cookie com `domain=.kambafy.com` (ex.: `kambafy_affiliate_code`).
-  - Quando houver `?ref=...` na URL: salvar no cookie e no localStorage do subdomínio atual.
-  - Quando não houver `?ref=...`: tentar recuperar primeiro do cookie (cross-subdomain), depois localStorage.
-- (Opcional complementar) também salvar em `window.name` com prefixo próprio (como fallback adicional), já que `window.name` persiste na mesma aba atravessando subdomínios.
+| Passo | Lógica Atual (ERRADA) | Lógica Nova (CORRETA) |
+|-------|----------------------|----------------------|
+| Valor Bruto | 10.00 KZ | 10.00 KZ |
+| Taxa Plataforma (8.99%) | 0.09 KZ (sobre 1 KZ) | **0.90 KZ** (sobre 10 KZ) |
+| Valor após taxa | - | 9.10 KZ |
+| Afiliado (90%) | 9.00 KZ | **8.19 KZ** (90% de 9.10) |
+| Vendedor | 0.91 KZ | **0.91 KZ** (10% de 9.10) |
 
-1.2) Não apagar automaticamente o afiliado por falhas transitórias
-- No `Checkout.tsx`, revisar o efeito que valida afiliado e hoje chama `clearAffiliateCode()` quando não encontra.
-- Mudar o comportamento para:
-  - “Não validou para este produto agora” → marcar como inválido no estado (para UI), mas não apagar do cookie/localStorage automaticamente.
-  - Só apagar em ações explícitas (ex.: botão “remover código” / limpar manualmente) ou se o usuário entrar com outro `ref`.
+## Alterações Necessárias
 
-1.3) Evitar que rotinas “limpem” a URL removendo `ref`
-- Onde hoje faz `window.history.replaceState(... pathname)`:
-  - Em vez de remover todos os query params, remover apenas os params de retorno/erro do gateway (ex.: `error`, `payment_return`, `redirect_status`, `payment_intent_id`, etc.) e preservar `ref` e UTMs.
-  - Exemplo de estratégia:
-    - `const params = new URLSearchParams(window.location.search); params.delete('error'); params.delete('payment_return'); ...; window.history.replaceState({}, title, pathname + '?' + params.toString());`
-  - Assim o `ref` continua disponível até o clique “Pagar”.
+### 1. Edge Function: AppyPay (Angola)
+**Arquivo:** `supabase/functions/create-appypay-charge/index.ts`
 
-2) Garantir que o checkout sempre envie `affiliate_code` ao backend (mesmo se o hook falhar)
-2.1) Consolidar uma função única “getAffiliateCodeToUse()”
-- Dentro do `Checkout.tsx`, criar uma função helper que resolve o código com prioridade:
-  1) `ref` da URL atual
-  2) cookie `.kambafy.com`
-  3) localStorage do subdomínio atual
-  4) estado do hook `affiliateCode`
-- Usar esse valor:
-  - para preencher `orderData.affiliate_code`
-  - e também para a validação on-demand (não depender de `hasAffiliate && affiliateCode`, porque isso falha quando o hook limpou o estado mas o ref ainda existe em cookie/URL).
+Alterar linhas 550-568:
+```typescript
+// NOVA LÓGICA: Taxa da plataforma sobre valor TOTAL primeiro
+const platformFee = grossAmount * ANGOLA_PLATFORM_FEE;
+const netAfterPlatformFee = grossAmount - platformFee;
 
-2.2) Ajustar `validateAffiliateOnDemand`
-- Hoje ele faz early return se `!hasAffiliate || !affiliateCode`. Isso impede validar quando a fonte é URL/cookie.
-- Mudar para receber o `affiliate_code_to_use` como parâmetro e validar com ele.
+if (resolvedAffiliateCode && resolvedAffiliateCommission !== null && Number.isFinite(resolvedAffiliateCommission) && resolvedAffiliateCommission > 0) {
+  // Recalcular comissão do afiliado sobre valor líquido (após taxa plataforma)
+  const affiliateRate = resolvedAffiliateCommission / grossAmount; // Ex: 9/10 = 0.90
+  resolvedAffiliateCommission = Math.round(netAfterPlatformFee * affiliateRate * 100) / 100;
+  sellerCommission = Math.round((netAfterPlatformFee - resolvedAffiliateCommission) * 100) / 100;
+} else {
+  sellerCommission = Math.round(netAfterPlatformFee * 100) / 100;
+}
+```
 
-2.3) Logs de diagnóstico no frontend
-- No clique “Pagar”, logar (somente em ambiente dev/preview, se houver esse padrão no projeto):
-  - URL atual, `ref` da URL, cookie, localStorage e o valor final enviado para o backend.
-- Isso reduz muito o “não sei onde está perdendo”.
+### 2. Edge Function: SISLOG (Moçambique)
+**Arquivo:** `supabase/functions/create-sislog-payment/index.ts`
 
-3) Corrigir o processamento financeiro (vendedor + afiliado no histórico)
-3.1) Corrigir o trigger SQL para reconhecer afiliado “ativo”
-- Alterar `create_balance_transaction_on_sale()` para buscar afiliado por:
-  - `status IN ('ativo', 'approved')` (compatibilidade com dados antigos), ou diretamente `ativo` se “approved” não for usado.
-- Isso garante que, quando o pedido tiver `affiliate_code`, o trigger crie também a transação `affiliate_commission`.
+Alterar linhas 229-249:
+```typescript
+// NOVA LÓGICA: Taxa da plataforma sobre valor TOTAL primeiro
+const platformFee = amount * MOZAMBIQUE_PLATFORM_FEE;
+const netAfterPlatformFee = amount - platformFee;
 
-3.2) Corrigir a matemática do trigger para bater com a arquitetura atual
-- Regra (alinhada com o que já está no backend/edge functions):
-  - `affiliate_commission = gross * rate` (ou usar `NEW.affiliate_commission` se já veio calculada)
-  - `seller_gross = gross - affiliate_commission`
-  - `platform_fee = seller_gross * fee_rate` (a taxa incide depois de descontar o afiliado)
-  - `seller_net = seller_gross - platform_fee`
-- Inserções em `balance_transactions`:
-  - `platform_fee`: negativo, no `user_id` do vendedor
-  - `sale_revenue`: positivo, no `user_id` do vendedor, valor `seller_net`
-  - `affiliate_commission`: positivo, no `affiliate_user_id`, valor `affiliate_commission`
-- Garantir idempotência (já existe verificação `existing_count`) e consistência com `seller_commission` do pedido:
-  - Se `NEW.seller_commission` estiver preenchida, podemos optar por usar `seller_net = NEW.seller_commission` e derivar `platform_fee = seller_gross - seller_net` para reduzir divergência por arredondamento.
+if (orderData?.affiliate_code && orderData?.affiliate_commission) {
+  const originalAffiliateCommission = parseFloat(orderData.affiliate_commission.toString());
+  const affiliateRate = originalAffiliateCommission / amount;
+  const newAffiliateCommission = Math.round(netAfterPlatformFee * affiliateRate * 100) / 100;
+  sellerCommission = Math.round((netAfterPlatformFee - newAffiliateCommission) * 100) / 100;
+  // Atualizar orderData.affiliate_commission
+} else {
+  sellerCommission = Math.round(netAfterPlatformFee * 100) / 100;
+}
+```
 
-4) Ajustar o comportamento do “tempo esgotando” vs “marcando pago”
-4.1) Confirmar o fluxo real do Express
-- Se o Express só confirma “pago” via webhook/polling, o checkout precisa:
-  - manter o countdown até `expires_at`
-  - mostrar status “Aguardando confirmação”
-  - atualizar imediatamente quando o status mudar para `completed`
+### 3. Database Trigger: Transações Financeiras
+**Nova migração SQL:**
 
-4.2) Atualização de status em tempo real (melhor UX e evita “só marca pago depois”)
-- Implementar um polling leve (ex.: a cada 2–3s por 30–60s, depois espaça) chamando um endpoint já existente (há funções como `check-appypay-status` / `check-order-status` no projeto).
-OU
-- Usar Realtime (subscription) no registro do pedido (se já estiver habilitado e o projeto já usar esse padrão).
-- Assim que detectar `status=completed`, parar countdown e redirecionar/atualizar UI.
+Atualizar a função `create_balance_transaction_on_sale()`:
+```sql
+-- NOVA LÓGICA: Taxa primeiro, depois divisão
+-- 1. Calcular taxa da plataforma sobre valor BRUTO
+platform_fee_amount := ROUND(gross_amount * platform_fee_rate, 2);
+net_after_platform := gross_amount - platform_fee_amount;
 
-5) Testes de validação (critério de aceite)
-5.1) Teste principal (seu caso real)
-- Abrir exatamente:
-  - `https://pay.kambafy.com/checkout/08483bc7-2929-4214-95c3-d4e2b57d5428?ref=079DB20D`
-- Fazer uma compra via Multicaixa Express com email de comprador diferente do email do afiliado (para eliminar qualquer regra de anti-auto-comissão, se existir).
-- Verificar no banco:
-  - `orders.affiliate_code = '079DB20D'`
-  - `orders.affiliate_commission` preenchido
-  - `balance_transactions` tem 3 lançamentos para o mesmo `order_id` (platform_fee, sale_revenue, affiliate_commission)
-- Verificar no UI:
-  - vendedor vê a venda com a percentagem/valor correto
-  - afiliado vê a comissão no histórico
+-- 2. Calcular comissões sobre valor LÍQUIDO (após taxa)
+IF affiliate_record IS NOT NULL THEN
+  affiliate_rate := COALESCE(affiliate_commission_amount / gross_amount, 0);
+  affiliate_commission_amount := ROUND(net_after_platform * affiliate_rate, 2);
+  seller_final_amount := net_after_platform - affiliate_commission_amount;
+ELSE
+  seller_final_amount := net_after_platform;
+END IF;
+```
 
-5.2) Teste de robustez: fluxo com login no meio
-- Abrir checkout com `?ref=...`
-- Navegar para login (`/auth`) e voltar para checkout
-- Confirmar que o `affiliate_code` ainda é recuperado via cookie cross-subdomain.
+### 4. Edge Function: Stripe Webhook
+**Arquivo:** `supabase/functions/stripe-webhook/index.ts`
 
-Arquivos que serão alterados (quando você aprovar)
-- `src/hooks/useAffiliateTracking.ts` (persistência em cookie + não depender só de localStorage)
-- `src/pages/Checkout.tsx`
-  - não apagar `ref` ao limpar URL
-  - não chamar `clearAffiliateCode()` automaticamente em validação falha transitória
-  - validar afiliado usando `affiliate_code_to_use` (URL/cookie/localStorage)
-- `supabase/migrations/...` (nova migration ajustando `create_balance_transaction_on_sale()` e trigger relacionado)
-- (Opcional) Ajustes pequenos em componentes que navegam para `/auth` a partir do checkout, para preservar a intenção de retorno.
+Alterar linhas 744 e 780 para usar a nova lógica:
+```typescript
+// Antes: seller_commission: sellerCommissionInKZ * 0.9101
+// Depois: Taxa já aplicada sobre total
+const platformFee = amountInKZ * 0.0999; // 9.99% internacional
+seller_commission = amountInKZ - platformFee;
+// Se tiver afiliado, subtrair comissão do afiliado do valor líquido
+```
 
-Riscos e mitigação
-- Risco: passar a creditar comissão quando comprador=afiliado (auto-compra). Se isso não for desejado, vamos precisar de uma regra explícita (bloquear por email/user_id/IP).
-  - Mitigação: definir regra de negócio claramente e implementar verificação no backend (edge function ou trigger) antes de criar transação `affiliate_commission`.
+### 5. Frontend: Checkout.tsx
+**Arquivo:** `src/pages/Checkout.tsx`
 
-Entrega incremental recomendada
-- Primeiro: persistência do `ref` + envio correto para `create-appypay-charge` (para `orders.affiliate_code` nunca mais ser NULL quando o link tem ref).
-- Segundo: trigger corrigido (para aparecer no histórico de ambos com percentagens corretas).
-- Terceiro: melhoria do tempo/atualização de status (UX/ansiedade do checkout).
+Alterar linhas 1954-1955 para cálculo de display:
+```typescript
+// NOVA LÓGICA para cálculo local (display only)
+const platformFee = totalAmount * 0.0899; // 8.99% Angola
+const netAfterFee = totalAmount - platformFee;
+affiliate_commission = Math.round(netAfterFee * affiliateRate * 100) / 100;
+seller_commission = Math.round((netAfterFee - affiliate_commission) * 100) / 100;
+```
+
+## Impacto nos Valores
+
+### Vendedor (10% após taxa)
+- Antes: 0.91 KZ (sobre 1 KZ bruto)
+- Depois: 0.91 KZ (10% de 9.10 KZ) ✅ **Mesmo valor**
+
+### Afiliado (90% após taxa)
+- Antes: 9.00 KZ (90% do bruto)
+- Depois: 8.19 KZ (90% de 9.10 KZ) ⚠️ **Redução de 0.81 KZ**
+
+### Plataforma
+- Antes: 0.09 KZ (8.99% de 1 KZ)
+- Depois: 0.90 KZ (8.99% de 10 KZ) ✅ **Taxa correta**
+
+## Detalhes Técnicos
+
+### Arquivos a Modificar:
+1. `supabase/functions/create-appypay-charge/index.ts` - Linhas 550-568
+2. `supabase/functions/create-sislog-payment/index.ts` - Linhas 229-249
+3. `supabase/functions/stripe-webhook/index.ts` - Linhas 744, 780
+4. `src/pages/Checkout.tsx` - Linhas 1954-1955
+5. Nova migração SQL para atualizar `create_balance_transaction_on_sale()`
+
+### Ordem de Implementação:
+1. Atualizar trigger do banco de dados primeiro (fonte de verdade)
+2. Atualizar Edge Functions (AppyPay, SISLOG, Stripe)
+3. Atualizar frontend (Checkout.tsx)
+4. Testar fluxo completo
+
+### Backward Compatibility:
+- Vendas antigas mantêm seus valores originais
+- Nova lógica aplica-se apenas a vendas futuras
+- O trigger verifica se já existem transações antes de processar
