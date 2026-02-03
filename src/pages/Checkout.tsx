@@ -1899,20 +1899,28 @@ const Checkout = () => {
       let seller_commission: number | null = null;
       let affiliate_code_to_use: string | null = null;
 
-      // ✅ SEMPRE capturar o código de afiliado de TODAS as fontes possíveis usando a função consolidada.
-      // Prioridade: 1) URL, 2) Cookie cross-subdomain, 3) window.name, 4) localStorage, 5) hook state
-      // O backend (create-appypay-charge) fará a validação final.
-      affiliate_code_to_use = getAffiliateCodeFromAllSources() || affiliateCode || null;
+      // ✅ SEMPRE capturar o código de afiliado de TODAS as fontes possíveis
+      // FALLBACK DIRETO: Ler da URL atual primeiro (mais confiável)
+      const urlParams = new URLSearchParams(window.location.search);
+      const refFromUrl = urlParams.get('ref');
       
-      if (affiliate_code_to_use) {
-        console.log('🔗 Código de afiliado capturado para envio ao backend:', {
-          code: affiliate_code_to_use,
-          hookValue: affiliateCode,
-          fromConsolidatedFunction: true
-        });
-      } else {
-        console.log('⚠️ Nenhum código de afiliado encontrado em nenhuma fonte');
+      affiliate_code_to_use = refFromUrl || getAffiliateCodeFromAllSources() || affiliateCode || null;
+      
+      // Salvar em localStorage para persistência futura se encontrado
+      if (affiliate_code_to_use && !refFromUrl) {
+        try {
+          localStorage.setItem('affiliate_code', affiliate_code_to_use);
+        } catch (e) {
+          console.error('Failed to save affiliate code to localStorage:', e);
+        }
       }
+      
+      console.log('🔗 Código de afiliado para compra:', {
+        code: affiliate_code_to_use,
+        source: refFromUrl ? 'URL' : (getAffiliateCodeFromAllSources() ? 'storage' : 'hook'),
+        hookValue: affiliateCode,
+        urlRef: refFromUrl
+      });
 
       const validateAffiliateOnDemand = async (codeToValidate: string | null): Promise<number | null> => {
         if (!codeToValidate || !product?.id) return null;
